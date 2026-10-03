@@ -1,0 +1,45 @@
+{
+  "at": "2026-10-03T17:59:18.581Z",
+  "status": 200,
+  "health": {
+    "app": "thepower-rag",
+    "phase": "crag",
+    "execution": "real",
+    "runtime": "Cloudflare-Workers",
+    "capabilities": {
+      "sin-rag": {
+        "status": "ready",
+        "missing": []
+      },
+      "rag": {
+        "status": "ready",
+        "missing": []
+      },
+      "crag": {
+        "status": "ready",
+        "missing": []
+      }
+    },
+    "corpus": {
+      "version": "c3a59a406888b",
+      "contentVersion": "cc037ef0bb1f7",
+      "profileId": "p76509a5f9743",
+      "profileFamily": "workers-ai",
+      "coverage": {
+        "curriculum": "complete",
+        "calendarLx": "complete",
+        "calendarMj": "complete",
+        "exerciseDetail": "partial",
+        "remote": "index-verified"
+      },
+      "embedding": "@cf/baai/bge-m3",
+      "dimensions": 1024,
+      "remoteRevision": null
+    },
+    "compatibility": {
+      "langgraph": "ok",
+      "openrouter": "loaded",
+      "note": "LangGraph carga. El grafo de CRAG vive en la ruta de chat. Esta comprobación no es una activación remota."
+    }
+  }
+}

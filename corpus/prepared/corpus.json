@@ -1,0 +1,1002 @@
+{
+  "contentVersion": "cc037ef0bb1f7",
+  "preparationId": "c3a59a406888b",
+  "version": "c3a59a406888b",
+  "verifiedDate": "2026-10-03",
+  "embeddingModel": "fixture-token-hash-v1",
+  "dimensions": 128,
+  "remoteRevision": null,
+  "coverage": {
+    "curriculum": "complete",
+    "calendarLx": "complete",
+    "calendarMj": "complete",
+    "exerciseDetail": "partial",
+    "remote": "not-verified",
+    "sessions": [
+      {
+        "session": "S1",
+        "curriculum": "present",
+        "exerciseDetail": "title-only",
+        "dateLx": "2026-09-21",
+        "dateMj": "2026-09-22",
+        "instructorLx": "Martín",
+        "instructorMj": "Martín"
+      },
+      {
+        "session": "S2",
+        "curriculum": "present",
+        "exerciseDetail": "title-only",
+        "dateLx": "2026-09-23",
+        "dateMj": "2026-09-24",
+        "instructorLx": "Martín",
+        "instructorMj": "Martín"
+      },
+      {
+        "session": "S3",
+        "curriculum": "present",
+        "exerciseDetail": "title-only",
+        "dateLx": "2026-09-28",
+        "dateMj": "2026-09-29",
+        "instructorLx": "Martín",
+        "instructorMj": "Martín"
+      },
+      {
+        "session": "S4",
+        "curriculum": "present",
+        "exerciseDetail": "title-only",
+        "dateLx": "2026-09-30",
+        "dateMj": "2026-10-01",
+        "instructorLx": "Ignacio",
+        "instructorMj": "Ignacio"
+      },
+      {
+        "session": "S5",
+        "curriculum": "present",
+        "exerciseDetail": "summary",
+        "dateLx": "2026-10-05",
+        "dateMj": "2026-10-06",
+        "instructorLx": "Jose Antonio",
+        "instructorMj": "Ignacio"
+      },
+      {
+        "session": "S6",
+        "curriculum": "present",
+        "exerciseDetail": "summary",
+        "dateLx": "2026-10-07",
+        "dateMj": "2026-10-08",
+        "instructorLx": "Jose Antonio",
+        "instructorMj": "Ignacio"
+      },
+      {
+        "session": "S7",
+        "curriculum": "present",
+        "exerciseDetail": "summary",
+        "dateLx": "2026-10-14",
+        "dateMj": "2026-10-13",
+        "instructorLx": "Jose Antonio",
+        "instructorMj": "Jose Antonio"
+      },
+      {
+        "session": "S8",
+        "curriculum": "present",
+        "exerciseDetail": "summary",
+        "dateLx": "2026-10-19",
+        "dateMj": "2026-10-15",
+        "instructorLx": "Jose Antonio",
+        "instructorMj": "Jose Antonio"
+      },
+      {
+        "session": "S9",
+        "curriculum": "present",
+        "exerciseDetail": "title-only",
+        "dateLx": "2026-10-21",
+        "dateMj": "2026-10-20",
+        "instructorLx": "Ignacio",
+        "instructorMj": "Ignacio"
+      },
+      {
+        "session": "S10",
+        "curriculum": "present",
+        "exerciseDetail": "summary",
+        "dateLx": "2026-10-26",
+        "dateMj": "2026-10-22",
+        "instructorLx": "Ignacio",
+        "instructorMj": "Jose Antonio"
+      },
+      {
+        "session": "S11",
+        "curriculum": "present",
+        "exerciseDetail": "summary",
+        "dateLx": "2026-10-28",
+        "dateMj": "2026-10-27",
+        "instructorLx": "Ignacio",
+        "instructorMj": "Jose Antonio"
+      },
+      {
+        "session": "S12",
+        "curriculum": "present",
+        "exerciseDetail": "summary",
+        "dateLx": "2026-11-04",
+        "dateMj": "2026-10-29",
+        "instructorLx": "Ignacio",
+        "instructorMj": "Jose Antonio"
+      },
+      {
+        "session": "S13",
+        "curriculum": "present",
+        "exerciseDetail": "title-only",
+        "dateLx": "2026-11-09",
+        "dateMj": "2026-11-03",
+        "instructorLx": "Ignacio",
+        "instructorMj": "Ignacio"
+      },
+      {
+        "session": "S14",
+        "curriculum": "present",
+        "exerciseDetail": "title-only",
+        "dateLx": "2026-11-11",
+        "dateMj": "2026-11-05",
+        "instructorLx": "Ignacio",
+        "instructorMj": "Ignacio"
+      },
+      {
+        "session": "S15",
+        "curriculum": "present",
+        "exerciseDetail": "title-only",
+        "dateLx": "2026-11-16",
+        "dateMj": "2026-11-10",
+        "instructorLx": "Ignacio",
+        "instructorMj": "Ignacio"
+      },
+      {
+        "session": "S16",
+        "curriculum": "present",
+        "exerciseDetail": "summary",
+        "dateLx": "2026-11-18",
+        "dateMj": "2026-11-12",
+        "instructorLx": "Ignacio",
+        "instructorMj": "Jose Antonio"
+      },
+      {
+        "session": "S17",
+        "curriculum": "present",
+        "exerciseDetail": "summary",
+        "dateLx": "2026-11-23",
+        "dateMj": "2026-11-17",
+        "instructorLx": "Jose Antonio",
+        "instructorMj": "Jose Antonio"
+      },
+      {
+        "session": "S18",
+        "curriculum": "present",
+        "exerciseDetail": "summary",
+        "dateLx": "2026-11-25",
+        "dateMj": "2026-11-19",
+        "instructorLx": "Jose Antonio",
+        "instructorMj": "Ignacio"
+      },
+      {
+        "session": "S19",
+        "curriculum": "present",
+        "exerciseDetail": "summary",
+        "dateLx": "2026-11-30",
+        "dateMj": "2026-11-24",
+        "instructorLx": "Jose Antonio",
+        "instructorMj": "Jose Antonio"
+      },
+      {
+        "session": "S20",
+        "curriculum": "present",
+        "exerciseDetail": "summary",
+        "dateLx": "2026-12-02",
+        "dateMj": "2026-11-26",
+        "instructorLx": "Jose Antonio",
+        "instructorMj": "Ignacio"
+      }
+    ]
+  },
+  "indexProfile": {
+    "family": "fixture",
+    "model": "fixture-token-hash-v1",
+    "dimensions": 128,
+    "metric": "cosine",
+    "chunkMaxChars": 900,
+    "chunkOverlap": 80,
+    "providerRevision": null,
+    "preparationId": "c3a59a406888b",
+    "id": "p9e8e8e03627e"
+  },
+  "documents": [
+    {
+      "id": "calendario-lx",
+      "title": "Calendario AI Engineer de la cohorte L/X",
+      "audience": "L/X",
+      "session": null,
+      "verified": "2026-10-03",
+      "source": "docs/sources/calendario-original-2026.png; GUIA-DE-CLASES-2026.md",
+      "sourcePath": "cohorts/calendario-lx.md",
+      "sourceHash": "a7c36691c4d9176f",
+      "curriculum": "absent",
+      "exerciseDetail": "absent",
+      "chunks": [
+        {
+          "chunkId": "c3a59a406888b:calendario-lx:00",
+          "vectorId": "c3a59a406888b:calendario-lx:00",
+          "section": "Calendario AI Engineer de la cohorte L/X",
+          "text": "# Calendario AI Engineer de la cohorte L/X\n\nCohorte de lunes y miércoles del programa AI Engineer. Las fechas y los profesores salen de la tabla AI Engineer de la imagen de calendario, no de la tabla de Desarrollo Agéntico. El horario 18:30-20:00 Europe/Madrid sale de la guía verificada. Las celdas marcadas FESTIVO el lunes 12 de octubre y el lunes 2 de noviembre no son clase. Una fecha de M/J no se copia aquí.",
+          "ordinal": 0
+        },
+        {
+          "chunkId": "c3a59a406888b:calendario-lx:01",
+          "vectorId": "c3a59a406888b:calendario-lx:01",
+          "section": "S1",
+          "text": "## S1\n\nfecha: 2026-09-21\nprofesor: Martín\nhorario: 18:30-20:00 Europe/Madrid\nCohorte L/X S1 2026-09-21 Martín.",
+          "ordinal": 1
+        },
+        {
+          "chunkId": "c3a59a406888b:calendario-lx:02",
+          "vectorId": "c3a59a406888b:calendario-lx:02",
+          "section": "S2",
+          "text": "## S2\n\nfecha: 2026-09-23\nprofesor: Martín\nhorario: 18:30-20:00 Europe/Madrid\nCohorte L/X S2 2026-09-23 Martín.",
+          "ordinal": 2
+        },
+        {
+          "chunkId": "c3a59a406888b:calendario-lx:03",
+          "vectorId": "c3a59a406888b:calendario-lx:03",
+          "section": "S3",
+          "text": "## S3\n\nfecha: 2026-09-28\nprofesor: Martín\nhorario: 18:30-20:00 Europe/Madrid\nCohorte L/X S3 2026-09-28 Martín.",
+          "ordinal": 3
+        },
+        {
+          "chunkId": "c3a59a406888b:calendario-lx:04",
+          "vectorId": "c3a59a406888b:calendario-lx:04",
+          "section": "S4",
+          "text": "## S4\n\nfecha: 2026-09-30\nprofesor: Ignacio\nhorario: 18:30-20:00 Europe/Madrid\nCohorte L/X S4 2026-09-30 Ignacio.",
+          "ordinal": 4
+        },
+        {
+          "chunkId": "c3a59a406888b:calendario-lx:05",
+          "vectorId": "c3a59a406888b:calendario-lx:05",
+          "section": "S5",
+          "text": "## S5\n\nfecha: 2026-10-05\nprofesor: Jose Antonio\nhorario: 18:30-20:00 Europe/Madrid\nCohorte L/X S5 2026-10-05 Jose Antonio.",
+          "ordinal": 5
+        },
+        {
+          "chunkId": "c3a59a406888b:calendario-lx:06",
+          "vectorId": "c3a59a406888b:calendario-lx:06",
+          "section": "S6",
+          "text": "## S6\n\nfecha: 2026-10-07\nprofesor: Jose Antonio\nhorario: 18:30-20:00 Europe/Madrid\nCohorte L/X S6 2026-10-07 Jose Antonio.",
+          "ordinal": 6
+        },
+        {
+          "chunkId": "c3a59a406888b:calendario-lx:07",
+          "vectorId": "c3a59a406888b:calendario-lx:07",
+          "section": "S7",
+          "text": "## S7\n\nfecha: 2026-10-14\nprofesor: Jose Antonio\nhorario: 18:30-20:00 Europe/Madrid\nCohorte L/X S7 2026-10-14 Jose Antonio.",
+          "ordinal": 7
+        },
+        {
+          "chunkId": "c3a59a406888b:calendario-lx:08",
+          "vectorId": "c3a59a406888b:calendario-lx:08",
+          "section": "S8",
+          "text": "## S8\n\nfecha: 2026-10-19\nprofesor: Jose Antonio\nhorario: 18:30-20:00 Europe/Madrid\nCohorte L/X S8 2026-10-19 Jose Antonio.",
+          "ordinal": 8
+        },
+        {
+          "chunkId": "c3a59a406888b:calendario-lx:09",
+          "vectorId": "c3a59a406888b:calendario-lx:09",
+          "section": "S9",
+          "text": "## S9\n\nfecha: 2026-10-21\nprofesor: Ignacio\nhorario: 18:30-20:00 Europe/Madrid\nCohorte L/X S9 2026-10-21 Ignacio.",
+          "ordinal": 9
+        },
+        {
+          "chunkId": "c3a59a406888b:calendario-lx:10",
+          "vectorId": "c3a59a406888b:calendario-lx:10",
+          "section": "S10",
+          "text": "## S10\n\nfecha: 2026-10-26\nprofesor: Ignacio\nhorario: 18:30-20:00 Europe/Madrid\nCohorte L/X S10 2026-10-26 Ignacio. La clase de RAG S10 de esta cohorte es el 2026-10-26.",
+          "ordinal": 10
+        },
+        {
+          "chunkId": "c3a59a406888b:calendario-lx:11",
+          "vectorId": "c3a59a406888b:calendario-lx:11",
+          "section": "S11",
+          "text": "## S11\n\nfecha: 2026-10-28\nprofesor: Ignacio\nhorario: 18:30-20:00 Europe/Madrid\nCohorte L/X S11 2026-10-28 Ignacio.",
+          "ordinal": 11
+        },
+        {
+          "chunkId": "c3a59a406888b:calendario-lx:12",
+          "vectorId": "c3a59a406888b:calendario-lx:12",
+          "section": "S12",
+          "text": "## S12\n\nfecha: 2026-11-04\nprofesor: Ignacio\nhorario: 18:30-20:00 Europe/Madrid\nCohorte L/X S12 2026-11-04 Ignacio.",
+          "ordinal": 12
+        },
+        {
+          "chunkId": "c3a59a406888b:calendario-lx:13",
+          "vectorId": "c3a59a406888b:calendario-lx:13",
+          "section": "S13",
+          "text": "## S13\n\nfecha: 2026-11-09\nprofesor: Ignacio\nhorario: 18:30-20:00 Europe/Madrid\nCohorte L/X S13 2026-11-09 Ignacio.",
+          "ordinal": 13
+        },
+        {
+          "chunkId": "c3a59a406888b:calendario-lx:14",
+          "vectorId": "c3a59a406888b:calendario-lx:14",
+          "section": "S14",
+          "text": "## S14\n\nfecha: 2026-11-11\nprofesor: Ignacio\nhorario: 18:30-20:00 Europe/Madrid\nCohorte L/X S14 2026-11-11 Ignacio.",
+          "ordinal": 14
+        },
+        {
+          "chunkId": "c3a59a406888b:calendario-lx:15",
+          "vectorId": "c3a59a406888b:calendario-lx:15",
+          "section": "S15",
+          "text": "## S15\n\nfecha: 2026-11-16\nprofesor: Ignacio\nhorario: 18:30-20:00 Europe/Madrid\nCohorte L/X S15 2026-11-16 Ignacio.",
+          "ordinal": 15
+        },
+        {
+          "chunkId": "c3a59a406888b:calendario-lx:16",
+          "vectorId": "c3a59a406888b:calendario-lx:16",
+          "section": "S16",
+          "text": "## S16\n\nfecha: 2026-11-18\nprofesor: Ignacio\nhorario: 18:30-20:00 Europe/Madrid\nCohorte L/X S16 2026-11-18 Ignacio.",
+          "ordinal": 16
+        },
+        {
+          "chunkId": "c3a59a406888b:calendario-lx:17",
+          "vectorId": "c3a59a406888b:calendario-lx:17",
+          "section": "S17",
+          "text": "## S17\n\nfecha: 2026-11-23\nprofesor: Jose Antonio\nhorario: 18:30-20:00 Europe/Madrid\nCohorte L/X S17 2026-11-23 Jose Antonio.",
+          "ordinal": 17
+        },
+        {
+          "chunkId": "c3a59a406888b:calendario-lx:18",
+          "vectorId": "c3a59a406888b:calendario-lx:18",
+          "section": "S18",
+          "text": "## S18\n\nfecha: 2026-11-25\nprofesor: Jose Antonio\nhorario: 18:30-20:00 Europe/Madrid\nCohorte L/X S18 2026-11-25 Jose Antonio.",
+          "ordinal": 18
+        },
+        {
+          "chunkId": "c3a59a406888b:calendario-lx:19",
+          "vectorId": "c3a59a406888b:calendario-lx:19",
+          "section": "S19",
+          "text": "## S19\n\nfecha: 2026-11-30\nprofesor: Jose Antonio\nhorario: 18:30-20:00 Europe/Madrid\nCohorte L/X S19 2026-11-30 Jose Antonio.",
+          "ordinal": 19
+        },
+        {
+          "chunkId": "c3a59a406888b:calendario-lx:20",
+          "vectorId": "c3a59a406888b:calendario-lx:20",
+          "section": "S20",
+          "text": "## S20\n\nfecha: 2026-12-02\nprofesor: Jose Antonio\nhorario: 18:30-20:00 Europe/Madrid\nCohorte L/X S20 2026-12-02 Jose Antonio.",
+          "ordinal": 20
+        }
+      ]
+    },
+    {
+      "id": "calendario-mj",
+      "title": "Calendario AI Engineer de la cohorte M/J",
+      "audience": "M/J",
+      "session": null,
+      "verified": "2026-10-03",
+      "source": "docs/sources/calendario-original-2026.png; GUIA-DE-CLASES-2026.md",
+      "sourcePath": "cohorts/calendario-mj.md",
+      "sourceHash": "d5e87b2d7d6ae594",
+      "curriculum": "absent",
+      "exerciseDetail": "absent",
+      "chunks": [
+        {
+          "chunkId": "c3a59a406888b:calendario-mj:00",
+          "vectorId": "c3a59a406888b:calendario-mj:00",
+          "section": "Calendario AI Engineer de la cohorte M/J",
+          "text": "# Calendario AI Engineer de la cohorte M/J\n\nCohorte de martes y jueves del programa AI Engineer. Las fechas y los profesores salen de la tabla AI Engineer de la imagen de calendario, no de la tabla de Desarrollo Agéntico. El horario 18:30-20:00 Europe/Madrid sale de la guía verificada. Una fecha de L/X no se copia aquí.",
+          "ordinal": 0
+        },
+        {
+          "chunkId": "c3a59a406888b:calendario-mj:01",
+          "vectorId": "c3a59a406888b:calendario-mj:01",
+          "section": "S1",
+          "text": "## S1\n\nfecha: 2026-09-22\nprofesor: Martín\nhorario: 18:30-20:00 Europe/Madrid\nCohorte M/J S1 2026-09-22 Martín.",
+          "ordinal": 1
+        },
+        {
+          "chunkId": "c3a59a406888b:calendario-mj:02",
+          "vectorId": "c3a59a406888b:calendario-mj:02",
+          "section": "S2",
+          "text": "## S2\n\nfecha: 2026-09-24\nprofesor: Martín\nhorario: 18:30-20:00 Europe/Madrid\nCohorte M/J S2 2026-09-24 Martín.",
+          "ordinal": 2
+        },
+        {
+          "chunkId": "c3a59a406888b:calendario-mj:03",
+          "vectorId": "c3a59a406888b:calendario-mj:03",
+          "section": "S3",
+          "text": "## S3\n\nfecha: 2026-09-29\nprofesor: Martín\nhorario: 18:30-20:00 Europe/Madrid\nCohorte M/J S3 2026-09-29 Martín.",
+          "ordinal": 3
+        },
+        {
+          "chunkId": "c3a59a406888b:calendario-mj:04",
+          "vectorId": "c3a59a406888b:calendario-mj:04",
+          "section": "S4",
+          "text": "## S4\n\nfecha: 2026-10-01\nprofesor: Ignacio\nhorario: 18:30-20:00 Europe/Madrid\nCohorte M/J S4 2026-10-01 Ignacio.",
+          "ordinal": 4
+        },
+        {
+          "chunkId": "c3a59a406888b:calendario-mj:05",
+          "vectorId": "c3a59a406888b:calendario-mj:05",
+          "section": "S5",
+          "text": "## S5\n\nfecha: 2026-10-06\nprofesor: Ignacio\nhorario: 18:30-20:00 Europe/Madrid\nCohorte M/J S5 2026-10-06 Ignacio.",
+          "ordinal": 5
+        },
+        {
+          "chunkId": "c3a59a406888b:calendario-mj:06",
+          "vectorId": "c3a59a406888b:calendario-mj:06",
+          "section": "S6",
+          "text": "## S6\n\nfecha: 2026-10-08\nprofesor: Ignacio\nhorario: 18:30-20:00 Europe/Madrid\nCohorte M/J S6 2026-10-08 Ignacio.",
+          "ordinal": 6
+        },
+        {
+          "chunkId": "c3a59a406888b:calendario-mj:07",
+          "vectorId": "c3a59a406888b:calendario-mj:07",
+          "section": "S7",
+          "text": "## S7\n\nfecha: 2026-10-13\nprofesor: Jose Antonio\nhorario: 18:30-20:00 Europe/Madrid\nCohorte M/J S7 2026-10-13 Jose Antonio.",
+          "ordinal": 7
+        },
+        {
+          "chunkId": "c3a59a406888b:calendario-mj:08",
+          "vectorId": "c3a59a406888b:calendario-mj:08",
+          "section": "S8",
+          "text": "## S8\n\nfecha: 2026-10-15\nprofesor: Jose Antonio\nhorario: 18:30-20:00 Europe/Madrid\nCohorte M/J S8 2026-10-15 Jose Antonio.",
+          "ordinal": 8
+        },
+        {
+          "chunkId": "c3a59a406888b:calendario-mj:09",
+          "vectorId": "c3a59a406888b:calendario-mj:09",
+          "section": "S9",
+          "text": "## S9\n\nfecha: 2026-10-20\nprofesor: Ignacio\nhorario: 18:30-20:00 Europe/Madrid\nCohorte M/J S9 2026-10-20 Ignacio.",
+          "ordinal": 9
+        },
+        {
+          "chunkId": "c3a59a406888b:calendario-mj:10",
+          "vectorId": "c3a59a406888b:calendario-mj:10",
+          "section": "S10",
+          "text": "## S10\n\nfecha: 2026-10-22\nprofesor: Jose Antonio\nhorario: 18:30-20:00 Europe/Madrid\nCohorte M/J S10 2026-10-22 Jose Antonio. La clase de RAG S10 de esta cohorte es el 2026-10-22.",
+          "ordinal": 10
+        },
+        {
+          "chunkId": "c3a59a406888b:calendario-mj:11",
+          "vectorId": "c3a59a406888b:calendario-mj:11",
+          "section": "S11",
+          "text": "## S11\n\nfecha: 2026-10-27\nprofesor: Jose Antonio\nhorario: 18:30-20:00 Europe/Madrid\nCohorte M/J S11 2026-10-27 Jose Antonio.",
+          "ordinal": 11
+        },
+        {
+          "chunkId": "c3a59a406888b:calendario-mj:12",
+          "vectorId": "c3a59a406888b:calendario-mj:12",
+          "section": "S12",
+          "text": "## S12\n\nfecha: 2026-10-29\nprofesor: Jose Antonio\nhorario: 18:30-20:00 Europe/Madrid\nCohorte M/J S12 2026-10-29 Jose Antonio.",
+          "ordinal": 12
+        },
+        {
+          "chunkId": "c3a59a406888b:calendario-mj:13",
+          "vectorId": "c3a59a406888b:calendario-mj:13",
+          "section": "S13",
+          "text": "## S13\n\nfecha: 2026-11-03\nprofesor: Ignacio\nhorario: 18:30-20:00 Europe/Madrid\nCohorte M/J S13 2026-11-03 Ignacio.",
+          "ordinal": 13
+        },
+        {
+          "chunkId": "c3a59a406888b:calendario-mj:14",
+          "vectorId": "c3a59a406888b:calendario-mj:14",
+          "section": "S14",
+          "text": "## S14\n\nfecha: 2026-11-05\nprofesor: Ignacio\nhorario: 18:30-20:00 Europe/Madrid\nCohorte M/J S14 2026-11-05 Ignacio.",
+          "ordinal": 14
+        },
+        {
+          "chunkId": "c3a59a406888b:calendario-mj:15",
+          "vectorId": "c3a59a406888b:calendario-mj:15",
+          "section": "S15",
+          "text": "## S15\n\nfecha: 2026-11-10\nprofesor: Ignacio\nhorario: 18:30-20:00 Europe/Madrid\nCohorte M/J S15 2026-11-10 Ignacio.",
+          "ordinal": 15
+        },
+        {
+          "chunkId": "c3a59a406888b:calendario-mj:16",
+          "vectorId": "c3a59a406888b:calendario-mj:16",
+          "section": "S16",
+          "text": "## S16\n\nfecha: 2026-11-12\nprofesor: Jose Antonio\nhorario: 18:30-20:00 Europe/Madrid\nCohorte M/J S16 2026-11-12 Jose Antonio.",
+          "ordinal": 16
+        },
+        {
+          "chunkId": "c3a59a406888b:calendario-mj:17",
+          "vectorId": "c3a59a406888b:calendario-mj:17",
+          "section": "S17",
+          "text": "## S17\n\nfecha: 2026-11-17\nprofesor: Jose Antonio\nhorario: 18:30-20:00 Europe/Madrid\nCohorte M/J S17 2026-11-17 Jose Antonio.",
+          "ordinal": 17
+        },
+        {
+          "chunkId": "c3a59a406888b:calendario-mj:18",
+          "vectorId": "c3a59a406888b:calendario-mj:18",
+          "section": "S18",
+          "text": "## S18\n\nfecha: 2026-11-19\nprofesor: Ignacio\nhorario: 18:30-20:00 Europe/Madrid\nCohorte M/J S18 2026-11-19 Ignacio.",
+          "ordinal": 18
+        },
+        {
+          "chunkId": "c3a59a406888b:calendario-mj:19",
+          "vectorId": "c3a59a406888b:calendario-mj:19",
+          "section": "S19",
+          "text": "## S19\n\nfecha: 2026-11-24\nprofesor: Jose Antonio\nhorario: 18:30-20:00 Europe/Madrid\nCohorte M/J S19 2026-11-24 Jose Antonio.",
+          "ordinal": 19
+        },
+        {
+          "chunkId": "c3a59a406888b:calendario-mj:20",
+          "vectorId": "c3a59a406888b:calendario-mj:20",
+          "section": "S20",
+          "text": "## S20\n\nfecha: 2026-11-26\nprofesor: Ignacio\nhorario: 18:30-20:00 Europe/Madrid\nCohorte M/J S20 2026-11-26 Ignacio.",
+          "ordinal": 20
+        }
+      ]
+    },
+    {
+      "id": "s01-ecosistema",
+      "title": "S1 · Ecosistema actual de AI Engineering",
+      "audience": "program",
+      "session": "S1",
+      "verified": "2026-10-03",
+      "source": "docs/sources/ai-engineer-curriculum-2026-07-17.txt",
+      "sourcePath": "program/s01-ecosistema.md",
+      "sourceHash": "2fd38862262c638d",
+      "curriculum": "present",
+      "exerciseDetail": "title-only",
+      "chunks": [
+        {
+          "chunkId": "c3a59a406888b:s01-ecosistema:00",
+          "vectorId": "c3a59a406888b:s01-ecosistema:00",
+          "section": "S1 · Ecosistema actual",
+          "text": "# S1 · Ecosistema actual\n\nContenidos de la sesión S1 del programa: ecosistema actual, parámetros de generación y selección de modelo.\n\nObjetivo para el alumno: situar modelos, frameworks y protocolos del ecosistema actual antes de entrar en el detalle de cada uno.\n\nContenido del temario del 17 de julio de 2026: qué son los LLM, parámetros de generación, comparativa de modelos, diferencia entre aprendizaje automático, deep learning e IA, costes y optimización, y modelos propietarios frente a código abierto.\n\nEjercicio localizado: selección de modelo. Hay que justificar, para un caso de negocio, la elección de proveedor o modelo con criterios técnicos y económicos. La fuente no trae rúbrica, plazo ni un enunciado más largo.\n\nEstas referencias describen el temario. No certifican que un modelo o una API sigan disponibles.",
+          "ordinal": 0
+        }
+      ]
+    },
+    {
+      "id": "s02-prompt-openai",
+      "title": "S2 · Prompt engineering y OpenAI",
+      "audience": "program",
+      "session": "S2",
+      "verified": "2026-10-03",
+      "source": "docs/sources/ai-engineer-curriculum-2026-07-17.txt",
+      "sourcePath": "program/s02-prompt-openai.md",
+      "sourceHash": "0c737f82684504d2",
+      "curriculum": "present",
+      "exerciseDetail": "title-only",
+      "chunks": [
+        {
+          "chunkId": "c3a59a406888b:s02-prompt-openai:00",
+          "vectorId": "c3a59a406888b:s02-prompt-openai:00",
+          "section": "S2 · Prompt engineering y OpenAI",
+          "text": "# S2 · Prompt engineering y OpenAI\n\nObjetivo para el alumno: dominar las técnicas de prompting que siguen siendo la base de un sistema de IA generativa y dar los primeros pasos con la API de OpenAI.\n\nContenido del temario: anatomía de un prompt, zero-shot, few-shot y chain of thought, system prompt frente a user prompt, JSON mode, prompting ReAct, prompting para código y análisis de datos, iteración y evaluación de prompts, seguridad y OpenAI.\n\nEjercicio localizado: uso de OpenAI mediante prompt injection para intentar saltarse los guardarraíles de un sistema con instrucciones protegidas. No hay rúbrica ni plazo en la fuente.\n\nEl texto original conserva erratas como «Propmt» y «guardarailes». Esta ficha normaliza la ortografía y no añade requisitos.",
+          "ordinal": 0
+        }
+      ]
+    },
+    {
+      "id": "s03-arquitectura",
+      "title": "S3 · Arquitectura de sistemas conversacionales",
+      "audience": "program",
+      "session": "S3",
+      "verified": "2026-10-03",
+      "source": "docs/sources/ai-engineer-curriculum-2026-07-17.txt",
+      "sourcePath": "program/s03-arquitectura.md",
+      "sourceHash": "905c7ef3c6ff8014",
+      "curriculum": "present",
+      "exerciseDetail": "title-only",
+      "chunks": [
+        {
+          "chunkId": "c3a59a406888b:s03-arquitectura:00",
+          "vectorId": "c3a59a406888b:s03-arquitectura:00",
+          "section": "S3 · Arquitectura de sistemas conversacionales",
+          "text": "# S3 · Arquitectura de sistemas conversacionales\n\nObjetivo para el alumno: diseñar la arquitectura de una aplicación de IA antes de escribir código y sentar las bases conceptuales de los agentes.\n\nContenido del temario: fundamentos de arquitectura de software, requisitos funcionales y no funcionales, patrones de diseño, estructura de carpetas y separación de capas, documentación y el patrón ReAct explicado paso a paso.\n\nEjercicio localizado: arquitectura de extremo a extremo. Consiste en diseñar y poner en marcha la estructura de carpetas y la separación de capas de un proyecto. No hay rúbrica ni plazo en la fuente.",
+          "ordinal": 0
+        }
+      ]
+    },
+    {
+      "id": "s04-langchain",
+      "title": "S4 · Fundamentos prácticos de LangChain",
+      "audience": "program",
+      "session": "S4",
+      "verified": "2026-10-03",
+      "source": "docs/sources/ai-engineer-curriculum-2026-07-17.txt",
+      "sourcePath": "program/s04-langchain.md",
+      "sourceHash": "892dca4440cc8149",
+      "curriculum": "present",
+      "exerciseDetail": "title-only",
+      "chunks": [
+        {
+          "chunkId": "c3a59a406888b:s04-langchain:00",
+          "vectorId": "c3a59a406888b:s04-langchain:00",
+          "section": "S4 · LangChain",
+          "text": "# S4 · LangChain\n\nObjetivo para el alumno: usar el framework extendido para construir aplicaciones de modelos de lenguaje componibles.\n\nContenido del temario: qué es LangChain y su papel, entrada y salida de modelos, recuperación, memoria conversacional, agentes en LangChain, cadenas simples y compuestas, y LangServe.\n\nEjercicio localizado: añadir memoria y herramientas a una cadena completa. La fuente no detalla rúbrica, datos ni plazo.",
+          "ordinal": 0
+        }
+      ]
+    },
+    {
+      "id": "s05-langgraph",
+      "title": "S5 · LangGraph",
+      "audience": "program",
+      "session": "S5",
+      "verified": "2026-10-03",
+      "source": "docs/sources/ai-engineer-curriculum-2026-07-17.txt; GUIA-DE-CLASES-2026.md",
+      "sourcePath": "program/s05-langgraph.md",
+      "sourceHash": "dc87820f23a10ad2",
+      "curriculum": "present",
+      "exerciseDetail": "summary",
+      "chunks": [
+        {
+          "chunkId": "c3a59a406888b:s05-langgraph:00",
+          "vectorId": "c3a59a406888b:s05-langgraph:00",
+          "section": "S5 · LangGraph",
+          "text": "# S5 · LangGraph\n\nObjetivo para el alumno: entender cómo modelar un agente mediante estado, nodos y conexiones explícitas, y evolucionar un grafo sencillo hasta un chatbot con memoria y herramientas.\n\nLangGraph modela un agente con estado y nodos. El temario cubre introducción, manejo de estado y flujo de control, integración de modelos de lenguaje, patrones y prácticas de producción.\n\nLa guía del 2 de octubre añade, para el alumno: StateGraph, entrada, salida, aristas y actualizaciones del estado. Distingue estado de ejecución, historial y memoria guardada por un checkpointer. Trata la llamada al modelo, la respuesta directa frente a la solicitud de herramienta, las rutas condicionales, el aislamiento por thread_id, la persistencia, el control de errores, la terminación y los límites para impedir bucles.",
+          "ordinal": 0
+        },
+        {
+          "chunkId": "c3a59a406888b:s05-langgraph:01",
+          "vectorId": "c3a59a406888b:s05-langgraph:01",
+          "section": "S5 · LangGraph",
+          "text": "tencia, el control de errores, la terminación y los límites para impedir bucles.\n\nEjercicio resumido en esa guía: un asistente de soporte ficticio por etapas, con Python y LangGraph. El modelo con tools se elige por MODEL_ID. El estado lleva mensajes, contador de llamadas y errores. Hay una ruta condicional para responder o ejecutar una herramienta. La persistencia usa SqliteSaver y dos thread_id no mezclan mensajes. Las tools consultar_ticket y buscar_articulo son de solo lectura sobre datos ficticios. El máximo documentado es dos llamadas a herramientas por turno. Los tests usan respuestas simuladas. La entrega pide código, datos ficticios, README y esquema del grafo. La dedicación orientativa es de 3 a 5 horas. No exige frontend, RAG ni despliegue. El enunciado original en DOCX no está en este repositorio.",
+          "ordinal": 1
+        }
+      ]
+    },
+    {
+      "id": "s06-observabilidad",
+      "title": "S6 · Observabilidad con Langfuse y LangSmith",
+      "audience": "program",
+      "session": "S6",
+      "verified": "2026-10-03",
+      "source": "docs/sources/ai-engineer-curriculum-2026-07-17.txt; GUIA-DE-CLASES-2026.md",
+      "sourcePath": "program/s06-observabilidad.md",
+      "sourceHash": "90a982fc8937ee75",
+      "curriculum": "present",
+      "exerciseDetail": "summary",
+      "chunks": [
+        {
+          "chunkId": "c3a59a406888b:s06-observabilidad:00",
+          "vectorId": "c3a59a406888b:s06-observabilidad:00",
+          "section": "S6 · Observabilidad",
+          "text": "# S6 · Observabilidad\n\nObjetivo para el alumno: explicar qué ocurrió dentro de un agente, dónde falló, cuánto consumió y cómo comparar versiones con evidencia.\n\nContenido del temario: introducción a Langfuse, fundamentos de LangSmith, buenas prácticas de observabilidad y consideraciones de despliegue y seguridad.\n\nLa guía añade traza completa, pasos internos, llamadas al modelo y herramientas, instrumentación de un grafo, tags y metadatos, prompts versionados, latencia, tokens, costes, errores, evaluación manual, depuración, privacidad, filtrado y retención.",
+          "ordinal": 0
+        },
+        {
+          "chunkId": "c3a59a406888b:s06-observabilidad:01",
+          "vectorId": "c3a59a406888b:s06-observabilidad:01",
+          "section": "S6 · Observabilidad",
+          "text": "ostes, errores, evaluación manual, depuración, privacidad, filtrado y retención.\n\nEjercicio resumido: reutilizar el asistente de S5 o uno equivalente. Registrar entrada, llamadas al modelo, herramientas y respuesta en Langfuse y LangSmith. Guardar dos versiones de prompt y comparar diez consultas con resultado esperado. Registrar duración, herramientas, errores y tokens. No inventar métricas ausentes. Evaluar a mano acierto y fallo. Incluir un fallo simulado, un retraso y el ocultado de un correo ficticio. La dedicación orientativa es de 3 a 5 horas. No exige Ragas ni un panel propio.",
+          "ordinal": 1
+        }
+      ]
+    },
+    {
+      "id": "s07-modelos-abiertos",
+      "title": "S7 · Modelos abiertos y Hugging Face",
+      "audience": "program",
+      "session": "S7",
+      "verified": "2026-10-03",
+      "source": "docs/sources/ai-engineer-curriculum-2026-07-17.txt; GUIA-DE-CLASES-2026.md",
+      "sourcePath": "program/s07-modelos-abiertos.md",
+      "sourceHash": "c658ee64015ede68",
+      "curriculum": "present",
+      "exerciseDetail": "summary",
+      "chunks": [
+        {
+          "chunkId": "c3a59a406888b:s07-modelos-abiertos:00",
+          "vectorId": "c3a59a406888b:s07-modelos-abiertos:00",
+          "section": "S7 · Modelos abiertos",
+          "text": "# S7 · Modelos abiertos\n\nObjetivo para el alumno: entender cuándo compensa un modelo abierto frente a un modelo cerrado por API, y comparar mejorar el prompt con especializar el modelo.\n\nContenido del temario: ecosistema Hugging Face, generación de texto, prompting aplicado a modelos abiertos, fine-tuning y datasets, y despliegue en el Hub.\n\nLa guía añade LoRA, publicación y reutilización, y los costes de control, infraestructura y mantenimiento.",
+          "ordinal": 0
+        },
+        {
+          "chunkId": "c3a59a406888b:s07-modelos-abiertos:01",
+          "vectorId": "c3a59a406888b:s07-modelos-abiertos:01",
+          "section": "S7 · Modelos abiertos",
+          "text": "ación y reutilización, y los costes de control, infraestructura y mantenimiento.\n\nEjercicio resumido: clasificar incidencias ficticias y producir JSON con categoría, prioridad y respuesta breve. La referencia enviada es Qwen3-0.6B con Transformers, Datasets, TRL y PEFT. Separar entrenamiento, validación y test. Comparar base con instrucciones, base con few-shot y ajuste LoRA. Pedir JSON como texto, sin modo JSON ni reintentos correctores. Publicar el adaptador en Hugging Face Hub. La dedicación orientativa es de 5 a 7 horas con GPU, aparte de las esperas. El título del temario es fine-tuning de un modelo de texto abierto.",
+          "ordinal": 1
+        }
+      ]
+    },
+    {
+      "id": "s08-modelos-cerrados",
+      "title": "S8 · Modelos cerrados, Gemini y Claude",
+      "audience": "program",
+      "session": "S8",
+      "verified": "2026-10-03",
+      "source": "docs/sources/ai-engineer-curriculum-2026-07-17.txt; GUIA-DE-CLASES-2026.md",
+      "sourcePath": "program/s08-modelos-cerrados.md",
+      "sourceHash": "d7d23f56a7fc6d3d",
+      "curriculum": "present",
+      "exerciseDetail": "summary",
+      "chunks": [
+        {
+          "chunkId": "c3a59a406888b:s08-modelos-cerrados:00",
+          "vectorId": "c3a59a406888b:s08-modelos-cerrados:00",
+          "section": "S8 · Modelos cerrados",
+          "text": "# S8 · Modelos cerrados\n\nObjetivo para el alumno: comparar alternativas propietarias a OpenAI y un fine-tuning de Gemini frente a modelos abiertos y a Claude con prompting.\n\nContenido del temario: Gemini, Anthropic Claude y comparativa práctica.\n\nLa guía añade diferencias de integración, control, ajuste, latencia y coste, con criterios comunes.\n\nEjercicio resumido: reutilizar el problema y las particiones de S7. El documento enviado cita el laboratorio Gemini de Google Cloud, gemini-3.1-flash-lite para tuning y Claude Haiku 4.5 para comparación. Esas referencias deben validarse antes de un ensayo: la guía no certifica su disponibilidad. Comparar seis condiciones y no inventar consumos. Cambiar solo el prompt no cumple el fine-tuning. La dedicación orientativa es de 4 a 6 horas, sin colas. El título del temario es fine-tuning sobre modelo cerrado.",
+          "ordinal": 0
+        }
+      ]
+    },
+    {
+      "id": "s09-postgresql-pgvector",
+      "title": "S9 · Bases de datos para agentes, PostgreSQL y pgvector",
+      "audience": "program",
+      "session": "S9",
+      "verified": "2026-10-03",
+      "source": "docs/sources/ai-engineer-curriculum-2026-07-17.txt",
+      "sourcePath": "program/s09-postgresql-pgvector.md",
+      "sourceHash": "5563a858e752bb30",
+      "curriculum": "present",
+      "exerciseDetail": "title-only",
+      "chunks": [
+        {
+          "chunkId": "c3a59a406888b:s09-postgresql-pgvector:00",
+          "vectorId": "c3a59a406888b:s09-postgresql-pgvector:00",
+          "section": "S9 · PostgreSQL y pgvector",
+          "text": "# S9 · PostgreSQL y pgvector\n\nObjetivo para el alumno: dotar a los agentes de memoria persistente y de búsqueda semántica sobre datos propios.\n\nContenido del temario: fundamentos de embeddings y similitud vectorial, bases de datos vectoriales, PostgreSQL, pgvector, herramientas de gestión y monitorización, e integración de la base vectorial con modelos de lenguaje y con MCP.\n\nEjercicio localizado: RAG multi-tenancy, con aislamiento de datos por cliente y organización. La fuente no trae rúbrica, esquema, dimensión ni plazo.\n\nEsta sesión enseña PostgreSQL y pgvector. La demostración de la clase de RAG de este repositorio usa Vectorize, D1 y R2. Esa adaptación no cambia lo que esta sesión enseña.",
+          "ordinal": 0
+        }
+      ]
+    },
+    {
+      "id": "s10-rag",
+      "title": "S10 · RAG",
+      "audience": "program",
+      "session": "S10",
+      "verified": "2026-10-03",
+      "source": "docs/sources/ai-engineer-curriculum-2026-07-17.txt; GUIA-DE-CLASES-2026.md",
+      "sourcePath": "program/s10-rag.md",
+      "sourceHash": "4dd8568e08642649",
+      "curriculum": "present",
+      "exerciseDetail": "summary",
+      "chunks": [
+        {
+          "chunkId": "c3a59a406888b:s10-rag:00",
+          "vectorId": "c3a59a406888b:s10-rag:00",
+          "section": "S10 · RAG",
+          "text": "# S10 · RAG\n\nObjetivo para el alumno: construir el flujo que permite responder con documentación propia y rechazar lo que esa documentación no permite saber.\n\nContenido del temario: fundamentos de retrieval-augmented generation, preparación de datos, recuperación y generación aumentada. El título del ejercicio en el temario es un chatbot con RAG completo.\n\nLa guía añade ingesta, limpieza, fragmentación, embeddings, búsqueda vectorial, selección de contexto, generación fundamentada, fuentes, puntuaciones y rechazo.",
+          "ordinal": 0
+        },
+        {
+          "chunkId": "c3a59a406888b:s10-rag:01",
+          "vectorId": "c3a59a406888b:s10-rag:01",
+          "section": "S10 · RAG",
+          "text": "selección de contexto, generación fundamentada, fuentes, puntuaciones y rechazo.\n\nEjercicio resumido: al menos ocho documentos ficticios y un flujo de lectura, limpieza, fragmentación, embeddings, almacenamiento, búsqueda y generación. El enunciado enviado cita Gemini, Gemini Embedding y PostgreSQL con pgvector, con embeddings de 768 dimensiones. Es la referencia de aquel encargo, no la arquitectura de este asistente. El contenido recuperado es dato, no una instrucción. Hace falta un control de puntuación antes de generar. La evaluación reservada es de 20 preguntas, 14 respondibles y seis sin respuesta, y no forma parte de esta demostración. La dedicación orientativa es de 4 a 6 horas.",
+          "ordinal": 1
+        }
+      ]
+    },
+    {
+      "id": "s11-rag-avanzado",
+      "title": "S11 · RAG avanzado",
+      "audience": "program",
+      "session": "S11",
+      "verified": "2026-10-03",
+      "source": "docs/sources/ai-engineer-curriculum-2026-07-17.txt; GUIA-DE-CLASES-2026.md",
+      "sourcePath": "program/s11-rag-avanzado.md",
+      "sourceHash": "7071405d9459869f",
+      "curriculum": "present",
+      "exerciseDetail": "summary",
+      "chunks": [
+        {
+          "chunkId": "c3a59a406888b:s11-rag-avanzado:00",
+          "vectorId": "c3a59a406888b:s11-rag-avanzado:00",
+          "section": "S11 · RAG avanzado",
+          "text": "# S11 · RAG avanzado\n\nObjetivo para el alumno: mejorar el control de la recuperación mediante reranking y rutas de corrección, sin asumir que más complejidad siempre mejora la calidad.\n\nContenido del temario: RAG avanzado, Corrective RAG y evaluación y métricas específicas de sistemas RAG. El texto original escribe «Corrective RAG GRAG»; esta ficha lo lee como CRAG y no inventa otra técnica. El ejercicio del temario es construir un CRAG completo desde cero.\n\nLa guía añade reordenamiento, valoración de evidencia, reformulación, límites de iteración y comparación con un RAG básico.",
+          "ordinal": 0
+        },
+        {
+          "chunkId": "c3a59a406888b:s11-rag-avanzado:01",
+          "vectorId": "c3a59a406888b:s11-rag-avanzado:01",
+          "section": "S11 · RAG avanzado",
+          "text": " evidencia, reformulación, límites de iteración y comparación con un RAG básico.\n\nEjercicio resumido: un grafo con recuperación, reranking, valoración, reformulación y respuesta o rechazo, sobre ocho o más documentos ficticios. Recuperar hasta diez candidatos. Las rutas son evidencia suficiente, ambigua o insuficiente. El máximo documentado es dos reformulaciones después de la búsqueda inicial y tres recuperaciones en total. Comparar con un RAG básico sobre 20 preguntas nuevas. La dedicación orientativa es de 6 a 8 horas.",
+          "ordinal": 1
+        }
+      ]
+    },
+    {
+      "id": "s12-deep-research",
+      "title": "S12 · Deep Research y multimodal",
+      "audience": "program",
+      "session": "S12",
+      "verified": "2026-10-03",
+      "source": "docs/sources/ai-engineer-curriculum-2026-07-17.txt; GUIA-DE-CLASES-2026.md",
+      "sourcePath": "program/s12-deep-research.md",
+      "sourceHash": "bdeebadf117375d2",
+      "curriculum": "present",
+      "exerciseDetail": "summary",
+      "chunks": [
+        {
+          "chunkId": "c3a59a406888b:s12-deep-research:00",
+          "vectorId": "c3a59a406888b:s12-deep-research:00",
+          "section": "S12 · Deep Research y multimodal",
+          "text": "# S12 · Deep Research y multimodal\n\nObjetivo para el alumno: construir un agente que combine imagen, audio, memoria, herramientas e investigación asíncrona, y que también pueda producir voz.\n\nContenido del temario: procesamiento de archivos y visión con modelos multimodales, imagen a texto, audio y text to speech, y Deep Research. El ejercicio del temario es un grafo de chatbot multimodal con memoria, herramientas y capacidad de deep research.\n\nLa guía concreta un caso con imagen y audio, memoria por hilo, una herramienta de solo lectura y una investigación asíncrona con identificador de trabajo.",
+          "ordinal": 0
+        },
+        {
+          "chunkId": "c3a59a406888b:s12-deep-research:01",
+          "vectorId": "c3a59a406888b:s12-deep-research:01",
+          "section": "S12 · Deep Research y multimodal",
+          "text": "enta de solo lectura y una investigación asíncrona con identificador de trabajo.\n\nEjercicio resumido: un caso ficticio con imagen sintética y audio de hasta 30 segundos. La respuesta usa ambos y puede convertirse en un audio corto. Dos thread_id permanecen aislados. Hay una herramienta propia de solo lectura y una investigación asíncrona identificada, con límite de intentos. Una simulación no sustituye la investigación real pedida en el enunciado. La dedicación orientativa es de 6 a 9 horas, sin la espera remota.",
+          "ordinal": 1
+        }
+      ]
+    },
+    {
+      "id": "s13-fine-tuning",
+      "title": "S13 · Fine-tuning, LoRA y adaptación",
+      "audience": "program",
+      "session": "S13",
+      "verified": "2026-10-03",
+      "source": "docs/sources/ai-engineer-curriculum-2026-07-17.txt",
+      "sourcePath": "program/s13-fine-tuning.md",
+      "sourceHash": "79b0c82079ac9daa",
+      "curriculum": "present",
+      "exerciseDetail": "title-only",
+      "chunks": [
+        {
+          "chunkId": "c3a59a406888b:s13-fine-tuning:00",
+          "vectorId": "c3a59a406888b:s13-fine-tuning:00",
+          "section": "S13 · Fine-tuning y LoRA",
+          "text": "# S13 · Fine-tuning y LoRA\n\nObjetivo para el alumno: especializar un modelo cuando el prompting y el RAG no bastan.\n\nContenido del temario: fundamentos de fine-tuning, preparación de entornos y datos, supervised fine-tuning, LoRA y PEFT, cuantización y QLoRA, merge y despliegue del modelo adaptado.\n\nEjercicio localizado: fine-tuning multimodal. La fuente no trae rúbrica, dataset, plazo ni una pila concreta.",
+          "ordinal": 0
+        }
+      ]
+    },
+    {
+      "id": "s14-agentes",
+      "title": "S14 · Agentes y sistemas multiagente",
+      "audience": "program",
+      "session": "S14",
+      "verified": "2026-10-03",
+      "source": "docs/sources/ai-engineer-curriculum-2026-07-17.txt",
+      "sourcePath": "program/s14-agentes.md",
+      "sourceHash": "e1e4af078a3ecb82",
+      "curriculum": "present",
+      "exerciseDetail": "title-only",
+      "chunks": [
+        {
+          "chunkId": "c3a59a406888b:s14-agentes:00",
+          "vectorId": "c3a59a406888b:s14-agentes:00",
+          "section": "S14 · Agentes",
+          "text": "# S14 · Agentes\n\nObjetivo para el alumno: pasar de un agente aislado a un sistema de varios agentes, y entender los trade-offs de los frameworks citados para 2026.\n\nContenido del temario: agente único con herramientas, equipos especializados, orquestación, patrones de coordinación, persistencia y memoria compartida, errores y reintentos, protocolo A2A, observabilidad y coste. Los frameworks nombrados son LangGraph, CrewAI, AutoGen, OpenAI, Google ADK y Microsoft Agent Framework.\n\nEjercicio localizado: convertir un agente conversacional en un sistema de dos o tres agentes especializados usando LangGraph o CrewAI y comparar ambas implementaciones. No hay rúbrica ni plazo en la fuente.",
+          "ordinal": 0
+        }
+      ]
+    },
+    {
+      "id": "s15-mcp",
+      "title": "S15 · MCP",
+      "audience": "program",
+      "session": "S15",
+      "verified": "2026-10-03",
+      "source": "docs/sources/ai-engineer-curriculum-2026-07-17.txt",
+      "sourcePath": "program/s15-mcp.md",
+      "sourceHash": "270e60c5c6aeb5b8",
+      "curriculum": "present",
+      "exerciseDetail": "title-only",
+      "chunks": [
+        {
+          "chunkId": "c3a59a406888b:s15-mcp:00",
+          "vectorId": "c3a59a406888b:s15-mcp:00",
+          "section": "S15 · MCP",
+          "text": "# S15 · MCP\n\nObjetivo para el alumno: entender y construir sobre el Model Context Protocol para conectar modelos con herramientas y datos.\n\nContenido del temario: qué es MCP, arquitectura, primitivas, construcción de un servidor, MCP Inspector, consumo desde un agente, autenticación, autorización, seguridad, gobernanza empresarial y la comparación con A2A.\n\nEjercicio localizado: construir un servidor MCP propio que expone una herramienta y un recurso de negocio, conectarlo a un agente y verificar su funcionamiento. No hay rúbrica ni plazo en la fuente.",
+          "ordinal": 0
+        }
+      ]
+    },
+    {
+      "id": "s16-cloud-aws",
+      "title": "S16 · Despliegue en la nube y bases de AWS",
+      "audience": "program",
+      "session": "S16",
+      "verified": "2026-10-03",
+      "source": "docs/sources/ai-engineer-curriculum-2026-07-17.txt; GUIA-DE-CLASES-2026.md",
+      "sourcePath": "program/s16-cloud-aws.md",
+      "sourceHash": "dfd6932528067369",
+      "curriculum": "present",
+      "exerciseDetail": "summary",
+      "chunks": [
+        {
+          "chunkId": "c3a59a406888b:s16-cloud-aws:00",
+          "vectorId": "c3a59a406888b:s16-cloud-aws:00",
+          "section": "S16 · Despliegue en AWS",
+          "text": "# S16 · Despliegue en AWS\n\nObjetivo para el alumno: llevar una pequeña API de IA de local a AWS entendiendo contenedor, red, permisos, secretos y coste.\n\nContenido del temario: proveedores cloud, AWS básico, comparación con Azure y GCP, cómputo, almacenamiento, red, seguridad, optimización de costes, Docker y un primer vistazo a servicios de IA gestionada. El título del ejercicio es desplegar una aplicación con Docker.\n\nEjercicio resumido en la guía: API FastAPI con salud y una llamada de IA, Dockerfile y despliegue de demostración en ECR y ECS/Fargate. Los secretos van en Secrets Manager o Parameter Store. Estimar 730 horas sin mantener los recursos un mes, y documentar la limpieza. La dedicación orientativa es de 4 a 6 horas.",
+          "ordinal": 0
+        }
+      ]
+    },
+    {
+      "id": "s17-serverless",
+      "title": "S17 · Serverless AI, Bedrock y Lambda",
+      "audience": "program",
+      "session": "S17",
+      "verified": "2026-10-03",
+      "source": "docs/sources/ai-engineer-curriculum-2026-07-17.txt; GUIA-DE-CLASES-2026.md",
+      "sourcePath": "program/s17-serverless.md",
+      "sourceHash": "a8287c17ca209723",
+      "curriculum": "present",
+      "exerciseDetail": "summary",
+      "chunks": [
+        {
+          "chunkId": "c3a59a406888b:s17-serverless:00",
+          "vectorId": "c3a59a406888b:s17-serverless:00",
+          "section": "S17 · Serverless AI",
+          "text": "# S17 · Serverless AI\n\nObjetivo para el alumno: exponer un servicio de IA sin gestionar servidores, con autenticación, validación, límites y medición.\n\nContenido del temario: AWS Bedrock, AWS Lambda, alternativas como Azure y Vertex AI, y consideraciones de coste, latencia y límites. El título del ejercicio en el temario es AWS Bedrock.\n\nEjercicio resumido: API Gateway con IAM, Lambda y Bedrock para clasificar una incidencia ficticia. La referencia europea enviada es eu.amazon.nova-2-lite-v1:0. La petición de demostración va firmada con SigV4 y credenciales temporales. Medir cold start solo si se captura; si no, declararlo. Estimar 1000 peticiones sin ejecutarlas. La dedicación orientativa es de 4 a 6 horas. La guía no certifica que esa referencia de modelo siga disponible.",
+          "ordinal": 0
+        }
+      ]
+    },
+    {
+      "id": "s18-cicd",
+      "title": "S18 · CI/CD y monitorización",
+      "audience": "program",
+      "session": "S18",
+      "verified": "2026-10-03",
+      "source": "docs/sources/ai-engineer-curriculum-2026-07-17.txt; GUIA-DE-CLASES-2026.md",
+      "sourcePath": "program/s18-cicd.md",
+      "sourceHash": "0f8b782f8a5724c2",
+      "curriculum": "present",
+      "exerciseDetail": "summary",
+      "chunks": [
+        {
+          "chunkId": "c3a59a406888b:s18-cicd:00",
+          "vectorId": "c3a59a406888b:s18-cicd:00",
+          "section": "S18 · CI/CD y monitorización",
+          "text": "# S18 · CI/CD y monitorización\n\nObjetivo para el alumno: impedir que cambios defectuosos lleguen al despliegue, observar una API y recuperar una versión anterior con evidencia.\n\nContenido del temario: conceptos de CI/CD y entornos, GitHub Actions, logging, monitorización y APM, seguimiento de errores, variables y secretos, migraciones y despliegues sin downtime, copias y recuperación. El título del ejercicio es montar un pipeline de CI/CD con tests automáticos.\n\nEjercicio resumido: API con salud e IA, comprobada en local y en staging. En cada pull request: dependencias bloqueadas, análisis, pytest y build. Las acciones externas se fijan a un SHA de 40 caracteres. El despliegue a staging no reconstruye la imagen. Demostrar un rollback al digest anterior. La dedicación orientativa es de 6 a 8 horas con la infraestructura inicial lista. La práctica documentada se realiza en staging.",
+          "ordinal": 0
+        }
+      ]
+    },
+    {
+      "id": "s19-evaluacion",
+      "title": "S19 · Evaluación y testing de sistemas de IA",
+      "audience": "program",
+      "session": "S19",
+      "verified": "2026-10-03",
+      "source": "docs/sources/ai-engineer-curriculum-2026-07-17.txt; GUIA-DE-CLASES-2026.md",
+      "sourcePath": "program/s19-evaluacion.md",
+      "sourceHash": "9d9bb6ec8e261385",
+      "curriculum": "present",
+      "exerciseDetail": "summary",
+      "chunks": [
+        {
+          "chunkId": "c3a59a406888b:s19-evaluacion:00",
+          "vectorId": "c3a59a406888b:s19-evaluacion:00",
+          "section": "S19 · Evaluación y testing",
+          "text": "# S19 · Evaluación y testing\n\nObjetivo para el alumno: medir recuperación y generación por separado y detectar regresiones sin confundir una respuesta plausible con una respuesta correcta.\n\nContenido del temario: evaluación de modelos y métricas, análisis de producción, testing automatizado de agentes y de pipelines RAG, e integración con observabilidad. El ejercicio del temario es construir un sistema RAG completo con evaluación y testing integrados.",
+          "ordinal": 0
+        },
+        {
+          "chunkId": "c3a59a406888b:s19-evaluacion:01",
+          "vectorId": "c3a59a406888b:s19-evaluacion:01",
+          "section": "S19 · Evaluación y testing",
+          "text": "emario es construir un sistema RAG completo con evaluación y testing integrados.\n\nEjercicio resumido: RAG reconstruible y 20 preguntas separadas del ajuste, 14 respondibles y seis no respondibles. Medir precision y recall sobre documentos, no sobre fragmentos repetidos del mismo documento. El evaluador citado queda aislado. Revisar a mano al menos cinco respuestas. Comparar dos configuraciones cambiando una sola variable. La dedicación orientativa es de 7 a 9 horas. Ese conjunto de 20 preguntas no es el paseo de desarrollo de esta aplicación.",
+          "ordinal": 1
+        }
+      ]
+    },
+    {
+      "id": "s20-proyecto-final",
+      "title": "S20 · Proyecto final de agente conversacional",
+      "audience": "program",
+      "session": "S20",
+      "verified": "2026-10-03",
+      "source": "docs/sources/ai-engineer-curriculum-2026-07-17.txt; GUIA-DE-CLASES-2026.md",
+      "sourcePath": "program/s20-proyecto-final.md",
+      "sourceHash": "d9220d08a2334562",
+      "curriculum": "present",
+      "exerciseDetail": "summary",
+      "chunks": [
+        {
+          "chunkId": "c3a59a406888b:s20-proyecto-final:00",
+          "vectorId": "c3a59a406888b:s20-proyecto-final:00",
+          "section": "S20 · Proyecto final",
+          "text": "# S20 · Proyecto final\n\nObjetivo para el alumno: integrar lo aprendido en un proyecto de principio a fin.\n\nTemario: introducción y planificación, prompts y configuración del agente, construcción del grafo, módulos y herramientas, aplicación, integración con PostgreSQL, integración con Langfuse, exposición mediante FastAPI, integración con MCP y despliegue en AWS. También una extensión de Deep Research combinada con recuperación sobre información propia.\n\nEjercicio del temario: entrega de este proyecto final.\n\nLímite de las fuentes: no consta un enunciado final detallado, una rúbrica, una fecha límite de entrega ni si la sesión es construcción, revisión o defensa. No hay que atribuir esos detalles. La guía tampoco documenta una dedicación orientativa.",
+          "ordinal": 0
+        }
+      ]
+    }
+  ]
+}

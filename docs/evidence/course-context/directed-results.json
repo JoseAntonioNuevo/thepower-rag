@@ -1,0 +1,473 @@
+{
+  "at": "2026-10-03T20:19:26.245Z",
+  "kind": "directed development regression; local SDK generation using verified production D1 context, not public endpoint and not independent benchmark",
+  "model": "openai/gpt-6-luna",
+  "mode": "priority",
+  "provenance": "remote D1 and OpenRouter",
+  "results": [
+    {
+      "id": "days-lx",
+      "group": "L/X",
+      "question": "que dias hay clase?",
+      "expected": "lunes y miércoles, 18:30–20:00, fuente del calendario L/X",
+      "answer": "La cohorte L/X tiene clase los **lunes y miércoles**, de **18:30 a 20:00** (hora de Madrid). En el calendario, el **lunes 12 de octubre** y el **lunes 2 de noviembre** son festivos, así que no hay clase esos días. [cite:c3a59a406888b:calendario-lx:00]\n\nLas próximas sesiones, desde la fecha de referencia, son: **lunes 5 de octubre** y **miércoles 7 de octubre**; después, **miércoles 14 de octubre**. [cite:c3a59a406888b:calendario-lx:05] [cite:c3a59a406888b:calendario-lx:06] [cite:c3a59a406888b:calendario-lx:07]",
+      "finishReason": "stop",
+      "usage": {
+        "inputTokens": 7832,
+        "inputTokenDetails": {
+          "noCacheTokens": 7832,
+          "cacheReadTokens": 0,
+          "cacheWriteTokens": 7829
+        },
+        "outputTokens": 180,
+        "outputTokenDetails": {
+          "textTokens": 180,
+          "reasoningTokens": 0
+        },
+        "totalTokens": 8012
+      },
+      "cost": {
+        "amount": 0.00213785,
+        "currency": "USD",
+        "source": "OpenRouter",
+        "method": "provider-reported generation cost; excludes retrieval and CRAG evaluation/reformulation"
+      },
+      "latencyMs": 2637
+    },
+    {
+      "id": "days-mj",
+      "group": "M/J",
+      "question": "¿Qué días de la semana tenemos clases y cuál es el horario?",
+      "expected": "martes y jueves, 18:30–20:00, calendario M/J",
+      "answer": "El grupo M/J tiene clases los martes y jueves, de 18:30 a 20:00, hora de Madrid. [cite:c3a59a406888b:calendario-mj:00]",
+      "finishReason": "stop",
+      "usage": {
+        "inputTokens": 7815,
+        "inputTokenDetails": {
+          "noCacheTokens": 7815,
+          "cacheReadTokens": 0,
+          "cacheWriteTokens": 7812
+        },
+        "outputTokens": 49,
+        "outputTokenDetails": {
+          "textTokens": 49,
+          "reasoningTokens": 0
+        },
+        "totalTokens": 7864
+      },
+      "cost": {
+        "amount": 0.0020026,
+        "currency": "USD",
+        "source": "OpenRouter",
+        "method": "provider-reported generation cost; excludes retrieval and CRAG evaluation/reformulation"
+      },
+      "latencyMs": 948
+    },
+    {
+      "id": "count",
+      "group": "program",
+      "question": "¿Cuántas sesiones tiene el programa AI Engineer y hasta qué sesión llega?",
+      "expected": "20 sesiones, S1–S20",
+      "answer": "El programa tiene **20 sesiones**, numeradas de S1 a S20. La última es **S20 · Proyecto final**. [cite:c3a59a406888b:s20-proyecto-final:00]",
+      "finishReason": "stop",
+      "usage": {
+        "inputTokens": 5619,
+        "inputTokenDetails": {
+          "noCacheTokens": 5619,
+          "cacheReadTokens": 0,
+          "cacheWriteTokens": 5616
+        },
+        "outputTokens": 49,
+        "outputTokenDetails": {
+          "textTokens": 49,
+          "reasoningTokens": 0
+        },
+        "totalTokens": 5668
+      },
+      "cost": {
+        "amount": 0.0014536,
+        "currency": "USD",
+        "source": "OpenRouter",
+        "method": "provider-reported generation cost; excludes retrieval and CRAG evaluation/reformulation"
+      },
+      "latencyMs": 938
+    },
+    {
+      "id": "outline",
+      "group": "program",
+      "question": "Dame la lista completa de sesiones del curso, con número y tema, sin saltarte ninguna.",
+      "expected": "lista S1–S20 con sus títulos",
+      "answer": "1. **S1 — Ecosistema actual** [cite:c3a59a406888b:s01-ecosistema:00]\n2. **S2 — Prompt engineering y OpenAI** [cite:c3a59a406888b:s02-prompt-openai:00]\n3. **S3 — Arquitectura de sistemas conversacionales** [cite:c3a59a406888b:s03-arquitectura:00]\n4. **S4 — LangChain** [cite:c3a59a406888b:s04-langchain:00]\n5. **S5 — LangGraph** [cite:c3a59a406888b:s05-langgraph:00]\n6. **S6 — Observabilidad** [cite:c3a59a406888b:s06-observabilidad:00]\n7. **S7 — Modelos abiertos** [cite:c3a59a406888b:s07-modelos-abiertos:00]\n8. **S8 — Modelos cerrados** [cite:c3a59a406888b:s08-modelos-cerrados:00]\n9. **S9 — PostgreSQL y pgvector** [cite:c3a59a406888b:s09-postgresql-pgvector:00]\n10. **S10 — RAG** [cite:c3a59a406888b:s10-rag:00]\n11. **S11 — RAG avanzado** [cite:c3a59a406888b:s11-rag-avanzado:00]\n12. **S12 — Deep Research y multimodal** [cite:c3a59a406888b:s12-deep-research:00]\n13. **S13 — Fine-tuning y LoRA** [cite:c3a59a406888b:s13-fine-tuning:00]\n14. **S14 — Agentes** [cite:c3a59a406888b:s14-agentes:00]\n15. **S15 — MCP** [cite:c3a59a406888b:s15-mcp:00]\n16. **S16 — Despliegue en AWS** [cite:c3a59a406888b:s16-cloud-aws:00]\n17. **S17 — Serverless AI** [cite:c3a59a406888b:s17-serverless:00]\n18. **S18 — CI/CD y monitorización** [cite:c3a59a406888b:s18-cicd:00]\n19. **S19 — Evaluación y testing** [cite:c3a59a406888b:s19-evaluacion:00]\n20. **S20 — Proyecto final** [cite:c3a59a406888b:s20-proyecto-final:00]",
+      "finishReason": "stop",
+      "usage": {
+        "inputTokens": 5624,
+        "inputTokenDetails": {
+          "noCacheTokens": 27,
+          "cacheReadTokens": 5597,
+          "cacheWriteTokens": 24
+        },
+        "outputTokens": 580,
+        "outputTokenDetails": {
+          "textTokens": 580,
+          "reasoningTokens": 0
+        },
+        "totalTokens": 6204
+      },
+      "cost": {
+        "amount": 0.00069854,
+        "currency": "USD",
+        "source": "OpenRouter",
+        "method": "provider-reported generation cost; excludes retrieval and CRAG evaluation/reformulation"
+      },
+      "latencyMs": 2660
+    },
+    {
+      "id": "langchain",
+      "group": "program",
+      "question": "¿Qué vamos a hacer en la sesión de LangChain y cuál viene inmediatamente después?",
+      "expected": "S4 LangChain, siguiente S5 LangGraph",
+      "answer": "En la sesión de **LangChain (S4)** aprenderás a construir aplicaciones componibles con el framework: trabajarás con entradas y salidas de modelos, recuperación, memoria conversacional, agentes, cadenas simples y compuestas, y LangServe. El ejercicio consiste en añadir memoria y herramientas a una cadena completa; no constan rúbrica, datos ni plazo. [cite:c3a59a406888b:s04-langchain:00]\n\nLa sesión que viene inmediatamente después es **LangGraph (S5)**. Verás cómo modelar un agente con estado, nodos y conexiones, y cómo evolucionar un grafo hasta un chatbot con memoria y herramientas. [cite:c3a59a406888b:s05-langgraph:00]",
+      "finishReason": "stop",
+      "usage": {
+        "inputTokens": 5620,
+        "inputTokenDetails": {
+          "noCacheTokens": 23,
+          "cacheReadTokens": 5597,
+          "cacheWriteTokens": 20
+        },
+        "outputTokens": 156,
+        "outputTokenDetails": {
+          "textTokens": 156,
+          "reasoningTokens": 0
+        },
+        "totalTokens": 5776
+      },
+      "cost": {
+        "amount": 0.00027354,
+        "currency": "USD",
+        "source": "OpenRouter",
+        "method": "provider-reported generation cost; excludes retrieval and CRAG evaluation/reformulation"
+      },
+      "latencyMs": 1426
+    },
+    {
+      "id": "follow-up",
+      "group": "program",
+      "question": "¿Y qué práctica se hace en esa siguiente sesión?",
+      "expected": "asistente de soporte por etapas, memoria, herramientas y límites de S5",
+      "answer": "En LangGraph se hace un asistente ficticio de soporte por etapas, con Python y LangGraph. El estado incluye mensajes, contador de llamadas y errores; el flujo decide si responder o ejecutar una herramienta. Se implementan dos herramientas de solo lectura sobre datos ficticios (`consultar_ticket` y `buscar_articulo`), persistencia con `SqliteSaver` y aislamiento entre conversaciones mediante `thread_id`. Los tests usan respuestas simuladas y se limita el turno a dos llamadas a herramientas. [cite:c3a59a406888b:s05-langgraph:01]\n\nLa entrega pide el código, los datos ficticios, un README y un esquema del grafo. La dedicación orientativa es de 3 a 5 horas. No exige frontend, RAG ni despliegue. [cite:c3a59a406888b:s05-langgraph:01]",
+      "finishReason": "stop",
+      "usage": {
+        "inputTokens": 5793,
+        "inputTokenDetails": {
+          "noCacheTokens": 176,
+          "cacheReadTokens": 5617,
+          "cacheWriteTokens": 173
+        },
+        "outputTokens": 183,
+        "outputTokenDetails": {
+          "textTokens": 183,
+          "reasoningTokens": 0
+        },
+        "totalTokens": 5976
+      },
+      "cost": {
+        "amount": 0.00033919,
+        "currency": "USD",
+        "source": "OpenRouter",
+        "method": "provider-reported generation cost; excludes retrieval and CRAG evaluation/reformulation"
+      },
+      "latencyMs": 1453
+    },
+    {
+      "id": "teachers",
+      "group": "M/J",
+      "question": "¿Qué profesores aparecen en mi calendario y quién enseña RAG básico?",
+      "expected": "Martín, Ignacio, José Antonio; S10 José Antonio",
+      "answer": "En tu calendario M/J aparecen **Martín, Ignacio y Jose Antonio**. [cite:c3a59a406888b:calendario-mj:01] [cite:c3a59a406888b:calendario-mj:04] [cite:c3a59a406888b:calendario-mj:07]\n\n**Jose Antonio enseña RAG básico**: es la sesión S10, programada para el 22 de octubre de 2026. [cite:c3a59a406888b:calendario-mj:10] [cite:c3a59a406888b:s10-rag:00]",
+      "finishReason": "stop",
+      "usage": {
+        "inputTokens": 7816,
+        "inputTokenDetails": {
+          "noCacheTokens": 21,
+          "cacheReadTokens": 7795,
+          "cacheWriteTokens": 18
+        },
+        "outputTokens": 142,
+        "outputTokenDetails": {
+          "textTokens": 142,
+          "reasoningTokens": 0
+        },
+        "totalTokens": 7958
+      },
+      "cost": {
+        "amount": 0.000303,
+        "currency": "USD",
+        "source": "OpenRouter",
+        "method": "provider-reported generation cost; excludes retrieval and CRAG evaluation/reformulation"
+      },
+      "latencyMs": 1582
+    },
+    {
+      "id": "october",
+      "group": "L/X",
+      "question": "¿Qué clases hay durante octubre? Incluye las fechas y el día festivo sin clase.",
+      "expected": "5,7,14,19,21,26,28 octubre; 12 octubre festivo",
+      "answer": "Durante octubre, el grupo **L/X** tiene estas clases, todas de **18:30 a 20:00 (Europe/Madrid)**:\n\n- **Lunes 5** — S5, Jose Antonio. [cite:c3a59a406888b:calendario-lx:05]\n- **Miércoles 7** — S6, Jose Antonio. [cite:c3a59a406888b:calendario-lx:06]\n- **Lunes 12** — **Festivo, sin clase**. [cite:c3a59a406888b:calendario-lx:00]\n- **Miércoles 14** — S7, Jose Antonio. [cite:c3a59a406888b:calendario-lx:07]\n- **Lunes 19** — S8, Jose Antonio. [cite:c3a59a406888b:calendario-lx:08]\n- **Miércoles 21** — S9, Ignacio. [cite:c3a59a406888b:calendario-lx:09]\n- **Lunes 26** — S10, Ignacio. [cite:c3a59a406888b:calendario-lx:10]\n- **Miércoles 28** — S11, Ignacio. [cite:c3a59a406888b:calendario-lx:11]",
+      "finishReason": "stop",
+      "usage": {
+        "inputTokens": 7845,
+        "inputTokenDetails": {
+          "noCacheTokens": 25,
+          "cacheReadTokens": 7820,
+          "cacheWriteTokens": 22
+        },
+        "outputTokens": 297,
+        "outputTokenDetails": {
+          "textTokens": 297,
+          "reasoningTokens": 0
+        },
+        "totalTokens": 8142
+      },
+      "cost": {
+        "amount": 0.0004595,
+        "currency": "USD",
+        "source": "OpenRouter",
+        "method": "provider-reported generation cost; excludes retrieval and CRAG evaluation/reformulation"
+      },
+      "latencyMs": 1699
+    },
+    {
+      "id": "next",
+      "group": "L/X",
+      "question": "Según la fecha actual, ¿cuál es la próxima sesión y quién la imparte?",
+      "expected": "2026-10-05 S5 José Antonio",
+      "answer": "La próxima sesión del grupo L/X es la **S5**, el **lunes 5 de octubre de 2026**, de **18:30 a 20:00**, y la imparte **Jose Antonio**. [cite:c3a59a406888b:calendario-lx:05]",
+      "finishReason": "stop",
+      "usage": {
+        "inputTokens": 7845,
+        "inputTokenDetails": {
+          "noCacheTokens": 25,
+          "cacheReadTokens": 7820,
+          "cacheWriteTokens": 22
+        },
+        "outputTokens": 68,
+        "outputTokenDetails": {
+          "textTokens": 68,
+          "reasoningTokens": 0
+        },
+        "totalTokens": 7913
+      },
+      "cost": {
+        "amount": 0.0002305,
+        "currency": "USD",
+        "source": "OpenRouter",
+        "method": "provider-reported generation cost; excludes retrieval and CRAG evaluation/reformulation"
+      },
+      "latencyMs": 1298
+    },
+    {
+      "id": "missing-fee",
+      "group": "program",
+      "question": "¿Cuánto vale la inscripción y en qué aula del campus tengo que sentarme?",
+      "expected": "precios y aula no constan",
+      "answer": "No consta en la información disponible ni el precio de la inscripción ni el aula del campus.",
+      "finishReason": "stop",
+      "usage": {
+        "inputTokens": 5620,
+        "inputTokenDetails": {
+          "noCacheTokens": 23,
+          "cacheReadTokens": 5597,
+          "cacheWriteTokens": 20
+        },
+        "outputTokens": 22,
+        "outputTokenDetails": {
+          "textTokens": 22,
+          "reasoningTokens": 0
+        },
+        "totalTokens": 5642
+      },
+      "cost": {
+        "amount": 0.00013954,
+        "currency": "USD",
+        "source": "OpenRouter",
+        "method": "provider-reported generation cost; excludes retrieval and CRAG evaluation/reformulation"
+      },
+      "latencyMs": 1031
+    },
+    {
+      "id": "missing-exercise",
+      "group": "program",
+      "question": "¿Dónde está detallada la rúbrica del primer ejercicio y cuál es su fecha de entrega?",
+      "expected": "rúbrica y fecha no constan; ficha S1 solo título",
+      "answer": "No consta una rúbrica ni una fecha de entrega para el primer ejercicio, que es justificar la elección de un proveedor o modelo para un caso de negocio. [cite:c3a59a406888b:s01-ecosistema:00]",
+      "finishReason": "stop",
+      "usage": {
+        "inputTokens": 5623,
+        "inputTokenDetails": {
+          "noCacheTokens": 26,
+          "cacheReadTokens": 5597,
+          "cacheWriteTokens": 23
+        },
+        "outputTokens": 53,
+        "outputTokenDetails": {
+          "textTokens": 53,
+          "reasoningTokens": 0
+        },
+        "totalTokens": 5676
+      },
+      "cost": {
+        "amount": 0.00017129,
+        "currency": "USD",
+        "source": "OpenRouter",
+        "method": "provider-reported generation cost; excludes retrieval and CRAG evaluation/reformulation"
+      },
+      "latencyMs": 1132
+    },
+    {
+      "id": "conceptual",
+      "group": "program",
+      "question": "¿En qué situaciones conviene un modelo abierto frente a una API de modelo cerrado?",
+      "expected": "respuesta de S7; no pide grupo de calendario",
+      "answer": "Según el programa, conviene valorar un **modelo abierto** frente a una API de modelo cerrado cuando el control sobre el modelo, su especialización o su publicación y reutilización sean importantes. La sesión propone comparar esas opciones y contrastar si basta con mejorar el prompt o conviene ajustar el modelo. [cite:c3a59a406888b:s07-modelos-abiertos:00]\n\nLa comparación también debe considerar los costes de **infraestructura, control y mantenimiento**; el temario no establece una opción ganadora para todos los casos. [cite:c3a59a406888b:s07-modelos-abiertos:00] En paralelo, la sesión de modelos cerrados plantea comparar integración, control, ajuste, latencia y coste. [cite:c3a59a406888b:s08-modelos-cerrados:00]",
+      "finishReason": "stop",
+      "usage": {
+        "inputTokens": 5621,
+        "inputTokenDetails": {
+          "noCacheTokens": 24,
+          "cacheReadTokens": 5597,
+          "cacheWriteTokens": 21
+        },
+        "outputTokens": 175,
+        "outputTokenDetails": {
+          "textTokens": 175,
+          "reasoningTokens": 0
+        },
+        "totalTokens": 5796
+      },
+      "cost": {
+        "amount": 0.00029279,
+        "currency": "USD",
+        "source": "OpenRouter",
+        "method": "provider-reported generation cost; excludes retrieval and CRAG evaluation/reformulation"
+      },
+      "latencyMs": 1622
+    }
+  ],
+  "allowance": {
+    "maxSpendUsd": 0.25,
+    "maxGenerativeCalls": 12,
+    "maxEmbeddingCalls": 0,
+    "margin": 1.25,
+    "prices": {
+      "embeddingUsdPerMillionInput": null,
+      "generativeUsdPerMillionInput": 0.19999999999999998,
+      "generativeUsdPerMillionOutput": 1
+    },
+    "nextId": 13,
+    "reservations": [
+      {
+        "id": "r1",
+        "kind": "generation",
+        "calls": 1,
+        "worstCaseUsd": 0.013999999999999999,
+        "actualUsd": 0.00213785,
+        "settled": true
+      },
+      {
+        "id": "r2",
+        "kind": "generation",
+        "calls": 1,
+        "worstCaseUsd": 0.013999999999999999,
+        "actualUsd": 0.0020026,
+        "settled": true
+      },
+      {
+        "id": "r3",
+        "kind": "generation",
+        "calls": 1,
+        "worstCaseUsd": 0.013999999999999999,
+        "actualUsd": 0.0014536,
+        "settled": true
+      },
+      {
+        "id": "r4",
+        "kind": "generation",
+        "calls": 1,
+        "worstCaseUsd": 0.013999999999999999,
+        "actualUsd": 0.00069854,
+        "settled": true
+      },
+      {
+        "id": "r5",
+        "kind": "generation",
+        "calls": 1,
+        "worstCaseUsd": 0.013999999999999999,
+        "actualUsd": 0.00027354,
+        "settled": true
+      },
+      {
+        "id": "r6",
+        "kind": "generation",
+        "calls": 1,
+        "worstCaseUsd": 0.013999999999999999,
+        "actualUsd": 0.00033919,
+        "settled": true
+      },
+      {
+        "id": "r7",
+        "kind": "generation",
+        "calls": 1,
+        "worstCaseUsd": 0.013999999999999999,
+        "actualUsd": 0.000303,
+        "settled": true
+      },
+      {
+        "id": "r8",
+        "kind": "generation",
+        "calls": 1,
+        "worstCaseUsd": 0.013999999999999999,
+        "actualUsd": 0.0004595,
+        "settled": true
+      },
+      {
+        "id": "r9",
+        "kind": "generation",
+        "calls": 1,
+        "worstCaseUsd": 0.013999999999999999,
+        "actualUsd": 0.0002305,
+        "settled": true
+      },
+      {
+        "id": "r10",
+        "kind": "generation",
+        "calls": 1,
+        "worstCaseUsd": 0.013999999999999999,
+        "actualUsd": 0.00013954,
+        "settled": true
+      },
+      {
+        "id": "r11",
+        "kind": "generation",
+        "calls": 1,
+        "worstCaseUsd": 0.013999999999999999,
+        "actualUsd": 0.00017129,
+        "settled": true
+      },
+      {
+        "id": "r12",
+        "kind": "generation",
+        "calls": 1,
+        "worstCaseUsd": 0.013999999999999999,
+        "actualUsd": 0.00029279,
+        "settled": true
+      }
+    ]
+  },
+  "review": {
+    "method": "manual comparison with supplied course documents; directed development regressions, not an independent quality benchmark",
+    "factsCorrect": 12,
+    "cases": 12,
+    "note": "The first days-L/X answer still used the word cohorte; output terminology was subsequently changed to grupo without changing course facts."
+  }
+}

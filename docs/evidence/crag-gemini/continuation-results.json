@@ -1,0 +1,281 @@
+{
+  "at": "2026-10-03T20:58:18.765Z",
+  "evaluator": "google/gemini-3.8-flash",
+  "generator": "openai/gpt-6-luna",
+  "provenance": "real OpenRouter SDK, versioned local course chunks; no retrieval or public endpoint",
+  "maxSpendUsd": 0.12,
+  "endpointPricing": {
+    "prompt": "0.00000075",
+    "completion": "0.00000375",
+    "image": "0.00000075",
+    "audio": "0.00000075",
+    "input_audio_cache": "0.000000075",
+    "web_search": "0.014",
+    "internal_reasoning": "0.00000375",
+    "input_cache_read": "0.000000075",
+    "input_cache_write": "0.0000000416666666666667",
+    "discount": 0.5
+  },
+  "results": [
+    {
+      "id": "combined-course-summary",
+      "expected": "sufficient",
+      "durationMs": 2218,
+      "passed": true,
+      "result": {
+        "ok": true,
+        "providerCall": true,
+        "raw": {
+          "ranking": [
+            {
+              "chunkId": "c3a59a406888b:s05-langgraph:00",
+              "score": 0.95,
+              "reason": "Detalla directamente el temario y los contenidos enseñados en la sesión S5 LangGraph."
+            },
+            {
+              "chunkId": "c3a59a406888b:s06-observabilidad:00",
+              "score": 0.95,
+              "reason": "Detalla directamente el temario y contenidos teóricos enseñados en S6 sobre Langfuse y LangSmith."
+            },
+            {
+              "chunkId": "c3a59a406888b:s06-observabilidad:01",
+              "score": 0.5,
+              "reason": "Explica la parte práctica/ejercicio de S6, complementando el temario de dicha sesión."
+            },
+            {
+              "chunkId": "c3a59a406888b:s05-langgraph:01",
+              "score": 0.5,
+              "reason": "Explica la parte práctica/ejercicio de S5, complementando los contenidos formativos."
+            }
+          ],
+          "status": "sufficient",
+          "reason": "Los fragmentos cubren de forma completa y explícita el temario de S5 LangGraph y S6 Observabilidad (Langfuse y LangSmith) sin necesidad de recurrir a código.",
+          "gaps": [],
+          "usefulIds": [
+            "c3a59a406888b:s05-langgraph:00",
+            "c3a59a406888b:s06-observabilidad:00",
+            "c3a59a406888b:s06-observabilidad:01",
+            "c3a59a406888b:s05-langgraph:01"
+          ]
+        }
+      },
+      "validated": {
+        "ok": true,
+        "ranking": [
+          {
+            "chunkId": "c3a59a406888b:s05-langgraph:00",
+            "score": 0.95,
+            "reason": "Detalla directamente el temario y los contenidos enseñados en la sesión S5 LangGraph."
+          },
+          {
+            "chunkId": "c3a59a406888b:s06-observabilidad:00",
+            "score": 0.95,
+            "reason": "Detalla directamente el temario y contenidos teóricos enseñados en S6 sobre Langfuse y LangSmith."
+          },
+          {
+            "chunkId": "c3a59a406888b:s06-observabilidad:01",
+            "score": 0.5,
+            "reason": "Explica la parte práctica/ejercicio de S6, complementando el temario de dicha sesión."
+          },
+          {
+            "chunkId": "c3a59a406888b:s05-langgraph:01",
+            "score": 0.5,
+            "reason": "Explica la parte práctica/ejercicio de S5, complementando los contenidos formativos."
+          }
+        ],
+        "assessment": {
+          "status": "sufficient",
+          "reason": "Los fragmentos cubren de forma completa y explícita el temario de S5 LangGraph y S6 Observabilidad (Langfuse y LangSmith) sin necesidad de recurrir a código.",
+          "gaps": [],
+          "usefulIds": [
+            "c3a59a406888b:s05-langgraph:00",
+            "c3a59a406888b:s06-observabilidad:00",
+            "c3a59a406888b:s06-observabilidad:01",
+            "c3a59a406888b:s05-langgraph:01"
+          ]
+        }
+      }
+    },
+    {
+      "id": "irrelevant",
+      "expected": "insufficient",
+      "durationMs": 1380,
+      "passed": true,
+      "result": {
+        "ok": true,
+        "providerCall": true,
+        "raw": {
+          "ranking": [
+            {
+              "chunkId": "c3a59a406888b:s16-cloud-aws:00",
+              "score": 0,
+              "reason": "Trata sobre despliegue en AWS con Docker y ECS/Fargate, sin ninguna mención a LangGraph, agentes o nodos."
+            }
+          ],
+          "status": "insufficient",
+          "reason": "El fragmento proporcionado aborda el despliegue en AWS y no contiene información sobre el modelado de agentes con estado y nodos en LangGraph.",
+          "gaps": [],
+          "usefulIds": []
+        }
+      },
+      "validated": {
+        "ok": true,
+        "ranking": [
+          {
+            "chunkId": "c3a59a406888b:s16-cloud-aws:00",
+            "score": 0,
+            "reason": "Trata sobre despliegue en AWS con Docker y ECS/Fargate, sin ninguna mención a LangGraph, agentes o nodos."
+          }
+        ],
+        "assessment": {
+          "status": "insufficient",
+          "reason": "El fragmento proporcionado aborda el despliegue en AWS y no contiene información sobre el modelado de agentes con estado y nodos en LangGraph.",
+          "gaps": [],
+          "usefulIds": []
+        }
+      }
+    },
+    {
+      "id": "unknown",
+      "expected": "insufficient",
+      "durationMs": 1766,
+      "passed": true,
+      "result": {
+        "ok": true,
+        "providerCall": true,
+        "raw": {
+          "ranking": [
+            {
+              "chunkId": "c3a59a406888b:s05-langgraph:00",
+              "score": 0,
+              "reason": "Trata sobre el módulo LangGraph; no contiene información sobre becas ni sobre 1991."
+            },
+            {
+              "chunkId": "c3a59a406888b:s05-langgraph:01",
+              "score": 0,
+              "reason": "Describe ejercicios de LangGraph; es completamente irrelevante para becas."
+            },
+            {
+              "chunkId": "c3a59a406888b:s16-cloud-aws:00",
+              "score": 0,
+              "reason": "Aborda el despliegue en AWS; no guarda relación con becas internas ni con 1991."
+            }
+          ],
+          "status": "insufficient",
+          "reason": "Ninguno de los fragmentos menciona becas internas ni hace referencia al año 1991.",
+          "gaps": [],
+          "usefulIds": []
+        }
+      },
+      "validated": {
+        "ok": true,
+        "ranking": [
+          {
+            "chunkId": "c3a59a406888b:s05-langgraph:00",
+            "score": 0,
+            "reason": "Trata sobre el módulo LangGraph; no contiene información sobre becas ni sobre 1991."
+          },
+          {
+            "chunkId": "c3a59a406888b:s05-langgraph:01",
+            "score": 0,
+            "reason": "Describe ejercicios de LangGraph; es completamente irrelevante para becas."
+          },
+          {
+            "chunkId": "c3a59a406888b:s16-cloud-aws:00",
+            "score": 0,
+            "reason": "Aborda el despliegue en AWS; no guarda relación con becas internas ni con 1991."
+          }
+        ],
+        "assessment": {
+          "status": "insufficient",
+          "reason": "Ninguno de los fragmentos menciona becas internas ni hace referencia al año 1991.",
+          "gaps": [],
+          "usefulIds": []
+        }
+      }
+    },
+    {
+      "id": "rewrite",
+      "result": {
+        "ok": true,
+        "providerCall": true,
+        "raw": {
+          "query": "LangGraph instrumentacion Langfuse LangSmith trazabilidad monitoreo agente"
+        }
+      }
+    },
+    {
+      "id": "generation-luna",
+      "result": {
+        "ok": true,
+        "providerCall": true,
+        "text": "LangGraph modela un agente mediante un grafo con estado, nodos y conexiones explícitas. Los nodos realizan pasos y las conexiones definen el flujo entre ellos; el estado se actualiza durante la ejecución. [cite:c3a59a406888b:s05-langgraph:00]",
+        "usage": {
+          "inputTokens": 623,
+          "outputTokens": 65,
+          "totalTokens": 688
+        },
+        "cost": {
+          "amount": 0.0001896,
+          "currency": "USD",
+          "source": "OpenRouter",
+          "method": "provider-reported generation cost; excludes retrieval and CRAG evaluation/reformulation"
+        }
+      }
+    }
+  ],
+  "allowance": {
+    "maxSpendUsd": 0.12,
+    "maxGenerativeCalls": 5,
+    "maxEmbeddingCalls": 0,
+    "margin": 1.25,
+    "prices": {
+      "embeddingUsdPerMillionInput": null,
+      "generativeUsdPerMillionInput": 0.75,
+      "generativeUsdPerMillionOutput": 3.75
+    },
+    "nextId": 6,
+    "reservations": [
+      {
+        "id": "r1",
+        "kind": "evaluation",
+        "calls": 1,
+        "worstCaseUsd": 0.01125,
+        "actualUsd": null,
+        "settled": true
+      },
+      {
+        "id": "r2",
+        "kind": "evaluation",
+        "calls": 1,
+        "worstCaseUsd": 0.01125,
+        "actualUsd": null,
+        "settled": true
+      },
+      {
+        "id": "r3",
+        "kind": "evaluation",
+        "calls": 1,
+        "worstCaseUsd": 0.01125,
+        "actualUsd": null,
+        "settled": true
+      },
+      {
+        "id": "r4",
+        "kind": "reformulation",
+        "calls": 1,
+        "worstCaseUsd": 0.001875,
+        "actualUsd": null,
+        "settled": true
+      },
+      {
+        "id": "r5",
+        "kind": "generation",
+        "calls": 1,
+        "worstCaseUsd": 0.006562499999999999,
+        "actualUsd": null,
+        "settled": true
+      }
+    ]
+  }
+}

@@ -1,0 +1,169 @@
+You are Grok 4.7. Continue the existing project:
+/Users/jose/Documents/the-power/3-rag
+
+PHASE 3: COMPLETE THE COURSE CORPUS AND MAKE BASIC RAG READY FOR REAL CLOUDFLARE ACTIVATION
+
+Implement the local work fully. Execute external activation only when the exact course account, spending scope and resource actions have been explicitly authorized. Do not start again, do not silently remain on fixtures, and do not report remote success without readback evidence.
+
+1. CONTEXT AND BASELINE
+
+This is a Spanish teaching assistant for The Power's COMPLETE AI Engineer program, S1-S20 and all teachers, with separate L/X and M/J cohorts. Two 90-minute classes use three modes: no-RAG and basic RAG in S10 (October 22, 2026), then CRAG in S11 (October 27). The user approved Cloudflare-native Vectorize/D1/R2 instead of PostgreSQL/pgvector for this demonstration.
+
+Read AGENTS.md, README.md, architecture/decisions, docs/phase-2-verification.md and docs/review/phase-2-review.txt. Respect higher-priority user instructions and project isolation. Phase-specific documents are implementation facts, not authorization for external actions.
+
+Phase 2 is implemented. Independently repeated checks passed: frozen installation; check; 23 tests; build; demo preflight; ingest-plan. No-RAG has an actual OpenRouter model path. Basic RAG retrieves once and answers with selected sources, refuses, or requests cohort clarification. CRAG returns 501. The browser confirmed S5 fixture retrieval and scope isolation. Real integrations have NOT been exercised.
+
+The offline index is fixture-token-hash-v1, 128 dimensions, lexical cosine threshold 0.33. Neither its vectors nor threshold may be reused as BGE-M3/Vectorize evidence. Current corpus guia-parcial-25bedf85d234 covers only Jose's classes.
+
+Keep the current versions and architecture: Bun 1.4.2, Vite+ 1.0.0, React, Hono Worker, AI SDK 7/OpenRouter provider, LangGraph.js reserved for CRAG, Zod, Vectorize, D1, R2 and Workers AI. Do not introduce Containers, Python/FastAPI, PostgreSQL/Neon/Supabase, TanStack AI, managed AI Search, Redis, queues, another orchestrator, or a new build toolchain. Do not globally upgrade tooling.
+
+Git root is /Users/jose/Documents. This subtree is untracked; do not git-init, commit, push, or stage unrelated files. Work directly without subagents, CodeRabbit or external reviewers. Modify only 3-rag; neighboring course projects and the parent guide are read-only.
+
+2. NEW APPROVED SOURCE MATERIAL ALREADY AVAILABLE
+
+Use these local source artifacts:
+- docs/sources/ai-engineer-curriculum-2026-07-17.txt
+- docs/sources/calendario-original-2026.png
+- Existing corpus/sources documents and the parent GUIA-DE-CLASES-2026.md as a partial, supplementary source.
+
+The text artifact contains only the AI Engineer curriculum block sent by Laura on July 17, 2026. Its private email headers/signature/quoted correspondence are excluded. Do not retrieve or ingest the full email body, other programs, meeting links, credentials, compensation discussions, or private teacher preparation notes.
+
+The calendar image was supplied by the user. It contains both programs; ONLY the AI Engineer table belongs in this corpus. The final calendar supersedes older dates affected by holidays. The year is 2026 and the class time is 18:30-20:00 Europe/Madrid according to the existing verified guide. Do not mix the two cohorts or mistake Development Agéntico session numbers for AI Engineer.
+
+The twenty topic blocks, in source order, are:
+1. Current AI engineering ecosystem and model selection.
+2. Prompt engineering and OpenAI.
+3. Conversational systems architecture.
+4. LangChain practical foundations.
+5. LangGraph state machines.
+6. Langfuse and LangSmith observability.
+7. Open models / Hugging Face.
+8. Closed models / Gemini and Claude.
+9. Agent databases / PostgreSQL and pgvector.
+10. RAG.
+11. Advanced RAG / CRAG.
+12. Deep Research and multimodal.
+13. Fine-tuning, LoRA and adaptation.
+14. Agents and multi-agent systems.
+15. MCP.
+16. Cloud deployment / AWS basics.
+17. Serverless AI / Bedrock and Lambda.
+18. CI/CD and production monitoring.
+19. Evaluation/testing of AI systems.
+20. Final conversational-agent project.
+
+Cross-check their session mapping with the calendar and known session cards. Do not treat this list as fabricated extra requirements. The original S9 PostgreSQL topic stays in the curriculum even though our S10 demo uses Vectorize. The user's adaptation does not rewrite what another teacher teaches.
+
+Create normalized student documents for all supported sessions, with objectives, supplied topic coverage, supported exercise summary, and provenance. Extract cohort-specific dates/instructors carefully from the AI Engineer calendar; record any unreadable/ambiguous field as pending. Do not invent full exercise rubrics, deadlines or technical choices where the source only provides a broad exercise title. Preserve references as course content, not claims of currently available APIs/models.
+
+Generate coverage dynamically from explicit session/document metadata. Remove hardcoded missing-session lists and hardcoded partial/version/date labels when no longer true. Distinguish curriculum completeness, calendar completeness, exercise-detail completeness and remote verification. Freeze the versioned source set and preparation parameters before ingestion.
+
+3. CORRECT THE ACTIVATION RISKS FOUND IN REVIEW
+
+A. Real ingestion, not a simulated readiness wrapper:
+- runIngestion currently writes versionId as the body of manifest.json. Replace it with the real serialized manifest and write all versioned original documents/chunks to their intended stores.
+- Persist progress and failures. A failed operation must be distinguishable from a successful empty result; support safe resume/idempotency without changing existing corpus versions.
+- Replace caller-supplied confirmVisibility=true with evidence from the actual Vectorize mutation/index state and expected IDs/counts, plus D1 and R2 readback. No unconditional boolean may mark data ready.
+- Mark ready only after expected writes and readbacks succeed. Do not delete old versions or change an active version after partial failure.
+
+B. Embedding/index identity and request readiness:
+- Current prepareCorpus hashes content only; model/dimension changes retain IDs. Keeping a content version independent is fine, but add a distinct embedding/index profile identity containing model, observed dimension, metric, chunking config and provider revision when available.
+- Carry/check the profile in manifests, D1, vector metadata/index configuration and runtime selection. Never mix fixture vectors and semantic vectors in the same profile.
+- Before a real retrieval request, verify the selected corpus/profile is ready and matches the configured embedding model/dimension/index. The current real route reads chunks but ignores corpus_versions.status/profile.
+- Fail closed with a typed diagnostic for pending, missing or incompatible data. Do not silently generate from an incomplete index.
+- Validate unique document/chunk IDs, bounded vector-ID UTF-8 bytes, finite vectors, consistent embedding counts and no invalid audience metadata.
+
+C. Citation handling:
+- No-RAG must preserve ordinary text/code brackets; currently items[0] becomes items. because it uses the RAG citation filter with an empty whitelist.
+- Apply citation validation only to the explicit RAG citation grammar. Preserve unrelated arrays, Markdown and code.
+- Test markers split across stream deltas, unknown IDs, incomplete markers and bounded buffering. Citation membership is not proof of factual grounding; review representative answers against excerpts.
+
+D. Cancellation and time limits:
+- An already-aborted embedding signal currently calls runner.run once before rejecting. Check abortion before starting any upstream call, clean listeners after settlement, and bound embedding/query/generation steps.
+- State explicitly where abort stops local waiting but cannot guarantee remote computation cancellation. Do not claim a cancelled provider charge.
+- Verify a valid longer generated answer can be followed by another message without conflicting assistant-output/request-history limits. Keep bounded inputs and history; do not silently truncate evidence or pretend a failed follow-up succeeded.
+
+E. Preflight:
+- Preserve dotenv/Worker configuration parity and no process.env merging.
+- Add explicit capability/environment/config selection. Generation readiness must not imply RAG readiness.
+- Resolve the EXACT expected binding names and distinguish declared/configured/reachable/verified. Nonempty resource arrays do not prove those bindings exist.
+- The current loader assesses only string vars, leaving RAG blocked regardless of resource declarations; make configuration assessment accurate without passing fake runtime bindings as proof of real access.
+- A requested RAG capability with missing/mismatched settings must exit nonzero. Ordinary preflight remains read-only and must not trigger remote model calls.
+
+4. PREPARE A CONCRETE CLOUD RESOURCE PLAN
+
+First prepare docs/cloud-activation-plan.md with names, purposes, configuration, operations and estimated usage. Use a course-specific namespace, for example:
+- D1: thepower-ai-course-rag-d1
+- R2 private bucket: thepower-ai-course-rag-corpus
+- Vectorize: thepower-ai-course-rag-<short-index-profile>
+
+Select one index with the OBSERVED embedding dimension and cosine metric. Verify the current Cloudflare SDK/CLI behavior and limits from official docs and installed source; do not guess commands or IDs.
+
+Vectorize metadata filtering needs metadata indexes created before inserting vectors. Our retrieval filters on corpusVersion and audience: plan and verify both indexes before ingestion, including actual mutation completion. Respect the current limits on vector IDs, metadata fields, dimensions, batch sizes and index names. Chunk IDs exposed to users may map to compact stable vector IDs if necessary; make the mapping explicit and reversible.
+
+Create a proper ingestion/activation CLI with a dry-run default, explicit execute mode, scoped configuration, receipts, safe resumption and no startup writes. Provisioning, migrations, ingestion and active-version selection are separate operations. Use bound SQL/transactions where appropriate and resource identifiers returned from the approved account, not made-up examples.
+
+Do not create a new subscription, upgrade a plan, mutate another project's resources, change account-wide policies, or grant broad credentials. Do not expose a public ingestion/admin endpoint. Do not deploy the student app publicly in this phase.
+
+5. REQUIRED EXTERNAL ACTIVATION INPUTS
+
+External work needs direct user authorization covering:
+- The exact Cloudflare account ID/name for the course.
+- Permission to create/use the specified course D1/R2/Vectorize resources and apply their migrations/ingestion.
+- Permission to call Workers AI and OpenRouter, chosen MODEL_ID and compatible parameters.
+- A maximum verification spending limit and whether any plan/subscription change is permitted (default: none).
+
+These inputs are NOT supplied by this prompt. A CLI login/default account, a key's existence or APP_MODE=real does not establish authorization. Do not choose an account from another product or inspect neighboring environment files. Do not ask for secret values in chat.
+
+Prepare all local code, tests, normalized corpus, resource plan and commands before reporting missing external inputs. If valid prior user authorization for the exact target/actions exists, use it and do not ask again. Otherwise report the concrete activation plan and missing non-secret account/budget/authorization information once. Keep independent work moving.
+
+The current AGENTS prohibition on paid/cloud actions remains in force until the user explicitly authorizes this activation. Do not remove it and infer approval from your own edit. Update it only to reflect a genuine new user-authorized scope.
+
+6. LIVE VERIFICATION WHEN AUTHORIZED
+
+After target/actions/budget are confirmed, execute the prepared plan without repeated per-step confirmations within that scope:
+1. Verify account identity and access read-only; confirm the approved course resources or create only those approved.
+2. Verify configured model availability/parameters. Do not silently substitute another model or service tier.
+3. Probe the Workers AI embedding API using short synthetic texts. Record model, observed dimensions, finite/count checks and date; unknown remote revision remains null. Never initialize a 768-dimensional index by assumption or copy the fixture 128-dimensional setting.
+4. Create/verify the compatible Vectorize index and metadata indexes, D1 schema, and private R2 bucket.
+5. Ingest the frozen verified student corpus in bounded batches. Record source/corpus/index-profile hashes, expected counts, mutation IDs and readbacks. No credentials in receipts.
+6. Calibrate the semantic retrieval gate using a small development set separate from the reserved assessment. Do not copy the lexical fixture threshold 0.33. Freeze and record the semantic threshold and score meaning.
+7. Run a small directed check of real no-RAG and real basic RAG with the same generative model/parameters and clean conversations. Include a grounded response, refusal and cohort clarification; confirm no generative call on refusal/clarification.
+8. Verify shared documents and each cohort's calendar isolation, cited chunk existence, timeout/cancellation behavior and absent metrics handling.
+
+Keep verification bounded: no load tests or reserved twenty-case assessment; at most four directed generative calls unless a smaller approved limit applies, plus the budgeted embedding probe/corpus batches/development retrieval checks. Configure max output and retries deliberately. Stop before exceeding the approved cap; unknown pricing/usage must not be treated as free.
+
+Prefer a localhost Worker using documented remote bindings to inspect the actual remote data. This still makes remote calls/mutations and requires the authorization above. Do not pretend remote data is locally emulated. Do not use --remote or a deployment command that publishes an endpoint unless its exact deployment/exposure is authorized. If the environment cannot provide the approved remote-binding route, explain the required alternative before changing publication scope.
+
+CRAG remains 501. No reranker, evaluator, rewrite loop, internet search or extra agent framework belongs to this phase. Complete and understand the baseline before adding corrective behavior.
+
+7. VERIFICATION, EVIDENCE AND DELIVERY
+
+Normal tests remain offline and must fail on accidental network access. Add meaningful regressions for the review issues and relevant ingestion/profile contracts. Do not manufacture remote responses as live evidence.
+
+Run frozen install, check, tests, build, preflight for each supported capability, deterministic preparation/dry-run ingestion and workerd/browser checks. Preserve the offline fallback and its honest labels. Avoid unrelated UI redesign, dependency upgrades or speculative test expansion. Follow applicable motion/React checks if editing the frontend.
+
+Write docs/phase-3-verification.md and update README, architecture/decisions, corpus coverage and examples. Separate:
+- Local implementation and regression checks.
+- Complete/partial curriculum, calendars and exercise detail.
+- Real resource creation and actual ingestion receipts.
+- Live model/retrieval/browser results.
+- Pending external inputs and deployment.
+
+Do not claim configured means tested, data ready means deployed, or source coverage complete means the class is 100% ready. Public hosting, CRAG, reserved comparison and teaching materials/technical rehearsals remain separate next steps.
+
+Use OpenViking only for a verified account mapped to this project. It was unavailable/unmapped at review. Do not borrow a tenant or repair infrastructure; keep local session evidence and mark memory delivery pending.
+
+Final response in Spanish: changed behavior, exact commands, corpus coverage, check results, live receipts if any, outstanding inputs, next CRAG scope, and Git/publication/memory status. No commit/push/deployment is requested by this prompt.
+
+References:
+- Installed ai@7 and OpenRouter provider docs/source.
+- https://developers.cloudflare.com/vectorize/get-started/intro/
+- https://developers.cloudflare.com/vectorize/platform/limits/
+- https://developers.cloudflare.com/vectorize/reference/metadata-filtering/
+- https://developers.cloudflare.com/workers-ai/models/bge-m3/
+- https://developers.cloudflare.com/workers/local-development/environment-variables/
+- https://developers.cloudflare.com/d1/
+- https://developers.cloudflare.com/r2/
+
+Proceed with all authorized local phase-3 preparation now. Activate remotely only under the confirmed external scope above.

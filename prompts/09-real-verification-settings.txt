@@ -1,0 +1,25 @@
+You are Grok 4.7. Make TWO NARROW REAL-VERIFICATION CONFIGURATION CORRECTIONS in /Users/jose/Documents/the-power/3-rag. Read AGENTS.md and docs/review/phase-7-review.txt. Keep the verified phase-7 CLI/workerd integration intact; do not rebuild the architecture or add services/frameworks.
+
+The local closure is independently verified: 80 unit tests and 3 actual CLI/workerd tests passed, including native local D1/R2 and emulated Vectorize. No remote resources/provider calls have been verified. The target account remains 9c1493e94ba21f2c6872a9dd17ba19f7. Budget/model/external-action scope remain pending. This prompt authorizes local code/regression checks only; no resource creation, paid calls, public deployment, commit, push, plan change or neighboring secret access.
+
+1. WIRE A VALIDATED SEMANTIC THRESHOLD
+
+scripts/activate.ts currently passes undefined minScore on every remote verification invocation; startOwnedBridge correctly rejects it. Add an explicit input from the selected project configuration or a calibration receipt, with a documented source/precedence and validation. Carry it into the real bridge spec.
+
+Tie calibration to the exact semantic corpus/index profile and metric. A lexical 0.33, emulator 0.55, unknown profile or incompatible metric must not be accepted as a measured semantic calibration. Do not invent a threshold or calibrate against the reserved test set. Before a real calibration exists, return a precise conditional diagnostic; after valid input, the code must actually pass it instead of unconditionally blocking.
+
+2. INJECT THE PROJECT'S REAL SECRET INTO THE AUTHORIZED TEMP WORKER
+
+The current ephemeral .dev.vars writes only BRIDGE_TOKEN and an emulated key in offline verification. Real verify therefore lacks OPENROUTER_API_KEY. Load the real key only from the explicitly selected project-local vars/secret source using the same supported environment selection rules. Do not merge arbitrary process.env or read a neighboring .env.
+
+For an authorized real verify operation, pass the key through a private owned temporary Worker vars/secrets file (0600), correctly escaped using supported dotenv handling. Never put it into command args, source files, browser data, public vars, receipts or logs. Remove only owned temp files on all exits. No change to the global OAuth profile or account credentials.
+
+Missing key/profile settings must fail before billable calls. Offline mode must still use only its synthetic key and must not read/forward a real key. Preserve model/provider/allowance/deadline gates and the default demo configuration.
+
+3. REGRESSIONS AND DELIVERY
+
+Use sentinel test credentials, fake calibrated receipts and offline ports. Verify valid real-mode settings reach the Worker configuration/vars in a local test without remote bindings; invalid/missing/fixture calibration blocks; environment selection is correct; no sentinel appears in output/arguments/receipts; shutdown removes the owned secret file. A local configuration test is not a real provider result.
+
+Run relevant tests, check and build; reuse unchanged entrypoint evidence unless the lifecycle changes. Record the fix in docs/real-verification-settings.md and update activation examples/instructions without inserting real secrets or inventing calibration values. Preserve all pending live statuses.
+
+Keep the work confined to these settings. Classroom materials are handled by prompts/08-rag-crag-complete-teaching-package.txt. Actual activation, model calls, calibration, reserved comparison and public hosting require the human's separately confirmed scope/budget and actual service evidence. Report in Spanish what is fixed, the exact configuration source, tests and remaining live inputs.

@@ -1,0 +1,244 @@
+{
+  "at": "2026-10-03T20:57:33.573Z",
+  "evaluator": "google/gemini-3.8-flash",
+  "generator": "openai/gpt-6-luna",
+  "provenance": "real OpenRouter SDK, versioned local course chunks; no retrieval or public endpoint",
+  "maxSpendUsd": 0.25,
+  "endpointPricing": {
+    "prompt": "0.00000075",
+    "completion": "0.00000375",
+    "image": "0.00000075",
+    "audio": "0.00000075",
+    "input_audio_cache": "0.000000075",
+    "web_search": "0.014",
+    "internal_reasoning": "0.00000375",
+    "input_cache_read": "0.000000075",
+    "input_cache_write": "0.0000000416666666666667",
+    "discount": 0.5
+  },
+  "results": [
+    {
+      "id": "sufficient",
+      "expected": "sufficient",
+      "durationMs": 1771,
+      "passed": true,
+      "result": {
+        "ok": true,
+        "providerCall": true,
+        "raw": {
+          "ranking": [
+            {
+              "chunkId": "c3a59a406888b:s05-langgraph:00",
+              "score": 0.85,
+              "reason": "Menciona directamente cómo LangGraph modela agentes usando StateGraph, estado, nodos, aristas, memoria y control de flujo."
+            },
+            {
+              "chunkId": "c3a59a406888b:s05-langgraph:01",
+              "score": 0.65,
+              "reason": "Muestra un ejemplo práctico de modelado de estado (mensajes, contador) y rutas condicionales entre nodos/herramientas."
+            }
+          ],
+          "status": "sufficient",
+          "reason": "Los fragmentos describen los conceptos centrales de modelado en LangGraph (StateGraph, nodos, aristas, actualizaciones de estado y persistencia).",
+          "gaps": [],
+          "usefulIds": ["c3a59a406888b:s05-langgraph:00", "c3a59a406888b:s05-langgraph:01"]
+        }
+      },
+      "validated": {
+        "ok": true,
+        "ranking": [
+          {
+            "chunkId": "c3a59a406888b:s05-langgraph:00",
+            "score": 0.85,
+            "reason": "Menciona directamente cómo LangGraph modela agentes usando StateGraph, estado, nodos, aristas, memoria y control de flujo."
+          },
+          {
+            "chunkId": "c3a59a406888b:s05-langgraph:01",
+            "score": 0.65,
+            "reason": "Muestra un ejemplo práctico de modelado de estado (mensajes, contador) y rutas condicionales entre nodos/herramientas."
+          }
+        ],
+        "assessment": {
+          "status": "sufficient",
+          "reason": "Los fragmentos describen los conceptos centrales de modelado en LangGraph (StateGraph, nodos, aristas, actualizaciones de estado y persistencia).",
+          "gaps": [],
+          "usefulIds": ["c3a59a406888b:s05-langgraph:00", "c3a59a406888b:s05-langgraph:01"]
+        }
+      }
+    },
+    {
+      "id": "partial",
+      "expected": "partial",
+      "durationMs": 1928,
+      "passed": true,
+      "result": {
+        "ok": true,
+        "providerCall": true,
+        "raw": {
+          "ranking": [
+            {
+              "chunkId": "c3a59a406888b:s05-langgraph:00",
+              "score": 0.55,
+              "reason": "Explica los fundamentos de LangGraph (estado, nodos, StateGraph, checkpointer), pero no menciona Langfuse ni LangSmith."
+            },
+            {
+              "chunkId": "c3a59a406888b:s05-langgraph:01",
+              "score": 0.2,
+              "reason": "Detalla un ejercicio práctico con LangGraph sin hacer referencia a instrumentación con Langfuse ni LangSmith."
+            }
+          ],
+          "status": "partial",
+          "reason": "Los fragmentos explican los conceptos básicos de LangGraph, pero no contienen información sobre cómo instrumentar el agente con Langfuse ni LangSmith.",
+          "gaps": [
+            "Cómo instrumentar LangGraph con Langfuse",
+            "Cómo instrumentar LangGraph con LangSmith"
+          ],
+          "usefulIds": ["c3a59a406888b:s05-langgraph:00"]
+        }
+      },
+      "validated": {
+        "ok": true,
+        "ranking": [
+          {
+            "chunkId": "c3a59a406888b:s05-langgraph:00",
+            "score": 0.55,
+            "reason": "Explica los fundamentos de LangGraph (estado, nodos, StateGraph, checkpointer), pero no menciona Langfuse ni LangSmith."
+          },
+          {
+            "chunkId": "c3a59a406888b:s05-langgraph:01",
+            "score": 0.2,
+            "reason": "Detalla un ejercicio práctico con LangGraph sin hacer referencia a instrumentación con Langfuse ni LangSmith."
+          }
+        ],
+        "assessment": {
+          "status": "partial",
+          "reason": "Los fragmentos explican los conceptos básicos de LangGraph, pero no contienen información sobre cómo instrumentar el agente con Langfuse ni LangSmith.",
+          "gaps": [
+            "Cómo instrumentar LangGraph con Langfuse",
+            "Cómo instrumentar LangGraph con LangSmith"
+          ],
+          "usefulIds": ["c3a59a406888b:s05-langgraph:00"]
+        }
+      }
+    },
+    {
+      "id": "combined",
+      "expected": "sufficient",
+      "durationMs": 2280,
+      "passed": false,
+      "result": {
+        "ok": true,
+        "providerCall": true,
+        "raw": {
+          "ranking": [
+            {
+              "chunkId": "c3a59a406888b:s05-langgraph:00",
+              "score": 0.8,
+              "reason": "Explica conceptualmente LangGraph, StateGraph, nodos, aristas, estado y persistencia."
+            },
+            {
+              "chunkId": "c3a59a406888b:s06-observabilidad:00",
+              "score": 0.7,
+              "reason": "Describe los fundamentos de observabilidad, mencionando Langfuse y LangSmith para instrumentar grafos."
+            },
+            {
+              "chunkId": "c3a59a406888b:s06-observabilidad:01",
+              "score": 0.6,
+              "reason": "Detalla el ejercicio práctico de instrumentación de un agente con Langfuse y LangSmith."
+            },
+            {
+              "chunkId": "c3a59a406888b:s05-langgraph:01",
+              "score": 0.5,
+              "reason": "Describe el ejercicio práctico de LangGraph con herramientas y persistencia."
+            }
+          ],
+          "status": "partial",
+          "reason": "Los fragmentos describen qué es LangGraph y los objetivos de observabilidad con Langfuse y LangSmith, pero faltan los pasos técnicos de código para instrumentarlos.",
+          "gaps": [
+            "Pasos técnicos o código específico para instrumentar LangGraph con callbacks o SDKs de Langfuse y LangSmith."
+          ],
+          "usefulIds": [
+            "c3a59a406888b:s05-langgraph:00",
+            "c3a59a406888b:s06-observabilidad:00",
+            "c3a59a406888b:s06-observabilidad:01"
+          ]
+        }
+      },
+      "validated": {
+        "ok": true,
+        "ranking": [
+          {
+            "chunkId": "c3a59a406888b:s05-langgraph:00",
+            "score": 0.8,
+            "reason": "Explica conceptualmente LangGraph, StateGraph, nodos, aristas, estado y persistencia."
+          },
+          {
+            "chunkId": "c3a59a406888b:s06-observabilidad:00",
+            "score": 0.7,
+            "reason": "Describe los fundamentos de observabilidad, mencionando Langfuse y LangSmith para instrumentar grafos."
+          },
+          {
+            "chunkId": "c3a59a406888b:s06-observabilidad:01",
+            "score": 0.6,
+            "reason": "Detalla el ejercicio práctico de instrumentación de un agente con Langfuse y LangSmith."
+          },
+          {
+            "chunkId": "c3a59a406888b:s05-langgraph:01",
+            "score": 0.5,
+            "reason": "Describe el ejercicio práctico de LangGraph con herramientas y persistencia."
+          }
+        ],
+        "assessment": {
+          "status": "partial",
+          "reason": "Los fragmentos describen qué es LangGraph y los objetivos de observabilidad con Langfuse y LangSmith, pero faltan los pasos técnicos de código para instrumentarlos.",
+          "gaps": [
+            "Pasos técnicos o código específico para instrumentar LangGraph con callbacks o SDKs de Langfuse y LangSmith."
+          ],
+          "usefulIds": [
+            "c3a59a406888b:s05-langgraph:00",
+            "c3a59a406888b:s06-observabilidad:00",
+            "c3a59a406888b:s06-observabilidad:01"
+          ]
+        }
+      }
+    }
+  ],
+  "allowance": {
+    "maxSpendUsd": 0.25,
+    "maxGenerativeCalls": 7,
+    "maxEmbeddingCalls": 0,
+    "margin": 1.25,
+    "prices": {
+      "embeddingUsdPerMillionInput": null,
+      "generativeUsdPerMillionInput": 0.75,
+      "generativeUsdPerMillionOutput": 3.75
+    },
+    "nextId": 4,
+    "reservations": [
+      {
+        "id": "r1",
+        "kind": "evaluation",
+        "calls": 1,
+        "worstCaseUsd": 0.01125,
+        "actualUsd": null,
+        "settled": true
+      },
+      {
+        "id": "r2",
+        "kind": "evaluation",
+        "calls": 1,
+        "worstCaseUsd": 0.01125,
+        "actualUsd": null,
+        "settled": true
+      },
+      {
+        "id": "r3",
+        "kind": "evaluation",
+        "calls": 1,
+        "worstCaseUsd": 0.01125,
+        "actualUsd": null,
+        "settled": true
+      }
+    ]
+  }
+}

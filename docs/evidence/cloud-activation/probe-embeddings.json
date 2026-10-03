@@ -1,0 +1,17 @@
+{
+  "at": "2026-10-03T17:03:32.032Z",
+  "accountId": "9c1493e94ba21f2c6872a9dd17ba19f7",
+  "model": "@cf/baai/bge-m3",
+  "dimensions": 1024,
+  "providerRevision": null,
+  "rows": 2,
+  "measuredChargeUsd": null,
+  "provenance": "remote-binding",
+  "live": true,
+  "usableForRemoteIndex": true,
+  "adapter": {
+    "id": "workers-ai-binding",
+    "remote": true,
+    "binding": "AI"
+  }
+}

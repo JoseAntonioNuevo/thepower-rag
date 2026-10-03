@@ -1,0 +1,30 @@
+{
+  "at": "2026-10-03T17:54:58.597241+00:00",
+  "url": "https://rag-thepower.josenuevo.dev",
+  "worker": "thepower-rag",
+  "versionId": "bd989624-8d05-4006-b769-5fe72bd8c1bc",
+  "accountId": "9c1493e94ba21f2c6872a9dd17ba19f7",
+  "databaseId": "86110dc2-321f-4003-85ef-b451d133986a",
+  "profileId": "p76509a5f9743",
+  "corpusVersion": "c3a59a406888b",
+  "contentVersion": "cc037ef0bb1f7",
+  "documents": 22,
+  "chunks": 69,
+  "model": "openai/gpt-6-luna",
+  "serviceTier": "priority",
+  "embedding": "@cf/baai/bge-m3",
+  "dimensions": 1024,
+  "minScore": 0.5,
+  "workerSha256": "91189122de6783ae9f18686fe9bad6fc67a12cb2f9f89a8071395befc953b274",
+  "indexHtmlSha256": "4a68864d20b8d6a1da49cbec3b9458609f4b40765088af5adbe53941c3360283",
+  "tests": {
+    "unit": 89,
+    "entrypoint": 3
+  },
+  "comparison": {
+    "questions": 20,
+    "results": 40,
+    "ragCorrect": 17,
+    "cragCorrect": 18
+  }
+}

@@ -1,0 +1,144 @@
+{
+  "$schema": "./node_modules/wrangler/config-schema.json",
+  "name": "thepower-rag",
+  "account_id": "9c1493e94ba21f2c6872a9dd17ba19f7",
+  "compatibility_date": "2026-10-02",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "../api/src/worker.ts",
+  "assets": {
+    "not_found_handling": "single-page-application",
+    "run_worker_first": ["/api/*"],
+  },
+  "vars": {
+    "APP_MODE": "demo",
+  },
+  "env": {
+    "production": {
+      "name": "thepower-rag",
+      "workers_dev": false,
+      "preview_urls": false,
+      "vars": {
+        "APP_MODE": "real",
+        "RAG_CONTEXT_MODE": "complete",
+        "MODEL_ID": "openai/gpt-6-luna",
+        "EVALUATOR_MODEL_ID": "google/gemini-3.8-flash",
+        "EMBEDDING_MODEL": "@cf/baai/bge-m3",
+        "EMBEDDING_DIMENSIONS": "1024",
+        "CORPUS_VERSION": "c3a59a406888b",
+        "INDEX_PROFILE": "p76509a5f9743",
+        "VECTOR_METRIC": "cosine",
+        "MIN_RETRIEVAL_SCORE": "0.5",
+        "PUBLIC_BUDGET_USD": "4.3",
+        "MODEL_INPUT_USD_PER_MILLION": "0.2",
+        "MODEL_OUTPUT_USD_PER_MILLION": "1",
+        "EVALUATOR_INPUT_USD_PER_MILLION": "0.75",
+        "EVALUATOR_OUTPUT_USD_PER_MILLION": "3.75",
+        "PUBLIC_ORIGIN": "https://rag-thepower.josenuevo.dev",
+        "TURNSTILE_SITE_KEY": "0x4AAAAAAFM78XIBgxEHbTqT",
+      },
+      "ai": {
+        "binding": "AI",
+        "remote": true,
+      },
+      "vectorize": [
+        {
+          "binding": "VECTORIZE",
+          "index_name": "thepower-ai-course-rag-76509a5f9743",
+          "remote": true,
+        },
+      ],
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "thepower-ai-course-rag-d1",
+          "database_id": "86110dc2-321f-4003-85ef-b451d133986a",
+          "migrations_dir": "../api/migrations",
+          "remote": true,
+        },
+      ],
+      "r2_buckets": [
+        {
+          "binding": "CORPUS",
+          "bucket_name": "thepower-ai-course-rag-corpus",
+          "remote": true,
+        },
+      ],
+      "assets": {
+        "not_found_handling": "single-page-application",
+        "run_worker_first": ["/api/*"],
+      },
+      "ratelimits": [
+        {
+          "name": "CHAT_SESSION_LIMITER",
+          "namespace_id": "2026100310",
+          "simple": {
+            "limit": 6,
+            "period": 60,
+          },
+        },
+        {
+          "name": "CHAT_IP_LIMITER",
+          "namespace_id": "2026100311",
+          "simple": {
+            "limit": 120,
+            "period": 60,
+          },
+        },
+      ],
+    },
+    "local": {
+      "name": "thepower-rag-local",
+      "workers_dev": false,
+      "preview_urls": false,
+      "ai": {
+        "binding": "AI",
+        "remote": true,
+      },
+      "vectorize": [
+        {
+          "binding": "VECTORIZE",
+          "index_name": "thepower-ai-course-rag-76509a5f9743",
+          "remote": true,
+        },
+      ],
+      "d1_databases": [
+        {
+          "binding": "DB",
+          "database_name": "thepower-ai-course-rag-d1",
+          "database_id": "86110dc2-321f-4003-85ef-b451d133986a",
+          "migrations_dir": "../api/migrations",
+          "remote": true,
+        },
+      ],
+      "r2_buckets": [
+        {
+          "binding": "CORPUS",
+          "bucket_name": "thepower-ai-course-rag-corpus",
+          "remote": true,
+        },
+      ],
+      "assets": {
+        "not_found_handling": "single-page-application",
+        "run_worker_first": ["/api/*"],
+      },
+      "main": "../api/src/local-worker.ts",
+      "vars": {
+        "APP_MODE": "real",
+        "RAG_CONTEXT_MODE": "complete",
+        "MODEL_ID": "openai/gpt-6-luna",
+        "EVALUATOR_MODEL_ID": "google/gemini-3.8-flash",
+        "EMBEDDING_MODEL": "@cf/baai/bge-m3",
+        "EMBEDDING_DIMENSIONS": "1024",
+        "CORPUS_VERSION": "c3a59a406888b",
+        "INDEX_PROFILE": "p76509a5f9743",
+        "VECTOR_METRIC": "cosine",
+        "MIN_RETRIEVAL_SCORE": "0.5",
+        "MODEL_INPUT_USD_PER_MILLION": "0.2",
+        "MODEL_OUTPUT_USD_PER_MILLION": "1",
+        "EVALUATOR_INPUT_USD_PER_MILLION": "0.75",
+        "EVALUATOR_OUTPUT_USD_PER_MILLION": "3.75",
+        "LOCAL_BUDGET_USD": "4.3",
+      },
+    },
+  },
+}

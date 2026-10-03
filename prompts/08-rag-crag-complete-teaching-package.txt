@@ -1,0 +1,124 @@
+You are Grok 4.7. Prepare the COMPLETE LOCAL TEACHING PACKAGE for the two RAG classes using the existing project at /Users/jose/Documents/the-power/3-rag. Do not rebuild the app or provision/deploy anything to make the materials.
+
+CURRENT HANDOFF, OCTOBER 3: phase 7 passed independent review: 80 offline unit tests, 3 actual CLI/workerd entrypoint tests, checks and build. Read docs/review/phase-7-review.txt and docs/phase-7-verification.md. Use this verified local implementation as the teaching reference. Two narrow remote-verification settings remain documented separately (calibrated threshold and secret injection); do not claim that supplying a budget alone proves the real path. They do not block this local teaching package. Do not execute live integration or change application code as a side task while making the materials.
+
+1. CLASS CONTEXT
+
+- S10, Thursday October 22, 2026, AI Engineer M/J, 18:30-20:00 Europe/Madrid: no-RAG and basic RAG.
+- S11, Tuesday October 27, 2026, same cohort/time: evolve the same assistant to CRAG.
+- 90 minutes each INCLUDING questions. The app is prebuilt; the live lesson explains and executes prepared stages, not installs/builds the whole monorepo.
+- The assistant covers the COMPLETE S1-S20 AI Engineer course and all teachers, with separate cohorts. It is not a fictional company and not only Jose's classes.
+- The user explicitly approved Cloudflare Vectorize/D1/R2 for this test chat instead of the original pgvector exercise stack. Document the adaptation; do not pretend it was a school-wide change or rewrite S9's actual PostgreSQL topic.
+- Students know introductory Python/LLM concepts; the demo is TypeScript/Hono/AI SDK/LangGraph.js. Explain short code excerpts plainly, with a small syntax bridge if needed, not a second Python implementation.
+
+Read the actual README, phase verification documents, corpus coverage, graph/demo walkthrough, approved source curriculum/calendars and available review findings. Reflect the current verified state: phase 7 is locally verified, while remote integration/calibration remain pending. Local fixtures are not real model/Vectorize results. Do not invent executable live commands or screenshot data.
+
+2. STYLE REFERENCES AND QR
+
+Use the existing integrated LangGraph deck as the main visual reference, READ-ONLY:
+/Users/jose/Documents/the-power/presentaciones/S5-LangGraph-integrada-2026.pptx
+Its PDF is beside it. Also reference S6-Observabilidad-integrada-2026.pptx if useful. These are source decks to inspect/adapt, not files to overwrite.
+
+Preserve the established navy/cyan/blue/purple/pink style and consistent typography/layout hierarchy. Follow available presentation/template skills and inspect the reference. Editable text, shapes, connectors and tables are required; do not flatten whole slides into screenshots. Real app screenshots are legitimate content and must identify execution mode/date/profile.
+
+Original AI Engineer QR:
+/Users/jose/Documents/the-power/1-langGraph/material/assets/qr-ai-engineer.jpg
+Provenance:
+/Users/jose/Documents/the-power/1-langGraph/material/assets/qr-origen.md
+
+Copy the original QR unchanged into this package, verify decoding/legibility, and place it at the start and closing/reference slide. Explain that it evaluates the PREVIOUS class. S10 follows M/J S9 on October 20; S11 follows our S10. Do not substitute a different program QR or invent a new feedback URL. Do not send an evaluation.
+
+3. DELIVERABLES
+
+All main outputs belong under 3-rag/material with one clear index:
+- S10-rag-basico.pptx and PDF backup.
+- S11-crag.pptx and PDF backup.
+- Spanish teacher scripts in Markdown and a readable PDF/print backup if the environment supports it.
+- Teacher notes, pre-class checklist, troubleshooting/fallback, exact commands and expected results.
+- Student exercise statements and separate teacher reference solution/assessment criteria.
+- Requirement/example/evidence matrix.
+- Local screenshot/evidence register with actual provenance and pending remote items.
+- Technical rehearsal timing record, separate from Jose's still-pending oral rehearsal.
+- Student and teacher ZIPs if useful, with no credentials, local database/cache, node_modules, recursive ZIPs or unpublished private source correspondence.
+
+Only additional permitted parent writes are NEW S10/S11 local copies in /Users/jose/Documents/the-power/presentaciones/ with clear 2026 filenames. Never overwrite S5-S8 or unrelated files. Do not modify neighboring project code/dependencies/source decks. No commit/push/Drive publication or message to Laura.
+
+4. PRESENTATION CONTENT
+
+Each deck: Spanish, 16:9, 12 main slides and up to 3 reference slides, short text/code, native diagrams and speaker notes. Adapt the reference design to the actual RAG/CRAG topic; replace stale session numbers, dates, notes, model claims and diagrams. Prefer the reference's reusable native layouts rather than inventing a new visual theme.
+
+S10 narrative:
+1. Course-assistant goal and staged product.
+2. QR and prerequisites/objectives.
+3. Same question without documents: abstention/generic response is acceptable; do not force hallucination to prove a point.
+4. Approved full-course corpus, provenance and cohort separation.
+5. Preparation versus query-time pipeline.
+6. Chunking, IDs and embeddings.
+7. Vectorize retrieval, filters and score meaning.
+8. Inspect retrieval before generation.
+9. Context/answer/citations with the mini chat.
+10. Missing evidence, clarification and safe refusal.
+11. Updating/reindexing a controlled document and evaluation protocol.
+12. Exercise/delivery and transition to CRAG.
+
+S11 narrative:
+1. A limitation of the existing basic RAG.
+2. QR and objectives.
+3. RAG versus our corrective adaptation; complexity/latency/cost tradeoff.
+4. LangGraph state, nodes, routes and original question versus search query.
+5. Actual applied reranking; score is not probability.
+6. Sufficient/partial/insufficient evidence.
+7. Retain/merge/deduplicate.
+8. Discard/reformulate/search again.
+9. Three searches/two rewrites, global deadline and controlled errors.
+10. Visible graph trace and final allowed sources.
+11. Fair basic-RAG/CRAG comparison protocol; no guaranteed CRAG win.
+12. Exercise and delivery criteria.
+
+Reference slides can carry full architecture, configuration/recovery commands and closing QR. Do not pack every internal file or administrative/budget setting into the student slides.
+
+5. FOLLOWABLE TEACHER SCRIPTS
+
+For every time block, say what Jose says, which slide/window/file he opens, exactly what he runs/clicks, why, what should appear, what to point out, and how to recover/skip if it fails. Scripts must be usable during the class without reconstructing this conversation. Use actual current commands/routes/controls; verify each before claiming it works.
+
+S10 timing:
+0-10 QR/objectives/no-RAG opening;
+10-25 corpus/chunks/embeddings;
+25-40 preparation and retrieval inspection;
+40-60 grounded answer/citations/chat;
+60-75 refusal, cohort filters, update and evaluation;
+75-80 exercise;
+80-90 questions.
+
+S11 timing:
+0-10 QR/basic-RAG limitation;
+10-25 applied ranking and evidence sufficiency;
+25-45 graph/evaluator/routes;
+45-65 partial/insufficient cases and limits;
+65-75 fair comparison, latency and actual/unknown cost;
+75-80 exercise;
+80-90 questions.
+
+Use the six prepared CRAG development cases and honest fixture labels for reliable rehearsal. Include a short free-form case and explain lexical demo limitations. A scripted success does not measure model quality. A synthetic document update must be isolated/labeled and must not pollute the real course facts.
+
+Prepare offline fallback steps, saved screenshots and an exact transition back to slides. If remote services remain unverified, provide the offline path as tested and the live activation as a clearly pending teacher checklist. Do not call copied snapshots current service results.
+
+6. EXERCISES AND COMPARISON PREPARATION
+
+Write accessible Spanish statements for the adapted course-assistant practice. Distinguish the original sent requirements, the user-authorized demo adaptation, and optional extensions. Do not invent new school mandates or require students to pay for cloud hosting. A local test path is sufficient for practice.
+
+S10: reproducible corpus/preparation, embeddings/retrieval/filtering, one-search grounded response, resolvable sources and rejection. S11: evolve the same project with applied ranking, evidence decisions, preservation/discard/rewrite, limits and trace; keep the basic baseline.
+
+Prepare a separate, frozen reserved set of twenty NEW questions for later comparison: fourteen answerable and six absent/unsupported, with expected answers/source IDs or refusal reasons defined before execution. Exclude the six development demos and calibration examples. Provide manual criteria for correctness, source support, appropriate refusal, retrieval attempts, latency and actual/unknown usage/cost.
+
+Do not execute the reserved set against services or fabricate a results table. If actual comparison results do not exist, label the protocol planned and metrics pending. It needs a separate authorized batch budget. Keep the same answer model/parameters/corpus/profile and clean conversations for both systems; no tuning after seeing the test.
+
+7. QA AND HONEST CLOSURE
+
+Use available presentation/PDF tools and bundled workspace dependencies. Render EVERY slide and inspect overflow, contrast, fonts, diagrams, QR, links, speaker notes and timings. Fix actual issues. Check all local file links and ZIP contents. Do not claim PowerPoint-native acceptance if only PDF rendering was performed.
+
+Run each teacher demo command/interaction locally and record technical timings; do not call that a 90-minute oral rehearsal. Do not run unrelated tests repeatedly if code inputs have not changed. Preserve secrets/project isolation and follow OpenViking mapping policy without using another tenant.
+
+Final Spanish report links each local deliverable and distinguishes materials, local demo verification, remote integration/comparison, public deployment and Jose's oral rehearsal. Missing remote inputs do not prevent completing all independent materials; they do prevent claiming the classes 100% verified.
+
+Proceed with this local teaching package now.

@@ -1,0 +1,17 @@
+Phase 4 independent review — October 3, 2026, Europe/Madrid
+
+Repeated checks: frozen Bun install (183 installs / 335 packages), formatting (109 files), clean lint/types (57 TypeScript files), 49 passing tests in nine files, frontend/Worker build (2,977.70 kB), demo RAG preflight, and activation dry-run. No live APIs, provisioning, paid requests or deployment were executed in this review. UI code did not change; earlier browser evidence was not repeated as if new.
+
+Implemented improvements confirmed in source: awaited command outcomes, operation-specific requirements, scoped account selection, durable ingest_items writes, batch mutation receipts, pending-visibility versus failure, profile-scoped manifests, administrative metric parsing and preservation of earlier active data.
+
+Important remaining distinction:
+scripts/course-executor.ts has connected identify/inventory/provision/migrate and other management operations, but probeEmbeddings(), ingest() and verify() still return fixed refusals. They cannot become live operations merely by supplying .activation.json. The CLI resume() currently reads administrative index configuration/metadata; the core's real journal/visibility resumption exists separately. The core and CLI integration are different completion levels. Implement the remaining bridge before claiming live probe/ingestion/generative verification; current remote status correctly remains pending.
+
+Confirmed inventory parsing issue:
+inventory() treats any exit-0 Vectorize list response as a confirmed list. courseIndexNames() returns [] for malformed/non-array data. An isolated injected runner returned exit 0 with synthetic non-JSON text; inventory returned ok=true and reported Vectorize absent. No remote calls occurred. Strictly validate the expected CLI/API envelope before interpreting an empty list as absence. A malformed response must be an unconfirmed read, and must not trigger resource creation. Apply the same distinction to metadata list/config reads.
+
+Preserved project facts: corpus content cc037ef0bb1f7, preparation c3a59a406888b, fixture profile p9e8e8e03627e; curriculum and calendars complete from available sources, exercise details partial. Account destination is 9c1493e94ba21f2c6872a9dd17ba19f7, supplied/verified earlier; no fresh account inventory was requested or implied by this local review. Budget/model/external operation permissions remain unresolved.
+
+Next local phase: implement CRAG with LangGraph.js on the same application and injected offline providers, preserving the no-RAG and basic-RAG baselines. Missing live inputs do not prevent verifying bounded control flow. Do not call scripted fixture behavior a quality improvement or remote integration.
+
+Added only review/prompt artifacts. Application code, dependencies, corpus and activation settings were not changed by this review. No commit/push/publication. OpenViking exact project mapping remains unavailable; no foreign tenant is used.

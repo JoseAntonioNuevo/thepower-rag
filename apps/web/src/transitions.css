@@ -1,0 +1,504 @@
+/* transitions.dev catalog for the chat. Selectors stay as published. */
+
+:root {
+  --think-hold: 2000ms;
+  --think-swap: 150ms;
+  --think-gap: 50ms;
+  --think-distance: 8px;
+  --think-blur: 2px;
+  --think-shimmer: 2000ms;
+  --think-base: #7c7c7c;
+  --think-highlight: #0d0d0d;
+  --think-ease: ease-in-out;
+  --stream-gap: 60ms;
+  --stream-fade: 350ms;
+  --stream-blur: 1px;
+  --stream-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --matrix-cycle: 1200ms;
+  --matrix-base: #d9d9d9;
+  --matrix-active: #85858f;
+  --matrix-ease: ease-in-out;
+  --shake-distance: 6px;
+  --shake-overshoot: 4px;
+  --shake-dur-a: 80ms;
+  --shake-dur-b: 60ms;
+  --shake-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --revert-hold: 3000ms;
+  --revert-dur: 280ms;
+  --stagger-dur: 500ms;
+  --stagger-distance: 12px;
+  --stagger-stagger: 40ms;
+  --stagger-blur: 3px;
+  --stagger-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --panel-open-dur: 400ms;
+  --panel-close-dur: 350ms;
+  --panel-translate-y: 100px;
+  --panel-blur: 2px;
+  --panel-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --tabs-dur: 250ms;
+  --tabs-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --tabs-text-muted: #57534e;
+  --tabs-text-active: #1c1917;
+  --tabs-bar-bg: #e7e2d8;
+  --tabs-pill-bg: #fffcf7;
+  --acc-expand: 250ms;
+  --acc-collapse: 250ms;
+  --acc-chevron: 250ms;
+  --acc-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  --pulse-dur: 1000ms;
+  --pulse-count: 1;
+  --pulse-min: 0.5;
+  --reveal-dur: 400ms;
+  --reveal-blur: 2px;
+  --reveal-ease: ease-in-out;
+}
+
+.t-think {
+  position: relative;
+  display: inline-block;
+  text-align: center;
+}
+.t-think-sizer {
+  display: block;
+  visibility: hidden;
+  white-space: nowrap;
+}
+.t-think-text {
+  position: absolute;
+  top: 0;
+  left: 0;
+  right: 0;
+  display: block;
+  color: var(--think-base);
+  white-space: nowrap;
+  transform: translateY(0);
+  filter: blur(0);
+  opacity: 1;
+  transition:
+    transform var(--think-swap) var(--think-ease),
+    filter var(--think-swap) var(--think-ease),
+    opacity var(--think-swap) var(--think-ease);
+  will-change: transform, filter, opacity;
+}
+.t-think-text::before {
+  content: attr(data-text);
+  position: absolute;
+  inset: 0;
+  pointer-events: none;
+  background-image: linear-gradient(
+    90deg,
+    transparent 0%,
+    transparent 40%,
+    var(--think-highlight) 50%,
+    transparent 60%,
+    transparent 100%
+  );
+  background-size: 400% 100%;
+  background-repeat: no-repeat;
+  -webkit-background-clip: text;
+  background-clip: text;
+  color: transparent;
+  -webkit-text-fill-color: transparent;
+  animation: t-think-shimmer var(--think-shimmer) linear infinite;
+}
+@keyframes t-think-shimmer {
+  0% {
+    background-position: 100% 0;
+  }
+  100% {
+    background-position: 0% 0;
+  }
+}
+.t-think-text.is-exit {
+  transform: translateY(calc(var(--think-distance) * -1));
+  filter: blur(var(--think-blur));
+  opacity: 0;
+}
+.t-think-text.is-enter-start {
+  transition: none;
+  transform: translateY(var(--think-distance));
+  filter: blur(var(--think-blur));
+  opacity: 0;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .t-think-text {
+    transition: none !important;
+    transform: none !important;
+    filter: none !important;
+  }
+  .t-think-text::before {
+    display: none !important;
+  }
+}
+
+.t-stream-w {
+  opacity: 0;
+  filter: blur(var(--stream-blur));
+  transition:
+    opacity var(--stream-fade) var(--stream-ease),
+    filter var(--stream-fade) var(--stream-ease);
+}
+.t-stream-w.is-in {
+  opacity: 1;
+  filter: blur(0);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .t-stream-w {
+    transition: none !important;
+    filter: none !important;
+    opacity: 1 !important;
+  }
+}
+
+.t-matrix {
+  display: grid;
+  grid-template-columns: repeat(4, 2px);
+  grid-auto-rows: 2px;
+  gap: 2px;
+}
+.t-matrix i {
+  display: block;
+  background: var(--matrix-base);
+  animation: t-matrix-pulse var(--matrix-cycle) var(--matrix-ease) infinite;
+  animation-delay: calc(var(--d, 0) * 1ms);
+}
+.t-matrix i.is-gap {
+  visibility: hidden;
+  animation: none;
+}
+@keyframes t-matrix-pulse {
+  0%,
+  45%,
+  100% {
+    background-color: var(--matrix-base);
+  }
+  15% {
+    background-color: var(--matrix-active);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .t-matrix i {
+    animation: none !important;
+  }
+}
+
+.t-input {
+  transition: border-color 150ms ease-out;
+  will-change: transform;
+}
+.t-input.is-error {
+  transition: border-color var(--revert-dur, 280ms) ease-out;
+}
+
+.t-error-msg {
+  opacity: 0;
+  visibility: hidden;
+  transition:
+    opacity var(--revert-dur, 280ms) ease-out,
+    visibility 0s linear var(--revert-dur, 280ms);
+}
+.t-input-wrap.is-error .t-error-msg {
+  opacity: 1;
+  visibility: visible;
+  transition:
+    opacity var(--revert-dur, 280ms) ease-out,
+    visibility 0s linear 0s;
+}
+
+.t-input.is-shaking {
+  animation: t-input-shake calc(var(--shake-dur-a) * 2 + var(--shake-dur-b) * 2) linear;
+}
+@keyframes t-input-shake {
+  0% {
+    transform: translateX(0);
+    animation-timing-function: var(--shake-ease);
+  }
+  28.57% {
+    transform: translateX(var(--shake-distance));
+    animation-timing-function: var(--shake-ease);
+  }
+  57.14% {
+    transform: translateX(calc(var(--shake-distance) * -1));
+    animation-timing-function: var(--shake-ease);
+  }
+  78.57% {
+    transform: translateX(var(--shake-overshoot));
+    animation-timing-function: var(--shake-ease);
+  }
+  100% {
+    transform: translateX(0);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .t-input {
+    animation: none !important;
+    transform: none !important;
+  }
+}
+
+.t-stagger-line {
+  display: block;
+  opacity: 0;
+  transform: translateY(var(--stagger-distance));
+  filter: blur(var(--stagger-blur));
+  transition:
+    opacity var(--stagger-dur) var(--stagger-ease),
+    transform var(--stagger-dur) var(--stagger-ease),
+    filter var(--stagger-dur) var(--stagger-ease);
+  will-change: transform, opacity, filter;
+}
+.t-stagger-line--2 {
+  transition-delay: var(--stagger-stagger);
+}
+
+.t-stagger-line--3 {
+  transition-delay: calc(var(--stagger-stagger) * 2);
+}
+
+.t-stagger.is-shown .t-stagger-line {
+  opacity: 1;
+  transform: translateY(0);
+  filter: blur(0);
+}
+.t-stagger.is-hiding .t-stagger-line {
+  opacity: 0;
+  transform: translateY(0);
+  filter: blur(0);
+  transition:
+    opacity 200ms ease,
+    transform 0s linear,
+    filter 0s linear;
+  transition-delay: 0s;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .t-stagger-line {
+    transition: none !important;
+  }
+}
+
+.t-panel-slide {
+  transform: translateY(var(--panel-translate-y));
+  opacity: 0;
+  filter: blur(var(--panel-blur));
+  pointer-events: none;
+  transition:
+    transform var(--panel-close-dur) var(--panel-ease),
+    opacity var(--panel-close-dur) var(--panel-ease),
+    filter var(--panel-close-dur) var(--panel-ease);
+  will-change: transform, opacity, filter;
+}
+.t-panel-slide[data-open="true"] {
+  transform: translateY(0);
+  opacity: 1;
+  filter: blur(0);
+  pointer-events: auto;
+  transition:
+    transform var(--panel-open-dur) var(--panel-ease),
+    opacity var(--panel-open-dur) var(--panel-ease),
+    filter var(--panel-open-dur) var(--panel-ease);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .t-panel-slide {
+    transition: none !important;
+  }
+}
+
+.conversation-status {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 28px;
+  margin: 4px 0 8px;
+}
+
+.conversation-status .t-think {
+  text-align: left;
+  flex: 0 0 auto;
+}
+
+.status-loader {
+  display: inline-grid;
+  width: 14px;
+  height: 14px;
+  flex: 0 0 14px;
+}
+
+.conversation-status .t-think[data-live="false"] .t-think-text::before {
+  display: none;
+}
+
+.transcript .t-panel-slide,
+.panel .t-panel-slide,
+.panel.t-panel-slide {
+  --panel-translate-y: 12px;
+}
+
+.conversation .t-input.error {
+  border: 1px solid #fecaca;
+}
+
+.conversation .t-input.error.is-error {
+  border-color: #b91c1c;
+}
+
+.conversation .t-error-msg {
+  margin: 0;
+}
+
+.t-stream {
+  margin: 0;
+  white-space: pre-wrap;
+}
+
+.t-tabs {
+  position: relative;
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 3px;
+  border-radius: 48px;
+  background: var(--tabs-bar-bg);
+}
+
+.t-tabs-pill {
+  position: absolute;
+  top: 3px;
+  left: 0;
+  height: 30px;
+  width: 0;
+  background: var(--tabs-pill-bg);
+  border-radius: 48px;
+  transform: translateX(0);
+  transition:
+    transform var(--tabs-dur) var(--tabs-ease),
+    width var(--tabs-dur) var(--tabs-ease);
+  will-change: transform, width;
+  z-index: 0;
+  pointer-events: none;
+}
+
+.t-acc-panel {
+  display: grid;
+  grid-template-rows: 0fr;
+  transition: grid-template-rows var(--acc-collapse) var(--acc-ease);
+}
+
+.t-acc[data-open="true"] .t-acc-panel {
+  grid-template-rows: 1fr;
+  transition: grid-template-rows var(--acc-expand) var(--acc-ease);
+}
+
+.t-acc-panel-inner {
+  overflow: hidden;
+  opacity: 0;
+  filter: blur(2px);
+  transition:
+    opacity var(--acc-collapse) var(--acc-ease),
+    filter var(--acc-collapse) var(--acc-ease);
+}
+
+.t-acc[data-open="true"] .t-acc-panel-inner {
+  opacity: 1;
+  filter: blur(0);
+  transition:
+    opacity var(--acc-expand) var(--acc-ease),
+    filter var(--acc-expand) var(--acc-ease);
+}
+
+.t-acc-chevron {
+  display: inline-flex;
+  transform: scaleY(1);
+  transform-origin: center;
+  transition: transform var(--acc-chevron) var(--acc-ease);
+}
+
+.t-acc-chevron path {
+  vector-effect: non-scaling-stroke;
+}
+
+.t-acc[data-open="true"] .t-acc-chevron {
+  transform: scaleY(-1);
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .t-tabs-pill,
+  .t-acc-panel,
+  .t-acc-panel-inner,
+  .t-acc-chevron {
+    transition: none !important;
+  }
+}
+
+.t-skel {
+  position: relative;
+}
+
+.t-skel-skeleton,
+.t-skel-content {
+  position: absolute;
+  inset: 0;
+}
+
+.t-skel-skeleton {
+  z-index: 1;
+  opacity: 1;
+  filter: blur(0);
+  transition:
+    opacity var(--reveal-dur) var(--reveal-ease),
+    filter var(--reveal-dur) var(--reveal-ease);
+}
+
+.t-skel-content {
+  z-index: 2;
+  opacity: 0;
+  filter: blur(var(--reveal-blur));
+  transition:
+    opacity var(--reveal-dur) var(--reveal-ease),
+    filter var(--reveal-dur) var(--reveal-ease);
+}
+
+.t-skel.is-revealed .t-skel-skeleton {
+  opacity: 0;
+  filter: blur(var(--reveal-blur));
+}
+
+.t-skel.is-revealed .t-skel-content {
+  opacity: 1;
+  filter: blur(0);
+}
+
+.t-skel.is-resetting .t-skel-skeleton,
+.t-skel.is-resetting .t-skel-content {
+  transition: none !important;
+}
+
+.t-skel-skeleton.is-pulsing > * {
+  animation: t-skel-pulse var(--pulse-dur) ease-in-out var(--pulse-count);
+}
+
+@keyframes t-skel-pulse {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: var(--pulse-min);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .t-skel-skeleton,
+  .t-skel-content {
+    transition: none !important;
+  }
+
+  .t-skel-skeleton.is-pulsing > * {
+    animation: none !important;
+  }
+}

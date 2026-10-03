@@ -1,0 +1,42 @@
+{
+  "purpose": "Casos de desarrollo del grafo CRAG. No son la comparación reservada de veinte preguntas ni un resultado de calidad.",
+  "corpusPreparation": "c3a59a406888b",
+  "cases": [
+    {
+      "id": "sufficient-s5",
+      "route": "sufficient -> answer",
+      "question": "¿Cómo modela LangGraph un agente con estado y nodos?",
+      "expected": "Una búsqueda, sin reformulación, cita solo S5."
+    },
+    {
+      "id": "partial-s5-s6",
+      "route": "partial -> retain -> reformulate -> sufficient -> answer",
+      "question": "¿Cómo modela LangGraph el estado de un agente y cómo se observa esa ejecución?",
+      "expected": "Conserva S5, recupera S6, deduplica y cita las dos fichas."
+    },
+    {
+      "id": "irrelevant-then-s6",
+      "route": "insufficient -> discard -> reformulate -> sufficient -> answer",
+      "question": "¿Qué cubre la sesión de observabilidad del programa?",
+      "expected": "Descarta S16 y responde solo con S6."
+    },
+    {
+      "id": "missing-info",
+      "route": "insufficient hasta el límite -> refuse",
+      "question": "¿Qué beca interna del año 1991 cubre este programa?",
+      "expected": "Tres búsquedas, dos reformulaciones y rechazo sin generación."
+    },
+    {
+      "id": "clarify-cohort",
+      "route": "clarify -> end",
+      "question": "¿Cuándo es la sesión de RAG avanzado?",
+      "expected": "Pide L/X o M/J antes de buscar, evaluar o generar."
+    },
+    {
+      "id": "evaluator-error",
+      "route": "error -> end",
+      "question": "Provoca un fallo controlado del evaluador de prueba.",
+      "expected": "Una evaluación inválida, sin reintento ni respuesta generada."
+    }
+  ]
+}

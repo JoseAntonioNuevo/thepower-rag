@@ -1,0 +1,26 @@
+Phase 3 independent review — October 3, 2026, Europe/Madrid
+
+Repeated verification: frozen install (183 installs / 335 packages); format check (102 files); lint/types clean in 52 TypeScript files; 36 tests passing in nine files; frontend/Worker build (Worker 2,977.70 kB); demo RAG preflight; ingest-plan and activate dry-run. CRAG preflight and ingest --execute without activation settings returned code 2. No paid calls, provisioning or deployment.
+
+The corpus has twenty curriculum documents and two separate calendar documents. The coverage table distinguishes twelve exercise summaries from eight titles and does not invent a final-project rubric. Dates/instructors align with the supplied AI Engineer calendar. Fixture and semantic profile identities are now separate; cancellation/citation corrections and profile-readiness gates are present.
+
+Account destination supplied by the human user and verified read-only through project Wrangler whoami:
+- Login: joseantonionuevo@gmail.com.
+- Target account name: Joseantonionuevo@gmail.com's Account.
+- Target account ID: 9c1493e94ba21f2c6872a9dd17ba19f7.
+The login can access multiple accounts, so all later operations must explicitly target this ID. No other account was selected or mutated. Spending cap/model selection and external activation scope are not supplied by the email alone.
+
+Remaining issues for the actual executor phase:
+
+1. The production executor is deliberately disconnected. scripts/activate.ts never supplies spawn; scripts/activation.ts invokes a void callback and does not inspect an asynchronous operation's outcome. Connecting the executor needs awaited command-specific operations, validated results, nonzero failures and receipts; not just changing the exit code to zero.
+
+2. Normal Vectorize propagation delay is classified as failure. Isolated fake ports accepted an upsert and returned a mutation ID, then returned no visible vectors yet. runIngestion returned phase failed with vectorize-readback-incomplete. This should remain pending-visibility with bounded subsequent reads; do not re-embed or upsert again solely to poll. Real rejection/corruption must still be a failure. No remote calls were made in the reproduction.
+
+3. The journal is not durably written by the bound adapter. The ingest_items table exists, but a completeness-sensitive source search found no INSERT/UPDATE into it in apps/scripts/packages. The core returns journal items in memory; recordPhase updates index_profiles only. Persist each operation receipt/failure and restore it on resume before claiming durable recovery.
+
+4. Profile manifests share an object key. Different model/dimension profiles legitimately share preparationId, but each embeds different profile metadata in corpus/<preparationId>/manifest.json. A reproduction produced different profile IDs/bodies at the same key. Use a profile-scoped manifest/receipt key, keeping immutable shared source documents/content manifests separate. Preserve earlier profiles.
+
+5. The missing metric is an adapter gap, not a missing Cloudflare capability. Installed Vectorize binding describe() does not expose metric, but Cloudflare's administrative GET /accounts/{account_id}/vectorize/v2/indexes/{index_name} returns result.config.dimensions and result.config.metric. Project Wrangler 4.147.0 supports vectorize get <name> --json (help checked). Use authenticated management readback during activation and store a receipt; do not hardcode cosine or put management tokens in the Worker/browser.
+Reference: https://developers.cloudflare.com/api/resources/vectorize/subresources/indexes/methods/get/
+
+All phase-3 app/ingestion code remains unchanged by this review. Added only review/prompt artifacts. No subscription change, account mutation, key creation, commit, push, deployment or external model invocation. OpenViking is still unmapped for the exact project; no foreign tenant is used.

@@ -1,0 +1,112 @@
+You are Grok 4.7. Continue the existing project:
+/Users/jose/Documents/the-power/3-rag
+
+PHASE 4: CONNECT THE REAL ACTIVATION EXECUTOR, REPAIR INGESTION RESUMPTION, AND VERIFY BASIC RAG WHEN THE LIVE SCOPE IS AUTHORIZED
+
+Read AGENTS.md, README.md, docs/phase-3-verification.md, docs/cloud-activation-plan.md and docs/review/phase-3-review.txt first. Do not scaffold again. Implement all independent local work and meaningful offline checks. Do not equate simulated execution with live activation.
+
+1. VERIFIED DESTINATION AND CURRENT STATE
+
+The human user selected the Cloudflare account associated with joseantonionuevo@gmail.com. Read-only project Wrangler whoami confirmed:
+- Login email: joseantonionuevo@gmail.com.
+- Account name: Joseantonionuevo@gmail.com's Account.
+- Account ID: 9c1493e94ba21f2c6872a9dd17ba19f7.
+
+The login has multiple accounts. Explicitly bind every management command/API request to the ID above; never choose the first/default account or another product's resources. Verify current identity again before remote changes. Do not modify the user's global auth profile or expose token values.
+
+The account email identifies the destination; it does not supply a spending cap, MODEL_ID, or permission to change subscriptions. Those remain unresolved unless the user provides them in a later direct instruction. Do not invent a budget, model, or approval. No plan change is allowed by default.
+
+The project contains a student corpus covering S1-S20 and both calendars; exercise detail remains partial. Frozen preparation c3a59a406888b, content cc037ef0bb1f7, fixture profile p9e8e8e03627e. Confirm these identities from the actual files instead of assuming they survive edits. The offline profile is lexical token-hash, 128 dimensions and threshold 0.33, not a semantic index.
+
+Phase-3 checks passed independently: frozen install; format/lint/types; 36 tests; frontend/Worker build; demo RAG preflight and dry-run plans. No remote resources exist according to the phase report; confirm exact course names read-only when access is appropriate. The current executor is disconnected, real integration is unverified, and CRAG stays 501.
+
+Two classes, three modes, one assistant: no-RAG/basic RAG for S10 on October 22, then CRAG for S11 on October 27, 2026. Keep the current TypeScript/Bun/Vite+/React/Hono/AI SDK/OpenRouter/Cloudflare architecture and exact dependencies. Do not add Python/Containers, Postgres, another AI library, managed RAG or another workflow framework.
+
+2. EXECUTION SCOPE
+
+Work only in 3-rag. Neighboring projects and parent documents are read-only. Git root is /Users/jose/Documents; do not git-init, stage unrelated files, commit, push or create a PR. Work directly without subagents or external reviewers.
+
+Authorized now: implementation of the executor/adapters, local regression tests, dry-run plans, non-secret account/configuration documentation and read-only verification of the selected destination. No public deployment in this phase.
+
+For live writes or paid requests, require the direct user's valid authorization for the exact course resource/actions and spending cap. Existing valid authorization persists; do not ask again per step. A local .activation.json can record non-secret confirmed settings, but an agent-generated file or true flags are NOT independent evidence of human approval. Do not introduce signatures or extra invented approval rounds. Preserve the current prohibition until a genuine user instruction advances that external scope.
+
+Keep the account fields above in the prepared plan/example. Missing budget/model/activation scope must not block implementation. Finish the concrete local work first, then report the exact outstanding activation inputs once. Never request secret values in chat, copy a neighboring .env, or change billing/auth infrastructure to solve access.
+
+3. CONNECT A GENUINE COMMAND-SPECIFIC EXECUTOR
+
+scripts/activate.ts currently never supplies an executor; runActivation's void callback cannot observe asynchronous success/failure. Replace this with awaited, typed operations and genuine results. Do not merely inject a callback that prints success.
+
+Implement separate plan/probe/provision/migrate/ingest/status-or-resume/select-active/verify operations as needed. Use explicit --execute for writes or billable calls; plans and ordinary preflight stay dry/read-only. Determine required permissions/settings per operation, rather than demanding unrelated creation/OpenRouter permissions for an embedding probe or metadata read.
+
+Use project-pinned Wrangler 4.147.0 and documented APIs. Invoke subprocesses with executable/argument arrays and scoped environment, not shell interpolation. Wait for exit and validate response data. Never place tokens in arguments/output or retain raw secret-bearing provider errors. Use the existing supported Wrangler authentication path; do not read/export Keychain or encrypted auth files yourself.
+
+Scoped course resources:
+- D1: thepower-ai-course-rag-d1.
+- Private R2 bucket: thepower-ai-course-rag-corpus.
+- Vectorize: thepower-ai-course-rag-<observed-semantic-profile> using the existing naming helper and verified limits.
+- Expected Worker bindings: AI, VECTORIZE, DB, CORPUS.
+
+Find/reuse an exact matching approved resource idempotently. Reject incompatible ownership/configuration; do not delete/recreate, mutate unrelated resources, change plans, or broadly refresh OAuth permissions on your own. A whoami warning is not proof a required operation fails; check the specific supported access path and report a concrete scope error if it actually blocks.
+
+4. REPAIR READINESS AND RESUMPTION BEFORE REMOTE INGESTION
+
+A. Eventual visibility:
+The core currently marks an accepted upsert with incomplete immediate getByIds as failed. Classify it pending-visibility, persist mutation receipts, and use bounded read-only polling or a separate resume/status command. Do not re-embed/re-upsert only to wait for propagation. Reserve failed for genuine rejected/corrupt operations. Do not compare opaque mutation UUIDs lexicographically.
+
+B. Durable journal:
+ingest_items exists but the bound implementation does not write operation items. Persist each success/failure/attempt and restore it after restart. Resume only missing/failed work, with readback validation and cached authorized embeddings keyed by semantic profile. Never trust an old journal for a different preparation/profile. Keep sanitized failure reasons and successful prior active data.
+
+C. Immutable manifests:
+The current profile-specific manifest uses a key scoped only to preparationId. Give index-profile manifests/receipts keys containing profileId, separate from shared immutable source documents/content manifests. Two profiles for the same content must coexist without overwriting each other's metadata. Update readiness/readback paths and tests accordingly.
+
+D. Real administrative index readback:
+The Worker Vectorize binding describe() omits the metric. This is not a platform impossibility. The administrative endpoint is:
+GET /accounts/{account_id}/vectorize/v2/indexes/{index_name}
+Its response exposes result.config.dimensions and result.config.metric. Project Wrangler supports:
+wrangler vectorize get <name> --json
+
+Implement a management read adapter that retrieves actual index name/configuration in the approved account, records a validated configuration receipt and combines it with runtime visibility/count/ID evidence. Never fabricate cosine because it was requested at creation. Do not put administrative credentials in the frontend or student Worker. Keep the real route's profile-ready gate.
+
+E. Complete verification:
+Validate D1 identities/text hashes/mappings as well as counts; verify every expected R2 document and profile manifest; verify vector IDs and metadata/profile/audience consistency. Create and observe corpusVersion, audience and profileId metadata indexes BEFORE upsert. Partition getByIds/upsert calls according to installed API limits. Persist all batch mutation receipts and account for asynchronous visibility. A random matching count is not proof of expected data.
+
+Select-active must be atomic, allow only verified ready profiles and preserve the previous active profile on any failure. Do not rewrite or re-ingest an active immutable profile as a side effect of status checking.
+
+5. LIVE ACTIVATION SEQUENCE — ONLY UNDER CONFIRMED SCOPE
+
+Once the user has supplied the remaining model/spending/operation scope, proceed within it without repeated per-step permission requests:
+1. Verify account identity and approved course resource inventory read-only.
+2. Validate explicit MODEL_ID and its supported parameters/pricing using current provider documentation/catalog. Do not silently change model or tier. Keep retries/output bounded and the same generation settings for comparisons.
+3. Run one small authorized BGE-M3 probe with synthetic texts. Validate count, finite values and observed dimension; capture date/model/unknown revision. Do not assume 768 or use the fixture's 128 dimensions.
+4. Build a separate semantic profile/manifest for the frozen corpus. Keep offline fixture artifacts intact.
+5. Provision/reuse only the approved D1/R2/Vectorize resources, apply course migrations and verify index configuration/metadata indexes.
+6. Ingest in bounded batches with receipts and durable recovery. Confirm all stores/visibility, then mark ready and separately select active.
+7. Enable a separate explicit real configuration for the localhost Worker using the documented remote-binding route. Preserve default offline startup. Never make a management/provisioning endpoint public.
+8. Calibrate the semantic threshold on a small DEVELOPMENT set and freeze it. Do not carry over 0.33 or use the reserved assessment set.
+9. Verify real no-RAG and basic RAG in clean conversations with the same model. Include grounded S1/S5 content, cohort-specific S10 dates, a refusal and a general-audience cohort clarification. Confirm no generative call for controlled refusal/clarification.
+
+No public deployment is authorized here. No load tests or twenty-case assessment. At most four directed generative calls unless the approved cap is smaller, plus the authorized embedding probe/ingestion/development checks. Estimate/reserve spend before each batch/call; do not treat unknown cost as zero or claim the cap is enforced merely because it is stored in JSON. Fail before starting work that cannot fit the remaining budget. Never upgrade a subscription to proceed.
+
+If a required remote binding path requires publication or broader access, finish local work and explain the exact additional action before widening scope. A remote request can keep computing after local cancellation; be precise about that limit and charges.
+
+6. TESTS AND EVIDENCE
+
+Normal tests use fake management/provider ports and fail on unexpected network access. Add regressions for delayed visibility becoming ready after later readback without re-upsert, durable resume after restart, profile-specific manifests, metadata/configuration mismatch, batch receipts, failed command exit codes, partial writes preserving the active profile, and per-operation permission requirements. Do not turn normal tests into live paid checks.
+
+Run frozen install, check, tests, build and offline preflight/dry-run commands. Then only authorized live checks, with secret-free receipts identifying exact account/resources, corpus/profile, observed dimensions, mutations, source IDs, model/parameters, usage/cost where known and date. Separate CLI provisioning from ingestion from runtime/browser verification. If an external step is blocked, retain pending honestly and complete independent work.
+
+Write docs/phase-4-verification.md and update the resource plan/README/architecture/phase instructions. Do not label configured as remotely verified or ready as deployed. Do not claim a class 100% prepared: CRAG, reserved comparison, presentations/guions and rehearsal remain separate.
+
+Use OpenViking only if the exact project has a verified account mapping; it was unmapped/unavailable. Do not borrow a tenant or repair infrastructure. Keep local session evidence and report memory delivery pending.
+
+Final response in Spanish: executor changes, exact commands, local checks, verified account/resource/runtime evidence if any, remaining budget/model/access inputs, next CRAG scope, and commit/push/deployment/memory status. Do not create resources or spend money merely to make the final status look complete.
+
+Primary references:
+- Installed Wrangler/Cloudflare types, AI SDK and OpenRouter provider source.
+- https://developers.cloudflare.com/api/resources/vectorize/subresources/indexes/methods/get/
+- https://developers.cloudflare.com/vectorize/reference/wrangler-commands/
+- https://developers.cloudflare.com/vectorize/platform/limits/
+- https://developers.cloudflare.com/workers/local-development/remote-data/
+- https://developers.cloudflare.com/workers-ai/models/bge-m3/
+
+Implement all authorized phase-4 local work now. Execute the live sequence only under the confirmed user scope and budget.

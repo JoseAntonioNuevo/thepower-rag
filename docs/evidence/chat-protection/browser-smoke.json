@@ -1,0 +1,14 @@
+{
+  "at": "2026-10-03T19:06:05.294184+00:00",
+  "browser": "Brave on macOS",
+  "widgetMode": "managed",
+  "appearance": "interaction-only",
+  "permanentVerificationCaption": false,
+  "observed": {
+    "ragDateAnswer": "complete with calendar citation",
+    "secondRagAnswer": "complete with S5 citation",
+    "conditionalVisibilityRag": "complete with S5 citation and no visible verification notice",
+    "crag": "verification passed and retrieval began; evaluator ended with a controlled error"
+  },
+  "frontendConsoleErrors": []
+}

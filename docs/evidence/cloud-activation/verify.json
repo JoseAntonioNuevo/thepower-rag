@@ -1,0 +1,86 @@
+{
+  "at": "2026-10-03T17:39:49.323Z",
+  "accountId": "9c1493e94ba21f2c6872a9dd17ba19f7",
+  "modelId": "openai/gpt-6-luna",
+  "provenance": "remote-binding",
+  "live": true,
+  "measuredChargeUsd": null,
+  "summary": "verificación incompleta: clarify estado 400 {\"ok\":false,\"reason\":\"Falta la reserva. No se llama al proveedor.\"}",
+  "receipt": {
+    "provenance": "remote-binding",
+    "live": true,
+    "syntheticError": true,
+    "pricesSynthetic": false,
+    "measuredChargeUsd": null,
+    "generativeCalls": 4,
+    "turns": [
+      {
+        "id": "sin-rag",
+        "ok": true,
+        "detail": "ok"
+      },
+      {
+        "id": "rag",
+        "ok": true,
+        "detail": "ok"
+      },
+      {
+        "id": "crag",
+        "ok": true,
+        "detail": "ok"
+      },
+      {
+        "id": "clarify",
+        "ok": false,
+        "detail": "estado 400 {\"ok\":false,\"reason\":\"Falta la reserva. No se llama al proveedor.\"}"
+      },
+      {
+        "id": "local-error",
+        "ok": true,
+        "detail": "error sintético local, no es evidencia del proveedor"
+      }
+    ],
+    "adapters": [
+      {
+        "id": "openrouter",
+        "remote": true,
+        "binding": null
+      },
+      {
+        "id": "workers-ai-binding",
+        "remote": true,
+        "binding": "AI"
+      },
+      {
+        "id": "vectorize-binding",
+        "remote": true,
+        "binding": "VECTORIZE"
+      },
+      {
+        "id": "openrouter",
+        "remote": true,
+        "binding": null
+      },
+      {
+        "id": "workers-ai-binding",
+        "remote": true,
+        "binding": "AI"
+      },
+      {
+        "id": "vectorize-binding",
+        "remote": true,
+        "binding": "VECTORIZE"
+      },
+      {
+        "id": "openrouter",
+        "remote": true,
+        "binding": null
+      },
+      {
+        "id": "openrouter",
+        "remote": true,
+        "binding": null
+      }
+    ]
+  }
+}

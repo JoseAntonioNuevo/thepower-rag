@@ -1,0 +1,70 @@
+You are Grok 4.7. Continue /Users/jose/Documents/the-power/3-rag.
+
+PHASE 7: CLOSE THE ACTUAL CLI-TO-WORKER PATH, NOT JUST INJECTED HELPERS
+
+Read AGENTS.md, README.md, phase-6-verification.md and docs/review/phase-6-review.txt. Preserve the working no-RAG/RAG/CRAG teaching demo and all exact dependencies. Local phase-6 checks passed, but the actual CLI still does not construct the native data plane. Complete that wiring and verify the entrypoint end to end locally. Do not deliver another set of pure helper tests as proof of CLI integration.
+
+Scope: edit only 3-rag, work directly, no subagents/external reviewers. No commit/push/publication, cloud provisioning, paid calls or plan changes unless the human separately supplies valid exact external scope/budget. The target account is 9c1493e94ba21f2c6872a9dd17ba19f7, Joseantonionuevo@gmail.com's Account. Budget/model/action permissions remain unspecified. An agent-created activation file cannot establish consent. Finish independent local implementation without asking again for those inputs just to write/test code.
+
+1. REPAIR THE ACTUAL WORKER BOOTSTRAP
+
+- scripts/activate.ts must construct/manage the requested runtime plane for executable data operations and pass it to createCourseExecutor. Read-only management/dry-run paths must not start it.
+- Use a real Worker entry module with a default fetch handler. The config's main path must resolve to the existing project file from its actual temporary config location; use a verified absolute path or an explicitly supported resolution strategy.
+- Supply BRIDGE_TOKEN as an actual Worker binding using documented, private ephemeral vars/secrets handling. Passing it only to process.env does not automatically populate env.BRIDGE_TOKEN. Keep it out of arguments, receipts, logs, browser bundles and committed files; use private file permissions and remove only owned temp files.
+- Preserve the required runtime/auth environment through the existing scoped helpers, with the exact approved account. Do not alter global OAuth profiles, read the Keychain directly or copy unrelated secret variables.
+- Use the project-pinned Wrangler executable, verified arguments and a spawned child owned by this operation. Listen only on 127.0.0.1. No --remote publication, tunnel, wildcard bind or public admin route.
+- Readiness must tolerate initial ECONNREFUSED while the process starts: bounded retries/backoff/deadline, authenticated response validation, immediate terminal failure for a real child exit or invalid credentials. Do not kill the bridge on the first startup connection failure.
+- Shutdown must terminate and await only the owned child, close resources and remove owned temporary config/vars on success/error/abort.
+
+2. REMOVE THE RESOURCE BOOTSTRAP CYCLE
+
+The first BGE-M3 probe cannot require a preexisting Vectorize index or D1 UUID. Implement operation-specific bridge configurations:
+- Probe: AI only, when remotely authorized.
+- Storage/ingestion/selection: only the approved existing native bindings needed after provisioning.
+- Verification: native read bindings plus explicitly configured generation/evaluation, profile and session allowance.
+
+Never use invented remote resource IDs to satisfy config validation. Default offline startup stays unchanged. Real remote flags are enabled only by the separately authorized activation path, never by ordinary dev/test startup.
+
+3. CONNECT NATIVE OPERATIONS THROUGH A SMALL TYPED PROTOCOL
+
+bridge-worker currently supports only ready/embed. Implement the missing bounded operations using the existing core/bound adapters inside the Worker or narrow validated RPC facades. Do not expose arbitrary SQL, filesystem access or a generic fetch proxy.
+
+Use server-owned approved account/resource/profile/preparation scope and frozen manifests. Validate authenticated requests, input bounds and run identity. Execute the existing ingestion/journal/readback logic against native D1/R2/Vectorize rather than reproducing it in another pipeline.
+
+Remove production dependence on MemoryBindings/tables. Profile selection must use native atomic SQL and final readback; mutating an in-memory table array cannot count as native D1 selection. Keep memory implementations in fixtures/tests behind the same ports.
+
+Keep administration metric/metadata read receipts separate from runtime binding access. Native readiness still requires all expected content, profile, vectors and mutations to match. Pending visibility/resume must not re-embed/upsert accepted work, overwrite immutable profiles or discard earlier active data.
+
+4. REAL VERIFICATION MUST BE A REAL PATH
+
+Keep runVerificationSession's current mock harness explicitly fixture-only. Add an injectable command-driven verifier that calls the actual app/runtime HTTP path with configured native adapters/models. It must not instantiate MockLanguageModelV4 or fixture chunks in the real branch.
+
+Do not silently set real-looking model/profile values around a mocked pipeline. All receipts/caches need provenance: fixture, local native emulation, or actual remote-binding/provider execution. A boolean from a caller is insufficient evidence. Do not hardcode live=false or live=true for every plane; derive the classification from the actual constructed adapter path and recorded operations.
+
+Fixture caches may never be reused in live ingestion solely because dimensions/IDs match. Keep provenance in cache identity/validation or isolated namespaces. Record model/revision/dimension/preparation and hashes. Unknown usage/charge remains unknown, not zero.
+
+5. DURABLE EXECUTION SESSION
+
+Use the existing allowance ledger, restore/save its snapshot before/after reserved operations across the CLI's commands/restarts for the SAME confirmed session/account/profile. Do not create a new full allowance on every invocation. Outstanding unknown charges remain reserved. Serialize bounded verification operations; do not claim an account-wide distributed cap.
+
+Unknown pricing/model/spending scope blocks actual billable work, not local implementation. Keep at most four directed generative requests by default in the later short verifier, counting evaluation/rewrite too, and plan a sufficient-first-search CRAG turn that fits. A reserved twenty-case evaluation requires a separate budget/scope.
+
+6. PROVE THE ENTRYPOINT, OFFLINE
+
+Add a distinct local integration workflow that drives the actual activate CLI entrypoint through a genuine local workerd Worker and the protocol, with explicitly offline fixture/emulated resources. No remote bindings or external network calls. This complements normal injected tests.
+
+Verify executable entry/export/path resolution, actual secret binding, authenticated readiness, startup retry, shutdown/port cleanup, serialized operations, probe result consumption, cache/journal resume, native-style profile selection and verification provenance. Test wrong token, timeout, command failure and a budget already partly reserved after restart. Assert no command launches a runtime in dry-run/read-only mode.
+
+An offline runtime must not read a real provider key, authenticate to Cloudflare or emit an observation usable to create a real semantic index. It must report fixture/emulated provenance everywhere. Normal unit tests still reject unintended network; localhost integration is a separately named offline test command.
+
+Preserve frozen install, check, tests, frontend/Worker build, preflight and the three user-facing modes. Fix only necessary regressions; no new orchestration/framework/global tool upgrades. Do not broaden resource permissions to make tests pass.
+
+7. DELIVERY
+
+Write docs/phase-7-verification.md with exact executable commands, local CLI/workerd evidence, adapter/provenance classification and remaining live activation inputs. Update README/architecture/activation instructions and phase facts. Do not claim remotely tested, ingested or deployed when only the local entrypoint passed.
+
+No public deployment or reserved comparison in this phase. No account/API charges unless separately authorized by the human. Do not request another account choice; the destination is already known. Do not invent a model/budget or introduce extra approval paperwork; retain any valid direct authorization for the same scope.
+
+OpenViking requires a verified mapping for this project; reachable service alone is not a tenant. Continue locally and record memory pending without borrowing an account.
+
+Final response in Spanish: code paths completed, exact commands, entrypoint tests/results, resource/model/budget inputs still missing, and commit/push/deployment/memory status. Complete the independent local work now.

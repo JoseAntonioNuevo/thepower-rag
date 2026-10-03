@@ -1,0 +1,18 @@
+{
+  "at": "2026-10-03T20:44:30.924871+00:00",
+  "versionId": "29a820c1-5050-4019-8d11-91ab8ece9cbf",
+  "url": "https://rag-thepower.josenuevo.dev",
+  "ragMode": "complete",
+  "scope": "common course documents and selected-group calendar",
+  "corpusVersion": "c3a59a406888b",
+  "profileId": "p76509a5f9743",
+  "unitTests": 108,
+  "entrypointTests": 3,
+  "directedLiveSDKCases": 12,
+  "publicBrowserCases": [
+    "exact original weekly question, L/X: answered with weekdays, time and holidays",
+    "follow-up November: eight dates and holiday, citations, no lost context"
+  ],
+  "workerSha256": "67588ec6863f29785eddb0dfed71569f38f23a5a31f561a97c4ca0d45e9d3c0d",
+  "indexHtmlSha256": "9e575ae3c2f1ee2c187b51cfe3169a97d5cc59356651ed6111df0d31c54a870c"
+}

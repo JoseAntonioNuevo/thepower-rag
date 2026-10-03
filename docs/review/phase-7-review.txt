@@ -1,0 +1,23 @@
+Phase 7 independent review — October 3, 2026, Europe/Madrid
+
+Repeated verification passed:
+- Frozen install: 183 installs / 335 packages, no changes.
+- Vite+ format: 151 files; lint/types clean in 92 TypeScript files.
+- 80 unit tests in seventeen files, no external network.
+- 3 entrypoint integration tests against actual workerd, 21.18 seconds total on this host.
+- Frontend/app Worker build: 3,098.94 kB (695.20 kB gzip).
+- Demo CRAG preflight and activate plan: exit 0, no activation.
+
+The entrypoint tests now execute the actual CLI, verify wrong/right bridge tokens, probe/ingestion/resume/SQL selection/HTTP verification through local D1/R2 and emulated Vectorize, preserve reservations across invocations, and check port cleanup. Local emulator provenance remains unusable for a real remote index. No Cloudflare resources, paid calls, publication, commit or push.
+
+Phase-6 wiring findings addressed in source: default fetch export; absolute main; ephemeral .dev.vars token with mode 0600; bounded startup readiness; AI-only probe role; CLI-created data plane; typed operation transport; native SQL profile selection; provenance-aware cache/session restore.
+
+Two specific real-verify configuration issues remain (not exercised by offline tests):
+
+1. scripts/activate.ts passes minScore: offline ? LOCAL_EMULATED_MIN_SCORE : undefined. startOwnedBridge rejects remote verify with undefined minScore. There is currently no parsed calibrated threshold passed to that call. Supplying budget/model/creation permissions alone cannot make remote verify run. Add an explicit validated semantic calibration input tied to the selected index profile; do not reuse 0.33 or 0.55.
+
+2. scripts/loopback-bridge.ts writes BRIDGE_TOKEN and an emulated OpenRouter key only when verify is offline. The remote verify temp vars do not receive the project's real OPENROUTER_API_KEY. Scoped process env does not forward that key. Load only the explicitly selected project-local secret source and write it privately to the owned temporary Worker vars for the authorized real verification path, without logging/argument/browser exposure. No neighboring environment file may be used.
+
+These are narrowly scoped activation settings, not a reason to add another framework or delay offline classroom material production. A separate concise prompt captures them. Real startup, embedding dimension, semantic threshold, ingestion/readback, actual provider behavior and paid comparison still need explicit live inputs and evidence.
+
+No application code changed in this review. Added review/prompt notes only. OpenViking exact project mapping remains absent; no foreign tenant used.

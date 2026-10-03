@@ -1,0 +1,64 @@
+- main:
+  - heading "Asistente del curso AI Engineer" [level=1]
+  - paragraph: Sin RAG conversa sin documentos. RAG básico recupera una vez. CRAG recorre un grafo correctivo acotado. En demo las decisiones son un guion de prueba.
+  - status: "Perfil: real (workers-ai). Corpus: c3a59a406888b. Temario completo. Calendario L/X completo. Calendario M/J completo. Ejercicios parcial. Índice remoto verificado. Embedding: @cf/baai/bge-m3."
+  - group "Etapa":
+    - generic: Etapa
+    - radio "Sin RAG Proveedor configurado"
+    - generic: Sin RAG
+    - generic: Proveedor configurado
+    - radio "RAG básico Proveedor configurado"
+    - generic: RAG básico
+    - generic: Proveedor configurado
+    - radio "CRAG Proveedor configurado" [checked]
+    - generic: CRAG
+    - generic: Proveedor configurado
+  - group "Grupo del curso":
+    - generic: Grupo del curso
+    - radio "General" [checked]
+    - generic: General
+    - radio "Grupo con clases los lunes y miércoles"
+    - generic: Grupo con clases los lunes y miércoles
+    - radio "Grupo con clases los martes y jueves"
+    - generic: Grupo con clases los martes y jueves
+  - region "Conversación":
+    - article:
+      - paragraph: ¿Cómo modela LangGraph un agente con estado y nodos?
+    - article:
+      - paragraph: LangGraph modela un agente como un grafo con estado y nodos, conectados por aristas explícitas. El estado puede actualizarse durante la ejecución, y las rutas condicionales permiten decidir qué nodo ejecutar a continuación, por ejemplo, responder directamente o solicitar una herramienta. [cite:c3a59a406888b:s05-langgraph:00]
+      - paragraph: "provider. Estado: complete. Uso entrada: 623. Uso salida: 78. Coste: 0.0002026"
+    - status:
+      - generic: Listo
+    - generic: Pregunta
+    - textbox "Pregunta":
+      - /placeholder: Escribe una pregunta de prueba
+    - generic "Verificación de seguridad"
+    - button "Enviar" [disabled]
+    - button "Detener" [disabled]
+    - button "Nueva conversación"
+  - complementary:
+    - heading "Fuentes" [level=2]
+    - list:
+      - strong: S5 · LangGraph
+      - generic: S5 · LangGraph
+      - generic: c3a59a406888b:s05-langgraph:00
+      - generic: Corpus c3a59a406888b
+      - paragraph: "# S5 · LangGraph Objetivo para el alumno: entender cómo modelar un agente mediante estado, nodos y conexiones explícitas, y evolucionar un grafo sencillo hasta un chatbot con memoria y herramientas. LangGraph modela un agente con estado y nodos. El temario cubre introducción, ..."
+      - strong: S5 · LangGraph
+      - generic: S5 · LangGraph
+      - generic: c3a59a406888b:s05-langgraph:01
+      - generic: Corpus c3a59a406888b
+      - paragraph: "tencia, el control de errores, la terminación y los límites para impedir bucles. Ejercicio resumido en esa guía: un asistente de soporte ficticio por etapas, con Python y LangGraph. El modelo con tools se elige por MODEL_ID. El estado lleva mensajes, contador de llamadas y err..."
+    - heading "Traza de la clase" [level=2]
+    - paragraph: Recorrido real. answer. Los fragmentos de S5 detallan cómo LangGraph modela agentes mediante StateGraph, estado de ejecución, historial, checkpointer, aristas condicionales y nodos.
+    - paragraph: Búsquedas 1. Quedan 2. Reformulaciones 0. Quedan 2.
+    - paragraph: "Llamadas de pago: contadas por separado, sin total inventado. Uso: parcial. Coste: 0.0002026."
+    - paragraph: "Consulta original: ¿Cómo modela LangGraph un agente con estado y nodos?"
+    - paragraph: "Consulta de búsqueda: ¿Cómo modela LangGraph un agente con estado y nodos?"
+    - list:
+      - listitem: "Conservado c3a59a406888b:s05-langgraph:00 (0.950): Puntuación 0.950. Conservado en el orden validado."
+      - listitem: "Conservado c3a59a406888b:s05-langgraph:01 (0.800): Puntuación 0.800. Conservado en el orden validado."
+    - list "Pasos del grafo":
+      - listitem: retrieve. Búsqueda 1. Búsqueda 1. 10 fragmentos en alcance.
+      - listitem: "rank. Búsqueda 1. Los fragmentos de S5 detallan cómo LangGraph modela agentes mediante StateGraph, estado de ejecución, historial, checkpointer, aristas condicionales y nodos. Orden: c3a59a406888b:s05-langgraph:00 0.950, c3a59a406888b:s05-langgraph:01 0.800."
+      - listitem: answer. Búsqueda 1. Respuesta solo con la evidencia aceptada.

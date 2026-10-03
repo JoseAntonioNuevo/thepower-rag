@@ -1,0 +1,6 @@
+CREATE TABLE IF NOT EXISTS public_budget (
+  id TEXT PRIMARY KEY,
+  reserved_usd REAL NOT NULL DEFAULT 0,
+  turns INTEGER NOT NULL DEFAULT 0
+);
+INSERT OR IGNORE INTO public_budget(id) VALUES ('course-2026');

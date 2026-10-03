@@ -1,0 +1,148 @@
+You are Grok 4.7. Continue the existing monorepo at:
+/Users/jose/Documents/the-power/3-rag
+
+PHASE 5: IMPLEMENT CORRECTIVE RAG ON THE SAME COURSE ASSISTANT
+
+Implement the bounded corrective workflow and its classroom demonstration now. Complete local verification without requiring cloud provisioning or paid model calls. Do not rebuild the application or treat simulated provider results as live evidence.
+
+1. CONTEXT AND CURRENT STATE
+
+Read AGENTS.md, README.md, docs/phase-4-verification.md, docs/review/phase-4-review.txt, and the existing contracts/core/API/UI before editing.
+
+This is a Spanish assistant for the COMPLETE The Power AI Engineer course, S1-S20 and all instructors, with L/X and M/J calendars. Two 90-minute classes use three modes:
+- S10, October 22, 2026: no-RAG and basic RAG.
+- S11, October 27: evolve that same app to CRAG.
+
+Curriculum/calendars are complete in the approved source set; exercises remain twelve summaries plus eight titles. Do not invent rubrics/deadlines or change source facts to make examples easier.
+
+Phase 4 has a connected management executor and a resumable ingestion core. Local baseline checks passed: frozen install, clean checks, 49 tests, build, demo preflight and dry-run activation. Account inventory was previously read and found no course resources. Real embeddings/index/model checks remain pending.
+
+Important: CLI probeEmbeddings(), ingest() and verify() still contain fixed refusals; the CLI's administrative resume read is not the complete bound ingestion workflow. Preserve that honest distinction. Completing those remote bridges is a separate activation work item, not a reason to leave CRAG's local control flow unimplemented.
+
+Corpus preparation c3a59a406888b, content cc037ef0bb1f7 and fixture profile p9e8e8e03627e were last verified. Reconfirm identities if sources/configuration change. Fixture-token-hash-v1 is lexical, 128 dimensions, threshold 0.33; it is not BGE-M3/Vectorize, and its behavior does not measure real retrieval quality.
+
+Technology stays Bun 1.4.2, Vite+ 1.0.0, React, Hono/Workers, AI SDK 7 with the explicit OpenRouter provider, Zod, and existing LangGraph.js. Keep exact dependencies and one monorepo/Worker. No second orchestrator, ToolLoopAgent-based competing loop, TanStack AI, Python/Containers, managed RAG, Redis, queues or new hosting stack.
+
+2. SCOPE AND SAFETY BOUNDARIES
+
+Work directly without subagents, CodeRabbit or external reviewers. Edit only 3-rag. Preserve no-RAG/basic RAG and neighboring course projects. Git root is /Users/jose/Documents; no git-init, commit, push or PR is requested.
+
+This phase authorizes local code/tests/browser verification and mocked provider adapters. It does not authorize provisioning, paid requests, public deployment, plan changes, new credentials, or neighboring environment-file reuse.
+
+The known Cloudflare destination is Joseantonionuevo@gmail.com's Account, ID 9c1493e94ba21f2c6872a9dd17ba19f7. Identity does not authorize spending. Do not repeat account discovery or ask for a budget just to implement the offline graph. Use any later direct user authorization only for its exact target/actions; do not generate true authorization flags yourself.
+
+OpenViking still has no verified mapping for this project. Follow the account-isolation policy, continue locally if unavailable, and report memory delivery pending instead of borrowing a tenant.
+
+3. SMALL FOUNDATIONAL CORRECTION
+
+Fix the reviewed inventory parser issue first: a successful subprocess with malformed/non-array Vectorize JSON must be an unconfirmed read, not an empty inventory. Validate the actual supported response envelope. Apply the same rule to metadata/config lists. Add one meaningful regression proving invalid readback never triggers create. Do not execute account operations to test it.
+
+Do not expand this into an activation redesign. Record the remaining CLI embedding/ingestion/verification stubs clearly in the documentation.
+
+4. IMPLEMENT THE CRAG STATEGRAPH
+
+Use the installed LangGraph.js StateGraph API. Keep domain logic and ports in the core package and Worker-specific orchestration/model/storage adapters in the API. Do not leak LangGraph/server/binding dependencies into the browser.
+
+Create a graph with explicit conceptual steps:
+validate/clarify -> retrieve -> rerank -> assess evidence -> route:
+- sufficient -> answer -> end;
+- partial -> retain useful evidence -> reformulate -> retrieve again;
+- insufficient -> discard rejected context -> reformulate -> retrieve again;
+- exhausted/error/aborted -> controlled refusal/error -> end.
+
+Validate calendar/cohort requirements and real profile readiness before billable calls. Every retrieval uses the original audience, frozen corpus/index profile and embedding configuration. Never widen a cohort filter or query another version to obtain an answer.
+
+State must include original question, current search query, run/scope identity, retrieval/reformulation counters, candidates, ordered/ranked evidence, retained/discarded IDs, evidence decision/gaps, terminal outcome and a bounded operational trace. Start fresh graph state for each turn; no global shared counters/checkpointer or cross-conversation evidence cache.
+
+Hard contracts:
+- At most THREE retrieval attempts per turn, including the initial one; at most TWO reformulations.
+- Reserve/check the budget before starting each attempt; a failed request still counts as an attempt. No hidden automatic retries or fourth retrieval.
+- Define bounded candidate count (up to ten for this advanced stage), context size, retained evidence and execution time.
+- Sufficient requires actual usable source evidence, not only a valid JSON label or high score.
+- Partial keeps only validated useful chunk IDs and searches for missing coverage. Merge subsequent evidence without duplicates.
+- Insufficient removes rejected context; never feed it to the final answer just because it was retrieved earlier.
+- A rewritten query does not replace the original user question. It must preserve intent and cannot create a missing course fact.
+- Empty/invalid/no-progress reformulation terminates safely. Invalid evaluator output is a controlled error, not an excuse for unlimited repair/retry calls.
+- After limits are exhausted, refuse if evidence remains inadequate. Genuine storage/model errors stay distinguishable from an ordinary lack of evidence.
+- Abort before starting new work; propagate cancellation/time limits and make no claim that stopping local waiting cancels provider computation/charges.
+
+5. RERANKING AND EVIDENCE ADAPTERS
+
+Prepare injected typed interfaces for reranking, evidence assessment, reformulation and final generation. Use current installed AI SDK/Zod APIs for future OpenRouter structured decisions, not outdated tutorials.
+
+Validate model decisions against actual candidate IDs: no unknown IDs, duplicates, non-finite scores or unbounded reasons/queries. Evidence status is sufficient/partial/insufficient; partial contains specific gaps. Scores are relevance signals, not calibrated probabilities of truth.
+
+For the real CRAG path, EVALUATOR_MODEL_ID is a CRAG requirement only; missing evaluator settings must not block no-RAG or basic RAG. Keep the existing real index-ready gate. Explicitly configure providers, models, timeouts, output limits and retry policy; no silent model/SDK fallback.
+
+Reranking and evidence evaluation are distinct functions/concepts. They may share one structured provider call per iteration if that output genuinely provides both and the trace describes it accurately. Do not make or report a second call just for appearances. Preserve the original basic RAG path as a separate single-retrieval baseline.
+
+The final generative model, its parameters and source-answer policy are shared with basic RAG. Generate at most one final answer from accepted evidence and allowed [cite:id] citations. No internet fallback: this teaching adaptation searches the private course corpus only. Cite the original CRAG paper as inspiration, not as proof of an exact reproduction.
+
+6. A RELIABLE OFFLINE CLASSROOM DEMONSTRATION
+
+Default demo must run without credentials, remote bindings or API credits. Inject deterministic retrieval/rerank/evaluation/rewrite/generation fixtures into the SAME graph used by the real adapters. Do not implement a separate fake UI animation that bypasses the graph.
+
+Prepare clearly labeled development scenarios:
+1. Sufficient on the first search: answer immediately.
+2. Partial evidence: retain a useful session card, retrieve the missing related session, deduplicate, then answer with both sources.
+3. Irrelevant initial evidence: discard it, use a better query, then answer only from accepted sources.
+4. Missing information: three attempts/two reformulations, then refusal.
+5. General-audience schedule question: cohort clarification before retrieval/evaluation/generation.
+6. Evaluator failure or cancellation: controlled terminal behavior without extra calls.
+
+Use approved course facts (for example S5 memory/state and S6 observability) and explicitly synthetic error cases. Scripted decisions and lexical vectors must remain visibly marked as fixtures. Their apparent improvement is not a real CRAG quality result.
+
+An offline scenario selector may be provided for teaching, but it must be validated, available only in demo, and incapable of overriding the real evaluator/routing. Document free-form fixture limitations. Missing live inputs must not prevent completing these executable scenarios.
+
+7. STREAMING AND FRONTEND
+
+Keep the same chat with Sin RAG, RAG básico and CRAG. Replace CRAG's 501 with the actual demo graph; real CRAG reports precise blocked settings until configured/authorized. Never fall back to basic RAG silently.
+
+Stream real graph progress as nodes execute, before the final answer: query, retrieval number, ordering, evidence status, retained/discarded source IDs, reformulation and terminal outcome. Show short operational reasons, not hidden chain-of-thought or private prompts. Correlate all events with runId and conversation scope.
+
+Use transient per-step events plus a bounded final summary, or reconcile a stable typed data part. Do not accumulate unbounded message parts. Extend the shared request/UI schemas so a follow-up after a valid maximum-source/trace response still succeeds. Never feed client-supplied sources/events as trusted model evidence.
+
+Maintain clean histories on mode/audience changes, busy-state controls, stop/error handling, accessible labels and mobile readability. Show why a source was retained/discarded and how many attempts remain. Respect existing styling; follow applicable motion/React skills if changing UI behavior. Do not add a design framework.
+
+Metrics distinguish executions from actual paid provider calls. Separate retrieval, ranking/evaluation, rewriting and final-generation counts/times. Keep unknown cost/token fields null and mark partial aggregates instead of reporting a false total. Demo is explicitly not measured provider usage.
+
+8. PROPORTIONAL VERIFICATION
+
+Normal tests use injected deterministic ports and reject unintended network access. Focus on graph contracts:
+- First-search success with no reformulation.
+- Partial evidence retention/deduplication across searches.
+- Rejected evidence excluded from the final context/citations.
+- Exact three-attempt/two-rewrite limit; reset on the next turn.
+- No-progress/invalid output, unknown IDs and evaluator errors.
+- Cohort/corpus/profile isolation in every retrieval and retained set.
+- Clarification/refusal without final generation.
+- Cancellation prevents subsequent work.
+- Run events and bounded history remain valid for a follow-up.
+- Basic RAG remains one retrieval and uses the same final generation policy.
+
+Run frozen install, check, tests, build, preflight for all modes, and workerd/browser walkthroughs. Inspect actual node events, terminal sources and errors. Do not claim a Bun-only test proves Workers compatibility. Stop only local processes you create.
+
+Do not run the reserved twenty-question comparison or tune against it. Add a small development-case file distinct from the future assessment. Any later comparison uses the same corpus/model/parameters and clean conversations; do not require CRAG to win or present fixture successes as evaluation results.
+
+9. DOCUMENTATION AND DELIVERY
+
+Write docs/phase-5-verification.md, a short CRAG architecture/graph diagram and a Spanish demo walkthrough with commands, scenario questions, expected routes and failure handling. These are technical teaching bases, not a request for PPTX/PDF/full 90-minute guions yet.
+
+Update README, health/capability labels, preflight and project-local phase instructions. Preserve prior evidence, corpus identities unless intentionally changed, and CLAUDE.md's relative symlink.
+
+Separate completion levels in the final Spanish report:
+- CRAG graph implemented and verified offline/in workerd/browser.
+- Real adapters coded/mocked versus actually verified remotely.
+- Remaining activation CLI bridge, account permissions/budget, embeddings and index ingestion.
+- Reserved comparison, classroom materials/rehearsal and public deployment pending.
+- Commit/push/deployment/OpenViking status.
+
+Acceptance: the third stage runs a genuine bounded LangGraph corrective workflow locally, with visible sufficient/partial/insufficient routes, honest fixtures and tested limits; the first two stages still work. No paid calls, provisioning, commit, push or public deployment in this phase.
+
+References:
+- Installed LangGraph.js, AI SDK and OpenRouter provider docs/source.
+- https://docs.langchain.com/oss/javascript/langgraph/graph-api
+- https://ai-sdk.dev/docs/ai-sdk-ui/streaming-data
+- https://arxiv.org/abs/2401.15884
+
+Proceed with the authorized local CRAG implementation and verification now.

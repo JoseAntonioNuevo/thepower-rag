@@ -1,0 +1,12 @@
+{
+  "at": "2026-10-03T17:52:02.612Z",
+  "accountId": "9c1493e94ba21f2c6872a9dd17ba19f7",
+  "before": {
+    "reserved_usd": 2.7780384999999987,
+    "turns": 50
+  },
+  "knownOpenRouterUsageUsd": 0.04196889,
+  "retainedUnknownReserveUsd": 0.1,
+  "after": 0.1524611125,
+  "method": "one-time startup reconciliation using dedicated-key reported total usage; 25% margin and 0.10 USD unknown reserve retained; turn counter preserved; conditional SQL prevents concurrent-turn loss"
+}

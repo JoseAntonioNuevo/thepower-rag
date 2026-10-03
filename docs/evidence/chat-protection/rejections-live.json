@@ -1,0 +1,75 @@
+{
+  "at": "2026-10-03T18:43:04.352Z",
+  "origin": "https://rag-thepower.josenuevo.dev",
+  "observations": [
+    {
+      "name": "no-origin",
+      "status": 403,
+      "message": "Origen no permitido."
+    },
+    {
+      "name": "no-cookie",
+      "status": 403,
+      "message": "La sesión ha caducado. Recarga la página antes de enviar."
+    },
+    {
+      "name": "tampered-cookie",
+      "status": 403,
+      "message": "La sesión ha caducado. Recarga la página antes de enviar."
+    },
+    {
+      "name": "no-token",
+      "status": 403,
+      "message": "Completa la verificación antes de enviar la pregunta."
+    },
+    {
+      "name": "invalid-token",
+      "status": 403,
+      "message": "La verificación ha caducado o no es válida. Verifica de nuevo."
+    },
+    {
+      "name": "session-rate-0",
+      "status": 403,
+      "retryAfter": null
+    },
+    {
+      "name": "session-rate-1",
+      "status": 403,
+      "retryAfter": null
+    },
+    {
+      "name": "session-rate-2",
+      "status": 403,
+      "retryAfter": null
+    },
+    {
+      "name": "session-rate-3",
+      "status": 403,
+      "retryAfter": null
+    },
+    {
+      "name": "session-rate-4",
+      "status": 403,
+      "retryAfter": null
+    },
+    {
+      "name": "session-rate-5",
+      "status": 429,
+      "retryAfter": "60"
+    }
+  ],
+  "cookieAttributes": {
+    "secure": true,
+    "httpOnly": true,
+    "sameSiteStrict": true
+  },
+  "before": {
+    "reserved_usd": 0.27260861249999996,
+    "turns": 53
+  },
+  "after": {
+    "reserved_usd": 0.27260861249999996,
+    "turns": 53
+  },
+  "noBudgetChange": true
+}

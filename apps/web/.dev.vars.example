@@ -1,0 +1,14 @@
+# Copia local opcional: apps/web/.dev.vars
+# Wrangler lo lee junto a wrangler.jsonc. No lo versionamos.
+# Los valores son marcadores. Un valor que empieza por replace-with cuenta como ausente.
+
+APP_MODE=demo
+OPENROUTER_API_KEY=replace-with-a-local-secret
+MODEL_ID=replace-with-the-server-owned-model-id
+EMBEDDING_MODEL=replace-with-workers-ai-model
+EMBEDDING_DIMENSIONS=replace-with-observed-dimension
+CORPUS_VERSION=replace-with-corpus-version
+INDEX_PROFILE=replace-with-index-profile
+VECTOR_METRIC=cosine
+MIN_RETRIEVAL_SCORE=replace-with-calibrated-score
+EVALUATOR_MODEL_ID=replace-with-the-server-owned-evaluator-model-id

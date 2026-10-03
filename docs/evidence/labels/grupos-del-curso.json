@@ -1,0 +1,16 @@
+{
+  "at": "2026-10-03T19:22:12.596961+00:00",
+  "versionId": "3249c335-6680-4518-a8e9-f3c7603bc9bb",
+  "url": "https://rag-thepower.josenuevo.dev",
+  "selector": "Grupo del curso",
+  "labels": [
+    "General",
+    "Grupo con clases los lunes y mi\u00e9rcoles",
+    "Grupo con clases los martes y jueves"
+  ],
+  "mobileViewport": {
+    "width": 390,
+    "scrollWidth": 390
+  },
+  "calendarFiltersUnchanged": true
+}

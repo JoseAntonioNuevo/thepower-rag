@@ -1,0 +1,16 @@
+{
+  "at": "2026-10-03",
+  "url": "http://127.0.0.1:5173/",
+  "appMode": "real",
+  "secretFile": "apps/web/.dev.vars.local",
+  "secretMode": "0600",
+  "gitIgnored": true,
+  "unitTests": 113,
+  "productionBuild": "passed; not deployed",
+  "publicDeploymentUnchanged": true,
+  "rag": "calendar answered with citation, context complete",
+  "crag": "remote retrieval and Gemini evaluation, Luna answer with citation",
+  "budget": "shared existing course D1 reservation, no reset or expansion",
+  "server": "left running for user",
+  "memory": "pending, workspace selector exit 1"
+}

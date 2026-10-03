@@ -1,0 +1,53 @@
+- main:
+  - heading "Asistente del curso AI Engineer" [level=1]
+  - paragraph: Sin RAG conversa sin documentos. RAG básico recupera una vez. CRAG recorre un grafo correctivo acotado. En demo las decisiones son un guion de prueba.
+  - status: "Perfil: real (workers-ai). Corpus: c3a59a406888b. Temario completo. Calendario L/X completo. Calendario M/J completo. Ejercicios parcial. Índice remoto verificado. Embedding: @cf/baai/bge-m3."
+  - group "Etapa":
+    - generic: Etapa
+    - radio "Sin RAG Proveedor configurado"
+    - generic: Sin RAG
+    - generic: Proveedor configurado
+    - radio "RAG básico Proveedor configurado" [checked]
+    - generic: RAG básico
+    - generic: Proveedor configurado
+    - radio "CRAG Proveedor configurado"
+    - generic: CRAG
+    - generic: Proveedor configurado
+  - group "Grupo del curso":
+    - generic: Grupo del curso
+    - radio "General"
+    - generic: General
+    - radio "Grupo con clases los lunes y miércoles" [checked]
+    - generic: Grupo con clases los lunes y miércoles
+    - radio "Grupo con clases los martes y jueves"
+    - generic: Grupo con clases los martes y jueves
+  - region "Conversación":
+    - article:
+      - paragraph: que dias hay clase?
+    - article:
+      - paragraph: "En el grupo del curso L/X hay clase los **lunes y miércoles**, de **18:30 a 20:00**, hora de Madrid. Hay excepciones por festivos: **no hay clase el lunes 12 de octubre ni el lunes 2 de noviembre**. [cite:c3a59a406888b:calendario-lx:00]"
+      - paragraph: "provider. Estado: complete. Uso entrada: 7909. Uso salida: 79. Coste: 0.0020561"
+    - status:
+      - generic: Listo
+    - generic: Pregunta
+    - textbox "Pregunta":
+      - /placeholder: Escribe una pregunta de prueba
+    - generic "Verificación de seguridad"
+    - button "Enviar" [disabled]
+    - button "Detener" [disabled]
+    - button "Nueva conversación"
+  - complementary:
+    - heading "Fuentes" [level=2]
+    - list:
+      - strong: Calendario AI Engineer de la cohorte L/X
+      - generic: Calendario AI Engineer de la cohorte L/X
+      - generic: c3a59a406888b:calendario-lx:00
+      - generic: Corpus c3a59a406888b
+      - paragraph: "# Calendario AI Engineer de la cohorte L/X Cohorte de lunes y miércoles del programa AI Engineer. Las fechas y los profesores salen de la tabla AI Engineer de la imagen de calendario, no de la tabla de Desarrollo Agéntico. El horario 18:30-20:00 Europe/Madrid sale de la guía v..."
+    - heading "Traza de la clase" [level=2]
+    - paragraph: "Consulta: que dias hay clase?"
+    - paragraph: El modelo dispone del contexto completo del grupo y del historial para interpretar seguimientos.
+    - paragraph: Recuperación del catálogo por versión y grupo. El corpus es pequeño y cabe completo; no se filtra por coseno.
+    - list
+    - paragraph: "Decisión: answer. Generación: called."
+    - paragraph: "Contexto completo: 48 fragmentos de 21 documentos. Las fuentes se muestran cuando la respuesta las cita."

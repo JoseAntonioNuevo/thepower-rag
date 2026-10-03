@@ -1,0 +1,35 @@
+Phase 2 independent review — October 3, 2026, Europe/Madrid
+
+Verified again: frozen Bun install (183 installs / 335 packages); Vite+ format check (75 files), lint/type checks (45 files); 23 passing tests in five files; frontend/Worker build; demo preflight; dry-run ingest-plan. React Doctor scanned eight frontend files and reported 100/100 with no diagnostics. This is static evidence, not proof of remote behavior.
+
+Browser/workerd: the RAG fixture answered the LangGraph question with S5, source excerpt, corpus ID, and a clearly labeled lexical cosine trace (0.377 selected). Changing to cohort L/X cleared the conversation and source/trace panels. Screenshot: phase-2-basic-rag.png. No paid APIs or account resources were used. Reviewer system Node was v22.22.3; the author's recorded v24.16.0 is environment-specific.
+
+The main phase-1 findings are addressed: no module-global mode; scoped conversation remount; disabled selectors while busy; dotenv-based local vars; generation settings no longer require the evaluator; .dev.vars* ignored.
+
+Confirmed remaining issues for activation:
+
+1. Ingestion remains a planning wrapper rather than a complete writer.
+apps/api/src/ingest-run.ts:27 writes versionId as the manifest.json body, not serialized corpus metadata or source documents. Its confirmVisibility boolean is supplied by the caller; there is no observed mutation/count/readback evidence. Isolated fake ports with confirmVisibility=true returned ready, mutationId=null, and a non-JSON manifest. No remote calls were made. Before real ingestion, write the actual manifest and all originals/chunks, persist progress/failures, verify mutation visibility and expected identities/counts, and then transition to ready.
+
+2. Retrieval does not enforce ingested profile readiness.
+apps/api/src/app.ts reads chunk records but never validates corpus_versions.status, embedding_model, dimensions, or index profile before querying/generating. Source corpus identity currently hashes files only; prepareCorpus yields the same version and chunk IDs for different model/dimension configurations. Keeping content identity independent is acceptable ONLY if a separate index/embedding profile identity is validated end to end. That layer is missing. Add profile identity and ready-state readback; keep fixture and semantic indexes separate.
+
+3. Citation suppression corrupts ordinary no-RAG text.
+streamProviderCourseResponse applies suppressUnknownCitations with an empty allowed set in no-RAG. Reproduction with the same helper: "Python example: items[0]." becomes "Python example: items.". Limit citation handling to an explicit RAG citation grammar and preserve ordinary brackets/code. Verify split stream chunks and incomplete markers without unbounded buffering.
+
+4. Already-aborted embedding requests still start upstream work.
+apps/api/src/vectors.ts evaluates runner.run before the abort promise in Promise.race. An already-aborted signal invoked the injected runner once. No remote call occurred in the reproduction. Check abortion before launching, clean listeners on settlement, bound embedding/query time, and distinguish stopping local waiting from canceling provider computation.
+
+5. Preflight is still not a complete RAG readiness check.
+scripts/local-worker-config.ts:78-79 records declared binding presence separately but assesses only string vars, so RAG is blocked even when declarations exist. formatPreflight's exit status checks generation only. Add capability selection and explicit levels: declared, configured, remotely verified. Inspect the expected binding names, not merely nonempty arrays. Do not use fabricated runtime objects to label a remote resource verified.
+
+Further targeted checks before activation: assistant-output/history character limits must permit a follow-up after a valid longer streamed answer; partial source citations do not prove full grounding; stream metadata needs a run identifier and truthful completion/error state.
+
+New source evidence recovered for the COMPLETE course:
+- docs/sources/ai-engineer-curriculum-2026-07-17.txt is only the AI Engineer curriculum block from Laura's July 17 email (message 19f6f7569cc093d9). Headers, signature, contact details, other programs and quoted correspondence are excluded. It contains the twenty ordered topic blocks, including the eight missing from the current partial corpus. Session mapping and current dates must be cross-checked.
+- docs/sources/calendario-original-2026.png is a byte-for-byte copy of the calendar image supplied by the user. Use ONLY its AI Engineer table for this corpus; Development Agéntico is a separate program.
+- These source artifacts have not been normalized or ingested. corpus/COVERAGE.md and the fixture remain unchanged and partial.
+
+No application code/dependency changes were made in this review. Added artifacts are this review, screenshot, source excerpt/calendar, and phase-3 prompt. The parent Git checkout remains uncommitted/unpushed; no cloud provisioning or public deployment occurred.
+
+OpenViking remains pending: exact project selector returned exit 1 and 127.0.0.1:11933/health refused connection. No foreign tenant was used.

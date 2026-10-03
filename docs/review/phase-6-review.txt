@@ -1,0 +1,29 @@
+Phase 6 independent review — October 3, 2026, Europe/Madrid
+
+Repeated checks passed: frozen install (183 installs / 335 packages), formatting (135 files), clean lint/types in 77 TypeScript files, 76 tests in fifteen files, frontend/Worker build (3,098.94 kB), demo CRAG preflight and activation dry-run. No account writes, paid requests, deployment, commit or push. Current reviewer system Node v22.22.3; prior author's v24.16.0 is host-specific.
+
+The phase-5 corrections are present: shared turn deadline, applied ranking/tie policy, unique per-attempt discarded rows, busy scenario selector and correct CRAG paper authors. Local bridge/allowance/cache/ingestion helpers are exercised with injected memory bindings. Existing demonstration remains useful.
+
+The remaining production wiring is broader than external authorization alone:
+
+1. Actual CLI does not construct a data plane.
+scripts/activate.ts constructs createCourseExecutor without plane, allowance/session lifecycle or verifySession. There is no call to startLoopbackBridge from that entry point. Injected helper tests do not demonstrate a real command-driven runtime lifecycle.
+
+2. Bridge startup configuration is not executable as written.
+startLoopbackBridge writes config in a temporary directory with relative main=apps/api/src/bridge-worker.ts. That resolves under the temporary directory, not the project. The entry module exports handleBridgeRequest but has no default Worker fetch handler. BRIDGE_TOKEN is passed as a process variable without an explicit Worker variable/dev-vars binding. The default code does not ensure that process variable becomes env.BRIDGE_TOKEN.
+An isolated fake process/readiness reproduction confirmed configuredMainExists=false, no token in config.vars, and only one readiness attempt before killing the process after a synthetic ECONNREFUSED. No process or API was actually started. Use a real entry path/export, supported secret injection and bounded startup retries.
+
+3. Bootstrap has a resource dependency cycle.
+BridgeSpec requires Vectorize/D1 identities and always declares all four bindings, although the first embedding probe must happen before the index dimension/name/resources are known. Provide an AI-only probe bridge; add storage/index bindings after the approved provisioning step.
+
+4. Native storage/verification paths are not yet connected.
+bridge-worker.ts serves readiness and embed only. No protocol/adapters transport native ingestion/profile selection and application verification. CourseDataPlane/profiles use MemoryBindings, and writeProfileRows mutates bindings.tables directly; that cannot update native D1. runVerificationSession always instantiates MockLanguageModelV4, fixture chunks and scripted CRAG ports. Its live=false label is honest, but a separate real HTTP verification path is needed before it can verify OpenRouter/native bindings.
+
+5. Execution provenance and durable allowance need closure.
+Probe receipts hardcode live=false and CLI reconstruction has no persisted session allowance restore. Distinguish fixture/local-emulator/remote-binding provenance; never reuse a fixture embedding cache for live ingestion solely because dimensions/profile strings match. Restore outstanding reservations across an activation run's separate commands/restarts; source the ledger from the confirmed session rather than making a fresh full allowance each time.
+
+No further graph or framework redesign is needed. The next technical prompt requires a command-entrypoint integration test through a real local Worker (offline resources), in addition to pure injected tests, and removes the remaining native/fake adapter coupling. Live calls remain pending human account-action scope, model and spending inputs.
+
+A separate classroom-material prompt can run after the technical closure, or against the explicitly labeled current offline demo. No invented results, no claimed deployment and no reserved-test execution without live scope/budget.
+
+Added only review and prompt artifacts. No application or dependency edits. OpenViking mapping remains absent for the exact project; no foreign tenant is used.

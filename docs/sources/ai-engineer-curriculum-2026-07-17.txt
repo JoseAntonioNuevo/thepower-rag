@@ -1,0 +1,185 @@
+The Power — AI Engineer curriculum source excerpt
+Source: Laura's email dated July 17, 2026.
+Gmail message ID: 19f6f7569cc093d9
+Retrieved: October 3, 2026, Europe/Madrid.
+Scope: only the AI ENGINEER curriculum block. Headers, signatures, contact details, compensation discussions, other programs, and quoted correspondence have been excluded.
+Original wording is preserved, including typos. This source describes the curriculum; it does not establish current model availability or final per-cohort dates/instructors.
+Cross-check session mapping and calendars against the final 2026 calendar before authoring student documents.
+
+*IA ENGINEER:*
+AI ENGINEERING ACTUALMENTE
+AI Engineering actualmente Muestra del ecosistema actual para que el alumno
+entienda dónde se sitúa cada modeloa, framework o protocolo antes de entrar
+en detalle.
+AI Engineering actualmente Qué son los LLMS / Parámetros de generación /
+Comparativa actuazliada de modelos / ML vs Deep Learning vs IA / Costes y
+optimización / Modelos propietarios vs Open Source
+Selección de modelo Dado un caso de negocio justificar la elección de
+proveedor o modelo con criterios técnicos y económicos
+PROMPT ENGINEERING Y COMENZANDO CON OPENAI
+Propmt engineering y OpenAI Dominar las técnicas de prompting que siguen
+siendo la base de cualquier sistema de IA generativa, y dar los primeros
+pasos prácticos con la API de OpenAI.
+Propmt engineering y OpenAI Anatomía de un prompt / zero-shot vs. few-shot
+vs. chain of thought / system prompts vs. user prompts / JSON mode / React
+prompting / Prompting para código y análisis de datos / Iteración y
+evaluación de prompts / Seguridad / OpenAI
+Uso de OpenAI Propmt injection para saltarse los guardarailes de un sistema
+con instrucciones protegidas.
+ARQUITECTURA DE SISTEMAS CONVERSACIONALES
+Arquitectura de sistemas conversacionales Aprender a diseñar la
+arquitectura de una aplicación de IA antes de escribir código sentando las
+bases conceptuales de los agentes.
+Arquitectura de sistemas conversacionales Fundamentos de la arquitectura de
+software / Requerimientos funcionales y no funcionales / Patrones de diseño
+/ Estructura de carpetas y separación de capas de un proyecto /
+Documentación / Patrón React explicado paso a paso
+Arquitectura end to end Diseño y puesta en marcha de la estructura de
+carpetas y separación de capas de un proyecto
+LANGCHAIN: FUNDAMENTOS PRÁCTICOS
+Langchain: Fundamentos prácticos Dominar el framework más extendido para
+construir aplicaciones LLM componibles.
+Langchain: Fundamentos prácticos Qué es Langchain y rol actual / Model I/o
+/ Retrieval / Memoria conversacional / Agentes en Langchain / Cadenas
+simples y compuestas / Langserve
+Langchain Añadir memoria y herramientas a una cadena completa
+LANGGRAPH: STATE MACHINES PARA AGENTES
+LangGraph: State machines para agentes Aprender a modelar agentes como
+máquinas de estados explícitas.
+LangGraph: State machines para agentes Introducción y fundamentos de
+Langgraph / MAnejo de estado y flujo de control / Inegración de modelos de
+lenguaje / Patrones de diseño / Optimización y buenas prácticas de
+producción
+Langgraph Crear un grafo simple, evolucionarlo a un chatbot, añadirle
+memoria y finalmente herramientas
+OBSERVABILITY: LANGFUSE + LANGSMITH
+Observability: LangFuse + LangSmith Instrumentar aplicaciones LLM para
+poder depurarlas, evaluarlas y mejorarlas con datos reales.
+Observability: LangFuse + LangSmith Introducción a Langfuse / Fundamentos
+de Langsmith / Buenas prácticas de observabilidad en desarrollo con LLMs /
+Despliegue y consideraciones de seguridad en herramientas de observabilidad
+Langfuse y Langsmith Gestionar prompts de un chatbot, evaluar métricas de
+LLMs, instrumentas un grafo de Langgraph con Lagfuse y con Langsmith
+MODELOS OPEN SOURCE: HUGGINGFACE ECOSYSTEM
+Modelos open source: huggingface ecosystem Trabajar con modelos abiertos y
+entender cuándo compensa frente a usar un modelo cerrado vía API.
+Modelos open source: huggingface ecosystem Introducción al ecosistema
+Huggingface / NLP y generaciónd e texto con modelos open source / Prompt
+engineering aplicado a modelos abiertos / Fine-tuning y datasets /
+Despliegue de modelos en el Hub
+Modelos open source Fine-tuning de un modelo de texto abierto
+CLOSED SOURCE MODELS: GEMINI + CLAUDE
+Closed source models: Gemini + Claude Conocer en profundidad las dos
+grandes alternativas propietarias a OpenAI y sus capacidades diferenciales.
+Closed source models: Gemini + Claude Gemini / Anthropic Claude /
+Comparativa práctica
+Modelo Closed Source Fine-tuning sobre modelo cerrado
+DATABASES PARA AGENTES: POSTGRESQL + PGVECTOR
+Databases para agentes: PostgreSQL + PGVector Dotar a los agentes de
+memoria persistente y capacidad de búsqueda semántica sobre datos propios.
+Databases para agentes: PostgreSQL + PGVector Fundamentos matemáticos de
+embeddings y similitud vectorial / Bases de datos vectoriales / PostgreSQL
+/ PGVector / Herramientas especializadas de gestión y monitorización /
+Integración de la base vectorial con LLMs y con MCP
+Databases para agentes RAG multi-tenancy, aislamiento de datos por cliente
+y organización
+RAG
+RAG Construir el patrón de arquitectura más usado en aplicaciones
+empresariales de IA generativa.
+RAG Fundamentos de Retrieval-augmentes generation / Preparación de datos /
+Recuperación / Generación aumentada
+Chatbot con RAG Chatbpot con RAG completo
+RAG AVANZADO
+RAG avanzado Superar las limitaciones del RAG básico con técnicas de
+auto-corrección y reordenamiento de resultados.
+RAG avanzado RAG avanzado / Corrective RAG GRAG / Evaluación y métricas
+específicas de sistemas RAG
+RAG avanzado Construir un CRAG completo desde cero
+DEEP RESEARCH + MULTIMODAL
+Deep research + multimodal Construir agentes que investigan de forma
+autónoma y que procesan imagen y audio.
+Deep research + multimodal Procesamiento de archivos y visión por
+computador con modelos multimodales actuales / Imagen a texto, audio y text
+to speech / Deep Research
+Grafo de chatbot multimodal con memoria, herramientas y capacidad de deep
+research
+FINE-TUNING: LORA + ADAPTACIÓN DE MODELOS
+Fine-tuning: Lora + adaptación de modelos Aprender a especializar un modelo
+cuando el prompting y el RAG no son suficientes.
+Fine-tuning: Lora + adaptación de modelos Fundamentos de fine-tuning /
+Preparación de entornos y datos de entrenamiento / Supervised fine-tuning /
+LORA fundamentos y configuración con PEFT / Cuantización y QLORA para
+entrenar con recursos limitados / Merge y despliegue del modelo adaptado
+Fine-tuning Fine-tuning multimodal
+AGENTES
+Agentes Pasar de construir un agente aislado a diseñar sistemas multiagente
+de nivel producción, entendiendo el panorama de frameworks de 2026 y sus
+trade-offs reales.
+Agentes Agente único con herramientas / Equipos de agentes especializados /
+Frameworks de orquestación multiagente y cuando usar cada uno (Langgraph,
+Crew AI, Autogen / OpenAI / Google ADK / Microsoft agent framework ) /
+Patrones de coordinación / Persistencia de estado y memoria compartida /
+Manejo de errores reintentos y recuperación / Protocolo A2A /
+Observabilidad y coste en sistemas multiagente / Criterios de decisión
+Convertir un agente conversacional en un sistema de 2-3 agentes
+especializados usando Langgraph o CrewAI y comparando ambas implementaciones
+MCPS
+MCPs Entender y construir sobre el Model Context Protocol (MCP), el
+estándar para conectar modelos con herramientas y datos.
+MCPs Qué es MCP y por qué se ha convertido en el estandar / Arquitectura
+del protocolo / Primitivas del protocolo / Construcción de un servidos MCP
+propio / EL MCP INSpector como herramienta de depuración visual de
+servidores / Consumo de servidores MCP desde un agente / Autenticación y
+autorización / Seguridad específica de MCP / Gobernanza en entorno
+empresarial gateways MCP, registro y aprobación de servidores y auditoría
+de llamadas / MCP frente a A2A
+MCPs Construir un servidor MCP propio que expone una herramienta y un
+recurso de negocio, conectarlo a un agente y verificar su funcionamiento
+CLOUD DEPLOYMENT: AWS BASICS
+Cloud deployment: AWS basics Aprender a desplegar aplicaciones de IA en la
+nube de forma básica pero productiva.
+Cloud deployment: AWS basics Introducción a proveedores cloud / AWS básico
+/ comparativa AWS vs Azure vs GCP / Compute, storage, networking y
+seguridad / Optimización de costes / Docker / Primer vistazo a servicios de
+Ia gestionada en cada nube
+Despliegue Desplegar una aplicación con Docker
+SERVERLESS AI: AWS BEDROCK + LAMBDA
+Serverless AI: AWS Bedrock + Lambda Desplegar modelos y agentes sin
+gestionar servidores, usando los servicios de IA gestionada de los grandes
+proveedores.
+Serverless AI: AWS Bedrock + Lambda AWS bedrock / AWS Lambda / Alternaticas
+como Azure y Vertex AI / Consideraciones de coste, latencia y límites de
+las arquitecturas
+AWS Bedrock AWS Bedrock
+CI/CD + MONITORIZACIÓN EN PRODUCCIÓN
+CI/CD + Monitorización en producción Llevar una aplicación de IA a
+producción con las mismas garantías de calidad que cualquier sistema de
+software.
+CI/CD + Monitorización en producción Conceptos básicos de CI CD y entornos
+/ CI CD con GitHub Actions / Logging, monitoringy APM / Error tracking /
+Gestión de variables de entorno y secretos en despliegue / Migraciones de
+base de datos en producción y despliegues sin downtime / Disaster recovery
+backups
+CI/CD Montar un pipeline de CI/CD con tests automaticos
+EVALUACIÓN Y TESTING DE SISTEMAS DE IA
+Evaluación y testing de sistemas de IA Cerrar el ciclo de calidad: medir de
+forma rigurosa si un sistema de IA funciona bien antes y después de cada
+cambio.
+Evaluación y testing de sistemas de IA Evaluación de modelos y metricas
+especificas / Analisis avanzado y metricas de produccion / Testing
+automatizado de agentes y pipelines RAG / Integración de la evaluación con
+las herramientas de observabilidad
+Construir un sistema RAG completo desde cero con evaluación y testing
+integrados
+PROYECTO FINAL: AGENTE CONVERSACIONAL
+Proyecto final: Agente conversacional Integrar todo lo aprendido en un
+único proyecto.
+Proyecto final: Agente conversacional Agente conversacional: introducción
+al proyecto y planificación, prompts y configuración del agente,
+construcción del grafo, módulos y herramientas, aplicación, integración con
+postgrsql, integración con lagfuse, exposición cia fastapi, integración con
+mcps y despliegue en aws / Deep-research + RAG: Extensión del agente con
+capacidades de investigación autónama combinadas con recuperación de
+información propia / Integración de todos los c omponentes
+Proyecto final Entrega de este proyecto final
+

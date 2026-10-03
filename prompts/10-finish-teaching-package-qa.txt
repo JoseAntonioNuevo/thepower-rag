@@ -1,0 +1,54 @@
+You are Grok 4.7. Finish the LOCAL S10/S11 teaching package at /Users/jose/Documents/the-power/3-rag/material. Read docs/review/teaching-package-review.txt first. Most material is valid; preserve the established design, slide order, notes, dates, QR, guions and honest fixture labels. Do not rebuild the application or run paid/cloud operations.
+
+Verified package: two editable 15-slide 16:9 decks with notes, two 15-page PDFs, seven-page teacher-script PDFs, statements/teacher references/checklists, screenshots, an unexecuted 14+6 comparison protocol and documentary ZIPs. No public repo/deployment exists. The app is locally verified; real integrations and oral rehearsal remain pending.
+
+Scope: material/docs/packaging only inside 3-rag, plus updating this package's new S10/S11 copies in the parent presentaciones directory. Neighboring project code/templates/decks are read-only. No source-code/dependency/runtime changes, global font/tool installation, commit/push, Drive publication, feedback submission, provision/deployment or paid model call. Work directly without subagents or external reviewers.
+
+1. REPAIR FONT FIDELITY IN THE PDF BACKUPS
+
+The PPTX reference and S10/S11 decks declare Inter and Fira Code. Current PDFs embed FrankRuhlHofshi-Bold and LinuxLibertineG and look serif. Restore the actual intended title/body/code fonts in an isolated, supported rendering environment. Use available presentation/PDF skills, managed workspace dependencies and licensed official font assets if needed. Do not change global user font settings or silently redesign to another typography.
+
+When using LibreOffice, use the absolute bundled executable resolved through workspace dependencies, not the user's desktop installation. Register/load fonts only through a supported isolated renderer mechanism. Verify PDF font resources plus the visual result; XML declarations alone do not prove correct rendering.
+
+Re-export both slide PDFs, inspect every slide for changed line wraps/overflow, contrast, tables, code and QR. Preserve editable PPTX text/shapes/tables; do not flatten the slides to hide a rendering problem. Preserve author/speaker notes and all actual footer/order relationships. If font fidelity truly cannot be restored, report the exact renderer limitation rather than claiming a matched visual design.
+
+Use the existing integrated LangGraph deck as read-only reference:
+/Users/jose/Documents/the-power/presentaciones/S5-LangGraph-integrada-2026.pptx
+
+2. PROVIDE EXECUTABLE CODE AS A SEPARATE ARCHIVE
+
+Keep the existing student handout and teacher-material ZIP roles explicit. Add a sanitized, portable source/demo ZIP (for example material/S10-S11-demo-codigo.zip) that a learner can extract and run using the frozen lockfile/default offline mode.
+
+Include only the needed apps/packages/scripts/migrations, package manifests, bun.lock, TypeScript/Vite+/Wrangler configuration, approved corpus sources/prepared fixtures, dependency-free documentation and safe placeholder environment examples. Do not include node_modules, .wrangler, build output, actual env/dev-vars/activation files, allowance/cache/receipt state, raw email correspondence, private teacher notes, material/teacher solutions, reserved comparison questions, recursive ZIPs, or unrelated projects.
+
+The code archive must not expose teacher credentials or ask students to use the teacher's Cloudflare account. Explain that course-specific remote activation is instructor-only and not required for the offline lab. Do not authorize remote student activity or change account/permission code to make the ZIP work. Copy a tailored portable README into the archive; do not alter the live project's instructions merely to package it.
+
+Verify archive integrity, expected manifests/lockfile, safe paths/symlinks and exclusions. Extract into a fresh temporary directory and verify frozen install/check/build plus a minimal offline demo/health run if dependencies can be resolved, with no model/account calls. Use proportional checks and stop only owned local processes. Record missing verification honestly if an environment limitation prevents it; do not claim an executable package from filenames alone.
+
+3. FIX CONFIGURATION TROUBLESHOOTING
+
+In incidencias-y-respaldo/checklist/teacher notes, resolve a wrong APP_MODE from the ACTUAL selected Wrangler/.dev.vars source reported by preflight. Restarting without process exports does not override a .dev.vars real setting. Give a safe exact procedure to restore demo without exposing secrets, deleting unrelated vars or changing cloud state. Use the server's printed URL; do not falsely assert that the regular app cannot use 127.0.0.1.
+
+If related Markdown changes, regenerate the corresponding PDF and speaker-note excerpt where present. Ensure notes and guions agree with the actual app and cannot trigger activation as a live recovery step.
+
+4. CLARIFY EXERCISE SCOPE
+
+Clearly distinguish:
+- The original sent assignment (including its twenty-question evaluation requirement).
+- The user-approved architecture/corpus adaptation for this classroom demonstration.
+- The proposed offline lab using fixtures, which demonstrates control flow but not real model/semantic quality.
+- The teacher's separate protected/frozen 20-question comparison set, still unexecuted.
+
+Do not waive a school assessment because teacher API activation is pending, and do not tell students to execute/reveal the protected teacher set. Explain what remains required for the original assignment versus what the local lab can prove; students can prepare their own appropriate evaluation under their own available/authorized setup without a mandatory cloud subscription. Do not claim a fixture pass is a real quality measurement. Do not invent a rubric/approval/deadline absent from the source.
+
+Preserve the frozen teacher comparison content and no-results status. Do not run it or change prompts/configuration based on it. Do not introduce new academic requirements; only resolve the ambiguity and label proposals.
+
+5. FINAL CONSISTENCY AND DELIVERY
+
+Update material/README.md, file roles, teacher matrix and verification notes with the source-code archive link and exact verified scope. Rebuild documentary ZIPs from an explicit allowlist so PDF/note fixes are included while teacher answers/reserved questions stay out of student/code ZIPs. Add separate archive roles, not nested archives.
+
+Update only the S10/S11 parent-folder copies owned by this package; confirm they match the final primary PPTX/PDF. Preserve S5-S8 and original QR bytes. Validate all local links and actual presentation order/notes. Record font/rendering checks and code-archive verification in material/evidencias/qa-final.md.
+
+Do not claim PowerPoint-native inspection if only rendering was performed. Do not mark classes 100% ready: real integration, semantic calibration, actual reserved comparison, public hosting and Jose's 90-minute oral rehearsal are still distinct pending tasks. OpenViking requires the project's verified account mapping; no other tenant may be used.
+
+Final response in Spanish: corrected PDF typography, archive roles/run commands, scope clarifications, actual QA, local links and pending real/oral work. Keep application code and external accounts untouched.

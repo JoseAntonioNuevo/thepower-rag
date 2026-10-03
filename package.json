@@ -1,0 +1,39 @@
+{
+  "name": "thepower-rag",
+  "private": true,
+  "workspaces": [
+    "apps/*",
+    "packages/*"
+  ],
+  "type": "module",
+  "scripts": {
+    "dev": "vp -C apps/web dev",
+    "check": "vp check",
+    "test": "vp test",
+    "build": "vp -C apps/web build",
+    "preview": "vp -C apps/web preview",
+    "fmt": "vp fmt",
+    "lint": "vp lint",
+    "preflight": "bun scripts/preflight.ts",
+    "prepare-corpus": "bun scripts/prepare-corpus.ts",
+    "ingest-plan": "bun scripts/ingest-plan.ts",
+    "activate": "bun scripts/activate.ts",
+    "test:entrypoint": "THEPOWER_ENTRYPOINT=1 vp test",
+    "dev:real": "CLOUDFLARE_ENV=local vp -C apps/web dev",
+    "preflight:real": "bun scripts/preflight.ts --env local --capability crag"
+  },
+  "devDependencies": {
+    "@thepower-rag/contracts": "workspace:*",
+    "@thepower-rag/core": "workspace:*",
+    "@types/node": "24.19.1",
+    "dotenv": "16.3.1",
+    "typescript": "7.0.2",
+    "vite": "npm:@voidzero-dev/vite-plus-core@1.0.0",
+    "vite-plus": "1.0.0"
+  },
+  "overrides": {
+    "vite": "npm:@voidzero-dev/vite-plus-core@1.0.0",
+    "vitest": "5.0.1"
+  },
+  "packageManager": "bun@1.4.2"
+}

@@ -1,0 +1,126 @@
+You are Grok 4.7. Continue the existing monorepo:
+/Users/jose/Documents/the-power/3-rag
+
+PHASE 6: FIX THE VERIFIED CRAG REGRESSIONS AND CONNECT THE REAL EMBEDDING / INGESTION / VERIFICATION BRIDGE
+
+Read AGENTS.md, README.md, docs/phase-5-verification.md, docs/review/phase-5-review.txt, docs/cloud-activation-plan.md, the activation CLI and the CRAG implementation. Do not scaffold again or return another plan in place of independent local implementation.
+
+1. CURRENT STATE AND BOUNDARIES
+
+The same Spanish course assistant now has no-RAG, single-search RAG and bounded LangGraph.js CRAG. The complete S1-S20 curriculum and both calendars are sourced; exercise detail is partial. Preserve the frozen corpus identities unless a deliberate source/preparation change is required.
+
+Independent checks passed: frozen install, check, 65 tests, build and demo preflight. Browser verification now exists: partial S5/S6 route, three-attempt refusal, and 390px layout without horizontal overflow. The browser exposed duplicate React keys, and isolated port tests found deadline and ranking issues listed below.
+
+The real CLI management path is connected, but probeEmbeddings(), ingest() and verify() still contain unconditional refusals; resume() is an administrative read rather than the complete ingestion-resumption bridge. Replace these stubs with actual code paths and conditional diagnostics. Real resources/models remain unverified.
+
+Keep the current Bun/Vite+/React/Hono/AI SDK/OpenRouter/LangGraph.js/Workers architecture and pinned dependencies. No Python/Containers, additional orchestrator, managed RAG, Redis, queues, Durable Objects, or new hosting platform. No broad refactor for static-tool scores.
+
+Work directly, no subagents/CodeRabbit/external reviewers. Edit only 3-rag. Preserve neighboring course projects. Git root is /Users/jose/Documents; no git-init, commit, push, PR or public deployment.
+
+Known destination, already supplied and read-verified:
+- Login: joseantonionuevo@gmail.com.
+- Account: Joseantonionuevo@gmail.com's Account.
+- Account ID: 9c1493e94ba21f2c6872a9dd17ba19f7.
+
+The user has not supplied a spending cap/model/external-action scope in the current handoff. Do not invent them or generate approval flags as if they were human authorization. Complete local implementation and fake integration checks without repeating account/budget questions just to proceed locally. A later valid direct user authorization persists for that exact scope; no per-step reapproval is needed.
+
+No resource creation, paid requests, remote index writes or remote-binding activation in this phase unless separately authorized with the exact target/actions and budget. Do not borrow neighboring .env credentials, alter subscriptions/global OAuth, or export tokens. Preserve offline startup without credentials.
+
+2. FIX FOUR VERIFIED CRAG ISSUES FIRST
+
+A. One actual turn deadline:
+An injected generation ending at 21,000 ms was accepted despite the 20,000-ms global budget. Propagate a single deadline/combined abort signal through retrieval, evaluation, rewrite and generation. Each adapter receives remaining time, not a fresh full timeout. Check the deadline after awaited work as well as before new calls; late answers must not be reported complete. Clean listeners/timers. No new calls after stop. Distinguish stopping local waiting from cancelling already-started provider computation/charges.
+
+B. Apply the returned ranking:
+The graph validates ranking then discards it; a returned [b,a] order with usefulIds=[a,b] generated in [a,b] order. Define a deterministic ranking policy, apply the validated order/scores to selected evidence and final context, and expose them in the trace. Keep usefulIds as a membership decision, not a replacement for ordering. Test differing retrieval/rank/useful-ID order, invalid IDs, ties, and retained evidence across searches. Preserve audience/corpus/profile filtering and original-question intent.
+
+C. UI identity and busy-state safety:
+Repeated discarded S16 entries use duplicate drop-<chunkId> keys and emit console errors. Deduplicate final discarded summaries by source identity or give per-attempt rows genuinely unique identities; keep attempt history accurate. Disable the demo-scenario selector while busy, or abort/settle a run before switching. A new scenario must not clear an active response and later receive stale steps. Test follow-up/history bounds with the maximum allowed sources/summary.
+
+D. Correct the paper citation:
+arXiv:2401.15884 is by Shi-Qi Yan, Jia-Chen Gu, Yun Zhu and Zhen-Hua Ling. Fix docs/crag-graph.md. Keep the statement that our course-corpus corrective workflow is an adaptation, not an exact reproduction or remotely demonstrated improvement.
+
+3. IMPLEMENT A REAL, LOOPBACK-ONLY RUNTIME BRIDGE
+
+Wrangler 4.147.0 has no ai run. Do not invent a CLI command or leave probeEmbeddings() permanently rejected for that reason.
+
+Use a documented local Worker/Vite remote-binding route or another officially supported authenticated Workers AI API path under the approved account. Prefer a small internal runtime bridge bound to 127.0.0.1 that can use AI, DB, CORPUS and VECTORIZE when explicitly activated. Validate the installed Wrangler/plugin APIs and config before choosing the mechanism.
+
+Implement the bridge lifecycle and injectable transport so it is fully testable offline:
+- Explicit startup/readiness/timeout/shutdown; one identified process owned by this operation.
+- Default configuration keeps remoteBindings false. A separate selected real config enables only the approved course resources after authorization; it must not modify global profiles or the fixture build.
+- No public bridge/admin route, wildcard network bind, tunnel, wrangler deploy or implicit --remote publication.
+- Validate run/corpus/profile/scope and restrict operations to the approved course plan. Secrets stay server-side; no VITE_* keys, token arguments, raw credential logs or neighboring environment-file reads.
+- Bridge/CLI operations must not silently fall back to fixtures when a real path is requested.
+- Normal tests inject transport/provider/binding doubles and must fail on unintended network access.
+
+Do not add a permanent auth framework to solve a local control channel. Keep any temporary bridge control private to its run, and explain its bounds. If a supported runtime route requires extra publication/access, finish independent code and report that exact additional action rather than widening scope yourself.
+
+4. WIRE THE COMMANDS END TO END
+
+probe-embeddings:
+- Under explicit execution permission/budget, send two short synthetic texts to BGE-M3 through the bridge.
+- Validate count, finite rows and observed dimension; write a dated, secret-free receipt atomically. Unknown provider revision stays null.
+- Do not assume 768, fixture 128 or an unobserved 1024.
+- The command must consume the actual bridge result and return meaningful status, not unconditional refusal/success.
+
+ingest:
+- Rebuild a semantic profile for the frozen prepared corpus using the observed embedding configuration, leaving fixture artifacts intact.
+- Produce/reuse an embedding cache keyed by exact preparation/profile/model/dimension and source/chunk hashes. Validate cache integrity. Do not re-embed accepted work on resume.
+- Connect the existing bound/core ingestion to actual R2/D1/Vectorize through the bridge, using the scoped management metric/metadata receipt.
+- Write and read back immutable sources, content/profile manifests, catalog, durable operation journal and batch mutation receipts.
+- Preserve pending-visibility and use bounded read-only polling/status. Do not re-upsert merely to wait. Never replace the previous active profile after partial failure.
+
+resume/status/select-active:
+- Make full resume load the journal, cache and manifest for that exact profile, finish only missing work and verify visibility/configuration/identities.
+- Keep administrative status distinct from an ingestion resume. Do not report a metadata read as completed ingestion.
+- Select active only after complete readback, using the existing atomic policy and a final read proving the selected profile. No deletion of earlier versions.
+
+verify:
+- Implement an explicit short verification runner calling the real local app/runtime path, not a second copied RAG implementation.
+- Use clean conversations, fixed model/parameters, and the same frozen corpus/profile. Test no-RAG, basic RAG and a representative CRAG route only within the approved call budget.
+- Include citation readback, audience isolation, refusal and clarification with no final generation, and one controlled local error. Mark any synthetic error separately from real provider evidence.
+- Write JSON/Markdown receipts with date, account/resource/profile IDs, prompts/model/parameters, actual counters/metrics and unknown fields represented honestly.
+
+Existing provisioning stays limited to the three course resources and metadata indexes. Do not create them during normal startup/tests or change plans. Preserve strict JSON inventory validation and all current safety checks.
+
+5. A BUDGET IS AN ENFORCED EXECUTION POLICY, NOT JUST A JSON NUMBER
+
+The current real CRAG reserve() always returns ok. Replace it with an injected, server-owned allowance policy for the explicitly authorized verification session. Apply it to ALL billable paths, including evaluation/rewrite/final generation and embeddings, not only the CLI's initial check.
+
+Implement a testable reservation/settlement ledger for the bounded runner. Use recorded current pricing and conservative input/output bounds with margin; refuse an operation whose worst-case reservation cannot fit. Account for retries (normally zero), concurrency and restart/resume so a run cannot reset its allowance accidentally. Do not treat unknown pricing/actual charges as zero or release an unresolved reservation just to make more calls.
+
+Use named operation/call/time/output caps. The directed runner should normally stay within four generative requests total, counting evaluator/rewrite calls too, unless the human authorizes a different exact cap. A worst-case CRAG turn can consume several model calls: plan it rather than counting only its final answer.
+
+Keep the distinction between a bounded verification-session allowance and an account-wide/distributed billing cap. Do not claim the latter or add new infrastructure to achieve it. Unrestricted real/public chat remains disabled until its own hosting/access/usage policy is authorized. No provider key limit, top-up or account billing setting changes.
+
+All budget logic is verified with synthetic prices/ports in this phase. A missing real maxSpendUsd/model/permission leaves live execution blocked while the code is complete and ready.
+
+6. TESTS AND LOCAL ACCEPTANCE
+
+Add proportional regressions for deadline overrun, applied ranking, duplicate UI keys/scenario changes, bridge lifecycle, observed-dimension persistence, cache/profile mismatch, durable resume without re-embedding, real command status, and allowance exhaustion before any provider invocation.
+
+Use the current toolchain; no live network in normal tests. Exercise fake bridge + fake bindings end to end rather than merely checking printed commands or constants. Do not run the reserved twenty-question set yet or tune against it.
+
+Run frozen install, check, tests, build, capability-specific preflight and default dry-run commands. Verify the actual local app in workerd/browser, including 390px and the repeated-discard scenario with a clean console. Retain honest offline fixture labels and the first two teaching stages. Run appropriate React checks without a broad cosmetic rewrite.
+
+7. DELIVERY
+
+Write docs/phase-6-verification.md and update README/architecture/activation instructions with one executable path for each command. Preserve previous evidence as history. Stop only the temporary processes you created.
+
+Report in Spanish: repaired CRAG behavior, actual bridge/CLI code completion, exact commands, passed local/fake integration checks, live results only if separately authorized/executed, and the remaining spending/model/access inputs. Separate configured, tested, ingested, active, publicly deployed and classroom-ready states.
+
+Do not generate PowerPoints or execute the reserved assessment in this phase. After real integrations are authorized/verified, the remaining work is the fair RAG/CRAG comparison, final teaching materials/QR/90-minute guions, rehearsal and separately authorized public hosting.
+
+OpenViking still needs a verified project account mapping. Reachable service alone does not assign a tenant; do not borrow/create one or change infrastructure. Keep the session locally if memory delivery is unavailable.
+
+No commit, push, deployment, resource creation, paid call or subscription change is authorized by this local implementation prompt. If the user later supplies valid live scope/budget, apply it without asking again for each already-covered step.
+
+References:
+- Installed Wrangler/Vite-plugin, AI SDK/OpenRouter and LangGraph.js documentation/source.
+- https://developers.cloudflare.com/workers/local-development/remote-data/
+- https://developers.cloudflare.com/workers-ai/configuration/bindings/
+- https://developers.cloudflare.com/api/resources/vectorize/subresources/indexes/methods/get/
+- https://arxiv.org/abs/2401.15884
+
+Implement all independent authorized phase-6 code and local verification now.

@@ -1,0 +1,27 @@
+{
+  "at": "2026-10-03T18:55:20.124520+00:00",
+  "url": "https://rag-thepower.josenuevo.dev",
+  "worker": "thepower-rag",
+  "versionId": "d31c27f6-e985-4b7f-a14e-6addf0a9292d",
+  "widgetMode": "managed",
+  "appearance": "interaction-only",
+  "normalVerificationCaption": false,
+  "sessionLimit": {
+    "requests": 6,
+    "periodSeconds": 60,
+    "namespace": "2026100310"
+  },
+  "ipLimit": {
+    "requests": 120,
+    "periodSeconds": 60,
+    "namespace": "2026100311"
+  },
+  "tests": {
+    "unit": 99,
+    "entrypoint": 3
+  },
+  "workerSha256": "861d9a585f56ac780cd9511ef319c8d8150b5cf13c878fddeab34d3d8ae44cbc",
+  "indexHtmlSha256": "39b38df537b87e14f3b063c15fc5b78f79aeb5b2f826c6801cc0a18df9ca6019",
+  "rejectionReceipt": "rejections-live.json",
+  "noBudgetChangeForRejectedRequests": true
+}

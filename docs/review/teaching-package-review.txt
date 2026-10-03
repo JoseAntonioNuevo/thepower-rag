@@ -1,0 +1,31 @@
+S10/S11 local teaching package review — October 3, 2026
+
+Read-only validation of the supplied material; no app/provider calls, source-code edits, cloud actions, commit or push. Original files were not edited/re-exported during review.
+
+Confirmed:
+- Both PPTX archives are valid, 15 slides, 16:9 (12192000 x 6858000 EMU), with 15 notes parts each.
+- Actual slide order was read from presentation.xml relationships, not inferred from slide filenames. It matches the guions and footer numbers 1-15.
+- Each deck has 175 native shapes and two native tables; text/code/diagram objects are not a single flattened slide image.
+- Both slide PDFs have 15 pages. All slides were visually reviewed via PDF page contact sheets; no obvious clipping/overlap was observed at that review scale.
+- Both teacher-script PDFs have seven pages; their opening pages are readable. Markdown scripts contain the planned 90-minute blocks, exact demo questions, fallback and fixture labels.
+- Parent-folder PPTX copies are byte-identical. QR image matches the original byte-for-byte and appears prominently on opening/closing feedback slides. QR URL decoding was reported by the author, not independently repeated here because no QR decoder is installed in the bundled Python runtime.
+- Student/professor ZIP integrity passed, with no actual .env/.dev.vars/.activation.json/node_modules/.wrangler paths. Student ZIP excludes teacher solutions and the private reserved comparison set.
+- Reserved comparison has fourteen supported questions and six absent-data questions, and is explicitly unexecuted. No result table was fabricated.
+
+Issues/limitations to close:
+
+1. PDF font fidelity is broken.
+The source/reference PPTX declares Inter and Fira Code; S10/S11 PPTX still declare those fonts. However, both PDF backups embed FrankRuhlHofshi-Bold and LinuxLibertineG, producing serif body/title/code text instead of the requested template typography. This is a rendering/font-substitution problem. Restore the fonts in an isolated supported rendering environment, re-export and recheck layout/QR. Do not silently redesign the PPTX or install/alter global system fonts.
+
+2. ZIP scope is documentary, not executable.
+Student ZIP has eight entries (statements/QR/LEEME), no package.json or bun.lock. Professor ZIP has 52 material entries, no application source. This is acceptable as a document bundle, but neither can run the demo independently. Since no repo is published, provide a separate sanitized executable source archive/local starter and explicit distribution instructions, preserving teacher solutions/reserved questions separately.
+
+3. Troubleshooting must use actual configuration precedence.
+material/notas/incidencias-y-respaldo.md suggests restarting without exported variables if the banner is real. The Worker reads Wrangler vars plus .dev.vars; process.env is not merged. A real APP_MODE in .dev.vars persists after such a restart. Tell the teacher to inspect preflight's effective source and restore demo in the selected local configuration, without printing/removing secrets or changing unrelated files. Prefer the exact server URL printed rather than asserting 127.0.0.1 cannot work for the normal app.
+
+4. Clarify adapted local practice versus the original assessment.
+The statements distinguish original and demo, but the local prototype/fixture acceptance and postponed teacher comparison can be read as waiving the original twenty-question evaluation. The original S10/S11 evaluation requirement and the teacher's protected unexecuted set are separate. Label the proposed offline lab clearly; do not claim the school's assessment changed. Students must not be instructed to run/reveal the teacher's reserved set. Keep final requirements/proposals explicit and do not invent policy approval.
+
+Classroom-use scope: the local/demo teaching path is documented; real model/index/ingestion/calibration/comparison and Jose's oral rehearsal remain pending. The packet does not prove class readiness at 100% or deployment.
+
+Added only this review and a finishing prompt. App and original material remain intact. OpenViking mapping remains unavailable for this project.

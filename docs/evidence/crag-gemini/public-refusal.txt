@@ -1,0 +1,84 @@
+- main:
+  - heading "Asistente del curso AI Engineer" [level=1]
+  - paragraph: Sin RAG conversa sin documentos. RAG básico recupera una vez. CRAG recorre un grafo correctivo acotado. En demo las decisiones son un guion de prueba.
+  - status: "Perfil: real (workers-ai). Corpus: c3a59a406888b. Temario completo. Calendario L/X completo. Calendario M/J completo. Ejercicios parcial. Índice remoto verificado. Embedding: @cf/baai/bge-m3."
+  - group "Etapa":
+    - generic: Etapa
+    - radio "Sin RAG Proveedor configurado"
+    - generic: Sin RAG
+    - generic: Proveedor configurado
+    - radio "RAG básico Proveedor configurado"
+    - generic: RAG básico
+    - generic: Proveedor configurado
+    - radio "CRAG Proveedor configurado" [checked]
+    - generic: CRAG
+    - generic: Proveedor configurado
+  - group "Grupo del curso":
+    - generic: Grupo del curso
+    - radio "General" [checked]
+    - generic: General
+    - radio "Grupo con clases los lunes y miércoles"
+    - generic: Grupo con clases los lunes y miércoles
+    - radio "Grupo con clases los martes y jueves"
+    - generic: Grupo con clases los martes y jueves
+  - region "Conversación":
+    - article:
+      - paragraph: ¿Qué beca interna de 1991 cubre el programa?
+    - article:
+      - paragraph: No hay evidencia suficiente en el corpus del curso. No se responde con fragmentos rechazados ni con una búsqueda agotada.
+      - paragraph: "pipeline. Estado: refused. Uso entrada: desconocido. Uso salida: desconocido. Coste: desconocido"
+    - status:
+      - generic: Listo
+    - generic: Pregunta
+    - textbox "Pregunta":
+      - /placeholder: Escribe una pregunta de prueba
+    - generic "Verificación de seguridad"
+    - button "Enviar" [disabled]
+    - button "Detener" [disabled]
+    - button "Nueva conversación"
+  - complementary:
+    - heading "Fuentes" [level=2]
+    - paragraph: Sin fuentes en esta respuesta.
+    - heading "Traza de la clase" [level=2]
+    - paragraph: Recorrido real. refuse. Se agotaron los intentos sin evidencia suficiente.
+    - paragraph: Búsquedas 3. Quedan 0. Reformulaciones 2. Quedan 0.
+    - paragraph: "Llamadas de pago: contadas por separado, sin total inventado. Uso: desconocido. Coste: desconocido."
+    - paragraph: "Consulta original: ¿Qué beca interna de 1991 cubre el programa?"
+    - paragraph: "Consulta de búsqueda: beca interna 1991 cobertura programa"
+    - list:
+      - listitem: "Descartado c3a59a406888b:s01-ecosistema:00, intento 1: La pasada lo rechazó y no entra en la respuesta."
+      - listitem: "Descartado c3a59a406888b:s18-cicd:00, intento 1: La pasada lo rechazó y no entra en la respuesta."
+      - listitem: "Descartado c3a59a406888b:s16-cloud-aws:00, intento 1: La pasada lo rechazó y no entra en la respuesta."
+      - listitem: "Descartado c3a59a406888b:s02-prompt-openai:00, intento 1: La pasada lo rechazó y no entra en la respuesta."
+      - listitem: "Descartado c3a59a406888b:s08-modelos-cerrados:00, intento 1: La pasada lo rechazó y no entra en la respuesta."
+      - listitem: "Descartado c3a59a406888b:s17-serverless:00, intento 1: La pasada lo rechazó y no entra en la respuesta."
+      - listitem: "Descartado c3a59a406888b:s14-agentes:00, intento 1: La pasada lo rechazó y no entra en la respuesta."
+      - listitem: "Descartado c3a59a406888b:s10-rag:01, intento 1: La pasada lo rechazó y no entra en la respuesta."
+      - listitem: "Descartado c3a59a406888b:s13-fine-tuning:00, intento 1: La pasada lo rechazó y no entra en la respuesta."
+      - listitem: "Descartado c3a59a406888b:s07-modelos-abiertos:00, intento 1: La pasada lo rechazó y no entra en la respuesta."
+      - listitem: "Descartado c3a59a406888b:s18-cicd:00, intento 2: La pasada lo rechazó y no entra en la respuesta."
+      - listitem: "Descartado c3a59a406888b:s02-prompt-openai:00, intento 2: La pasada lo rechazó y no entra en la respuesta."
+      - listitem: "Descartado c3a59a406888b:s10-rag:01, intento 2: La pasada lo rechazó y no entra en la respuesta."
+      - listitem: "Descartado c3a59a406888b:s16-cloud-aws:00, intento 2: La pasada lo rechazó y no entra en la respuesta."
+      - listitem: "Descartado c3a59a406888b:s17-serverless:00, intento 2: La pasada lo rechazó y no entra en la respuesta."
+      - listitem: "Descartado c3a59a406888b:s01-ecosistema:00, intento 2: La pasada lo rechazó y no entra en la respuesta."
+      - listitem: "Descartado c3a59a406888b:s19-evaluacion:01, intento 2: La pasada lo rechazó y no entra en la respuesta."
+      - listitem: "Descartado c3a59a406888b:s11-rag-avanzado:01, intento 2: La pasada lo rechazó y no entra en la respuesta."
+      - listitem: "Descartado c3a59a406888b:s08-modelos-cerrados:00, intento 2: La pasada lo rechazó y no entra en la respuesta."
+      - listitem: "Descartado c3a59a406888b:s19-evaluacion:00, intento 2: La pasada lo rechazó y no entra en la respuesta."
+      - listitem: "Descartado c3a59a406888b:s18-cicd:00, intento 3: La última pasada lo rechazó y no entra en la respuesta."
+      - listitem: "Descartado c3a59a406888b:s02-prompt-openai:00, intento 3: La última pasada lo rechazó y no entra en la respuesta."
+      - listitem: "Descartado c3a59a406888b:s16-cloud-aws:00, intento 3: La última pasada lo rechazó y no entra en la respuesta."
+      - listitem: "Descartado c3a59a406888b:s08-modelos-cerrados:00, intento 3: La última pasada lo rechazó y no entra en la respuesta."
+    - list "Pasos del grafo":
+      - listitem: retrieve. Búsqueda 1. Búsqueda 1. 10 fragmentos en alcance.
+      - listitem: "rank. Búsqueda 1. Ninguno de los fragmentos contiene información sobre becas, becas internas ni sobre el año 1991. Orden: sin evidencia útil."
+      - listitem: discard. Búsqueda 1. Se descarta el contexto de esta pasada.
+      - listitem: reformulate. Búsqueda 1. Nueva consulta de búsqueda. La pregunta original no cambia.
+      - listitem: retrieve. Búsqueda 2. Búsqueda 2. 10 fragmentos en alcance.
+      - listitem: "rank. Búsqueda 2. Ninguno de los fragmentos contiene información sobre becas internas, coberturas o el año 1991 en el programa. Orden: sin evidencia útil."
+      - listitem: discard. Búsqueda 2. Se descarta el contexto de esta pasada.
+      - listitem: reformulate. Búsqueda 2. Nueva consulta de búsqueda. La pregunta original no cambia.
+      - listitem: retrieve. Búsqueda 3. Búsqueda 3. 10 fragmentos en alcance.
+      - listitem: "rank. Búsqueda 3. Ninguno de los fragmentos recuperados contiene información sobre becas internas, coberturas o eventos relacionados con el año 1991. Orden: sin evidencia útil."
+      - listitem: refuse. Búsqueda 3. Los intentos se agotaron sin evidencia suficiente.

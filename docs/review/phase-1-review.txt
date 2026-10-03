@@ -1,0 +1,35 @@
+Phase 1 review — October 3, 2026, Europe/Madrid
+
+Scope: independent source review and local verification of the existing foundation. No application code or dependencies were changed by this review. No paid calls, provisioning, deployment, commit, or push.
+
+Verified again:
+- bun install --frozen-lockfile: 182 installs across 334 packages, no changes.
+- bun run check: 49 files formatted; 26 files with no lint/type errors.
+- bun run test: 13 passing tests in two files.
+- bun run build: successful frontend and Worker builds.
+- bun run preflight: offline demo; provider/model variables absent; no connections.
+- Actual dev server in workerd and in-app browser: health reports Cloudflare-Workers; the no-RAG offline response is labeled; basic RAG returns its explicit not-implemented error.
+- CLAUDE.md is a relative symlink to AGENTS.md.
+- Git root is /Users/jose/Documents; the-power/3-rag is untracked. Do not git-init it or stage unrelated parent files.
+
+Review findings to address before live integrations:
+
+1. Incorrect effective configuration in preflight.
+scripts/preflight.ts:101 resolves APP_MODE only from process.env or Wrangler vars. It reads .dev.vars for variable presence but ignores APP_MODE in that file. In an isolated temporary copy, .dev.vars containing only APP_MODE=real was reported as effective demo and exited 0. This can give a false readiness result. Resolve the same configuration sources/precedence as the local Worker; do not combine independently present variable names into a configuration the Worker never receives. Add a regression test that does not use real credentials.
+
+2. Stage changes retain the previous conversation.
+apps/web/src/App.tsx:6 uses a module-global activeMode. Changing the stage clears the error but does not clear or isolate messages and does not prevent a change during streaming. Browser reproduction: send an offline response, select RAG, and the earlier no-RAG answer remains. It does not make the current foundation a fake RAG, but it would contaminate later comparisons and introduce races. Use component-local mode/transport state and a fresh conversation per mode/cohort/corpus selection. Abort and settle an active stream, or disable switches while busy.
+
+3. Configuration needs to become capability-specific.
+apps/api/src/env.ts and packages/contracts/src/limits.ts currently require EVALUATOR_MODEL_ID for all real mode requests. This matches the foundation's original policy, but the next phase must let a real no-RAG chat work without an evaluator or retrieval resources. Do not require future CRAG dependencies for basic capabilities.
+
+4. Future secret filename coverage.
+.gitignore ignores .dev.vars and .dev.vars.local, but not environment-specific names such as .dev.vars.production. Expand coverage to .dev.vars* before introducing such files. No actual exposed credential was found or read in this review.
+
+Implementation boundaries remain honest: model.ts defines factories without invoking the provider; RAG/CRAG are 501; compatibility graph is only a smoke check. GenerationPort currently returns buffered text and will need a suitable typed streaming boundary for phase 2. Health/message metadata schemas currently describe only the foundation/demo and must evolve with real capabilities.
+
+Current reviewer host observation: preflight reported system Node v22.22.3, not the author's earlier v24.16.0. Both observations can be environment-specific; record the runtime actually used rather than treating the old host version as fixed.
+
+Visual evidence: phase-1-mode-history.png in this directory.
+
+OpenViking: workspace-account.sh returned exit 1 for the exact project; 127.0.0.1:11933/health refused connection. No tenant was borrowed and no OpenViking write was made.

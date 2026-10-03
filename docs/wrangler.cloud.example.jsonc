@@ -1,0 +1,42 @@
+// Plantilla NO usada por el desarrollo ni por el build.
+// El id de cuenta es el destino ya elegido. Los ids de D1, R2 y Vectorize siguen sin existir.
+// No la copies a apps/web/wrangler.jsonc ni pongas remote: true hasta autorizar esa ruta.
+// EMBEDDING_MODEL cita el candidato documentado. La dimensión no está medida.
+{
+  "name": "thepower-rag",
+  "account_id": "9c1493e94ba21f2c6872a9dd17ba19f7",
+  "compatibility_date": "2026-10-02",
+  "compatibility_flags": ["nodejs_compat"],
+  "main": "../../apps/api/src/worker.ts",
+  "vars": {
+    "APP_MODE": "real",
+    "EMBEDDING_MODEL": "@cf/baai/bge-m3",
+    "EMBEDDING_DIMENSIONS": "REPLACE_AFTER_OBSERVING_BGE_M3",
+    "CORPUS_VERSION": "REPLACE_WITH_PREPARED_VERSION",
+    "INDEX_PROFILE": "REPLACE_WITH_OBSERVED_PROFILE",
+    "VECTOR_METRIC": "cosine",
+    "MIN_RETRIEVAL_SCORE": "REPLACE_AFTER_CALIBRATION",
+  },
+  "ai": {
+    "binding": "AI",
+  },
+  "vectorize": [
+    {
+      "binding": "VECTORIZE",
+      "index_name": "REPLACE_WITH_REAL_INDEX",
+    },
+  ],
+  "d1_databases": [
+    {
+      "binding": "DB",
+      "database_name": "REPLACE_WITH_REAL_DATABASE",
+      "database_id": "REPLACE_WITH_REAL_DATABASE_ID",
+    },
+  ],
+  "r2_buckets": [
+    {
+      "binding": "CORPUS",
+      "bucket_name": "REPLACE_WITH_REAL_BUCKET",
+    },
+  ],
+}

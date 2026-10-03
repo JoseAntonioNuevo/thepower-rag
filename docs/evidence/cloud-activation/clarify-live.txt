@@ -1,0 +1,16 @@
+data: {"type":"start","messageMetadata":{"runId":"21228c5a-4de7-4812-a4d8-abac1eac3c80","origin":"pipeline","modelId":"openai/gpt-6-luna","promptId":"crag-v1","completion":"streaming","usage":null,"cost":null},"messageId":"AXIRE28MGGCyVCl1"}
+
+data: {"type":"data-step","data":{"runId":"21228c5a-4de7-4812-a4d8-abac1eac3c80","kind":"clarify","retrieval":0,"reformulation":0,"query":"¿Cuándo es la clase de RAG?","status":"Falta la cohorte. No hay búsqueda ni evaluación.","evidenceStatus":null,"retainedIds":[],"discardedIds":[]},"transient":true}
+
+data: {"type":"data-crag","id":"crag","data":{"runId":"21228c5a-4de7-4812-a4d8-abac1eac3c80","fixture":false,"scenarioId":null,"measured":false,"partial":true,"audience":"program","corpusVersion":"c3a59a406888b","profileId":"p76509a5f9743","originalQuestion":"¿Cuándo es la clase de RAG?","currentQuery":"¿Cuándo es la clase de RAG?","retrievalCount":0,"reformulationCount":0,"attemptsRemaining":3,"rewritesRemaining":2,"evidenceStatus":null,"terminal":"clarify","reason":"Falta elegir la cohorte.","retained":[],"discarded":[],"calls":{"retrieval":{"executions":0,"providerCalls":null,"durationMs":null},"evaluation":{"executions":0,"providerCalls":null,"durationMs":null},"reformulation":{"executions":0,"providerCalls":null,"durationMs":null},"generation":{"executions":0,"providerCalls":null,"durationMs":null}},"usage":null,"cost":null}}
+
+data: {"type":"text-start","id":"answer"}
+
+data: {"type":"text-delta","id":"answer","delta":"La pregunta parece de calendario. Elige la cohorte L/X o M/J. La selección general no muestra los dos calendarios."}
+
+data: {"type":"text-end","id":"answer"}
+
+data: {"type":"finish","messageMetadata":{"runId":"21228c5a-4de7-4812-a4d8-abac1eac3c80","origin":"pipeline","modelId":"openai/gpt-6-luna","promptId":"crag-v1","completion":"clarified","usage":null,"cost":null}}
+
+data: [DONE]
+

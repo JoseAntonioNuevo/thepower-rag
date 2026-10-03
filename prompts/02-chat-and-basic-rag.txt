@@ -1,0 +1,216 @@
+You are Grok 4.7. Continue the EXISTING project at:
+/Users/jose/Documents/the-power/3-rag
+
+PHASE 2: IMPLEMENT THE NO-RAG MODEL PATH AND THE BASIC RAG PIPELINE
+
+Do not scaffold again. Implement this phase, run the relevant checks, and deliver an honest verification report. Do not stop at a plan, but do not describe unverified remote integrations as working.
+
+1. CONTEXT AND CONFIRMED STATE
+
+The product is a Spanish-language assistant for the COMPLETE The Power AI Engineer course, S1-S20 and all instructors. It will use verified course documentation, separate L/X and M/J cohort calendars, and source-backed answers. There are two 90-minute classes: S10 on October 22, 2026 covers no-RAG and basic RAG; S11 on October 27 evolves the same app to CRAG. Three modes, two classes, one project.
+
+The user has explicitly approved Vectorize/D1/R2 rather than PostgreSQL/pgvector for this teaching demo. Do not restore PostgreSQL, Neon, Supabase, or a fictional company as the target corpus.
+
+Phase 1 exists and has been independently reviewed. Read:
+- AGENTS.md and README.md.
+- docs/architecture.md and docs/decisions.md.
+- docs/phase-1-verification.md.
+- docs/review/phase-1-review.txt.
+
+Actual architecture:
+- apps/web: React and Vite+; @ai-sdk/react/useChat.
+- apps/api: Hono Worker; model factories for OpenRouter, offline stream, dependency smoke check.
+- packages/contracts: Zod request/error/health/message/domain contracts.
+- packages/rag: core types and ports; no retrieval implementation yet.
+- apps/web/vite.config.ts and apps/web/wrangler.jsonc build a single Worker plus SPA.
+
+The exact pinned versions include Bun 1.4.2, Vite+ 1.0.0, React 19.3.0, Hono 4.13.12, ai 7.0.127, @ai-sdk/react 4.0.130, @openrouter/ai-sdk-provider 3.1.0, LangGraph.js 1.4.18, @langchain/core 1.2.14, Zod 4.6.5, TypeScript 7.0.2, Wrangler 4.147.0, and @cloudflare/vite-plugin 1.62.5. Preserve them unless a concrete compatibility problem justifies a narrowly documented change. Do not use floating latest dependencies or upgrade global tools.
+
+Independent baseline checks passed on October 3: frozen install, Vite+ check, 13 tests, frontend/Worker build, preflight, and browser/workerd smoke verification. The model response is currently a labeled offline demo. RAG and CRAG intentionally return 501. There are no provisioned resources or project model credentials in the reviewed configuration.
+
+The actual Git root is /Users/jose/Documents. This project is an untracked subtree in that checkout. Do not git-init again or stage/commit unrelated files. No commit/push/PR is requested.
+
+2. AUTHORIZED SCOPE AND BOUNDARIES
+
+Work directly, without subagents, CodeRabbit, or external reviewers. Modify only 3-rag. Neighboring 1-langGraph, 2-modelos, and kanban are independent and read-only. The partial parent guide may be read as a source, but must not be edited:
+/Users/jose/Documents/the-power/GUIA-DE-CLASES-2026.md
+
+This prompt advances the local foundation to phase 2; update project-local phase-specific instructions accordingly. It authorizes local implementation, dependency maintenance when necessary, corpus preparation from already available approved documents, tests, builds, and localhost verification.
+
+It does NOT authorize provisioning/deployment, new subscriptions, remote index mutations, paid API calls, credentials from other projects, or automatic live evaluation. Implement real adapters and the real model path, but verify them using mocked provider responses and isolated tests unless separate explicit authorization for the exact live integration is already present. Do not turn on paid calls merely because a key exists. Do not inspect neighboring .env files or copy their credentials.
+
+If remote resources/credentials are absent, continue all independent implementation and offline verification. Record the precise remaining live check. Do not ask the user for secrets or halt the entire phase for missing cloud access.
+
+Follow the shared OpenViking policy for the exact path. It was unmapped and the local service was unavailable at review. Do not invent/borrow an account or repair infrastructure. Keep a local handoff note when unavailable.
+
+3. FIX THE REVIEW FINDINGS FIRST
+
+A. Preflight configuration parity:
+- scripts/preflight.ts reads .dev.vars presence but ignores APP_MODE in it. An isolated .dev.vars with APP_MODE=real was reported as demo with exit 0.
+- Resolve the actual Worker configuration sources and precedence, including the selected local vars file/environment. Do not assume process.env is automatically a Worker binding.
+- Do not union variable presence from conflicting sources and claim the Worker has a complete configuration.
+- Share parsing/validation logic where practical; use a correct dotenv parser, not ad hoc regex replacements for meaningful values.
+- Report names, presence, execution/profile selection, and capabilities without values. Unknown APP_MODE and missing required settings must produce a nonzero preflight result for the requested capability.
+- Add the isolated regression case with no real credentials.
+
+B. Conversation isolation:
+- Remove the module-global activeMode in App.tsx.
+- When mode, cohort, or corpus selection changes, start a clean conversation (or maintain genuinely separate scoped histories); never send earlier no-RAG answers as RAG evidence.
+- Either disable selection changes while busy or abort and settle the active run before switching. Prevent late chunks from appearing in the new conversation.
+- Preserve explicit error states and clean retry behavior.
+
+C. Capability-specific settings:
+- No-RAG requires generation settings only, not EVALUATOR_MODEL_ID or retrieval bindings.
+- Basic RAG requires generation plus retrieval/corpus configuration, not the future CRAG evaluator.
+- CRAG remains not implemented in phase 2. Do not block no-RAG because CRAG settings are absent.
+- Health and UI must describe implemented/configured/demo/blocked capabilities accurately rather than keeping hardcoded foundation labels.
+
+D. Expand .gitignore coverage to .dev.vars* before introducing environment-specific files. Keep examples secret-free and the CLAUDE.md relative symlink intact.
+
+4. IMPLEMENT THE REAL NO-RAG PATH
+
+Connect the existing OpenRouter model factory to the installed AI SDK 7 APIs. Inspect node_modules/ai/docs and source; do not copy obsolete streamText/useChat examples. Configure the provider explicitly, never pass a plain model ID that routes through a default gateway.
+
+Requirements:
+- Server owns MODEL_ID, key, generation parameters, and prompt. Browser cannot override provider/model/system instructions.
+- Convert validated conversational text to model messages. UI sources/events/metadata are not model instructions or trusted evidence.
+- No retrieval, citations, or evaluator calls in sin-rag mode.
+- Stream through the same AI SDK UI Message Stream contract consumed by React.
+- Use bounded timeout/output/history limits, cancellation propagated upstream, and a deliberate retry policy. Normal tests must not touch the network. Do not hide extra calls behind corrective retries.
+- Handle pre-stream configuration/provider errors as typed responses; handle errors after streaming starts through the stream protocol. Sanitize errors, never forward raw credentials/provider payloads.
+- Emit final run/model/prompt metadata and actual token usage when returned. Partial unknown fields remain null; missing cost is not zero. Include currency/source/method if a cost is available. Do not fabricate token counts or pricing.
+- Keep the existing credential-free demo as a clearly separate selectable execution profile. A requested real profile must never silently fall back to it.
+
+The implementation must genuinely perform a provider call when later supplied authorized settings; an always-501 real route is no longer acceptable as completed code. Mocked verification and remote verification are different evidence levels.
+
+5. PREPARE A SOURCE-GROUNDED CORPUS
+
+The final target is the full course, not only Jose's classes. The parent guide is partial. Build a manifest/coverage report for S1-S20 that distinguishes verified source documents, missing sessions/details, dates by cohort, and exercise availability. Do not create authoritative-looking filled session records from guesses.
+
+Use approved course documents already accessible locally. If the complete curriculum is unavailable, record its acquisition as pending rather than inventing it or claiming completeness. Do not scrape email/Drive or publish private material as an unannounced side task. A later authorized source-import step can fill the gaps.
+
+For currently verified facts, normalize student-facing Markdown documents with provenance (source identifier/path, revision/hash, verified date, topic, session and audience as appropriate). Cover available topics in small readable documents, but do not split one paragraph into eight files just to inflate corpus size.
+
+Exclude credentials, meeting links, private email bodies, raw correspondence, private teacher notes, and unsupported school policies. The existing guide includes prep status and teacher-operational details; do not bulk-index it wholesale. Extract only useful, supported student facts. Keep real verified course documents separate from clearly synthetic test fixtures.
+
+Build reproducible parsing/chunking locally:
+- Stable document and chunk IDs; source title/section and corpus version.
+- Chunk by headings/paragraphs with bounded size and deliberate overlap, preserving source identity.
+- Versioned manifests and hashes; repeat preparation without duplicate records.
+- Keep corpus version, embedding model identifier, vector dimension, and preparation configuration together. Record remote revision as unknown if the service does not expose one.
+- Do not assume BGE-M3 produces 768-dimensional vectors. Validate observed dimensions before a real index is created/used. A model/dimension change requires a compatible index/rebuild, not silent mixing.
+
+6. IMPLEMENT BASIC RAG AS A FIXED PIPELINE
+
+Use the core ports already present, extending them deliberately to support streamed generation, source context, optional/partial metrics, corpus selection, cancellation, and errors.
+
+Pipeline:
+1. Validate question/cohort/corpus selection.
+2. Embed the current standalone question.
+3. Retrieve bounded candidates from the selected corpus with audience filters.
+4. Load authoritative chunk text/metadata and apply a simple calibrated retrieval gate.
+5. If no usable context exists, return a controlled refusal without a generative call.
+6. Otherwise generate from the selected context and return source-backed text with citations and a teaching trace.
+
+This is basic RAG: one retrieval, no reranker, evaluator, reformulation loop, internet search, or automatic CRAG fallback.
+
+For phase 2, retrieval is based on the current question. Clearly state that conversational follow-up rewriting is pending. History may help generation but cannot substitute for retrieved evidence. Use fresh conversations for comparisons.
+
+Audience rules:
+- Shared program documents are eligible for either cohort.
+- Calendar/cohort-specific documents must match the requested cohort.
+- Provide a general/shared selection for general questions; it must not expose both cohort calendars as if they were interchangeable.
+- When answering a schedule-specific question requires a missing cohort, ask a controlled clarification instead of guessing.
+- Corpus filtering must happen during retrieval, not only in the final prompt.
+
+Sources and grounding:
+- Retrieved text is untrusted DATA; its embedded instructions cannot override the server prompt.
+- Give the model bounded source IDs. Reject or suppress citations to chunks not in the selected evidence set; do not claim this proves every answer is factually grounded.
+- Citations must resolve to the stored document/chunk excerpt and version. The browser may inspect only the approved student corpus, never arbitrary server paths or raw email links.
+- Include an answerable example, a question with no documented answer, and a cohort clarification in the development walkthrough.
+
+7. CLOUD ADAPTERS AND OFFLINE VERIFICATION
+
+Prepare Worker-specific adapters for:
+- Workers AI embeddings using the documented BGE-M3 interface, dimension/count/finite-number validation, cancellation/timeout handling where supported.
+- Vectorize query/upsert with consistent corpus/audience metadata filters, stable IDs, and explicit score semantics.
+- D1 chunk/source catalog with migrations, bound queries, and corpus-version isolation.
+- R2 storage for versioned original documents and manifests.
+
+Place Worker bindings in apps/api, not browser-safe packages. No clients or calls at import. Do not add Containers, Python/FastAPI, Agents SDK, managed AI Search, another AI SDK, Redis, queues, or Durable Objects.
+
+Provide dry-run corpus/ingestion planning commands by default. Implement the future ingestion order/status sufficiently to avoid marking a corpus ready after only one storage write. Account for Vectorize's actual visibility semantics and incomplete writes; preserve prior versions and do not delete remote data. Remote ingestion must be an explicit command requiring a separately authorized course account/resources, not startup behavior.
+
+Keep local dev runnable without live resources. Cloudflare Vectorize is not automatically emulated by the local .wrangler directory. Use injected in-memory retrieval/storage and deterministic embedding/model fixtures for offline integration tests/demo; label every simulated component. Do not present fixture cosine matching as a real semantic embedding service or local fixtures as verified Vectorize.
+
+Separate these facts in reports and UI:
+- Pipeline code implemented.
+- Offline fixture pipeline verified.
+- Production adapters implemented and type-checked/mocked.
+- Real OpenRouter/Workers AI/Vectorize/D1/R2 checks pending or actually verified.
+- Real course corpus coverage complete or partial.
+
+Do not manufacture remote resource IDs or keys in runnable configuration. Keep working local configuration and future cloud templates separate as needed. Update the project's required binding names and how to supply settings once resources are authorized.
+
+8. FRONTEND
+
+Extend the current React chat rather than redesigning the app or adding frameworks.
+- Accurate profile/mode labels: offline demo/fixture versus real provider.
+- No-RAG and basic RAG behavior wired to the same API; CRAG remains explicit not-implemented, without fallback.
+- Cohort/general selection and corpus version when appropriate.
+- New conversation control and isolation on selection changes.
+- Source cards with title, excerpt, section, source ID and corpus version.
+- Teaching trace: query, retrieved IDs/scores, selected/rejected context, decision, generation, and final status. Explain score meaning; do not call similarity a confidence probability.
+- Real run metadata with unknown fields rendered as unknown, not zero.
+- Stop, timeout, provider failure, configuration error, refusal and clarification states.
+- Mobile readability and accessible labels.
+
+Do not put provider secrets in VITE_* variables. Do not treat client-supplied assistant messages, costs, or citations as authoritative. If changing UI motion, follow the applicable transitions skill.
+
+9. PROPORTIONAL TESTS AND VERIFICATION
+
+Update old tests where behavior legitimately changes; preserve foundation guarantees rather than blindly requiring the old 501 for an implemented mode. Normal tests must use injected deterministic providers and fail on unintended network access.
+
+Cover real contracts:
+- No-RAG makes only the configured generation call and never retrieval/evaluation.
+- Basic RAG retrieves once; empty/failed evidence gate refuses without generation.
+- Correct selected context and permitted citations; unknown citation ID rejected.
+- Shared/cohort/corpus isolation; missing-cohort schedule clarification.
+- Deterministic preparation IDs and mismatch rejection for dimensions/model/corpus.
+- Prompt-injection fixture does not alter server instructions/routing.
+- Cancellation/timeout and sanitized streaming errors.
+- Missing configuration per capability; .dev.vars preflight regression.
+- UI conversation isolation and source display.
+- Partial/absent metrics stay unknown.
+
+Do not build a huge speculative test suite, freeze final assessment results, or run the reserved evaluation set yet. Development examples must be separate from the later formal 20 questions.
+
+Run frozen install, check, tests, frontend/Worker build, preflight, and workerd integration checks. Verify the actual browser flow for both implemented modes with labeled offline fixtures; verify that CRAG stays honest. Use current browser tools, observe results and console errors, and stop only the localhost processes you started.
+
+10. DELIVERY AND ACCEPTANCE
+
+Update the Spanish README, architecture/decisions, corpus coverage, environment examples, and phase-specific AGENTS.md. Preserve the relative CLAUDE.md symlink. Write docs/phase-2-verification.md with exact commands, evidence, fixture/remote distinctions, source coverage and pending resources. Keep phase-1 evidence as history.
+
+Deliver in Spanish:
+- What changed and why.
+- How to run offline no-RAG and the offline basic RAG walkthrough.
+- How the real model/RAG paths will run after authorized configuration is supplied.
+- Passed checks and actual failures/limitations.
+- Corpus coverage and missing sources.
+- Pending cloud provisioning/live verification, then CRAG as the next implementation phase.
+- OpenViking handoff status.
+- Publication state: no commit, push, deployment or paid calls unless separately authorized and actually performed.
+
+Acceptance: no-RAG model path and basic RAG pipeline genuinely implemented; source preparation and Worker adapters ready; offline integration and browser flows verified; CRAG still pending; remote evidence honestly pending where resources/authorization are absent. Do not call the class 100% ready or the RAG deployed at this stage.
+
+Useful sources:
+- Installed ai@7 docs/source and OpenRouter provider source are the first API references.
+- https://ai-sdk.dev/docs/ai-sdk-ui/streaming-data
+- https://github.com/OpenRouterTeam/ai-sdk-provider
+- https://developers.cloudflare.com/workers/local-development/environment-variables/
+- https://developers.cloudflare.com/workers-ai/models/bge-m3/
+- https://developers.cloudflare.com/vectorize/
+- https://developers.cloudflare.com/d1/
+- https://developers.cloudflare.com/r2/
+
+Proceed with phase 2 now. Implement all independent authorized work before reporting any external activation requirement.

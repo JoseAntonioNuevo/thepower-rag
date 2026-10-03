@@ -1,0 +1,20 @@
+{
+  "at": "2026-10-03T21:03:05.195832+00:00",
+  "versionId": "b21f8794-f151-44eb-b3f7-1bc797b0a619",
+  "url": "https://rag-thepower.josenuevo.dev",
+  "generator": "openai/gpt-6-luna",
+  "evaluator": "google/gemini-3.8-flash",
+  "evaluatorProvider": "google-ai-studio",
+  "reasoning": "low",
+  "unitTests": 110,
+  "entrypointTests": 3,
+  "directedProviderCalls": 8,
+  "publicCragCases": [
+    "sufficient S5, 1 search, 2 accepted chunks, cited generation",
+    "unknown 1991 grant, 3 searches, 2 rewrites, refusal, no generation"
+  ],
+  "additionalRagCalendar": "not sent; interactive Turnstile challenge; no bypass",
+  "workerSha256": "005f22676dfeea3899373bceffa2523972412f1afbd12bc891c61b7848c9b443",
+  "budgetLimitUnchanged": true,
+  "memory": "pending: workspace selector exit 1"
+}

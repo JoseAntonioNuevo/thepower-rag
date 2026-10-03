@@ -1,0 +1,30 @@
+Phase 5 independent review — October 3, 2026, Europe/Madrid
+
+Repeated checks passed: frozen install (183 installs / 335 packages), format (121 files), clean lint/types (65 TypeScript files), 65 tests in eleven files, frontend/Worker build (3,093.05 kB), demo CRAG preflight and activation dry-run. No live account operations, provisioning, paid calls or deployment.
+
+New browser evidence, using the in-app browser against workerd:
+- CRAG partial scenario kept S5, retrieved S6, answered with both sources and showed two searches/one rewrite.
+- Missing-information scenario performed three searches/two rewrites and refused without sources.
+- At width 390 and height 844, document/body scroll widths were 390; no horizontal overflow. Screenshots phase-5-crag-desktop.png and phase-5-crag-mobile.png.
+- The refusal scenario DID produce React console errors for duplicate discarded-item keys. This review does not claim a clean console.
+
+Confirmed issues to fix before real activation:
+
+1. Final generation can overrun the advertised global deadline.
+The graph checks time before starting generation, but accepts success after generation without checking that deadline again. An injected clock started at 0 and advanced to 21,000 ms inside generation. The 20,000-ms graph returned terminal=answer and accepted the late answer. No real delay or network call was used. Propagate one turn deadline through all adapters and reject late completion; separate provider cancellation limits from local waiting guarantees.
+
+2. The returned ranking is validated but not applied.
+rankAndAssess returned order [b,a], while usefulIds was [a,b]. Final generation received evidence [a,b]. The rank node stores the evidence decision but drops parsed.ranking. Apply a documented validated ordering to retained/final context and expose ranking scores/order in the trace. Membership/coverage evaluation alone is not observable reranking.
+
+3. Duplicate discard summary keys.
+Repeated retrieval of S16 appends duplicate discarded entries. App.tsx renders them with the same drop-<chunkId> key. Browser console confirmed React's duplicate-child-key errors. Deduplicate final summaries or use a unique per-attempt identity while preserving actual attempt history. The demo scenario selector also lacks disabled={busy}; align its behavior with the stage/cohort selectors so changing a script cannot clear an active stream.
+
+4. Incorrect bibliographic attribution.
+docs/crag-graph.md attributes arXiv:2401.15884 to Yan, Ding, Panda and Liu. The original source lists Shi-Qi Yan, Jia-Chen Gu, Yun Zhu and Zhen-Hua Ling. Fix the citation, keep the teaching adaptation distinction.
+Source: https://arxiv.org/abs/2401.15884
+
+React Doctor scanned eight frontend files: 74/100 with four warnings (large/complex ChatPane, parent callback effect, array-index key). These are diagnostic hypotheses; do not do a broad cosmetic refactor just to raise the score. The duplicate-key console error above is independently reproduced; append-only step indexes are not automatically a functional bug.
+
+Activation still has unconditional probeEmbeddings/ingest/verify refusals and administrative-only resume. Real CRAG's reserve port always permits a call; it is not a spending ledger. The next phase must connect the actual permitted runtime bridge and bounded verification budget without confusing fake tests with remotely verified data.
+
+Application code was not changed by this review. Added only review/screenshot/prompt artifacts. Default demo and corpus identities remain intact. No commit/push/deployment. OpenViking exact project mapping remains absent, regardless of tunnel health; no foreign tenant is used.
