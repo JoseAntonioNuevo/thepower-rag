@@ -98,7 +98,7 @@ Cuando el perfil real tenga `ANTHROPIC_API_KEY` y `MODEL_ID`, sin RAG llamará a
 
 ## Hecho y pendiente
 
-Hecho: ruta real sin RAG, RAG básico con citas o rechazo, corpus de S1 a S20 y los dos calendarios, ejecutor de Wrangler por operación, grafo CRAG con plazo único y ordenación aplicada, y el CLI conectado al Worker del puente. `bun run test:entrypoint` lo recorre en local con D1, R2 y un índice emulado. La investigación de S12, fase 1, corre en demo con guiones; la real sigue bloqueada. El contrato está en `docs/s12-research-phase1.md`.
+Hecho: ruta real sin RAG, RAG básico con citas o rechazo, corpus de S1 a S20 y los dos calendarios, ejecutor de Wrangler por operación, grafo CRAG con plazo único y ordenación aplicada, y el CLI conectado al Worker del puente. `bun run test:entrypoint` lo recorre en local con D1, R2 y un índice emulado. La investigación de S12, fase 1, corre en demo con guiones. La fase 2 añade conversaciones, trabajos durables y contabilidad propia en un D1 local aislado: `bun run dev:research` en `http://127.0.0.1:5191/`. La investigación real sigue bloqueada. Los contratos están en `docs/s12-research-phase1.md` y `docs/s12-research-phase2.md`.
 
 Pendiente de ejecución real: tope de gasto, permiso de alta y de Workers AI, arranque con `remote: true`, sonda de BGE-M3, recursos, umbral semántico y la comparación reservada. Sin esa autorización el `--execute` no abre el puente. El detalle de ocho ejercicios sigue siendo solo un título. No se han creado recursos nuevos ni se ha desplegado este cambio de modelo.
 

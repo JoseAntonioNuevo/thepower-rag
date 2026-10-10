@@ -20,7 +20,7 @@ import {
   type ResearchPorts,
   type ResearchRequest,
 } from "@thepower-rag/research";
-import { END, START, StateGraph } from "@langchain/langgraph";
+import { END, START, StateGraph, type BaseCheckpointSaver } from "@langchain/langgraph";
 import {
   courseNode,
   halt,
@@ -35,6 +35,7 @@ import {
   emptyLedger,
   guardedCall,
   ResearchGraphState,
+  controlError,
   traced,
   type ResearchState,
 } from "./research-state";
@@ -90,8 +91,17 @@ function validateNode(state: ResearchState, deps: NodeDeps): Partial<ResearchSta
       trace: traced(state, deps.emit, "validate", "Falta el grupo. No hay plan ni búsquedas."),
     };
   }
+  const memory =
+    state.originalQuestion !== state.question
+      ? " La pregunta del grafo está contextualizada; la original se conserva y la memoria no es evidencia."
+      : "";
   return {
-    trace: traced(state, deps.emit, "validate", "Pregunta válida para el grupo seleccionado."),
+    trace: traced(
+      state,
+      deps.emit,
+      "validate",
+      `Pregunta válida para el grupo seleccionado.${memory}`,
+    ),
   };
 }
 
@@ -580,6 +590,9 @@ export function initialResearchState(request: ResearchRequest, startedAt: number
   return {
     runId: request.runId,
     question: request.question.trim(),
+    originalQuestion: request.question.trim(),
+    threadId: request.threadId,
+    jobId: null,
     audience: request.audience,
     corpusVersion: request.corpusVersion,
     scenarioId: request.scenarioId,
@@ -617,21 +630,53 @@ export function initialResearchState(request: ResearchRequest, startedAt: number
   };
 }
 
-/** Ejecuta el grafo en primer plano, ligado a la petición. No es un trabajo durable. */
+/** Ejecuta el grafo. Sin checkpointer sigue ligado a la petición. */
 export async function runResearchGraph(
   request: ResearchRequest,
   ports: ResearchPorts,
   onStep?: (step: ResearchStep) => void,
+  options?: {
+    startedAt?: number;
+    checkpointer?: BaseCheckpointSaver;
+    threadId?: string;
+    interruptBefore?: "course";
+    jobId?: string | null;
+    originalQuestion?: string;
+  },
 ): Promise<ResearchState> {
   const emit = (step: ResearchStep) => {
     onStep?.(step);
   };
-  const initial = initialResearchState(request, ports.now());
+  const initial = initialResearchState(request, options?.startedAt ?? ports.now());
+  if (options?.originalQuestion) {
+    initial.originalQuestion = options.originalQuestion;
+  }
+  if (options?.jobId) {
+    initial.jobId = options.jobId;
+  }
+  const checkpointer = options?.checkpointer;
+  const threadId = options?.threadId;
   try {
-    return (await createResearchGraph({ ports, emit })
-      .compile()
-      .invoke(initial, { recursionLimit: 40 })) as ResearchState;
+    const compiled = createResearchGraph({ ports, emit }).compile({
+      ...(checkpointer ? { checkpointer } : {}),
+      ...(options?.interruptBefore ? { interruptBefore: [options.interruptBefore] } : {}),
+    });
+    if (checkpointer && threadId) {
+      const config = {
+        configurable: { thread_id: threadId, checkpoint_ns: "" },
+        recursionLimit: 40,
+      };
+      const existing = await checkpointer.getTuple({
+        configurable: { thread_id: threadId, checkpoint_ns: "" },
+      });
+      return (await compiled.invoke(existing ? null : initial, config)) as ResearchState;
+    }
+    return (await compiled.invoke(initial, { recursionLimit: 40 })) as ResearchState;
   } catch (error) {
+    const control = controlError(error);
+    if (control) {
+      throw control;
+    }
     console.warn(
       "Research graph failure",
       error instanceof Error

@@ -130,6 +130,16 @@ export const DEMO_RESEARCH_SCENARIOS = [
     label: "Dato interno con la herramienta de sesión",
     question: "¿Cuándo es la sesión 12 de mi grupo y qué ejercicio tiene?",
   },
+  {
+    id: "slow-search",
+    label: "Búsqueda lenta para cancelar",
+    question: DEMO_RESEARCH_QUESTION,
+  },
+  {
+    id: "ambiguous-operation",
+    label: "Operación ambigua: hace falta conciliación",
+    question: DEMO_RESEARCH_QUESTION,
+  },
 ] as const;
 
 export const researchScenarioSchema = z.enum([
@@ -141,6 +151,9 @@ export const researchScenarioSchema = z.enum([
   "no-progress-stop",
   "invalid-citation",
   "course-tool",
+  "slow-search",
+  "ambiguous-operation",
+  "crash-after-plan",
 ]);
 
 export type ResearchScenarioId = z.infer<typeof researchScenarioSchema>;
@@ -419,6 +432,9 @@ export const researchSummarySchema = z.object({
     note: z.string().min(1).max(L.maxReasonChars),
   }),
   trace: z.array(researchStepSchema).max(L.maxTraceEntries),
+  threadId: z.string().min(1).max(80).nullable().optional(),
+  jobId: z.string().min(1).max(80).nullable().optional(),
+  contextualizedQuestion: z.string().max(L.maxQuestionChars).nullable().optional(),
 });
 
 export type ResearchSummary = z.infer<typeof researchSummarySchema>;

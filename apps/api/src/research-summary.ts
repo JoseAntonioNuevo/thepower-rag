@@ -49,7 +49,16 @@ export function researchSummary(
     measured: ports.measured,
     audience: state.audience,
     corpusVersion: state.corpusVersion,
-    originalQuestion: state.question.slice(0, RESEARCH_LIMITS.maxQuestionChars),
+    originalQuestion: (state.originalQuestion || state.question).slice(
+      0,
+      RESEARCH_LIMITS.maxQuestionChars,
+    ),
+    threadId: state.threadId,
+    jobId: state.jobId,
+    contextualizedQuestion:
+      state.originalQuestion && state.originalQuestion !== state.question
+        ? state.question.slice(0, RESEARCH_LIMITS.maxQuestionChars)
+        : null,
     route: plan?.route ?? null,
     planRationale: plan?.rationale ?? null,
     subquestions: (plan?.subquestions ?? []).map((item) => ({

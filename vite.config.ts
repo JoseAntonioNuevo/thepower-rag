@@ -35,7 +35,11 @@ export default defineConfig({
   test: {
     include:
       process.env.THEPOWER_ENTRYPOINT === "1"
-        ? ["scripts/entrypoint-offline.integration.ts", "scripts/research-workerd.integration.ts"]
+        ? [
+            "scripts/entrypoint-offline.integration.ts",
+            "scripts/research-workerd.integration.ts",
+            "scripts/research-durable.workerd.ts",
+          ]
         : ["apps/**/*.test.ts", "packages/**/*.test.ts", "scripts/**/*.test.ts"],
     environment: "node",
     testTimeout: process.env.THEPOWER_ENTRYPOINT === "1" ? 180_000 : 20_000,

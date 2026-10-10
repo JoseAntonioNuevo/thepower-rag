@@ -498,8 +498,29 @@ export interface FixtureResearchOptions {
  * Puertos de prueba. Demuestran el flujo de control del grafo: no miden la
  * calidad de un modelo ni hacen una investigación real en internet.
  */
+function waitFor(signal: AbortSignal, ms: number): Promise<void> {
+  return new Promise((resolve) => {
+    const timer = setTimeout(resolve, ms);
+    const finish = () => {
+      clearTimeout(timer);
+      resolve();
+    };
+    if (signal.aborted) {
+      finish();
+      return;
+    }
+    signal.addEventListener("abort", finish, { once: true });
+  });
+}
+
 export function createFixtureResearchPorts(options: FixtureResearchOptions): ResearchPorts {
-  const scenario = options.scenarioId;
+  const requested = options.scenarioId;
+  const scenario =
+    requested === "slow-search" ||
+    requested === "ambiguous-operation" ||
+    requested === "crash-after-plan"
+      ? "sufficient-first-round"
+      : requested;
   const library = fixtureChunks();
   const scores = new Map<string, number | null>();
   const toCourse = (chunkId: string, score: number | null): CourseEvidence | null => {
@@ -571,7 +592,20 @@ export function createFixtureResearchPorts(options: FixtureResearchOptions): Res
       },
     }),
     search: {
-      search: ({ query }) => Promise.resolve(searchFor(scenario, query)),
+      async search({ query }) {
+        if (requested === "slow-search") {
+          await waitFor(options.signal, 12_000);
+          if (options.signal.aborted) {
+            return {
+              ok: false,
+              error: "aborted",
+              detail: "La búsqueda de prueba se detuvo.",
+              consumption: { kind: "none" },
+            };
+          }
+        }
+        return searchFor(scenario, query);
+      },
     },
     reader: {
       async read({ url }) {

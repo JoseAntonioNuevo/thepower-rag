@@ -142,5 +142,40 @@
         "LOCAL_BUDGET_USD": "4.3",
       },
     },
+    "research": {
+      "name": "thepower-rag-research",
+      "workers_dev": false,
+      "preview_urls": false,
+      "main": "../api/src/research-worker.ts",
+      "assets": {
+        "not_found_handling": "single-page-application",
+        "run_worker_first": ["/api/*"],
+      },
+      "vars": {
+        "APP_MODE": "demo",
+        "RESEARCH_OWNER_SECRET": "local-loopback-research-owner",
+        "RESEARCH_BUDGET_USD": "1.000000",
+        "RESEARCH_JOB_LIMIT_USD": "0.250000",
+        "RESEARCH_INPUT_USD_PER_MILLION": "0.100000",
+        "RESEARCH_OUTPUT_USD_PER_MILLION": "0.500000",
+        "RESEARCH_SEARCH_USD": "0.002000",
+        "RESEARCH_READ_USD": "0.005000",
+      },
+      "d1_databases": [
+        {
+          "binding": "RESEARCH_DB",
+          "database_name": "thepower-research-local",
+          "database_id": "11111111-1111-4111-8111-111111111111",
+          "migrations_dir": "../api/migrations-research",
+        },
+      ],
+      "workflows": [
+        {
+          "name": "thepower-research-job",
+          "binding": "RESEARCH_WORKFLOW",
+          "class_name": "ResearchJobWorkflow",
+        },
+      ],
+    },
   },
 }

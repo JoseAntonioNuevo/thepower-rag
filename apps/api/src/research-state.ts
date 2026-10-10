@@ -26,6 +26,43 @@ import { Annotation } from "@langchain/langgraph";
 
 export type CallStatus = "ok" | "error" | "timeout" | "late" | "skipped";
 
+/** Señal de control del ejecutor durable. No es un fallo de informe. */
+export class ResearchControlError extends Error {
+  constructor(name: string, message: string) {
+    super(message);
+    this.name = name;
+  }
+}
+
+export class ResearchAttention extends ResearchControlError {
+  constructor(readonly operationId: string) {
+    super("ResearchAttention", "research-attention");
+  }
+}
+
+export class ResearchStepCrash extends ResearchControlError {
+  constructor() {
+    super("ResearchStepCrash", "research-step-crash");
+  }
+}
+
+/** LangGraph puede envolver la señal. Se recorre la causa sin perder el tipo. */
+export function controlError(error: unknown): ResearchControlError | null {
+  const seen = new Set<unknown>();
+  let current: unknown = error;
+  while (current !== undefined && current !== null && !seen.has(current)) {
+    seen.add(current);
+    if (current instanceof ResearchControlError) {
+      return current;
+    }
+    if (!(current instanceof Error)) {
+      return null;
+    }
+    current = current.cause;
+  }
+  return null;
+}
+
 export interface CourseQueryLog {
   round: number;
   subquestionId: string;
@@ -92,6 +129,9 @@ export interface PendingQuery {
 export interface ResearchState {
   runId: string;
   question: string;
+  originalQuestion: string;
+  threadId: string | null;
+  jobId: string | null;
   audience: Audience;
   corpusVersion: string;
   scenarioId: ResearchScenarioId | null;
@@ -135,6 +175,9 @@ function last<T>() {
 export const ResearchGraphState = Annotation.Root({
   runId: last<string>(),
   question: last<string>(),
+  originalQuestion: last<string>(),
+  threadId: last<string | null>(),
+  jobId: last<string | null>(),
   audience: last<Audience>(),
   corpusVersion: last<string>(),
   scenarioId: last<ResearchScenarioId | null>(),
@@ -270,15 +313,20 @@ export async function guardedCall<T>(
   const pending = run({ signal: controller.signal, timeoutMs });
   const settled = pending.then(
     (value): PortResult<T> => value,
-    (): PortResult<T> => ({
-      ok: false,
-      error: controller.signal.aborted || ports.signal.aborted ? "aborted" : "provider",
-      detail: "La llamada lanzó una excepción.",
-      consumption: sent,
-    }),
+    (error: unknown): PortResult<T> => {
+      if (error instanceof ResearchControlError) {
+        throw error;
+      }
+      return {
+        ok: false,
+        error: controller.signal.aborted || ports.signal.aborted ? "aborted" : "provider",
+        detail: "La llamada lanzó una excepción.",
+        consumption: sent,
+      };
+    },
   );
   try {
-    const result = await new Promise<PortResult<T>>((resolve) => {
+    const result = await new Promise<PortResult<T>>((resolve, reject) => {
       let done = false;
       const finish = (value: PortResult<T>) => {
         if (done) {
@@ -286,6 +334,13 @@ export async function guardedCall<T>(
         }
         done = true;
         resolve(value);
+      };
+      const fail = (error: unknown) => {
+        if (done) {
+          return;
+        }
+        done = true;
+        reject(error);
       };
       onAbort = () => {
         controller.abort();
@@ -306,13 +361,18 @@ export async function guardedCall<T>(
           consumption: sent,
         });
       }, timeoutMs);
-      void settled.then((value) => {
-        if (ports.signal.aborted) {
-          finish(stopped());
-          return;
-        }
-        finish(value);
-      });
+      void settled.then(
+        (value) => {
+          if (ports.signal.aborted) {
+            finish(stopped());
+            return;
+          }
+          finish(value);
+        },
+        (error: unknown) => {
+          fail(error);
+        },
+      );
     });
     if (result.ok && ports.signal.aborted) {
       return stopped();

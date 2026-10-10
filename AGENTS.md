@@ -32,10 +32,12 @@ Desde este directorio:
 bun install --frozen-lockfile
 bun run prepare-corpus
 bun run dev
+bun run dev:research
 bun run check
 bun run test
 bun run build
 bun run preflight
+bun run preflight:research
 bun run preflight -- --capability rag
 bun run ingest-plan
 bun run activate
@@ -43,6 +45,6 @@ bun run activate -- status --read
 bun run test:entrypoint
 ```
 
-`bun run preview` sirve el build en local y tampoco despliega. La evidencia de las fases anteriores se conserva. La de esta fase está en `docs/phase-7-verification.md`. El plan de recursos está en `docs/cloud-activation-plan.md`.
+`bun run preview` sirve el build en local y tampoco despliega. `bun run dev:research` abre la investigación durable en `http://127.0.0.1:5191/` con D1 y Workflows locales en `apps/web/.wrangler/research-state`. No usa el D1 remoto del curso. La evidencia de las fases anteriores se conserva. La de la fase 7 está en `docs/phase-7-verification.md`. La de la investigación durable está en `docs/s12-research-phase2.md`. El plan de recursos está en `docs/cloud-activation-plan.md`.
 
 `scripts/activate.ts` arranca el puente solo para `probe-embeddings`, `ingest`, `resume`, `select-active` y `verify` con `--execute` y la autorización de esa operación. `plan` y `status --read` no lo arrancan. Sin autorización, `--execute` sale con código 2 y no abre el puerto. `resume()` sin plano sigue siendo la lectura administrativa. `select-active` exige la lectura final en D1 y no borra perfiles anteriores. Un listado Vectorize o de metadatos que no traiga el sobre esperado es lectura no confirmada y no crea nada. `bun run test:entrypoint` recorre el CLI contra workerd en `127.0.0.1` con recursos emulados y sin red externa.

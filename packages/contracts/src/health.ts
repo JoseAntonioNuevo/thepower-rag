@@ -38,6 +38,8 @@ export const healthResponseSchema = z.object({
     anthropic: z.enum(["loaded", "failed"]),
     note: z.string(),
   }),
+  /** True cuando hay base y flujo durable. No autoriza gasto real. */
+  durableResearch: z.boolean(),
 });
 
 export type HealthResponse = z.infer<typeof healthResponseSchema>;

@@ -20,14 +20,17 @@ function configuredRepoEnv(name: string): string | undefined {
   return value.trim();
 }
 
+const researchDev = process.env.CLOUDFLARE_ENV === "research";
+
 export default defineConfig(({ command }) => ({
   plugins: [
     react(),
     cloudflare({
       // Only the explicit local-real profile opens the existing remote bindings.
       remoteBindings: process.env.CLOUDFLARE_ENV === "local",
+      persistState: researchDev ? { path: ".wrangler/research-state" } : true,
       config(workerConfig) {
-        if (command !== "serve") return;
+        if (command !== "serve" || researchDev) return;
         const vars = { ...workerConfig.vars };
         let changed = false;
         const key = configuredRepoEnv("ANTHROPIC_API_KEY");
@@ -51,7 +54,7 @@ export default defineConfig(({ command }) => ({
   ],
   server: {
     host: "127.0.0.1",
-    port: 5173,
+    port: researchDev ? 5191 : 5173,
     strictPort: true,
     fs: {
       allow: [".", "../.."],

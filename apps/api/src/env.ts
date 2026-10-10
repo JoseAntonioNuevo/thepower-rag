@@ -3,7 +3,6 @@ import {
   GENERATION_VARIABLES,
   RAG_BINDING_NAMES,
   RAG_SETTING_VARIABLES,
-  RESEARCH_ACCOUNTING_MISSING,
   RESEARCH_SPEND_TOKEN,
   RESEARCH_VARIABLES,
   isConfiguredValue,
@@ -39,13 +38,21 @@ export interface WorkerEnv {
   RESEARCH_ALLOWED_DOMAINS?: string;
   RESEARCH_SPEND_AUTHORIZATION?: string;
   RESEARCH_BUDGET_USD?: string;
+  RESEARCH_JOB_LIMIT_USD?: string;
+  RESEARCH_FIXTURE_BUDGET_USD?: string;
+  RESEARCH_FIXTURE_JOB_LIMIT_USD?: string;
   RESEARCH_INPUT_USD_PER_MILLION?: string;
   RESEARCH_OUTPUT_USD_PER_MILLION?: string;
+  RESEARCH_SEARCH_USD?: string;
+  RESEARCH_READ_USD?: string;
   FIRECRAWL_USD_PER_CREDIT?: string;
+  RESEARCH_OWNER_SECRET?: string;
   AI?: unknown;
   VECTORIZE?: unknown;
   DB?: unknown;
   CORPUS?: unknown;
+  RESEARCH_DB?: unknown;
+  RESEARCH_WORKFLOW?: unknown;
 }
 
 export interface CapabilityReport {
@@ -147,20 +154,45 @@ export function researchSettings(
 }
 
 /**
- * La investigación real queda bloqueada en la fase 1: falta un libro de cuentas
- * durable del coste total. La lista de ausentes lo nombra siempre.
+ * Turnstile identifica al propietario solo en real, con presupuesto público,
+ * secreto y origen. En cualquier otro caso hace falta el secreto local.
+ */
+export function researchOwnerReady(env: WorkerEnv): boolean {
+  const turnstileOwner =
+    env.APP_MODE === "real" &&
+    env.PUBLIC_BUDGET_USD !== undefined &&
+    isConfiguredValue(env.TURNSTILE_SECRET_KEY) &&
+    isConfiguredValue(env.PUBLIC_ORIGIN);
+  return turnstileOwner || isConfiguredValue(env.RESEARCH_OWNER_SECRET);
+}
+
+/** Bindings y propietario del perfil durable. No autoriza gasto. */
+export function durableResearchConfigured(env: WorkerEnv): boolean {
+  return env.RESEARCH_DB != null && env.RESEARCH_WORKFLOW != null && researchOwnerReady(env);
+}
+
+/**
+ * La investigación real exige almacenamiento, flujo, tarifas, presupuesto
+ * propio y autorización de gasto. No hereda el presupuesto del RAG.
  */
 function researchCapability(env: WorkerEnv, ragMissing: readonly string[]): CapabilityReport {
   const settings = researchSettings(env);
+  const missing = new Set<string>([...ragMissing, ...(settings.ok ? [] : settings.missing)]);
+  if (env.RESEARCH_DB == null) {
+    missing.add("RESEARCH_DB");
+  }
+  if (env.RESEARCH_WORKFLOW == null) {
+    missing.add("RESEARCH_WORKFLOW");
+  }
+  if (!researchOwnerReady(env)) {
+    missing.add("RESEARCH_OWNER_SECRET");
+  }
+  if (!isConfiguredValue(env.RESEARCH_JOB_LIMIT_USD)) {
+    missing.add("RESEARCH_JOB_LIMIT_USD");
+  }
   return {
-    status: "blocked",
-    missing: [
-      ...new Set([
-        ...ragMissing,
-        ...(settings.ok ? [] : settings.missing),
-        RESEARCH_ACCOUNTING_MISSING,
-      ]),
-    ],
+    status: missing.size === 0 ? "ready" : "blocked",
+    missing: [...missing],
   };
 }
 

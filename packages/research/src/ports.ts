@@ -211,8 +211,8 @@ export type ResearchObservation = TextObservation;
 
 export interface ResearchRequest {
   runId: string;
-  /** La fase 2 dará memoria por hilo. En la fase 1 siempre es null. */
-  threadId: null;
+  /** Identificador del hilo ya autorizado. No es una credencial. */
+  threadId: string | null;
   question: string;
   observations: readonly ResearchObservation[];
   audience: Audience;

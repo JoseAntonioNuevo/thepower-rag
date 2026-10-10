@@ -119,7 +119,20 @@ export function ResearchTrace({ summary }: { summary: ResearchSummary }) {
       </p>
       <Section title="Pregunta original">
         <p className="research-question">{summary.originalQuestion}</p>
+        {summary.contextualizedQuestion ? (
+          <p className="research-meta">
+            Pregunta contextualizada, distinta de la original. La memoria no es evidencia del curso.
+          </p>
+        ) : null}
       </Section>
+      {summary.jobId ? (
+        <Section title="Identificadores">
+          <p className="research-meta">
+            Hilo {summary.threadId ?? "sin hilo"} · trabajo {summary.jobId} · recorrido{" "}
+            {summary.runId}
+          </p>
+        </Section>
+      ) : null}
       <Section title="Plan">
         {summary.route === null ? (
           <p>Sin plan: el recorrido terminó antes de planificar.</p>

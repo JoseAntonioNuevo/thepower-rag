@@ -20,7 +20,9 @@
     "activate": "bun scripts/activate.ts",
     "test:entrypoint": "THEPOWER_ENTRYPOINT=1 vp test",
     "dev:real": "CLOUDFLARE_ENV=local vp -C apps/web dev",
-    "preflight:real": "bun scripts/preflight.ts --env local --capability crag"
+    "dev:research": "CLOUDFLARE_ENV=research vp -C apps/web dev",
+    "preflight:real": "bun scripts/preflight.ts --env local --capability crag",
+    "preflight:research": "bun scripts/preflight.ts --env research --capability research"
   },
   "devDependencies": {
     "@thepower-rag/contracts": "workspace:*",

@@ -72,6 +72,10 @@ El 10 de octubre de 2026 la generación, el evaluador de CRAG y el modelo de inv
 
 No hay contenedores, FastAPI, Redis, colas, Durable Objects, Agents SDK ni AI Search. No se elige un modelo de pago por omisión. El modo real incompleto no cae a la demostración.
 
+## Investigación S12, fase 2
+
+La fase 2 no sustituye el grafo de LangGraph ni el presupuesto `public_budget`. Las conversaciones, los trabajos, el diario de operaciones, los checkpoints y la cuenta de investigación viven en un D1 aparte, binding `RESEARCH_DB`. El ejecutor es un Workflow de Cloudflare cuyo id de instancia es el del trabajo. Cada paso reanuda el mismo grafo con reintentos en cero. Una operación marcada como enviada y sin resultado queda desconocida y no se reenvía. Un checkpoint sin cargo ambiguo se reanuda con `recoverable`. El informe visible sale del resultado guardado, no de la memoria recortada. En real público, las mutaciones pasan por origen, Turnstile y cupo antes de reservar; las lecturas solo comprueban al propietario. La demostración local es `bun run dev:research`. No hay alta remota de esa base.
+
 ## OpenViking
 
 El 3 de octubre de 2026 el selector `~/.config/openviking/workspace-account.sh` no tiene una cuenta para `/Users/jose/Documents/the-power` ni para `3-rag`. Esas rutas tampoco son un checkout de las cuentas registradas. En las fases 2 y 3, `http://127.0.0.1:11933/health` no aceptó conexión. Al abrir y al cerrar la fase 4, al cerrar la fase 5, al abrir la fase 6 y al abrir y cerrar la fase 7, el túnel respondió HTTP 200, pero el selector siguió saliendo con código 1 para `3-rag` y la salud no trajo `account_id`. No se ha inventado una cuenta ni se ha escrito en otro tenant. La entrega de memoria queda pendiente hasta que exista un mapeo verificado para este proyecto.
