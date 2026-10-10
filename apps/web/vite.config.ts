@@ -20,13 +20,14 @@ function configuredRepoEnv(name: string): string | undefined {
   return value.trim();
 }
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
   plugins: [
     react(),
     cloudflare({
       // Only the explicit local-real profile opens the existing remote bindings.
       remoteBindings: process.env.CLOUDFLARE_ENV === "local",
       config(workerConfig) {
+        if (command !== "serve") return;
         const vars = { ...workerConfig.vars };
         let changed = false;
         const key = configuredRepoEnv("ANTHROPIC_API_KEY");
@@ -56,4 +57,4 @@ export default defineConfig({
       allow: [".", "../.."],
     },
   },
-});
+}));
