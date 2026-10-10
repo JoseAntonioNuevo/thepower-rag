@@ -1,7 +1,6 @@
 import {
   DEMO_RESEARCH_QUESTION,
   errorResponseSchema,
-  RESEARCH_ACCOUNTING_MISSING,
   researchSummarySchema,
 } from "@thepower-rag/contracts";
 import { afterEach, beforeEach, describe, expect, it } from "vite-plus/test";
@@ -195,7 +194,7 @@ describe("HTTP de investigación", () => {
     const body = errorResponseSchema.parse(await response.json());
     expect(body).toMatchObject({
       error: "configuration",
-      missing: expect.arrayContaining([RESEARCH_ACCOUNTING_MISSING]),
+      missing: expect.arrayContaining(["RESEARCH_DB", "RESEARCH_WORKFLOW"]),
     });
     expect(body.message).toContain("bloqueada");
     expect(network).toBe(0);

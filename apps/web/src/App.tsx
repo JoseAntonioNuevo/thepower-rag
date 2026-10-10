@@ -24,6 +24,7 @@ import {
 import { conversationStatus, prefersReducedMotion } from "./chat-motion";
 import { CourseAnswer } from "./course-answer";
 import { acceptScenarioChange, discardedRowKey, retainedRowKey } from "./crag-panel";
+import { ResearchDesk } from "./research-desk";
 import { ResearchSources, ResearchSteps, ResearchTrace } from "./research-panel";
 import { conversationKey } from "./scope";
 import { useTurnstile } from "./use-turnstile";
@@ -961,13 +962,22 @@ export function App() {
           <p className="group-note">L/X, lunes y miércoles. M/J, martes y jueves.</p>
         </div>
       </div>
-      <ChatPane
-        key={conversationKey(mode, audience, epoch)}
-        mode={mode}
-        audience={audience}
-        allowScenario={health?.execution === "demo"}
-        onBusy={onBusy}
-      />
+      {health?.durableResearch && mode === "research" ? (
+        <ResearchDesk
+          key={audience}
+          audience={audience}
+          allowScenario={health.execution === "demo"}
+          onBusy={onBusy}
+        />
+      ) : (
+        <ChatPane
+          key={conversationKey(mode, audience, epoch)}
+          mode={mode}
+          audience={audience}
+          allowScenario={health?.execution === "demo"}
+          onBusy={onBusy}
+        />
+      )}
     </main>
   );
 }

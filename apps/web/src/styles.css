@@ -641,6 +641,21 @@ fieldset:disabled {
   gap: 14px;
 }
 
+.research-desk {
+  display: grid;
+  gap: 1rem;
+}
+
+.research-status-skel {
+  min-height: 1.6rem;
+}
+
+.research-desk .conversation-list {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.5rem;
+}
+
 .research-banner {
   margin: 0;
   padding: 10px 12px;

@@ -31,7 +31,9 @@ import type { LanguageModel } from "ai";
 import { Hono } from "hono";
 import { dependencyCompatibility } from "./compat";
 import { cragHttpResponse } from "./crag-http";
+import { assessWorker, durableResearchConfigured, type WorkerEnv } from "./env";
 import { researchHttpResponse } from "./research-http";
+import { researchRoutes } from "./research-routes";
 import type { ResearchPorts } from "@thepower-rag/research";
 import {
   PUBLIC_PROVIDER_MESSAGE,
@@ -39,7 +41,6 @@ import {
   streamProviderCourseResponse,
 } from "./course-stream";
 import { offlineDemoResponse } from "./demo-stream";
-import { assessWorker, type WorkerEnv } from "./env";
 import {
   fixtureChunks,
   fixtureContentVersion,
@@ -129,6 +130,7 @@ function metadata(
 
 export function createApp(deps: AppDeps = {}) {
   const app = new Hono<{ Bindings: WorkerEnv }>();
+  app.route("/api/research", researchRoutes());
 
   app.get("/api/health", async (context) => {
     const assessment = assessWorker(context.env);
@@ -163,6 +165,7 @@ export function createApp(deps: AppDeps = {}) {
         remoteRevision: null,
       },
       compatibility,
+      durableResearch: durableResearchConfigured(context.env),
     };
     if (!demoCorpus && assessment.retrieval && context.env.DB) {
       try {
@@ -236,6 +239,17 @@ export function createApp(deps: AppDeps = {}) {
     // La investigación va antes del presupuesto público: no consume la reserva
     // del RAG. En real queda bloqueada sin su propia autorización y contabilidad.
     if (parsed.data.mode === "research") {
+      if (durableResearchConfigured(context.env)) {
+        return jsonError(
+          {
+            error: "configuration",
+            message:
+              "Esta petición no ejecuta la investigación. El trabajo durable se crea en la conversación y sigue aunque se cierre la página.",
+            missing: [],
+          },
+          409,
+        );
+      }
       const research = await researchHttpResponse({
         assessment,
         request: parsed.data,

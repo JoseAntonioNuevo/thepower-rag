@@ -170,11 +170,11 @@ export function loadLocalWorkerConfig(
   const devVarsPath = path.join(path.dirname(configPath), devName);
   const devVarsText = existsSync(devVarsPath) ? readFileSync(devVarsPath, "utf8") : null;
   const vars = effectiveWorkerVars(inspected.vars, devVarsText);
-  const repoKey = readRepoAnthropicKey(root);
+  const repoKey = environment === "research" ? undefined : readRepoAnthropicKey(root);
   if (repoKey && !isConfiguredValue(vars.ANTHROPIC_API_KEY)) {
     vars.ANTHROPIC_API_KEY = repoKey;
   }
-  const repoWorkspace = readRepoAnthropicWorkspaceId(root);
+  const repoWorkspace = environment === "research" ? undefined : readRepoAnthropicWorkspaceId(root);
   if (repoWorkspace && !isConfiguredValue(vars.ANTHROPIC_WORKSPACE_ID)) {
     vars.ANTHROPIC_WORKSPACE_ID = repoWorkspace;
   }

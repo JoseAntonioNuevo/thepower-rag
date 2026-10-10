@@ -41,6 +41,14 @@ function hex(value: ArrayBuffer) {
 async function digest(secret: string, text: string) {
   return hex(await crypto.subtle.sign("HMAC", await signingKey(secret), encoder.encode(text)));
 }
+export async function readProtectionSession(
+  request: Request,
+  secret: string,
+  now = Date.now(),
+): Promise<{ id: string; expires: number } | null> {
+  return session(request, secret, now);
+}
+
 async function session(
   request: Request,
   secret: string,
