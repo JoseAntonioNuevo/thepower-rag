@@ -386,7 +386,7 @@ export function createCourseExecutor(options: ExecutorOptions) {
         return {
           ok: false,
           summary:
-            "La verificación no está conectada al runtime local. No se llama a OpenRouter ni se copia otra canalización.",
+            "La verificación no está conectada al runtime local. No se llama a la API de Claude ni se copia otra canalización.",
         };
       }
       const prices = options.sessionPrices ?? {

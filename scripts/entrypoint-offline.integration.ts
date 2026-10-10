@@ -44,7 +44,7 @@ function runActivate(
   const env = { ...process.env, ...extra };
   delete env.CLOUDFLARE_API_TOKEN;
   delete env.CLOUDFLARE_API_KEY;
-  delete env.OPENROUTER_API_KEY;
+  delete env.ANTHROPIC_API_KEY;
   return new Promise((resolve, reject) => {
     const child = spawn("bun", ["scripts/activate.ts", ...args], {
       cwd: root,

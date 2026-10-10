@@ -104,7 +104,7 @@ it("el modelo recibe el curso completo y el historial, y se muestran solo fuente
   const env: WorkerEnv = {
     APP_MODE: "real",
     RAG_CONTEXT_MODE: "complete",
-    OPENROUTER_API_KEY: "synthetic-key",
+    ANTHROPIC_API_KEY: "synthetic-key",
     MODEL_ID: "example/model",
     EMBEDDING_MODEL: "@cf/baai/bge-m3",
     EMBEDDING_DIMENSIONS: "1024",

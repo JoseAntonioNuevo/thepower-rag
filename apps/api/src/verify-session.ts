@@ -126,7 +126,7 @@ export async function runVerificationSession(input: {
   };
   const env = {
     APP_MODE: "real",
-    OPENROUTER_API_KEY: "local-test-key",
+    ANTHROPIC_API_KEY: "local-test-key",
     MODEL_ID: "example/generator",
     EVALUATOR_MODEL_ID: "example/evaluator",
     EMBEDDING_MODEL: "@cf/baai/bge-m3",

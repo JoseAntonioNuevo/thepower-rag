@@ -2,8 +2,9 @@ import { z } from "zod";
 import { cragSummarySchema, demoScenarioSchema } from "./crag";
 import { audienceSchema, citationSchema, demoEventSchema, traceEventSchema } from "./domain";
 import { LIMITS } from "./limits";
+import { researchScenarioSchema, researchSourceSchema, researchSummarySchema } from "./research";
 
-export const chatModeSchema = z.enum(["sin-rag", "rag", "crag"]);
+export const chatModeSchema = z.enum(["sin-rag", "rag", "crag", "research"]);
 
 export type ChatMode = z.infer<typeof chatModeSchema>;
 
@@ -34,12 +35,24 @@ const cragPartSchema = z.object({
   data: cragSummarySchema,
 });
 
+const researchPartSchema = z.object({
+  type: z.literal("data-research"),
+  data: researchSummarySchema,
+});
+
+const researchSourcePartSchema = z.object({
+  type: z.literal("data-research-source"),
+  data: researchSourceSchema,
+});
+
 const messagePartSchema = z.discriminatedUnion("type", [
   textPartSchema,
   demoPartSchema,
   sourcePartSchema,
   tracePartSchema,
   cragPartSchema,
+  researchPartSchema,
+  researchSourcePartSchema,
 ]);
 
 export const chatMessageSchema = z
@@ -80,9 +93,17 @@ export const chatRequestSchema = z
     mode: chatModeSchema,
     audience: audienceSchema.default("program"),
     demoScenario: demoScenarioSchema.optional(),
+    researchScenario: researchScenarioSchema.optional(),
     messages: z.array(chatMessageSchema).min(1).max(LIMITS.maxHistoryMessages),
   })
   .superRefine((value, context) => {
+    if (value.researchScenario !== undefined && value.mode !== "research") {
+      context.addIssue({
+        code: "custom",
+        path: ["researchScenario"],
+        message: "El guion de investigación solo vale en la etapa de investigación.",
+      });
+    }
     const total = value.messages.reduce((sum, message) => sum + messageText(message).length, 0);
     if (total > LIMITS.maxHistoryChars) {
       context.addIssue({

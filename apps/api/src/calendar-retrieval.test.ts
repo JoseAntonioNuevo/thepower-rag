@@ -78,7 +78,7 @@ function setup(group: "L/X" | "M/J", badScope = false) {
   };
   const env: WorkerEnv = {
     APP_MODE: "real",
-    OPENROUTER_API_KEY: "synthetic-key",
+    ANTHROPIC_API_KEY: "synthetic-key",
     MODEL_ID: "example/model",
     EMBEDDING_MODEL: "@cf/baai/bge-m3",
     EMBEDDING_DIMENSIONS: "1024",

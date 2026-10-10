@@ -14,9 +14,10 @@ Vite compila el cliente. El plugin de Cloudflare empaqueta el Worker y, en local
 
 ## Etapas
 
-1. Sin RAG: en `demo`, un stream etiquetado y sin modelo. En `real`, `streamText` contra OpenRouter con el modelo del servidor. No hay recuperación ni evaluador. El texto ordinario, incluido `items[0]`, no pasa por el filtro de citas.
+1. Sin RAG: en `demo`, un stream etiquetado y sin modelo. En `real`, `streamText` contra la API de Claude con el modelo del servidor. No hay recuperación ni evaluador. El texto ordinario, incluido `items[0]`, no pasa por el filtro de citas.
 2. RAG básico: una búsqueda sobre la última pregunta, filtro de audiencia durante la consulta, umbral y respuesta con citas `[cite:id]` o rechazo sin llamada generativa. La reescritura de seguimiento está pendiente. En `demo` el índice es el hash lexical `fixture-token-hash-v1`. En `real` la consulta exige un perfil de índice con estado `ready`, el mismo modelo, la misma dimensión y la métrica cosine.
 3. CRAG: el grafo de `docs/crag-graph.md`. En demo usa el mismo grafo con guiones o, en una pregunta libre, el índice lexical. En real exige la configuración de RAG más `EVALUATOR_MODEL_ID`, el perfil `ready` y una sesión de gasto. Si falta, la respuesta es 409 o un error de reserva. No reutiliza RAG básico. Una pregunta de calendario sin cohorte se aclara antes de buscar.
+4. Investigación (fase 1 de S12): grafo en primer plano, ligado a la petición. En demo usa guiones y páginas sintéticas. En real queda bloqueada con 409 hasta que exista contabilidad durable del coste total y una autorización de gasto propia. No reserva el presupuesto del RAG. El detalle está en `docs/s12-research-phase1.md`.
 
 El grafo admite como máximo tres recuperaciones y dos reformulaciones. El orden final sigue el ranking validado. `usefulIds` solo decide la pertenencia. El plazo de 20 segundos es el del turno: cada llamada recibe el tiempo restante y un resultado tardío no se acepta.
 
@@ -29,7 +30,7 @@ El grafo admite como máximo tres recuperaciones y dos reformulaciones. El orden
 | D1                    | Texto de fragmentos, metadatos, versiones del corpus y registros mínimos de ejecución |
 | R2                    | Documentos originales y artefactos versionados                                        |
 | Workers AI            | Embeddings; candidato inicial `@cf/baai/bge-m3`                                       |
-| OpenRouter            | Modelo generativo y, al principio, evaluación y reordenación estructuradas            |
+| API de Claude         | Generación, evaluación CRAG e investigación con `claude-haiku-5-5`                    |
 
 La página de BGE-M3 consultada el 3 de octubre de 2026 muestra `@cf/baai/bge-m3`, la entrada `{ text }` y un precio publicado de 0,0118 dólares por millón de tokens de entrada. No publica la dimensión del vector. Otra tabla de AI Search lista 1024 para ese alias; no es una medición de esta cuenta y no autoriza a crear el índice. La dimensión queda pendiente de una sonda. No hay recursos creados en esta fase.
 
@@ -39,9 +40,9 @@ El archivo `docs/wrangler.cloud.example.jsonc` documenta los nombres de binding.
 
 ## Límites de código
 
-`packages/contracts` contiene esquemas Zod que el navegador puede importar. `packages/rag` contiene la canalización y los puertos. Los adaptadores de Workers AI, Vectorize, D1 y R2 viven en `apps/api` y no se llaman al importar el módulo. El navegador no importa OpenRouter, LangGraph, los bindings ni tipos de Bun.
+`packages/contracts` contiene esquemas Zod que el navegador puede importar. `packages/rag` contiene la canalización y los puertos. Los adaptadores de Workers AI, Vectorize, D1 y R2 viven en `apps/api` y no se llaman al importar el módulo. El navegador no importa la API de Claude, LangGraph, los bindings ni tipos de Bun.
 
-Los identificadores de modelo salen de `MODEL_ID` y, solo para CRAG, `EVALUATOR_MODEL_ID`. La fábrica OpenRouter usa `https://openrouter.ai/api/v1` y compatibilidad `strict`. `/api/chat` la usa cuando el perfil real tiene generación configurada y la prueba no inyecta un modelo. Construir la fábrica no llama a la red.
+Los identificadores de modelo salen de `MODEL_ID`, `EVALUATOR_MODEL_ID` y `RESEARCH_MODEL_ID`, todos `claude-haiku-5-5`. La fábrica usa `https://api.anthropic.com/v1` y `effort: low`. `/api/chat` la usa cuando el perfil real tiene generación configurada y la prueba no inyecta un modelo. Construir la fábrica no llama a la red.
 
 El uso y el coste desconocidos viajan como `null`. La demostración no inventa un cero.
 

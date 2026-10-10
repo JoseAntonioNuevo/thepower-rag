@@ -1,4 +1,4 @@
-export type ChatStage = "sin-rag" | "rag" | "crag";
+export type ChatStage = "sin-rag" | "rag" | "crag" | "research";
 
 const STATUS_LABELS = [
   "Listo",
@@ -6,6 +6,7 @@ const STATUS_LABELS = [
   "Recibiendo la respuesta",
   "Recibiendo RAG",
   "Recorriendo el grafo",
+  "Investigando",
   "Error",
 ] as const;
 
@@ -20,6 +21,9 @@ export function conversationStatus(status: string, mode: ChatStage): string {
   if (status === "streaming") {
     if (mode === "crag") {
       return "Recorriendo el grafo";
+    }
+    if (mode === "research") {
+      return "Investigando";
     }
     if (mode === "sin-rag") {
       return "Recibiendo la respuesta";

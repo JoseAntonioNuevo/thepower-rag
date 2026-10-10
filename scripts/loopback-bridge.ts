@@ -178,9 +178,9 @@ export async function startLoopbackBridge(
   await writeFile(configPath, serialized, { mode: 0o600 });
   const extra =
     spec.role === "verify" && !spec.remote
-      ? "OPENROUTER_API_KEY=local-emulated-not-a-provider\n"
+      ? "ANTHROPIC_API_KEY=local-emulated-not-a-provider\n"
       : spec.role === "verify" && spec.remote
-        ? `OPENROUTER_API_KEY=${JSON.stringify(spec.apiKey)}\n`
+        ? `ANTHROPIC_API_KEY=${JSON.stringify(spec.apiKey)}\n`
         : "";
   await writeFile(varsPath, `BRIDGE_TOKEN=${spec.token}\n${extra}`, { mode: 0o600 });
   await chmod(configPath, 0o600);

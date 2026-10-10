@@ -1,59 +1,47 @@
-import { createOpenRouter } from "@openrouter/ai-sdk-provider";
+import { createAnthropic, type AnthropicLanguageModelOptions } from "@ai-sdk/anthropic";
 import type { GenerationSettings } from "./env";
 
-export const OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1";
+export const ANTHROPIC_BASE_URL = "https://api.anthropic.com/v1";
+export const HAIKU_MODEL_ID = "claude-haiku-5-5";
+export const HAIKU_INPUT_USD_PER_MILLION = 0.1;
+export const HAIKU_OUTPUT_USD_PER_MILLION = 0.5;
 
-export function openRouterFactoryLoaded(): boolean {
-  return typeof createOpenRouter === "function";
+/** Effort low keeps adaptive thinking small so a short course answer still fits maxOutputTokens. */
+export const anthropicProviderOptions = {
+  anthropic: {
+    effort: "low",
+  } satisfies AnthropicLanguageModelOptions,
+};
+
+export function anthropicFactoryLoaded(): boolean {
+  return typeof createAnthropic === "function";
 }
 
-export function createGenerationModel(config: GenerationSettings, onCall?: () => void) {
-  return createOpenRouter({
+function client(config: GenerationSettings, onCall?: () => void) {
+  return createAnthropic({
     apiKey: config.apiKey,
+    baseURL: ANTHROPIC_BASE_URL,
+    headers: config.workspaceId ? { "anthropic-workspace-id": config.workspaceId } : undefined,
     fetch: onCall
       ? async (url, init) => {
           onCall();
           return fetch(url, init);
         }
       : undefined,
-    baseURL: OPENROUTER_BASE_URL,
-    compatibility: "strict",
-    appName: "thepower-rag",
-  }).chat(config.modelId, modelOptions(config.modelId));
+  });
+}
+
+export function createGenerationModel(config: GenerationSettings, onCall?: () => void) {
+  return client(config, onCall).chat(config.modelId);
 }
 
 export function createEvaluatorModel(
   config: GenerationSettings & { evaluatorModelId: string },
   onCall?: () => void,
 ) {
-  return createOpenRouter({
-    apiKey: config.apiKey,
-    fetch: onCall
-      ? async (url, init) => {
-          onCall();
-          return fetch(url, init);
-        }
-      : undefined,
-    baseURL: OPENROUTER_BASE_URL,
-    compatibility: "strict",
-    appName: "thepower-rag",
-  }).chat(config.evaluatorModelId, modelOptions(config.evaluatorModelId));
+  return client(config, onCall).chat(config.evaluatorModelId);
 }
 
-export function modelOptions(modelId: string) {
-  if (modelId === "google/gemini-3.8-flash") {
-    return {
-      reasoning: { effort: "low" as const },
-      extraBody: { provider: { only: ["google-ai-studio"], allow_fallbacks: false } },
-    };
-  }
-  return modelId === "openai/gpt-6-luna"
-    ? {
-        reasoning: { effort: "none" as const },
-        extraBody: {
-          service_tier: "priority",
-          provider: { only: ["openai/fast"], allow_fallbacks: false },
-        },
-      }
-    : {};
+export function refusedByModel(reason: string | undefined, raw: string | undefined): boolean {
+  return reason === "content-filter" || raw === "refusal";
 }

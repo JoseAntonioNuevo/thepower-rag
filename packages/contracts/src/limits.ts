@@ -8,7 +8,7 @@ export const LIMITS = {
   maxIdChars: 128,
   maxBodyChars: 80_000,
   maxIssues: 20,
-  maxOutputTokens: 600,
+  maxOutputTokens: 1_600,
   generationTimeoutMs: 20_000,
   embeddingTimeoutMs: 15_000,
   retrievalTimeoutMs: 10_000,
@@ -16,7 +16,7 @@ export const LIMITS = {
   retrievalTopK: 4,
 } as const;
 
-export const GENERATION_VARIABLES = ["OPENROUTER_API_KEY", "MODEL_ID"] as const;
+export const GENERATION_VARIABLES = ["ANTHROPIC_API_KEY", "MODEL_ID"] as const;
 
 export const RAG_SETTING_VARIABLES = [
   "EMBEDDING_MODEL",

@@ -13,7 +13,7 @@ export interface AdapterRecord {
     | "memory-tables"
     | "local-emulated-generator"
     | "local-emulated-evaluator"
-    | "openrouter";
+    | "anthropic";
   remote: boolean;
   binding: "AI" | "VECTORIZE" | "DB" | "CORPUS" | null;
 }
@@ -22,7 +22,7 @@ const FIXTURE_ADAPTERS = new Set<AdapterRecord["id"]>(["fixture-embedder", "memo
 const REMOTE_ADAPTERS = new Set<AdapterRecord["id"]>([
   "workers-ai-binding",
   "vectorize-binding",
-  "openrouter",
+  "anthropic",
 ]);
 
 export function classifyRuntime(adapters: readonly AdapterRecord[]): {

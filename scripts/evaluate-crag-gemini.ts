@@ -1,13 +1,13 @@
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
 import path from "node:path";
-import { parse } from "dotenv";
 import {
   createAllowanceLedger,
   validateRankingAndAssessment,
   type CragChunk,
 } from "@thepower-rag/core";
 import { createRealCragPorts } from "../apps/api/src/crag-real";
-import { createEvaluatorModel, createGenerationModel } from "../apps/api/src/model";
+import { createEvaluatorModel, createGenerationModel, HAIKU_MODEL_ID } from "../apps/api/src/model";
+import { readRepoAnthropicKey } from "./anthropic-key";
 import type { EmbeddingRunner } from "../apps/api/src/vectors";
 import type { SqlDatabase, VectorIndex } from "../apps/api/src/stores";
 import corpus from "../corpus/prepared/corpus.json";
@@ -32,31 +32,17 @@ const file = path.join(out, continuing ? "continuation-results.json" : "directed
 if (continuing && !existsSync(path.join(out, "directed-results.json")))
   throw new Error("No existe la primera prueba.");
 if (existsSync(file)) throw new Error("Ya hay evidencia; no se repite automáticamente.");
-const key = parse(
-  readFileSync(path.join(root, "apps/web/.dev.vars.production"), "utf8"),
-).OPENROUTER_API_KEY;
-if (!key) throw new Error("Falta clave del curso.");
-const credit = (await (
-  await fetch("https://openrouter.ai/api/v1/key", { headers: { Authorization: `Bearer ${key}` } })
-).json()) as { data: { limit: number; usage: number } };
-const catalog = (await (
-  await fetch("https://openrouter.ai/api/v1/models/google/gemini-3.8-flash/endpoints")
-).json()) as {
-  data: { endpoints: { tag: string; pricing: { prompt: string; completion: string } }[] };
-};
-const price = catalog.data.endpoints.find((e) => e.tag === "google-ai-studio")?.pricing;
-if (!price || Number(price.prompt) > 0.00000075 || Number(price.completion) > 0.00000375)
-  throw new Error("Tarifa ausente o superior a la reserva.");
-const maxSpend = Math.min(continuing ? 0.12 : 0.25, credit.data.limit - credit.data.usage);
-if (maxSpend < 0.12) throw new Error("No queda presupuesto suficiente.");
+const key = readRepoAnthropicKey(root);
+if (!key) throw new Error("Falta ANTHROPIC_API_KEY en .env.");
+const maxSpend = continuing ? 0.12 : 0.25;
 const ledger = createAllowanceLedger({
   maxSpendUsd: maxSpend,
   maxGenerativeCalls: continuing ? 5 : 7,
   maxEmbeddingCalls: 0,
   prices: {
     embeddingUsdPerMillionInput: null,
-    generativeUsdPerMillionInput: 0.75,
-    generativeUsdPerMillionOutput: 3.75,
+    generativeUsdPerMillionInput: 0.1,
+    generativeUsdPerMillionOutput: 0.5,
   },
 });
 const scope = {
@@ -92,10 +78,10 @@ const ports = createRealCragPorts({
   database: {} as SqlDatabase,
   evaluator: createEvaluatorModel({
     apiKey: key,
-    modelId: auth.modelId,
-    evaluatorModelId: "google/gemini-3.8-flash",
+    modelId: HAIKU_MODEL_ID,
+    evaluatorModelId: HAIKU_MODEL_ID,
   }),
-  generator: createGenerationModel({ apiKey: key, modelId: "openai/gpt-6-luna" }),
+  generator: createGenerationModel({ apiKey: key, modelId: HAIKU_MODEL_ID }),
   messages: [{ role: "user", content: "¿Cómo modela LangGraph un agente con estado y nodos?" }],
   embeddingModel: "not-used",
   dimensions: 1024,
@@ -136,11 +122,11 @@ const cases = [
 const results: unknown[] = [];
 const evidence = {
   at: new Date().toISOString(),
-  evaluator: "google/gemini-3.8-flash",
-  generator: "openai/gpt-6-luna",
-  provenance: "real OpenRouter SDK, versioned local course chunks; no retrieval or public endpoint",
+  evaluator: HAIKU_MODEL_ID,
+  generator: HAIKU_MODEL_ID,
+  provenance: "real Claude API SDK, versioned local course chunks; no retrieval or public endpoint",
   maxSpendUsd: maxSpend,
-  endpointPricing: price,
+  endpointPricing: { inputUsdPerMillion: 0.1, outputUsdPerMillion: 0.5 },
   results,
 };
 const save = () =>

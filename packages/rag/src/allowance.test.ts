@@ -25,7 +25,7 @@ describe("presupuesto de sesión", () => {
       generativeUsdPerMillionOutput: 2_000_000,
     };
     const room = createAllowanceLedger({
-      maxSpendUsd: 8_000,
+      maxSpendUsd: 12_000,
       maxGenerativeCalls: 4,
       maxEmbeddingCalls: 2,
       prices: expensive,
@@ -38,7 +38,7 @@ describe("presupuesto de sesión", () => {
     room.settle(first.id, null);
     expect(room.reserve({ kind: "generation" }).ok).toBe(false);
     const restored = createAllowanceLedger({
-      maxSpendUsd: 8_000,
+      maxSpendUsd: 12_000,
       maxGenerativeCalls: 4,
       maxEmbeddingCalls: 2,
       prices: expensive,

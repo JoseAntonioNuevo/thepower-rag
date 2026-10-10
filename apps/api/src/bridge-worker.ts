@@ -48,7 +48,7 @@ export interface BridgeEnv {
   BRIDGE_VERIFIED_METRIC?: string;
   BRIDGE_METADATA_INDEXES?: string;
   APP_MODE?: string;
-  OPENROUTER_API_KEY?: string;
+  ANTHROPIC_API_KEY?: string;
   MODEL_ID?: string;
   EVALUATOR_MODEL_ID?: string;
   EMBEDDING_MODEL?: string;
@@ -85,7 +85,7 @@ function note(adapter: AdapterRecord): void {
   if (adapter.id === "local-emulated-embedder" || adapter.id === "workers-ai-binding") {
     embedCalls += 1;
   }
-  if (adapter.id === "local-emulated-generator" || adapter.id === "openrouter") {
+  if (adapter.id === "local-emulated-generator" || adapter.id === "anthropic") {
     generateCalls += 1;
   }
 }
@@ -163,7 +163,7 @@ function configuredAdapters(env: BridgeEnv): AdapterRecord[] {
       adapters.push({ id: "native-d1", remote: true, binding: "DB" });
     }
     if (env.BRIDGE_ROLE === "verify") {
-      adapters.push({ id: "openrouter", remote: true, binding: null });
+      adapters.push({ id: "anthropic", remote: true, binding: null });
     }
     return adapters;
   }
@@ -662,7 +662,7 @@ export async function handleBridgeRequest(request: Request, env: BridgeEnv): Pro
       const remoteIndex = env.VECTORIZE;
       return createApp({
         allowance,
-        onProviderCall: () => note({ id: "openrouter", remote: true, binding: null }),
+        onProviderCall: () => note({ id: "anthropic", remote: true, binding: null }),
       }).fetch(request, {
         ...env,
         AI: {

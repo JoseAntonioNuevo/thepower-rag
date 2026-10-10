@@ -1,6 +1,7 @@
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { parse } from "dotenv";
+import { readRepoAnthropicKey, readRepoAnthropicWorkspaceId } from "./anthropic-key";
 import { assessWorker, type Assessment, type WorkerEnv } from "../apps/api/src/env";
 import {
   GENERATION_VARIABLES,
@@ -11,7 +12,7 @@ import {
 } from "@thepower-rag/contracts";
 
 export type BindingLevel = "absent" | "declared" | "configured";
-export type CapabilityName = "sin-rag" | "rag" | "crag";
+export type CapabilityName = "sin-rag" | "rag" | "crag" | "research";
 
 export interface BindingView {
   level: BindingLevel;
@@ -169,6 +170,14 @@ export function loadLocalWorkerConfig(
   const devVarsPath = path.join(path.dirname(configPath), devName);
   const devVarsText = existsSync(devVarsPath) ? readFileSync(devVarsPath, "utf8") : null;
   const vars = effectiveWorkerVars(inspected.vars, devVarsText);
+  const repoKey = readRepoAnthropicKey(root);
+  if (repoKey && !isConfiguredValue(vars.ANTHROPIC_API_KEY)) {
+    vars.ANTHROPIC_API_KEY = repoKey;
+  }
+  const repoWorkspace = readRepoAnthropicWorkspaceId(root);
+  if (repoWorkspace && !isConfiguredValue(vars.ANTHROPIC_WORKSPACE_ID)) {
+    vars.ANTHROPIC_WORKSPACE_ID = repoWorkspace;
+  }
   const relativeConfig = path.relative(root, configPath);
   return {
     environmentName: environment,
@@ -188,6 +197,7 @@ export function loadLocalWorkerConfig(
             "sin-rag": { status: "blocked", missing: ["APP_MODE"] },
             rag: { status: "blocked", missing: ["APP_MODE"] },
             crag: { status: "blocked", missing: ["APP_MODE"] },
+            research: { status: "blocked", missing: ["APP_MODE"] },
           },
         },
   };
@@ -247,7 +257,7 @@ export function formatPreflight(
     `perfil: ${config.assessment.execution}`,
   ];
   const groups: [string, readonly string[]][] = [
-    ["generación", ["OPENROUTER_API_KEY", "MODEL_ID"]],
+    ["generación", ["ANTHROPIC_API_KEY", "MODEL_ID"]],
     [
       "rag",
       [
@@ -273,7 +283,7 @@ export function formatPreflight(
     lines.push(`  ${name}: ${binding.level}; alcanzable: no comprobado; verificado: no`);
   }
   lines.push("nombres solo en process.env, ignorados por el Worker:");
-  for (const name of ["APP_MODE", "OPENROUTER_API_KEY", "MODEL_ID", "EVALUATOR_MODEL_ID"]) {
+  for (const name of ["APP_MODE", "ANTHROPIC_API_KEY", "MODEL_ID", "EVALUATOR_MODEL_ID"]) {
     lines.push(`  ${name}: ${presentProcess(processEnv, name)}`);
   }
   lines.push(`sin RAG: ${config.assessment.capabilities["sin-rag"].status}`);
@@ -295,6 +305,10 @@ export function formatPreflight(
         ? "configured"
         : "blocked";
   lines.push(`CRAG: ${cragStatus}`);
+  const research = config.assessment.capabilities.research;
+  lines.push(
+    `Investigación: ${research.status}${research.status === "blocked" ? ` (falta: ${research.missing.join(", ")})` : ""}`,
+  );
   lines.push("pruebas de conexión: no ejecutadas");
   lines.push("verificado remotamente: no");
   const capability = selection.capability;
@@ -306,6 +320,8 @@ export function formatPreflight(
     code = 2;
   } else if (capability === "crag") {
     code = cragStatus === "offline-fixture" || cragStatus === "configured" ? 0 : 2;
+  } else if (capability === "research") {
+    code = research.status === "offline-fixture" || research.status === "ready" ? 0 : 2;
   } else if (capability === "sin-rag") {
     const status = config.assessment.capabilities["sin-rag"].status;
     code = status === "offline-demo" || status === "ready" ? 0 : 2;
@@ -323,7 +339,9 @@ export function formatPreflight(
         ? rag.missing
         : capability === "crag"
           ? cragMissing
-          : config.assessment.capabilities["sin-rag"].missing;
+          : capability === "research"
+            ? research.missing
+            : config.assessment.capabilities["sin-rag"].missing;
     lines.push(
       `preflight incompleto: ${missing.join(", ") || config.assessment.message || "configuración"}`,
     );

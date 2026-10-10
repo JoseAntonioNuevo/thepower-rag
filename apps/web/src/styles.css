@@ -624,3 +624,70 @@ fieldset:disabled {
     padding-right: 4px;
   }
 }
+
+/* Etapa de investigación (S12, fase 1). */
+.chip-web {
+  background: #eef2ff;
+  color: #3730a3;
+}
+
+.chip-tool {
+  background: #f5f3ff;
+  color: #5b21b6;
+}
+
+.research-trace {
+  display: grid;
+  gap: 14px;
+}
+
+.research-banner {
+  margin: 0;
+  padding: 10px 12px;
+  border: 1px solid #fdba74;
+  border-radius: 8px;
+  background: #fff7ed;
+  color: #7c2d12;
+  font-size: 0.88rem;
+}
+
+.research-block h3 {
+  margin: 0 0 6px;
+  color: var(--ink-soft);
+  font-family: var(--font-ui);
+  font-size: 0.86rem;
+  font-weight: 600;
+}
+
+.research-block p {
+  margin: 0 0 6px;
+}
+
+.research-question {
+  white-space: pre-line;
+}
+
+.research-meta {
+  margin: 0;
+  color: var(--ink-soft);
+  font-size: 0.82rem;
+  overflow-wrap: anywhere;
+}
+
+.research-meta a {
+  color: var(--navy);
+}
+
+.research-excerpts summary {
+  cursor: pointer;
+  color: var(--ink-soft);
+  font-size: 0.84rem;
+}
+
+.research-excerpts ul {
+  display: grid;
+  gap: 6px;
+  margin: 6px 0 0;
+  padding-left: 18px;
+  font-size: 0.88rem;
+}

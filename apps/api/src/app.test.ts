@@ -4,7 +4,7 @@ import { simulateReadableStream, type LanguageModel } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
 import { afterEach, beforeEach, describe, expect, it } from "vite-plus/test";
 import { createApp, type AppDeps } from "./app";
-import { createEvaluatorModel, createGenerationModel, OPENROUTER_BASE_URL } from "./model";
+import { ANTHROPIC_BASE_URL, createEvaluatorModel, createGenerationModel } from "./model";
 import { assertEmbeddingMatrix, embedWithWorkersAi } from "./vectors";
 import type { WorkerEnv } from "./env";
 
@@ -80,7 +80,7 @@ function mockModel(text: string, calls: { count: number; prompt: string }): Lang
 
 const generationEnv: WorkerEnv = {
   APP_MODE: "real",
-  OPENROUTER_API_KEY: "local-test-key",
+  ANTHROPIC_API_KEY: "local-test-key",
   MODEL_ID: "example/generator",
 };
 
@@ -163,7 +163,7 @@ describe("fase 2", () => {
   it("no exige el evaluador para sin RAG", async () => {
     const response = await postChat(
       { mode: "sin-rag", messages: [userMessage("Hola")] },
-      { APP_MODE: "real", OPENROUTER_API_KEY: "local-test-key" },
+      { APP_MODE: "real", ANTHROPIC_API_KEY: "local-test-key" },
     );
     expect(response.status).toBe(409);
     const body = errorResponseSchema.parse(await response.json());
@@ -289,24 +289,24 @@ describe("fase 2", () => {
     expect(raw).toContain("version-prueba:inyeccion:00");
   });
 
-  it("la fábrica OpenRouter no llama a la red al construirse", async () => {
+  it("la fábrica de Claude no llama a la red al construirse", async () => {
     const generation = createGenerationModel({ apiKey: SENTINEL, modelId: "example/generator" });
     const evaluation = createEvaluatorModel({
       apiKey: SENTINEL,
       modelId: "example/generator",
       evaluatorModelId: "example/evaluator",
     });
-    expect(generation.provider).toBe("openrouter");
+    expect(generation.provider).toBe("anthropic.messages");
     expect(generation.modelId).toBe("example/generator");
     expect(evaluation.modelId).toBe("example/evaluator");
-    expect(OPENROUTER_BASE_URL).toBe("https://openrouter.ai/api/v1");
+    expect(ANTHROPIC_BASE_URL).toBe("https://api.anthropic.com/v1");
   });
 
   it("describe capacidades distintas en salud", async () => {
     const response = await createApp().request(
       "/api/health",
       { method: "GET" },
-      { OPENROUTER_API_KEY: SENTINEL },
+      { ANTHROPIC_API_KEY: SENTINEL },
     );
     const raw = await response.text();
     const body = healthResponseSchema.parse(JSON.parse(raw));

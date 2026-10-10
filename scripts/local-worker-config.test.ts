@@ -43,14 +43,14 @@ describe("preflight", () => {
     const result = report('{"vars":{"APP_MODE":"demo"}}', "APP_MODE=real\n", {
       APP_MODE: "demo",
       MODEL_ID: "secreto-modelo",
-      OPENROUTER_API_KEY: "secreto-clave",
+      ANTHROPIC_API_KEY: "secreto-clave",
     });
     const text = result.lines.join("\n");
     expect(result.code).toBe(2);
     expect(text).toContain("APP_MODE efectivo: real");
     expect(text).toContain("perfil: real");
     expect(text).toContain("MODEL_ID: ausente");
-    expect(text).toContain("OPENROUTER_API_KEY: ausente");
+    expect(text).toContain("ANTHROPIC_API_KEY: ausente");
     expect(text).not.toContain("secreto-modelo");
     expect(text).not.toContain("secreto-clave");
     expect(text).toContain("verificado remotamente: no");
@@ -65,7 +65,7 @@ describe("preflight", () => {
   it("interpreta comillas y un modo desconocido", () => {
     const quoted = report(
       '{"vars":{"APP_MODE":"demo"}}',
-      'APP_MODE="real"\nMODEL_ID="example/generator"\nOPENROUTER_API_KEY="quoted secret"\n',
+      'APP_MODE="real"\nMODEL_ID="example/generator"\nANTHROPIC_API_KEY="quoted secret"\n',
       {},
     );
     expect(quoted.code).toBe(0);
@@ -78,7 +78,7 @@ describe("preflight", () => {
     const wrangler = JSON.stringify({
       vars: {
         APP_MODE: "real",
-        OPENROUTER_API_KEY: "local-test-key",
+        ANTHROPIC_API_KEY: "local-test-key",
         MODEL_ID: "example/generator",
       },
       vectorize: [{ binding: "VECTORIZE_INDEX", index_name: "otro" }],
@@ -94,7 +94,7 @@ describe("preflight", () => {
     const file = JSON.stringify({
       vars: {
         APP_MODE: "real",
-        OPENROUTER_API_KEY: "local-test-key",
+        ANTHROPIC_API_KEY: "local-test-key",
         MODEL_ID: "example/generator",
         EMBEDDING_MODEL: "@cf/baai/bge-m3",
         EMBEDDING_DIMENSIONS: "1024",
@@ -126,7 +126,7 @@ describe("preflight", () => {
       JSON.stringify({
         vars: {
           APP_MODE: "real",
-          OPENROUTER_API_KEY: "local-test-key",
+          ANTHROPIC_API_KEY: "local-test-key",
           MODEL_ID: "example/generator",
         },
       }),
@@ -140,7 +140,7 @@ describe("preflight", () => {
       JSON.stringify({
         vars: {
           APP_MODE: "real",
-          OPENROUTER_API_KEY: "local-test-key",
+          ANTHROPIC_API_KEY: "local-test-key",
           MODEL_ID: "example/generator",
         },
       }),
@@ -157,7 +157,7 @@ it("CRAG configurado no se declara conectado ni verificado sin una comprobación
     JSON.stringify({
       vars: {
         APP_MODE: "real",
-        OPENROUTER_API_KEY: "local-test-key",
+        ANTHROPIC_API_KEY: "local-test-key",
         MODEL_ID: "example/generator",
         EVALUATOR_MODEL_ID: "example/evaluator",
         EMBEDDING_MODEL: "@cf/baai/bge-m3",

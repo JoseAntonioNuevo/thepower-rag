@@ -1,3 +1,4 @@
+import { anthropicProviderOptions, refusedByModel } from "./model";
 import { providerCost } from "./provider-cost";
 import { LIMITS } from "@thepower-rag/contracts";
 import {
@@ -225,6 +226,7 @@ export function createRealCragPorts(input: {
               maxOutputTokens: 1600,
               maxRetries: LIMITS.maxRetries,
               abortSignal: signal,
+              providerOptions: anthropicProviderOptions,
             }),
         );
         settle("evaluation", null);
@@ -256,9 +258,10 @@ export function createRealCragPorts(input: {
               schemaName: "crag-query",
               system: REWRITE_PROMPT,
               prompt: `Pregunta original:\n${question}\n\nConsulta anterior:\n${query}\n\nLagunas:\n${gaps.join("\n") || "sin laguna nombrada"}`,
-              maxOutputTokens: 200,
+              maxOutputTokens: 800,
               maxRetries: LIMITS.maxRetries,
               abortSignal: signal,
+              providerOptions: anthropicProviderOptions,
             }),
         );
         settle("reformulation", null);
@@ -290,12 +293,16 @@ export function createRealCragPorts(input: {
               maxRetries: LIMITS.maxRetries,
               abortSignal: signal,
               timeout: { totalMs: timeoutMs },
+              providerOptions: anthropicProviderOptions,
             }),
         );
         settle("generation", null);
       } catch (error) {
         settle("generation", null);
         throw error;
+      }
+      if (refusedByModel(result.finishReason, result.rawFinishReason)) {
+        throw new Error("provider-failed");
       }
       const usage = result.totalUsage;
       const inputTokens = typeof usage.inputTokens === "number" ? usage.inputTokens : null;
@@ -309,7 +316,7 @@ export function createRealCragPorts(input: {
           inputTokens === null && outputTokens === null && totalTokens === null
             ? null
             : { inputTokens, outputTokens, totalTokens },
-        cost: providerCost(result.providerMetadata),
+        cost: providerCost(usage),
       };
     },
   };

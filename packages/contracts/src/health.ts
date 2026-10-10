@@ -15,6 +15,7 @@ export const healthResponseSchema = z.object({
     "sin-rag": capabilitySchema,
     rag: capabilitySchema,
     crag: capabilitySchema,
+    research: capabilitySchema,
   }),
   corpus: z.object({
     version: z.string().nullable(),
@@ -34,7 +35,7 @@ export const healthResponseSchema = z.object({
   }),
   compatibility: z.object({
     langgraph: z.enum(["ok", "failed"]),
-    openrouter: z.enum(["loaded", "failed"]),
+    anthropic: z.enum(["loaded", "failed"]),
     note: z.string(),
   }),
 });

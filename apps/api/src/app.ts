@@ -31,6 +31,8 @@ import type { LanguageModel } from "ai";
 import { Hono } from "hono";
 import { dependencyCompatibility } from "./compat";
 import { cragHttpResponse } from "./crag-http";
+import { researchHttpResponse } from "./research-http";
+import type { ResearchPorts } from "@thepower-rag/research";
 import {
   PUBLIC_PROVIDER_MESSAGE,
   streamFixedCourseResponse,
@@ -75,6 +77,8 @@ export interface AppDeps {
   embed?: (text: string) => readonly number[];
   profile?: IndexProfileRow | null;
   cragPorts?: CragPorts;
+  /** Solo pruebas: puertos de investigación inyectados. */
+  researchPorts?: ResearchPorts;
 }
 
 function jsonError(body: ErrorResponse, status: 400 | 409 | 501 | 502): Response {
@@ -229,6 +233,25 @@ export function createApp(deps: AppDeps = {}) {
     const history = modelMessages(parsed.data.messages);
     const signal = context.req.raw.signal;
 
+    // La investigación va antes del presupuesto público: no consume la reserva
+    // del RAG. En real queda bloqueada sin su propia autorización y contabilidad.
+    if (parsed.data.mode === "research") {
+      const research = await researchHttpResponse({
+        assessment,
+        request: parsed.data,
+        question,
+        signal,
+        deps: { researchPorts: deps.researchPorts },
+      });
+      if (!(research instanceof Response)) {
+        return jsonError(
+          { error: "configuration", message: research.message, missing: research.missing },
+          409,
+        );
+      }
+      return research;
+    }
+
     const publicBudget =
       assessment.execution === "real" && context.env.PUBLIC_BUDGET_USD !== undefined;
     const allowance = publicBudget
@@ -263,7 +286,8 @@ export function createApp(deps: AppDeps = {}) {
       return crag;
     }
 
-    const capability = assessment.capabilities[parsed.data.mode];
+    const mode = parsed.data.mode;
+    const capability = assessment.capabilities[mode];
     if (assessment.execution === "real" && capability.status === "blocked") {
       return jsonError(
         {

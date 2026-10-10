@@ -1,3 +1,4 @@
+import { anthropicProviderOptions, refusedByModel } from "./model";
 import { providerCost } from "./provider-cost";
 import {
   createUIMessageStream,
@@ -130,6 +131,7 @@ export function streamProviderCourseResponse(input: {
           maxRetries: LIMITS.maxRetries,
           abortSignal: input.signal,
           timeout: { totalMs: LIMITS.generationTimeoutMs },
+          providerOptions: anthropicProviderOptions,
         });
         writer.write({ type: "text-start", id: "answer" });
         let pending = "";
@@ -160,14 +162,20 @@ export function streamProviderCourseResponse(input: {
           });
           return;
         }
+        const reason = await result.finishReason;
+        const rawReason = await result.rawFinishReason;
+        if (refusedByModel(reason, rawReason)) {
+          throw new Error("provider-failed");
+        }
+        const usage = await result.totalUsage;
         writer.write({ type: "text-end", id: "answer" });
         writer.write({
           type: "finish",
           messageMetadata: runMetadataSchema.parse({
             ...input.metadata,
             completion: "complete",
-            usage: usageFrom(await result.totalUsage),
-            cost: providerCost(await result.providerMetadata),
+            usage: usageFrom(usage),
+            cost: providerCost(usage),
           }),
         });
       } catch (error) {

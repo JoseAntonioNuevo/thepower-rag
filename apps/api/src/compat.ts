@@ -1,5 +1,5 @@
 import { Annotation, END, START, StateGraph } from "@langchain/langgraph";
-import { openRouterFactoryLoaded } from "./model";
+import { anthropicFactoryLoaded } from "./model";
 
 const CompatState = Annotation.Root({
   marker: Annotation<string>,
@@ -7,7 +7,7 @@ const CompatState = Annotation.Root({
 
 export interface CompatibilityReport {
   langgraph: "ok" | "failed";
-  openrouter: "loaded" | "failed";
+  anthropic: "loaded" | "failed";
   note: string;
 }
 
@@ -32,18 +32,18 @@ let pending: Promise<CompatibilityReport> | undefined;
 
 export function dependencyCompatibility(): Promise<CompatibilityReport> {
   pending ??= (async () => {
-    const openrouter = openRouterFactoryLoaded() ? "loaded" : "failed";
+    const anthropic = anthropicFactoryLoaded() ? "loaded" : "failed";
     try {
       await runDependencyGraph();
       return {
         langgraph: "ok",
-        openrouter,
+        anthropic,
         note: "LangGraph carga. El grafo de CRAG vive en la ruta de chat. Esta comprobación no es una activación remota.",
       };
     } catch (error) {
       return {
         langgraph: "failed",
-        openrouter,
+        anthropic,
         note: failureNote(error),
       };
     }

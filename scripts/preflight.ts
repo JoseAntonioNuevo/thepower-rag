@@ -40,13 +40,16 @@ function dependencyVersion(manifest: string, name: string): string {
 }
 
 const argv = process.argv.slice(2);
-let capability: "sin-rag" | "rag" | "crag" | undefined;
+let capability: "sin-rag" | "rag" | "crag" | "research" | undefined;
 let environment: string | null = null;
 let configPath: string | undefined;
 for (let index = 0; index < argv.length; index += 1) {
   const flag = argv[index];
   const value = argv[index + 1];
-  if (flag === "--capability" && (value === "sin-rag" || value === "rag" || value === "crag")) {
+  if (
+    flag === "--capability" &&
+    (value === "sin-rag" || value === "rag" || value === "crag" || value === "research")
+  ) {
     capability = value;
     index += 1;
   } else if (flag === "--env" && value !== undefined) {
@@ -95,7 +98,7 @@ for (const [manifest, name] of [
   [path.join(root, "apps/web/package.json"), "@ai-sdk/react"],
   [path.join(root, "apps/api/package.json"), "hono"],
   [path.join(root, "apps/api/package.json"), "ai"],
-  [path.join(root, "apps/api/package.json"), "@openrouter/ai-sdk-provider"],
+  [path.join(root, "apps/api/package.json"), "@ai-sdk/anthropic"],
   [path.join(root, "apps/api/package.json"), "@langchain/langgraph"],
   [path.join(root, "apps/api/package.json"), "@langchain/core"],
   [path.join(root, "packages/contracts/package.json"), "zod"],

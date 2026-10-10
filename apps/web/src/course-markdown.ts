@@ -162,10 +162,16 @@ export function parseCourseMarkdown(source: string): CourseBlock[] {
   return blocks;
 }
 
-export function citeBadge(id: string): {
-  label: string;
-  tone: "calendar" | "exercise" | "session" | "note";
-} {
+export type CiteTone = "calendar" | "exercise" | "session" | "note" | "web" | "tool";
+
+export function citeBadge(id: string): { label: string; tone: CiteTone } {
+  if (/^web-[a-f0-9]{12}$/.test(id)) {
+    return { label: "Web", tone: "web" };
+  }
+  const tool = /^tool:session:[a-z]+:s(\d{1,2})$/.exec(id);
+  if (tool !== null) {
+    return { label: `Herramienta · S${String(Number(tool[1]))}`, tone: "tool" };
+  }
   const calendar = /calendario-(lx|mj)(?::(\d+))?/i.exec(id);
   if (calendar !== null) {
     const group = calendar[1]?.toLowerCase() === "mj" ? "M/J" : "L/X";

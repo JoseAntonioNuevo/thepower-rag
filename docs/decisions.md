@@ -6,7 +6,7 @@ El ejercicio anterior pedía PostgreSQL con pgvector y documentos de una empresa
 
 ## Un Worker y el AI SDK
 
-La interfaz es React con Vite+. La API es Hono dentro del mismo Worker. El estado de chat usa `@ai-sdk/react` y el protocolo UI Message Stream. No se instala TanStack AI, Next.js ni el AI Gateway de Vercel. El modelo, cuando exista la llamada, sale de `@openrouter/ai-sdk-provider` con URL y compatibilidad explícitas.
+La interfaz es React con Vite+. La API es Hono dentro del mismo Worker. El estado de chat usa `@ai-sdk/react` y el protocolo UI Message Stream. No se instala TanStack AI, Next.js ni el AI Gateway de Vercel. El modelo sale de `@ai-sdk/anthropic` contra `https://api.anthropic.com/v1`. No se pasa un id suelto que enrute por el gateway.
 
 LangGraph ejecuta el grafo de CRAG en cada turno de esa etapa. La comprobación de compatibilidad solo mira que el paquete carga. No es una activación remota.
 
@@ -57,6 +57,16 @@ La sonda, la ingesta, la reanudación completa y la verificación llaman a un pl
 ## Fase 7: el CLI arranca el Worker
 
 El 3 de octubre de 2026 `activate` pasó a construir el puente para los comandos de datos con `--execute`. El módulo tiene `fetch`, el `main` es absoluto y el testigo es un binding de `.dev.vars`. Wrangler 4.147.0 rechaza Vectorize local, así que la integración offline usa D1 y R2 nativos y emula el índice. La procedencia la marca el adaptador usado. La caché de otra procedencia no se reutiliza. La sesión de gasto se restaura entre invocaciones. `bun run test:entrypoint` recorrió ese CLI contra workerd sin red externa. El arranque con `remote: true` no se ha hecho.
+
+## S12 fase 1: investigación en primer plano
+
+El 10 de octubre de 2026 la etapa de investigación quedó en la misma aplicación, sin hilos persistentes, trabajos en la nube, imagen, audio ni voz. El grafo corre mientras la petición sigue abierta. Los adaptadores de prueba no miden un proveedor. La investigación real sigue bloqueada: falta `RESEARCH_DURABLE_ACCOUNTING` y no hereda la autorización ni el presupuesto del RAG. Una respuesta 409 no cae al guion.
+
+Cada cláusula tiene que ser un tramo ordenado de un extracto admitido. El solapamiento de palabras no verifica una negación omitida, un intercambio de cifras ni un hecho añadido al lado de una cláusula que sí reproduce el extracto. La fase 1 no acepta paráfrasis. Una contradicción explícita impide un informe completo y puede abrir la única ronda de seguimiento ya prevista. La evaluación de la segunda ronda recibe la evidencia acumulada y la cobertura previa. Un fallo de `get_course_session` es un fallo operativo; una lectura correcta sin el dato es falta de evidencia. Cancelar la petición deja de esperar en local aunque el adaptador ignore la señal; eso no anula un cargo remoto ya enviado. Los créditos sin un USD verificado no completan el total.
+
+## Generación con Claude Haiku 5.5
+
+El 10 de octubre de 2026 la generación, el evaluador de CRAG y el modelo de investigación pasan a `claude-haiku-5-5` por la API de Claude. La fábrica es `createAnthropic` con `effort: low`. No se envían `temperature`, `top_p` ni `top_k`. El tope de salida del curso queda en 1600 tokens para dejar sitio al pensamiento adaptativo. Las tarifas publicadas para prompts de hasta 100000 tokens son 0,10 USD y 0,50 USD por millón. El presupuesto público sigue en 4,30 USD. Embeddings siguen en Workers AI y Firecrawl no cambia. La clave va en `.env` como `ANTHROPIC_API_KEY`. Una clave de organización envía además `ANTHROPIC_WORKSPACE_ID` en la cabecera `anthropic-workspace-id`.
 
 ## Qué queda fuera
 

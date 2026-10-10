@@ -26,6 +26,8 @@ export default {
       }
       const parsed = chatRequestSchema.safeParse(payload);
       if (!parsed.success) return new Response("Invalid request", { status: 400 });
+      // La investigación no usa el presupuesto local del RAG. La app la bloquea en real.
+      if (parsed.data.mode === "research") return createApp().fetch(request, env, context);
       const allowance = await reservePublicTurn(
         { ...env, PUBLIC_BUDGET_USD: env.LOCAL_BUDGET_USD },
         parsed.data.mode,

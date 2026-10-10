@@ -5,7 +5,7 @@ const env = {
   BRIDGE_ROLE: "verify",
   BRIDGE_REMOTE: "true",
   APP_MODE: "real",
-  OPENROUTER_API_KEY: "synthetic-key",
+  ANTHROPIC_API_KEY: "synthetic-key",
   MODEL_ID: "example/generator",
   EVALUATOR_MODEL_ID: "example/evaluator",
   EMBEDDING_MODEL: "@cf/baai/bge-m3",

@@ -24,7 +24,7 @@ El navegador habla con un único Worker. Workers Static Assets sirve React. Hono
 - D1 guardará texto, metadatos y versiones.
 - R2 guardará originales y manifiestos.
 - Workers AI es el candidato de embeddings con `@cf/baai/bge-m3`. Su dimensión no está medida.
-- OpenRouter genera. El evaluador de CRAG usa `EVALUATOR_MODEL_ID` y no se ha llamado.
+- La API de Claude genera con `claude-haiku-5-5`. El evaluador de CRAG usa el mismo modelo.
 
 El perfil demo no usa esos servicios. Usa un índice lexical de 128 dimensiones, etiquetado como prueba. No es una búsqueda semántica ni Vectorize.
 
@@ -76,7 +76,7 @@ bun run preflight -- --capability rag
 | Nombre                 | Uso                                         |
 | ---------------------- | ------------------------------------------- |
 | `APP_MODE`             | `demo` o `real`                             |
-| `OPENROUTER_API_KEY`   | Clave del perfil real                       |
+| `ANTHROPIC_API_KEY`    | Clave de la API de Claude. Va en `.env`     |
 | `MODEL_ID`             | Modelo generativo del servidor              |
 | `EMBEDDING_MODEL`      | Modelo de embeddings del RAG real           |
 | `EMBEDDING_DIMENSIONS` | Dimensión observada, no supuesta            |
@@ -94,13 +94,13 @@ En local, `.dev.vars` sustituye las claves repetidas de `vars`. El entorno del p
 
 El Worker ejecutable no declara base de datos, índice ni bucket. Los nombres futuros están en `docs/wrangler.cloud.example.jsonc`, que el desarrollo no carga.
 
-Cuando el perfil real tenga clave y `MODEL_ID`, sin RAG llamará a OpenRouter. RAG real llamará además a Workers AI, Vectorize y D1. Esa comprobación remota no se ha hecho.
+Cuando el perfil real tenga `ANTHROPIC_API_KEY` y `MODEL_ID`, sin RAG llamará a la API de Claude con `claude-haiku-5-5`. RAG real llamará además a Workers AI, Vectorize y D1.
 
 ## Hecho y pendiente
 
-Hecho: ruta real sin RAG, RAG básico con citas o rechazo, corpus de S1 a S20 y los dos calendarios, ejecutor de Wrangler por operación, grafo CRAG con plazo único y ordenación aplicada, y el CLI conectado al Worker del puente. `bun run test:entrypoint` lo recorre en local con D1, R2 y un índice emulado.
+Hecho: ruta real sin RAG, RAG básico con citas o rechazo, corpus de S1 a S20 y los dos calendarios, ejecutor de Wrangler por operación, grafo CRAG con plazo único y ordenación aplicada, y el CLI conectado al Worker del puente. `bun run test:entrypoint` lo recorre en local con D1, R2 y un índice emulado. La investigación de S12, fase 1, corre en demo con guiones; la real sigue bloqueada. El contrato está en `docs/s12-research-phase1.md`.
 
-Pendiente de ejecución real: tope de gasto, `MODEL_ID`, permiso de alta y de Workers AI/OpenRouter, arranque con `remote: true`, sonda de BGE-M3, recursos, umbral semántico y la comparación reservada. Sin esa autorización el `--execute` no abre el puente. El detalle de ocho ejercicios sigue siendo solo un título. No se han creado recursos ni se ha llamado a un modelo de pago.
+Pendiente de ejecución real: tope de gasto, permiso de alta y de Workers AI, arranque con `remote: true`, sonda de BGE-M3, recursos, umbral semántico y la comparación reservada. Sin esa autorización el `--execute` no abre el puente. El detalle de ocho ejercicios sigue siendo solo un título. No se han creado recursos nuevos ni se ha desplegado este cambio de modelo.
 
 La memoria de OpenViking sigue pendiente. El detalle está en `docs/decisions.md` y `docs/phase-2-verification.md`.
 

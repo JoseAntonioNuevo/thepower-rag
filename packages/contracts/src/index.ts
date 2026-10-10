@@ -48,4 +48,37 @@ export type {
 } from "./limits";
 export { DEMO_CRAG_SCENARIOS, cragStepSchema, cragSummarySchema, demoScenarioSchema } from "./crag";
 export type { CragStep, CragSummary, DemoScenarioId } from "./crag";
+export {
+  DEFAULT_RESEARCH_DOMAINS,
+  DEMO_RESEARCH_QUESTION,
+  DEMO_RESEARCH_SCENARIOS,
+  RESEARCH_ACCOUNTING_MISSING,
+  RESEARCH_LIMITS,
+  RESEARCH_SPEND_TOKEN,
+  RESEARCH_VARIABLES,
+  researchNodeSchema,
+  researchOutcomeSchema,
+  researchRouteSchema,
+  researchScenarioSchema,
+  researchSourceIdSchema,
+  researchSourceSchema,
+  researchStepSchema,
+  researchStopSchema,
+  researchSubquestionSchema,
+  researchSummarySchema,
+  subquestionKindSchema,
+} from "./research";
+export type {
+  ResearchNode,
+  ResearchOutcome,
+  ResearchRoute,
+  ResearchScenarioId,
+  ResearchSource,
+  ResearchStep,
+  ResearchStop,
+  ResearchSubquestion,
+  ResearchSummary,
+  ResearchVariable,
+  SubquestionKind,
+} from "./research";
 export type { CourseDataParts, CourseUIMessage } from "./ui-message";

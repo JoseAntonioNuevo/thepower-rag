@@ -1,12 +1,16 @@
 import { useChat } from "@ai-sdk/react";
 import {
   DEMO_CRAG_SCENARIOS,
+  DEMO_RESEARCH_QUESTION,
+  DEMO_RESEARCH_SCENARIOS,
   healthResponseSchema,
   type Audience,
   type ChatMode,
   type CragStep,
   type DemoScenarioId,
   type HealthResponse,
+  type ResearchScenarioId,
+  type ResearchStep,
 } from "@thepower-rag/contracts";
 import { DefaultChatTransport, type CourseUIMessage } from "./chat";
 import {
@@ -20,6 +24,7 @@ import {
 import { conversationStatus, prefersReducedMotion } from "./chat-motion";
 import { CourseAnswer } from "./course-answer";
 import { acceptScenarioChange, discardedRowKey, retainedRowKey } from "./crag-panel";
+import { ResearchSources, ResearchSteps, ResearchTrace } from "./research-panel";
 import { conversationKey } from "./scope";
 import { useTurnstile } from "./use-turnstile";
 import {
@@ -38,6 +43,7 @@ const STAGES: readonly { id: ChatMode; label: string }[] = [
   { id: "sin-rag", label: "Sin RAG" },
   { id: "rag", label: "RAG básico" },
   { id: "crag", label: "CRAG" },
+  { id: "research", label: "Investigación" },
 ];
 
 const AUDIENCES: readonly { id: Audience; label: string; title?: string }[] = [
@@ -50,6 +56,7 @@ const EXAMPLES: Record<ChatMode, string> = {
   "sin-rag": "¿Qué es un embedding?",
   rag: "¿Qué vemos en la sesión 10?",
   crag: "¿Qué cambia CRAG respecto a una sola búsqueda?",
+  research: DEMO_RESEARCH_QUESTION,
 };
 
 function citationKind(source: {
@@ -389,7 +396,10 @@ function ChatPane({
   const [verifying, setVerifying] = useState(false);
   const [scenario, setScenario] = useState<DemoScenarioId | null>(null);
   const [liveSteps, setLiveSteps] = useState<CragStep[]>([]);
+  const [researchScenario, setResearchScenario] = useState<ResearchScenarioId | null>(null);
+  const [researchSteps, setResearchSteps] = useState<ResearchStep[]>([]);
   const selectedScenario = allowScenario && mode === "crag" ? scenario : null;
+  const selectedResearch = allowScenario && mode === "research" ? researchScenario : null;
   const transport = useMemo(
     () =>
       new DefaultChatTransport<CourseUIMessage>({
@@ -406,16 +416,18 @@ function ChatPane({
           body: {
             mode,
             audience,
-            messages: messages.map((message) => ({
+            // La investigación de la fase 1 no tiene memoria: solo envía la última pregunta.
+            messages: (mode === "research" ? messages.slice(-1) : messages).map((message) => ({
               id: message.id,
               role: message.role,
               parts: [{ type: "text", text: partText(message) }],
             })),
             ...(selectedScenario === null ? {} : { demoScenario: selectedScenario }),
+            ...(selectedResearch === null ? {} : { researchScenario: selectedResearch }),
           },
         }),
       }),
-    [mode, audience, selectedScenario],
+    [mode, audience, selectedScenario, selectedResearch],
   );
   const { messages, sendMessage, status, stop, error, clearError, setMessages } =
     useChat<CourseUIMessage>({
@@ -423,6 +435,9 @@ function ChatPane({
       onData: (part) => {
         if (part.type === "data-step") {
           setLiveSteps((current) => [...current, part.data].slice(-16));
+        }
+        if (part.type === "data-research-step") {
+          setResearchSteps((current) => [...current, part.data].slice(-40));
         }
       },
     });
@@ -440,11 +455,22 @@ function ChatPane({
   const trace = lastAssistant?.parts.find((part) => part.type === "data-trace");
   const cragPart = lastAssistant?.parts.find((part) => part.type === "data-crag");
   const crag = cragPart?.type === "data-crag" ? cragPart.data : null;
+  const researchPart = lastAssistant?.parts.find((part) => part.type === "data-research");
+  const research = researchPart?.type === "data-research" ? researchPart.data : null;
+  const researchSources =
+    lastAssistant?.parts.flatMap((part) =>
+      part.type === "data-research-source" ? [part.data] : [],
+    ) ?? [];
   const answerPending = busy || lastAssistant?.metadata?.completion === "streaming";
-  const sourcesLoading = mode !== "sin-rag" && sources.length === 0 && answerPending;
+  const visibleSources = mode === "research" ? researchSources.length : sources.length;
+  const sourcesLoading = mode !== "sin-rag" && visibleSources === 0 && answerPending;
   const traceLoading =
     answerPending &&
-    (mode === "crag" ? crag === null && liveSteps.length === 0 : trace?.type !== "data-trace");
+    (mode === "crag"
+      ? crag === null && liveSteps.length === 0
+      : mode === "research"
+        ? research === null && researchSteps.length === 0
+        : trace?.type !== "data-trace");
 
   async function sendQuestion() {
     const text = input.trim();
@@ -457,6 +483,7 @@ function ChatPane({
       const verificationToken = await beforeSend();
       clearError();
       setLiveSteps([]);
+      setResearchSteps([]);
       setInput("");
       await sendMessage(
         { text },
@@ -550,6 +577,43 @@ function ChatPane({
               </select>
             </label>
           ) : null}
+          {mode === "research" && allowScenario ? (
+            <label className="composer-script" htmlFor="guion-investigacion">
+              Guion
+              <select
+                id="guion-investigacion"
+                value={researchScenario ?? ""}
+                disabled={busy || !acceptScenarioChange(busy)}
+                onChange={(event) => {
+                  if (!acceptScenarioChange(busy)) {
+                    return;
+                  }
+                  const found = DEMO_RESEARCH_SCENARIOS.find(
+                    (item) => item.id === event.target.value,
+                  );
+                  setResearchScenario(found?.id ?? null);
+                  if (found !== undefined) {
+                    setInput(found.question);
+                  }
+                  setMessages([]);
+                  setResearchSteps([]);
+                }}
+              >
+                <option value="">Libre, con el material del curso de prueba</option>
+                {DEMO_RESEARCH_SCENARIOS.map((item) => (
+                  <option key={item.id} value={item.id}>
+                    {item.label}
+                  </option>
+                ))}
+              </select>
+            </label>
+          ) : null}
+          {mode === "research" ? (
+            <p className="composer-caption">
+              Se ejecuta mientras la petición sigue abierta. No es un trabajo en segundo plano ni
+              recuerda turnos anteriores.
+            </p>
+          ) : null}
           <p className="composer-caption">
             {alertMessage !== null ? (
               <span role="alert">
@@ -576,6 +640,7 @@ function ChatPane({
                     return;
                   }
                   setScenario(null);
+                  setResearchScenario(null);
                   setInput(EXAMPLES[mode]);
                   questionRef.current?.focus();
                 }}
@@ -613,6 +678,10 @@ function ChatPane({
                   const selected = DEMO_CRAG_SCENARIOS.find((item) => item.id === current);
                   return selected !== undefined && selected.question === next ? current : null;
                 });
+                setResearchScenario((current) => {
+                  const selected = DEMO_RESEARCH_SCENARIOS.find((item) => item.id === current);
+                  return selected !== undefined && selected.question === next ? current : null;
+                });
               }}
               placeholder="Escribe una pregunta"
               onKeyDown={onQuestionKeyDown}
@@ -641,6 +710,19 @@ function ChatPane({
               <h2 className="sources-sticky">Fuentes</h2>
               {mode === "sin-rag" ? (
                 <p>Sin fuentes. Este modo no recupera documentos.</p>
+              ) : mode === "research" ? (
+                <RevealSlot
+                  loading={sourcesLoading}
+                  label="Fuentes"
+                  skeleton={
+                    <>
+                      <span className="skel-line skel-line-short" />
+                      <span className="skel-line" />
+                    </>
+                  }
+                >
+                  <ResearchSources sources={researchSources} />
+                </RevealSlot>
               ) : (
                 <RevealSlot
                   loading={sourcesLoading}
@@ -686,7 +768,18 @@ function ChatPane({
                   </>
                 }
               >
-                {mode === "crag" ? (
+                {mode === "research" ? (
+                  research === null ? (
+                    <div aria-live="polite">
+                      <p>La traza completa aparece con el resultado.</p>
+                      <ResearchSteps steps={researchSteps} />
+                    </div>
+                  ) : (
+                    <PanelSlide>
+                      <ResearchTrace summary={research} />
+                    </PanelSlide>
+                  )
+                ) : mode === "crag" ? (
                   <div>
                     {crag === null ? (
                       <p>La traza aparece con la respuesta.</p>
@@ -832,11 +925,12 @@ export function App() {
   return (
     <main className="shell">
       <header className="masthead">
-        <h1>The Power RAG y CRAG</h1>
+        <h1>The Power RAG, CRAG e investigación</h1>
         <p>
-          Clases 10 y 11. RAG y CRAG consultan el mismo material del curso: el temario de las
-          sesiones 1 a 20, los ejercicios documentados y el calendario de cada grupo, con fechas,
-          horario y profesor.
+          Clases 10, 11 y 12. Las cuatro etapas consultan el mismo material del curso: el temario de
+          las sesiones 1 a 20, los ejercicios documentados y el calendario de cada grupo. La
+          investigación añade un plan acotado, documentación técnica externa y un informe con
+          fuentes.
         </p>
       </header>
       <div className="toolbar">

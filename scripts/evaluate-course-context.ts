@@ -1,8 +1,14 @@
 import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import path from "node:path";
-import { parse } from "dotenv";
 import { generateText } from "../apps/api/src/context-evaluation-model";
-import { createGenerationModel } from "../apps/api/src/model";
+import {
+  anthropicProviderOptions,
+  createGenerationModel,
+  HAIKU_INPUT_USD_PER_MILLION,
+  HAIKU_MODEL_ID,
+  HAIKU_OUTPUT_USD_PER_MILLION,
+} from "../apps/api/src/model";
+import { readRepoAnthropicKey } from "./anthropic-key";
 import { completeRagSystem } from "../apps/api/src/prompts";
 import { providerCost } from "../apps/api/src/provider-cost";
 import { readCourseContext } from "../apps/api/src/course-context";
@@ -21,39 +27,24 @@ const auth = JSON.parse(readFileSync(path.join(root, "apps/web/.activation.json"
 if (
   auth.accountId !== COURSE_DESTINATION.accountId ||
   !auth.allowOpenRouter ||
-  auth.maxSpendUsd !== 5 ||
-  auth.modelId !== "openai/gpt-6-luna"
+  auth.maxSpendUsd !== 5
 )
   throw new Error("Falta autorización del curso.");
 const out = path.join(root, "docs/evidence/course-context");
 mkdirSync(out, { recursive: true });
 const file = path.join(out, "directed-results.json");
 if (existsSync(file)) throw new Error("La prueba ya está guardada; no se repite automáticamente.");
-const secret = parse(
-  readFileSync(path.join(root, "apps/web/.dev.vars.production"), "utf8"),
-).OPENROUTER_API_KEY;
-const credit = (await (
-  await fetch("https://openrouter.ai/api/v1/key", {
-    headers: { Authorization: "Bearer " + secret },
-  })
-).json()) as { data: { usage: number; limit: number } };
-const catalog = (await (
-  await fetch("https://openrouter.ai/api/v1/models/openai/gpt-6-luna/endpoints")
-).json()) as {
-  data: { endpoints: { tag: string; pricing: { prompt: string; completion: string } }[] };
-};
-const pricing = catalog.data.endpoints.find((e) => e.tag === "openai/fast")?.pricing;
-if (!pricing) throw new Error("No hay tarifa verificada priority.");
-const maxSpend = Math.min(0.25, credit.data.limit - credit.data.usage);
-if (!(maxSpend > 0)) throw new Error("No queda presupuesto de la clave.");
+const secret = readRepoAnthropicKey(root);
+if (!secret) throw new Error("Falta ANTHROPIC_API_KEY en .env.");
+const maxSpend = 0.25;
 const ledger = createAllowanceLedger({
   maxSpendUsd: maxSpend,
   maxGenerativeCalls: 12,
   maxEmbeddingCalls: 0,
   prices: {
     embeddingUsdPerMillionInput: null,
-    generativeUsdPerMillionInput: Number(pricing.prompt) * 1000000,
-    generativeUsdPerMillionOutput: Number(pricing.completion) * 1000000,
+    generativeUsdPerMillionInput: HAIKU_INPUT_USD_PER_MILLION,
+    generativeUsdPerMillionOutput: HAIKU_OUTPUT_USD_PER_MILLION,
   },
 });
 const runner = createWranglerRunner(
@@ -171,7 +162,7 @@ const cases: [string, Audience, string, string][] = [
     "respuesta de S7; no pide grupo de calendario",
   ],
 ];
-const model = createGenerationModel({ apiKey: secret!, modelId: auth.modelId });
+const model = createGenerationModel({ apiKey: secret, modelId: HAIKU_MODEL_ID });
 const results: Record<string, unknown>[] = [];
 for (const [id, group, question, expected] of cases) {
   const reserve = ledger.reserve({
@@ -194,11 +185,12 @@ for (const [id, group, question, expected] of cases) {
       model,
       system: completeRagSystem(contexts.get(group)!, group),
       messages,
-      maxOutputTokens: 1200,
+      maxOutputTokens: 1600,
       maxRetries: 0,
       timeout: { totalMs: 20000 },
+      providerOptions: anthropicProviderOptions,
     });
-    const cost = providerCost(result.providerMetadata);
+    const cost = providerCost(result.totalUsage);
     ledger.settle(reserve.id, cost?.amount ?? null);
     results.push({
       id,
@@ -231,7 +223,7 @@ for (const [id, group, question, expected] of cases) {
         kind: "directed development regression; local SDK generation using verified production D1 context, not public endpoint and not independent benchmark",
         model: auth.modelId,
         mode: "priority",
-        provenance: "remote D1 and OpenRouter",
+        provenance: "remote D1 and Claude API",
         results,
         allowance: ledger.snapshot(),
       },

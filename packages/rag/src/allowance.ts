@@ -4,8 +4,8 @@ export const VERIFY_GENERATIVE_CALLS = 4;
 export const OPERATION_BOUNDS = {
   retrieval: { maxInputTokens: 500, maxOutputTokens: 0, calls: 1 },
   evaluation: { maxInputTokens: 4_000, maxOutputTokens: 1600, calls: 1 },
-  reformulation: { maxInputTokens: 1_000, maxOutputTokens: 200, calls: 1 },
-  generation: { maxInputTokens: 4_000, maxOutputTokens: 600, calls: 1 },
+  reformulation: { maxInputTokens: 1_000, maxOutputTokens: 800, calls: 1 },
+  generation: { maxInputTokens: 4_000, maxOutputTokens: 1_600, calls: 1 },
   embedding: { maxInputTokens: 900, maxOutputTokens: 0, calls: 1 },
 } as const;
 

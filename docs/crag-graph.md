@@ -24,6 +24,6 @@ La ordenación validada manda el orden del contexto final. `usefulIds` solo dice
 
 `sufficient` exige fragmentos con texto, del mismo corpus, perfil y audiencia. Una etiqueta JSON no basta. `partial` guarda solo esos ids y nombra la laguna. `insufficient` no mete ese contexto en la respuesta. Si se agotan los intentos sin evidencia suficiente, se rechaza y no se llama al generador.
 
-La generación final, cuando ocurre, es una sola llamada con el mismo tope de salida, temperatura 0,2 y política de citas `[cite:id]` que el RAG básico. El modelo de generación sigue siendo `MODEL_ID`. `EVALUATOR_MODEL_ID` solo lo usa CRAG.
+La generación final, cuando ocurre, es una sola llamada con el tope de salida del curso, `effort: low` y la política de citas `[cite:id]` del RAG básico. Generación y evaluación usan `claude-haiku-5-5`.
 
 Parar la espera aborta la señal local. Eso no demuestra que un proveedor que ya recibió la llamada detenga el cómputo o el cargo.

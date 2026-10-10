@@ -56,7 +56,15 @@ export const runMetadataSchema = z.object({
   origin: z.enum(["offline-demo", "offline-fixture", "provider", "pipeline"]),
   modelId: z.string().nullable(),
   promptId: z.string(),
-  completion: z.enum(["streaming", "complete", "aborted", "error", "refused", "clarified"]),
+  completion: z.enum([
+    "streaming",
+    "complete",
+    "partial",
+    "aborted",
+    "error",
+    "refused",
+    "clarified",
+  ]),
   usage: runUsageSchema.nullable(),
   cost: runCostSchema.nullable(),
 });

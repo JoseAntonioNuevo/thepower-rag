@@ -2,7 +2,12 @@ import { randomBytes } from "node:crypto";
 import { mkdirSync, readFileSync } from "node:fs";
 import { mkdir } from "node:fs/promises";
 import path from "node:path";
-import { parse as parseDotenv } from "dotenv";
+import {
+  HAIKU_INPUT_USD_PER_MILLION,
+  HAIKU_MODEL_ID,
+  HAIKU_OUTPUT_USD_PER_MILLION,
+} from "../apps/api/src/model";
+import { readRepoAnthropicKey } from "./anthropic-key";
 import {
   LOCAL_EMULATED_MIN_SCORE,
   classifyRuntime,
@@ -119,27 +124,15 @@ if (!ACTIVATION_COMMANDS.includes(command)) {
             )
               throw new Error("La calibración no coincide con el perfil remoto.");
             minScore = calibration.minScore;
-            apiKey = parseDotenv(
-              readFileSync(path.join(root, "apps/web/.dev.vars.production"), "utf8"),
-            ).OPENROUTER_API_KEY;
-            const catalog = (await (
-              await fetch(`https://openrouter.ai/api/v1/models/${parsed.auth.modelId}/endpoints`)
-            ).json()) as {
-              data?: {
-                endpoints?: { tag: string; pricing: { prompt: string; completion: string } }[];
-              };
-            };
-            const pricing = catalog.data?.endpoints?.find((e) => e.tag === "openai/fast")?.pricing;
-            if (
-              !pricing ||
-              !Number.isFinite(Number(pricing.prompt)) ||
-              !Number.isFinite(Number(pricing.completion))
-            )
-              throw new Error("No hay tarifa verificada para el modelo priority.");
+            if (parsed.auth.modelId !== HAIKU_MODEL_ID) {
+              throw new Error("La verificación real exige MODEL_ID claude-haiku-5-5.");
+            }
+            apiKey = readRepoAnthropicKey(root);
+            if (!apiKey) throw new Error("Falta ANTHROPIC_API_KEY en .env.");
             verifiedPrices = {
               embeddingUsdPerMillionInput: 0.0118,
-              generativeUsdPerMillionInput: Number(pricing.prompt) * 1_000_000,
-              generativeUsdPerMillionOutput: Number(pricing.completion) * 1_000_000,
+              generativeUsdPerMillionInput: HAIKU_INPUT_USD_PER_MILLION,
+              generativeUsdPerMillionOutput: HAIKU_OUTPUT_USD_PER_MILLION,
             };
           }
           const owned = await startOwnedBridge({
