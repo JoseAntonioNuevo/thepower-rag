@@ -123,7 +123,9 @@ async function post(
       },
       body: JSON.stringify(body),
       signal: context.signal,
-      redirect: "error",
+      // workerd rejects redirect: error before sending the request. Manual
+      // preserves the no-redirect policy through the non-2xx check below.
+      redirect: "manual",
     });
   } catch {
     return context.signal.aborted

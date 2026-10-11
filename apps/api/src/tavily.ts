@@ -55,7 +55,9 @@ async function post(
       headers: { authorization: `Bearer ${apiKey}`, "content-type": "application/json" },
       body: JSON.stringify(body),
       signal: context.signal,
-      redirect: "error",
+      // workerd only supports follow/manual. Return redirects to the status
+      // check below so an Authorization header never follows another origin.
+      redirect: "manual",
     });
     if (!response.ok) {
       await response.body?.cancel().catch(() => undefined);

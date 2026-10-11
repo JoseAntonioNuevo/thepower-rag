@@ -40,13 +40,37 @@ describe("investigación en workerd", () => {
     const inspector = await freePort();
     const directory = await mkdtemp(path.join(os.tmpdir(), "thepower-rag-research-"));
     const configPath = path.join(directory, "wrangler.json");
+    const entryPath = path.join(directory, "worker.ts");
+    await writeFile(
+      entryPath,
+      `import worker from ${JSON.stringify(path.join(root, "apps/api/src/worker.ts"))};
+import { createTavilySearch, createTavilyReader } from ${JSON.stringify(path.join(root, "apps/api/src/tavily.ts"))};
+import { createFirecrawlSearch } from ${JSON.stringify(path.join(root, "apps/api/src/firecrawl.ts"))};
+export default { async fetch(request, env, ctx) {
+  if (new URL(request.url).pathname !== "/provider-redirect-probe") return worker.fetch(request, env, ctx);
+  let calls = 0;
+  const fakeFetch = async (url, init) => {
+    const outbound = new Request(url, init); // Real workerd Request validation.
+    calls++;
+    if (outbound.redirect !== "manual") throw new Error("redirect-policy");
+    return new Response(null, {status: 302, headers: {location: "https://other.example/"}});
+  };
+  const input = {apiKey: "test-key", fetch: fakeFetch};
+  const context = {signal: new AbortController().signal, timeoutMs: 5000};
+  const query = {query: "Vectorize", allowedDomains: ["developers.cloudflare.com"], limit: 1};
+  const search = await createTavilySearch(input).search(query, context);
+  const read = await createTavilyReader({...input, allowedDomains: query.allowedDomains}).read({url: "https://developers.cloudflare.com/vectorize/"}, context);
+  const firecrawl = await createFirecrawlSearch({...input, usdPerCredit: 0.01}).search(query, context);
+  return Response.json({calls, search, read, firecrawl});
+}};`,
+    );
     await writeFile(
       configPath,
       JSON.stringify({
         name: "thepower-rag-research-entry",
         compatibility_date: "2026-10-02",
         compatibility_flags: ["nodejs_compat"],
-        main: path.join(root, "apps/api/src/worker.ts"),
+        main: entryPath,
         vars: { APP_MODE: "demo" },
       }),
     );
@@ -121,6 +145,13 @@ describe("investigación en workerd", () => {
       expect(health?.runtime).toBe("Cloudflare-Workers");
       expect(health?.execution).toBe("demo");
       expect(health?.capabilities?.research?.status).toBe("offline-fixture");
+      const probe = await fetch(`${base}/provider-redirect-probe`);
+      expect(await probe.json()).toMatchObject({
+        calls: 3,
+        search: { ok: false, error: "provider", detail: "Tavily respondió HTTP 302." },
+        read: { ok: false, error: "provider", detail: "Tavily respondió HTTP 302." },
+        firecrawl: { ok: false, error: "provider", detail: "Firecrawl respondió HTTP 302." },
+      });
       const response = await fetch(`${base}/api/chat`, {
         method: "POST",
         headers: { "content-type": "application/json", origin: base },
