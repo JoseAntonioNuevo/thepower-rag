@@ -21,6 +21,7 @@ export const ASSESS_PROMPT = [
   UNTRUSTED,
   "items: cada evidencia recibida exactamente una vez, con decision accept o reject y un reason breve.",
   "accept: subquestionIds que apoya y de 1 a 3 excerpts copiados LITERALMENTE del texto mostrado.",
+  "Mantén la evaluación compacta: selecciona 1 o 2 extractos de hasta 240 caracteres por fuente admitida; reason y gap de hasta 120 caracteres. Copia frases útiles completas dentro de esos límites. Para reject, subquestionIds y excerpts son arrays vacíos.",
   "Una página externa (kind web) no apoya hechos internos del curso (subpreguntas course o session).",
   "Recibes la evidencia acumulada de las rondas anteriores y la nueva. Reevalúa la cobertura con ese conjunto y con la cobertura previa.",
   "coverage: una entrada por subpregunta con status covered, partial o uncovered; gap describe la laguna concreta; followUp true solo si otra búsqueda concreta podría cerrarla.",

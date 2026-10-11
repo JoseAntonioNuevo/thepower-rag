@@ -7,7 +7,7 @@ import type {
   ResearchModelPort,
   ResearchPorts,
 } from "@thepower-rag/research";
-import { generateObject, type LanguageModel } from "ai";
+import { generateObject, NoObjectGeneratedError, type LanguageModel } from "ai";
 import { z } from "zod";
 import type { ResearchSettings, RetrievalSettings } from "./env";
 import { createFirecrawlReader, createFirecrawlSearch } from "./firecrawl";
@@ -142,12 +142,19 @@ function consumptionFrom(
   return tokenEstimateConsumption(usage);
 }
 
-function failed(signal: AbortSignal): PortResult<never> {
+function failed(signal: AbortSignal, error?: unknown): PortResult<never> {
+  const structured = NoObjectGeneratedError.isInstance(error);
+  // Never expose the generated text, provider body, request or error message.
+  const detail = structured
+    ? error.finishReason === "length"
+      ? "El modelo agotó el tope de salida antes de completar el objeto."
+      : "La salida estructurada del modelo no cumple el esquema."
+    : "El modelo no completó la llamada.";
   return {
     ok: false,
     error: signal.aborted ? "aborted" : "provider",
-    detail: signal.aborted ? "La llamada se canceló." : "El modelo no completó la llamada.",
-    consumption: { kind: "unknown" },
+    detail: signal.aborted ? "La llamada se canceló." : detail,
+    consumption: structured ? consumptionFrom(error.usage) : { kind: "unknown" },
   };
 }
 
@@ -174,8 +181,8 @@ export function createResearchModelPort(input: {
           value: result.object,
           consumption: consumptionFrom(result.usage),
         };
-      } catch {
-        return failed(context.signal);
+      } catch (error) {
+        return failed(context.signal, error);
       }
     },
     async assess({ question, subquestions, evidence, priorCoverage, round }, context) {
@@ -196,8 +203,8 @@ export function createResearchModelPort(input: {
           value: result.object,
           consumption: consumptionFrom(result.usage),
         };
-      } catch {
-        return failed(context.signal);
+      } catch (error) {
+        return failed(context.signal, error);
       }
     },
     async followUp({ question, gaps, previousQueries }, context) {
@@ -218,8 +225,8 @@ export function createResearchModelPort(input: {
           value: result.object,
           consumption: consumptionFrom(result.usage),
         };
-      } catch {
-        return failed(context.signal);
+      } catch (error) {
+        return failed(context.signal, error);
       }
     },
     async synthesize({ question, subquestions, coverage, contradictions, evidence }, context) {
@@ -240,8 +247,8 @@ export function createResearchModelPort(input: {
           value: result.object,
           consumption: consumptionFrom(result.usage),
         };
-      } catch {
-        return failed(context.signal);
+      } catch (error) {
+        return failed(context.signal, error);
       }
     },
   };

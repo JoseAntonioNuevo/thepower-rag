@@ -50,7 +50,7 @@ export const RESEARCH_LIMITS = {
   maxAnswerChars: 1_200,
   maxOutputTokens: {
     plan: 800,
-    assess: 1_600,
+    assess: 3_200,
     followUp: 800,
     synthesis: 1_800,
   },

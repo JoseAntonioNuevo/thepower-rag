@@ -12,7 +12,7 @@ export const RESEARCH_QUEUE_MS = 60_000;
 
 /** Tope de entrada por llamada: memoria, prompt, evidencia y salida estructurada. */
 const INPUT_TOKEN_CAP = 8_000;
-const OUTPUT_TOKEN_CAP = 1_800;
+const OUTPUT_TOKEN_CAP = Math.max(...Object.values(RESEARCH_LIMITS.maxOutputTokens));
 /** 0,0118 USD por millón de tokens de embedding, 2.000 tokens, redondeo al alza. */
 export const COURSE_EMBED_MICROS = 24;
 

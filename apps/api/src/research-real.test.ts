@@ -46,6 +46,35 @@ function chunk(id: string): ChunkRecord {
 }
 
 describe("adaptadores reales simulados", () => {
+  it("identifica la salida estructurada truncada sin exponerla ni reintentar", async () => {
+    let calls = 0;
+    const model = new MockLanguageModelV4({
+      doGenerate: async () => {
+        calls += 1;
+        return {
+          content: [{ type: "text", text: '{"private-input":' }],
+          finishReason: { unified: "length", raw: "max_tokens" },
+          usage: {
+            inputTokens: { total: 10, noCache: 10, cacheRead: undefined, cacheWrite: undefined },
+            outputTokens: { total: 8, text: 8, reasoning: undefined },
+          },
+          warnings: [],
+        };
+      },
+    });
+    const result = await createResearchModelPort({ planner: model, generator: model }).plan(
+      { question: "Vectorize", audience: "program" },
+      call,
+    );
+    expect(calls).toBe(1);
+    expect(result).toMatchObject({
+      ok: false,
+      error: "provider",
+      detail: "El modelo agotó el tope de salida antes de completar el objeto.",
+      consumption: { kind: "estimated", inputTokens: 10, outputTokens: 8 },
+    });
+    expect(JSON.stringify(result)).not.toContain("private-input");
+  });
   it("el curso vectorial devuelve solo fragmentos por encima del umbral", async () => {
     const seen: unknown[] = [];
     const index: VectorIndex = {
