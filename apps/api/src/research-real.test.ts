@@ -8,6 +8,7 @@ import {
   createResearchModelPort,
   createVectorCoursePort,
   estimateResearchMaxUsd,
+  type RealResearchInput,
 } from "./research-real";
 import { createCourseSessionTool } from "./research-tool";
 import type { SqlDatabase, VectorIndex } from "./stores";
@@ -176,16 +177,26 @@ describe("adaptadores reales simulados", () => {
     expect(calls).toBe(1);
     expect(result.ok).toBe(true);
     expect(result.ok ? result.value : null).toMatchObject({ route: "course" });
-    expect(result.consumption).toEqual({ kind: "reported", usd: 0.0000044, credits: null });
+    expect(result.consumption).toMatchObject({
+      kind: "estimated",
+      usd: 0.0000044,
+      complete: true,
+      inputTokens: 4,
+      outputTokens: 8,
+    });
+    expect(result.consumption.kind === "estimated" ? result.consumption.provenance : "").toContain(
+      "no es un importe del proveedor",
+    );
   });
 
   it("construir los puertos reales no llama a la red", async () => {
     let calls = 0;
-    const ports = createRealResearchPorts({
+    const input = {
       signal: new AbortController().signal,
       audience: "program",
       corpusVersion: corpus,
       settings,
+      priceSearchProvider: "firecrawl",
       retrieval,
       planner: new MockLanguageModelV4({}),
       generator: new MockLanguageModelV4({}),
@@ -196,11 +207,15 @@ describe("adaptadores reales simulados", () => {
         calls += 1;
         return new Response("no", { status: 500 });
       },
-    });
+    } satisfies RealResearchInput;
+    const ports = createRealResearchPorts(input);
     expect(calls).toBe(0);
     expect(ports.measured).toBe(true);
     expect(ports.fixture).toBe(false);
     expect(ports.estimatedMaxUsd).toBeGreaterThan(0);
     expect(estimateResearchMaxUsd(settings)).toBe(ports.estimatedMaxUsd);
+    expect(() => createRealResearchPorts({ ...input, priceSearchProvider: "tavily" })).toThrow(
+      "research-search-provider-price-mismatch",
+    );
   });
 });

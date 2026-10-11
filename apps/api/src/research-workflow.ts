@@ -1,10 +1,14 @@
+import { MEDIA_LIMITS, isVisionModel } from "@thepower-rag/contracts";
 import { WorkflowEntrypoint } from "cloudflare:workers";
 import type { WorkflowEvent, WorkflowStep } from "cloudflare:workers";
-import type { WorkerEnv } from "./env";
+import { assessWorker, type WorkerEnv } from "./env";
+import { asMediaBucket } from "./research-media";
+import { createGenerationModel } from "./model";
 import { asResearchDatabase, ensureResearchSchema } from "./research-db";
 import { createFixtureResearchPorts } from "./research-fixture";
 import { liveResearchPorts } from "./research-live";
-import { priceSnapshot } from "./research-money";
+import { priceSnapshot, searchProviderForSnapshot } from "./research-money";
+import type { WorkersAi } from "./research-perception";
 import { runResearchTick } from "./research-runner";
 
 interface Payload {
@@ -32,6 +36,8 @@ export class ResearchJobWorkflow extends WorkflowEntrypoint<WorkerEnv, Payload> 
       searchUsd: this.env.RESEARCH_SEARCH_USD,
       readUsd: this.env.RESEARCH_READ_USD,
       firecrawlUsdPerCredit: this.env.FIRECRAWL_USD_PER_CREDIT,
+      searchProvider: this.env.RESEARCH_SEARCH_PROVIDER === "tavily" ? "tavily" : "firecrawl",
+      tavilyUsdPerCredit: this.env.TAVILY_USD_PER_CREDIT,
     });
     if (!database || !prices) {
       return { done: true, status: "failed" };
@@ -42,17 +48,23 @@ export class ResearchJobWorkflow extends WorkflowEntrypoint<WorkerEnv, Payload> 
     });
     for (let tick = 0; tick < 4; tick += 1) {
       const outcome = await step.do(`tick-${String(tick)}`, STEP, async () =>
-        runResearchTick(database, event.payload.jobId, event.payload.ownerId, (signal, job) => {
-          if (this.env.APP_MODE === "real") {
-            return liveResearchPorts(this.env, signal, job);
-          }
-          return createFixtureResearchPorts({
-            signal,
-            scenarioId: job.scenario_id,
-            audience: job.audience,
-            corpusVersion: job.corpus_version,
-          });
-        }),
+        runResearchTick(
+          database,
+          event.payload.jobId,
+          event.payload.ownerId,
+          (signal, job, jobPrices) => {
+            if (this.env.APP_MODE === "real") {
+              return liveResearchPorts(this.env, signal, job, searchProviderForSnapshot(jobPrices));
+            }
+            return createFixtureResearchPorts({
+              signal,
+              scenarioId: job.scenario_id,
+              audience: job.audience,
+              corpusVersion: job.corpus_version,
+            });
+          },
+          mediaContext(this.env),
+        ),
       );
       if (outcome.done) {
         return outcome;
@@ -60,4 +72,29 @@ export class ResearchJobWorkflow extends WorkflowEntrypoint<WorkerEnv, Payload> 
     }
     return { done: true, status: "attention" };
   }
+}
+
+function mediaContext(env: WorkerEnv) {
+  const assessment = assessWorker(env);
+  const visionId = env.RESEARCH_VISION_MODEL_ID?.trim() || env.RESEARCH_MODEL_ID?.trim() || "";
+  const vision =
+    env.APP_MODE === "real" && assessment.generation && isVisionModel(visionId)
+      ? createGenerationModel({
+          apiKey: assessment.generation.apiKey,
+          modelId: visionId,
+          ...(assessment.generation.workspaceId
+            ? { workspaceId: assessment.generation.workspaceId }
+            : {}),
+        })
+      : null;
+  const ai = env.AI;
+  return {
+    mode: env.APP_MODE === "real" ? ("real" as const) : ("demo" as const),
+    bucket: asMediaBucket(env.RESEARCH_MEDIA),
+    ai: typeof ai === "object" && ai !== null && "run" in ai ? (ai as WorkersAi) : null,
+    vision,
+    visionModelId: isVisionModel(visionId) ? visionId : null,
+    sttModelId: env.RESEARCH_STT_MODEL_ID?.trim() || MEDIA_LIMITS.sttModelId,
+    ttsModelId: env.RESEARCH_TTS_MODEL_ID?.trim() || MEDIA_LIMITS.ttsModelId,
+  };
 }

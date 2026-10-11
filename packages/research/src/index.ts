@@ -37,6 +37,9 @@ export {
   verifyReport,
 } from "./report";
 export type { ClaimSupport, DroppedClaim, ReportClaim, VerifiedReport } from "./report";
+export { dimensionPair, fuseInputs } from "./fusion";
+export type { DimensionPair, FusionInputText, FusionResult } from "./fusion";
+export { spokenScript } from "./speech-script";
 export {
   checkUrl,
   flagEmbeddedInstructions,

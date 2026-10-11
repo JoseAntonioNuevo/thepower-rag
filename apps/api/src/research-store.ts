@@ -83,7 +83,54 @@ export interface OperationRow {
 
 export type AdmitResult =
   | { ok: true; job: JobRow; created: boolean }
-  | { ok: false; reason: "conversation" | "fingerprint" | "budget" | "active" | "turns" };
+  | {
+      ok: false;
+      reason: "conversation" | "fingerprint" | "budget" | "active" | "turns" | "attachment";
+    };
+
+export interface JobMediaBinding {
+  voice: boolean;
+  image: { id: string; hash: string } | null;
+  audio: { id: string; hash: string; durationMs: number } | null;
+}
+
+const ASSET_GUARD = `
+           AND (? IS NULL OR EXISTS (
+             SELECT 1 FROM research_media_assets
+             WHERE id = ? AND owner_id = ? AND conversation_id = ? AND role = ?
+               AND content_hash = ? AND (job_id IS NULL OR job_id = ?)
+           ))
+           AND (? IS NULL OR EXISTS (
+             SELECT 1 FROM research_media_assets
+             WHERE id = ? AND owner_id = ? AND conversation_id = ? AND role = ?
+               AND content_hash = ? AND (job_id IS NULL OR job_id = ?)
+           ))`;
+
+function assetGuardBinds(
+  media: JobMediaBinding | null,
+  ownerId: string,
+  conversationId: string,
+  jobId: string,
+): unknown[] {
+  const image = media?.image ?? null;
+  const audio = media?.audio ?? null;
+  return [
+    image?.id ?? null,
+    image?.id ?? "",
+    ownerId,
+    conversationId,
+    "image",
+    image?.hash ?? "",
+    jobId,
+    audio?.id ?? null,
+    audio?.id ?? "",
+    ownerId,
+    conversationId,
+    "audio",
+    audio?.hash ?? "",
+    jobId,
+  ];
+}
 
 const JOB_COLUMNS = `id, conversation_id, owner_id, run_id, audience, execution_status, report_outcome,
   idempotency_key, fingerprint, original_question, contextualized_question, scenario_id, corpus_version,
@@ -197,6 +244,7 @@ export async function admitJob(
     now: number;
     deadlineMs: number;
     queueMs: number;
+    media?: JobMediaBinding | null;
   },
 ): Promise<AdmitResult> {
   const conversation = await getConversation(database, input.ownerId, input.conversationId);
@@ -244,7 +292,8 @@ export async function admitJob(
            AND NOT EXISTS (
              SELECT 1 FROM research_jobs
              WHERE conversation_id = ? AND execution_status IN ('queued', 'running', 'attention')
-           )`,
+           )
+           ${ASSET_GUARD}`,
         )
         .bind(
           input.ownerId,
@@ -256,6 +305,7 @@ export async function admitJob(
           input.conversationId,
           input.idempotencyKey,
           input.conversationId,
+          ...assetGuardBinds(input.media ?? null, input.ownerId, input.conversationId, jobId),
         ),
       database
         .prepare(
@@ -273,7 +323,8 @@ export async function admitJob(
              SELECT 1 FROM research_submissions
              WHERE owner_id = ? AND conversation_id = ? AND idempotency_key = ?
                AND fingerprint = ? AND job_id = ?
-           )`,
+           )
+           ${ASSET_GUARD}`,
         )
         .bind(
           jobId,
@@ -298,6 +349,7 @@ export async function admitJob(
           input.idempotencyKey,
           input.fingerprint,
           jobId,
+          ...assetGuardBinds(input.media ?? null, input.ownerId, input.conversationId, jobId),
         ),
       database
         .prepare(
@@ -319,6 +371,58 @@ export async function admitJob(
       database
         .prepare(`UPDATE research_conversations SET updated_at = ? WHERE id = ? AND owner_id = ?`)
         .bind(input.now, input.conversationId, input.ownerId),
+      ...(input.media
+        ? [
+            database
+              .prepare(
+                `INSERT INTO research_job_inputs (
+                   job_id, voice, image_asset_id, audio_asset_id, image_hash, audio_hash, audio_duration_ms
+                 )
+                 SELECT ?, ?, ?, ?, ?, ?, ?
+                 WHERE EXISTS (SELECT 1 FROM research_jobs WHERE id = ?)`,
+              )
+              .bind(
+                jobId,
+                input.media.voice ? 1 : 0,
+                input.media.image?.id ?? null,
+                input.media.audio?.id ?? null,
+                input.media.image?.hash ?? null,
+                input.media.audio?.hash ?? null,
+                input.media.audio?.durationMs ?? null,
+                jobId,
+              ),
+            database
+              .prepare(
+                `UPDATE research_media_assets SET job_id = ?
+                 WHERE ? IS NOT NULL AND id = ? AND owner_id = ? AND conversation_id = ?
+                   AND content_hash = ? AND (job_id IS NULL OR job_id = ?)`,
+              )
+              .bind(
+                jobId,
+                input.media.image?.id ?? null,
+                input.media.image?.id ?? "",
+                input.ownerId,
+                input.conversationId,
+                input.media.image?.hash ?? "",
+                jobId,
+              ),
+            database
+              .prepare(
+                `UPDATE research_media_assets SET job_id = ?
+                 WHERE ? IS NOT NULL AND id = ? AND owner_id = ? AND conversation_id = ?
+                   AND content_hash = ? AND (job_id IS NULL OR job_id = ?)`,
+              )
+              .bind(
+                jobId,
+                input.media.audio?.id ?? null,
+                input.media.audio?.id ?? "",
+                input.ownerId,
+                input.conversationId,
+                input.media.audio?.hash ?? "",
+                jobId,
+              ),
+          ]
+        : []),
     ]);
   } catch (error) {
     const message = sqlError(error);
@@ -363,7 +467,13 @@ export async function admitJob(
       )
       .bind(input.conversationId)
       .first<{ id: string }>();
-    return { ok: false, reason: active ? "active" : "budget" };
+    if (active) {
+      return { ok: false, reason: "active" };
+    }
+    if (input.media?.image || input.media?.audio) {
+      return { ok: false, reason: "attachment" };
+    }
+    return { ok: false, reason: "budget" };
   }
   if (submission.fingerprint !== input.fingerprint) {
     return { ok: false, reason: "fingerprint" };
@@ -770,7 +880,8 @@ export async function holdDispatched(
 ): Promise<boolean> {
   const result = await database
     .prepare(
-      `UPDATE research_operations SET state = 'unknown'
+      `UPDATE research_operations
+       SET state = 'unknown', unknown_hold_micros = reservation_micros
        WHERE id = ? AND state = 'dispatched' AND fence = ?`,
     )
     .bind(operationId, fence)
@@ -807,7 +918,8 @@ export function settlementOf(
   if (consumption.kind === "none") {
     return { consumed: 0, unknownHold: 0 };
   }
-  if (consumption.kind === "unknown") {
+  if (consumption.kind === "unknown" || consumption.kind === "estimated") {
+    // Una estimación, aunque esté completa, no es USD verificado. No se libera.
     return { consumed: 0, unknownHold: reservation };
   }
   if (consumption.usd === null) {
@@ -853,6 +965,38 @@ export async function completeOperation(
     )
     .run();
   return result.changes > 0;
+}
+
+/** Sustituye el texto del turno de usuario de este trabajo. No inserta otro turno. */
+export async function rememberAdmittedTurn(
+  database: ResearchDatabase,
+  input: {
+    ownerId: string;
+    conversationId: string;
+    jobId: string;
+    idempotencyKey: string;
+    text: string;
+  },
+): Promise<void> {
+  await database
+    .prepare(
+      `UPDATE research_messages
+       SET text = ?
+       WHERE conversation_id = ? AND job_id = ? AND role = 'user' AND client_key = ?
+         AND EXISTS (
+           SELECT 1 FROM research_conversations
+           WHERE research_conversations.id = research_messages.conversation_id
+             AND research_conversations.owner_id = ?
+         )`,
+    )
+    .bind(
+      input.text.slice(0, 1_200),
+      input.conversationId,
+      input.jobId,
+      input.idempotencyKey,
+      input.ownerId,
+    )
+    .run();
 }
 
 export async function recordAssistantMessage(
@@ -926,4 +1070,75 @@ export async function purgeCheckpoints(
     throw new Error("La retención alteró el presupuesto.");
   }
   return rows.length;
+}
+
+export interface JobInputRow {
+  job_id: string;
+  voice: number;
+  image_asset_id: string | null;
+  audio_asset_id: string | null;
+  image_hash: string | null;
+  audio_hash: string | null;
+  audio_duration_ms: number | null;
+}
+
+export async function readJobInput(
+  database: ResearchDatabase,
+  jobId: string,
+): Promise<JobInputRow | null> {
+  return database
+    .prepare(
+      `SELECT job_id, voice, image_asset_id, audio_asset_id, image_hash, audio_hash, audio_duration_ms
+       FROM research_job_inputs WHERE job_id = ?`,
+    )
+    .bind(jobId)
+    .first<JobInputRow>();
+}
+
+export async function saveResultDraft(
+  database: ResearchDatabase,
+  input: {
+    ownerId: string;
+    jobId: string;
+    leaseToken: number;
+    outcome: string;
+    resultJson: string;
+  },
+): Promise<boolean> {
+  const result = await database
+    .prepare(
+      `UPDATE research_jobs
+       SET result_json = ?, report_outcome = ?
+       WHERE id = ? AND owner_id = ? AND lease_token = ? AND cancel_requested = 0
+         AND execution_status = 'running'`,
+    )
+    .bind(input.resultJson, input.outcome, input.jobId, input.ownerId, input.leaseToken)
+    .run();
+  return result.changes > 0;
+}
+
+export async function listOrphanMedia(
+  database: ResearchDatabase,
+  olderThan: number,
+): Promise<{ id: string; object_key: string }[]> {
+  return database
+    .prepare(
+      `SELECT id, object_key FROM research_media_assets
+       WHERE job_id IS NULL AND created_at < ?
+         AND NOT EXISTS (
+           SELECT 1 FROM research_job_inputs
+           WHERE research_job_inputs.image_asset_id = research_media_assets.id
+              OR research_job_inputs.audio_asset_id = research_media_assets.id
+         )`,
+    )
+    .bind(olderThan)
+    .all<{ id: string; object_key: string }>();
+}
+
+export async function deleteMediaRow(database: ResearchDatabase, id: string): Promise<boolean> {
+  const result = await database
+    .prepare(`DELETE FROM research_media_assets WHERE id = ? AND job_id IS NULL`)
+    .bind(id)
+    .run();
+  return result.changes > 0;
 }

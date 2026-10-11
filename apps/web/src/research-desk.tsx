@@ -9,6 +9,7 @@ import {
 import { useCallback, useEffect, useRef, useState } from "react";
 import { CourseAnswer } from "./course-answer";
 import { ResearchSources, ResearchTrace } from "./research-panel";
+import { createSubmitGate, submitResearch, type SubmitGate } from "./research-submit";
 import { useTurnstile } from "./use-turnstile";
 
 interface ConversationItem {
@@ -126,6 +127,23 @@ export function ResearchDesk({
   const [conversationId, setConversationId] = useState<string | null>(null);
   const [scenarioId, setScenarioId] = useState<ResearchScenarioId | null>(null);
   const [question, setQuestion] = useState("");
+  const [voice, setVoice] = useState(false);
+  const [imageFile, setImageFile] = useState<File | null>(null);
+  const [audioFile, setAudioFile] = useState<File | null>(null);
+  const [imageUrl, setImageUrl] = useState<string | null>(null);
+  const [audioUrl, setAudioUrl] = useState<string | null>(null);
+  const imageKey = useRef<string | null>(null);
+  const audioKey = useRef<string | null>(null);
+  const imageInput = useRef<HTMLInputElement>(null);
+  const audioInput = useRef<HTMLInputElement>(null);
+  const imageUrlRef = useRef<string | null>(null);
+  const audioUrlRef = useRef<string | null>(null);
+  const generation = useRef(0);
+  const submission = useRef<SubmitGate | null>(null);
+  if (submission.current === null) {
+    submission.current = createSubmitGate();
+  }
+  const submitGate = submission.current;
   const [job, setJob] = useState<JobView | null>(null);
   const [summary, setSummary] = useState<ResearchSummary | null>(null);
   const [sources, setSources] = useState<ResearchSource[]>([]);
@@ -186,6 +204,39 @@ export function ResearchDesk({
       ignore = true;
     };
   }, [audience, loadConversations]);
+
+  useEffect(() => {
+    return () => {
+      if (imageUrlRef.current) URL.revokeObjectURL(imageUrlRef.current);
+      if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current);
+    };
+  }, []);
+
+  function clearLocalMedia() {
+    setImageFile(null);
+    setAudioFile(null);
+    replaceImageUrl(null);
+    replaceAudioUrl(null);
+    imageKey.current = null;
+    audioKey.current = null;
+    if (imageInput.current) imageInput.current.value = "";
+    if (audioInput.current) audioInput.current.value = "";
+    setVoice(false);
+  }
+
+  function replaceImageUrl(file: File | null) {
+    const next = file ? URL.createObjectURL(file) : null;
+    if (imageUrlRef.current) URL.revokeObjectURL(imageUrlRef.current);
+    imageUrlRef.current = next;
+    setImageUrl(next);
+  }
+
+  function replaceAudioUrl(file: File | null) {
+    const next = file ? URL.createObjectURL(file) : null;
+    if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current);
+    audioUrlRef.current = next;
+    setAudioUrl(next);
+  }
 
   useEffect(() => {
     if (!conversationId) {
@@ -282,7 +333,7 @@ export function ResearchDesk({
     }
   }
 
-  async function mutationHeaders(jsonBody: boolean): Promise<HeadersInit | null> {
+  async function mutationHeaders(jsonBody: boolean): Promise<Record<string, string> | null> {
     try {
       const token = await beforeSend();
       return {
@@ -296,6 +347,7 @@ export function ResearchDesk({
   }
 
   async function createConversation() {
+    generation.current += 1;
     setNotice(null);
     const headers = await mutationHeaders(true);
     if (headers === null) {
@@ -312,6 +364,7 @@ export function ResearchDesk({
       return;
     }
     sessionStorage.setItem(`research-conversation:${audience}`, body.id);
+    clearLocalMedia();
     setSummary(null);
     setSources([]);
     setReportText(null);
@@ -321,48 +374,57 @@ export function ResearchDesk({
   }
 
   async function submit() {
-    if (!conversationId || question.trim().length === 0) {
+    if (!conversationId || (question.trim().length === 0 && !imageFile && !audioFile)) {
       return;
     }
+    if (!submitGate.enter()) return;
+    const generationAtStart = generation.current;
+    const conversationAtStart = conversationId;
     setNotice(null);
-    const headers = await mutationHeaders(true);
-    if (headers === null) {
-      return;
-    }
     setSummary(null);
     setSources([]);
     setReportText(null);
     setReportNote(null);
     idempotency.current ??= crypto.randomUUID();
-    const response = await fetch(`/api/research/conversations/${conversationId}/jobs`, {
-      method: "POST",
-      headers,
-      body: JSON.stringify({
-        idempotencyKey: idempotency.current,
+    imageKey.current ??= imageFile ? crypto.randomUUID() : null;
+    audioKey.current ??= audioFile ? crypto.randomUUID() : null;
+    const idempotencyKey = idempotency.current;
+    try {
+      const result = await submitResearch({
+        conversationId: conversationAtStart,
         question: question.trim(),
         scenarioId,
-      }),
-    });
-    const body = (await readJson(response)) as {
-      jobId?: string;
-      message?: string;
-      execution?: string;
-    } | null;
-    if (!response.ok || !body?.jobId) {
-      setNotice(messageOf(body, "No se pudo crear el trabajo."));
-      return;
+        voice,
+        image: imageFile && imageKey.current ? { file: imageFile, key: imageKey.current } : null,
+        audio: audioFile && audioKey.current ? { file: audioFile, key: audioKey.current } : null,
+        idempotencyKey,
+        generation: generationAtStart,
+        currentGeneration: () => generation.current,
+        beforeSend,
+      });
+      if (generation.current !== generationAtStart) {
+        setNotice("La conversación cambió. El envío no se ha mezclado.");
+        return;
+      }
+      if (!result.ok) {
+        setNotice(result.message);
+        return;
+      }
+      idempotency.current = null;
+      clearLocalMedia();
+      setQuestion("");
+      setJob({
+        jobId: result.jobId,
+        conversationId: conversationAtStart,
+        execution: result.execution,
+        reportOutcome: null,
+        attention: null,
+        progress: null,
+        events: [],
+      });
+    } finally {
+      submitGate.leave();
     }
-    idempotency.current = null;
-    setQuestion("");
-    setJob({
-      jobId: body.jobId,
-      conversationId,
-      execution: body.execution ?? "queued",
-      reportOutcome: null,
-      attention: null,
-      progress: null,
-      events: [],
-    });
   }
 
   async function cancel() {
@@ -433,12 +495,14 @@ export function ResearchDesk({
             className="caption-action"
             aria-pressed={item.id === conversationId}
             onClick={() => {
+              generation.current += 1;
               setConversationId(item.id);
               sessionStorage.setItem(`research-conversation:${audience}`, item.id);
               setSummary(null);
               setReportText(null);
               setReportNote(null);
               setJob(null);
+              clearLocalMedia();
             }}
           >
             Conversación {index + 1}
@@ -492,9 +556,99 @@ export function ResearchDesk({
             setQuestion(event.target.value);
           }}
         />
+        <div className="media-row">
+          <label>
+            Imagen PNG o JPEG
+            <input
+              ref={imageInput}
+              aria-label="Imagen"
+              type="file"
+              accept="image/png,image/jpeg"
+              onChange={(event) => {
+                const file = event.target.files?.[0] ?? null;
+                event.target.value = "";
+                setImageFile(file);
+                imageKey.current = file ? crypto.randomUUID() : null;
+                replaceImageUrl(file);
+              }}
+            />
+          </label>
+          <label>
+            Audio WAV
+            <input
+              ref={audioInput}
+              aria-label="Audio"
+              type="file"
+              accept="audio/wav,audio/wave,audio/x-wav"
+              onChange={(event) => {
+                const file = event.target.files?.[0] ?? null;
+                event.target.value = "";
+                setAudioFile(file);
+                audioKey.current = file ? crypto.randomUUID() : null;
+                replaceAudioUrl(file);
+              }}
+            />
+          </label>
+          <label>
+            <input
+              type="checkbox"
+              checked={voice}
+              onChange={(event) => {
+                setVoice(event.target.checked);
+              }}
+            />{" "}
+            Generar voz
+          </label>
+        </div>
+        {imageUrl ? (
+          <figure>
+            <img
+              className="media-preview"
+              src={imageUrl}
+              alt="Vista previa de la imagen seleccionada"
+            />
+            <figcaption className="research-meta">
+              {imageFile?.name} · {imageFile ? `${String(imageFile.size)} bytes` : ""}
+              <button
+                type="button"
+                onClick={() => {
+                  setImageFile(null);
+                  imageKey.current = null;
+                  if (imageInput.current) imageInput.current.value = "";
+                  replaceImageUrl(null);
+                }}
+              >
+                Quitar imagen
+              </button>
+            </figcaption>
+          </figure>
+        ) : null}
+        {audioUrl ? (
+          <div>
+            <audio className="media-audio" controls preload="none" src={audioUrl} />
+            <p className="research-meta">
+              {audioFile?.name}
+              <button
+                type="button"
+                onClick={() => {
+                  setAudioFile(null);
+                  audioKey.current = null;
+                  if (audioInput.current) audioInput.current.value = "";
+                  replaceAudioUrl(null);
+                }}
+              >
+                Quitar audio
+              </button>
+            </p>
+          </div>
+        ) : null}
         <button
           type="submit"
-          disabled={!verificationReady || !conversationId || question.trim().length === 0}
+          disabled={
+            !verificationReady ||
+            !conversationId ||
+            (question.trim().length === 0 && !imageFile && !audioFile)
+          }
         >
           Investigar
         </button>
@@ -544,7 +698,51 @@ export function ResearchDesk({
             La ejecución puede haber terminado y el informe seguir siendo parcial, un rechazo o un
             error.
           </p>
+          {summary.media?.image ? (
+            <section className="research-block">
+              <h3>Imagen</h3>
+              <img
+                className="media-preview"
+                src={`/api/research/media/${summary.media.image.assetId}`}
+                alt="Imagen admitida de esta investigación"
+              />
+              <p>{summary.media.image.detail}</p>
+              {summary.media.image.observedText ? (
+                <p>
+                  Texto observado: <q>{summary.media.image.observedText}</q>
+                </p>
+              ) : null}
+              {summary.media.image.notes ? <p>{summary.media.image.notes}</p> : null}
+            </section>
+          ) : null}
+          {summary.media?.audio ? (
+            <section className="research-block">
+              <h3>Audio</h3>
+              <p>{summary.media.audio.detail}</p>
+              {summary.media.audio.transcript ? (
+                <p>
+                  Transcripción: <q>{summary.media.audio.transcript}</q>
+                </p>
+              ) : null}
+            </section>
+          ) : null}
+          {summary.media?.conflict ? <p role="alert">{summary.media.conflict}</p> : null}
           {reportText ? <CourseAnswer text={reportText} /> : null}
+          {summary.media?.speech ? (
+            <section className="research-block">
+              <h3>Voz</h3>
+              <p>{summary.media.speech.text}</p>
+              <p className="research-meta">{summary.media.speech.detail}</p>
+              {summary.media.speech.assetId ? (
+                <audio
+                  className="media-audio"
+                  controls
+                  preload="none"
+                  src={`/api/research/media/${summary.media.speech.assetId}`}
+                />
+              ) : null}
+            </section>
+          ) : null}
           {reportNote ? <p>{reportNote}</p> : null}
           <ResearchTrace summary={summary} />
           <ResearchSources sources={sources} />

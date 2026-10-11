@@ -61,6 +61,7 @@ export {
   researchRouteSchema,
   researchScenarioSchema,
   researchSourceIdSchema,
+  researchMediaSchema,
   researchSourceSchema,
   researchStepSchema,
   researchStopSchema,
@@ -68,6 +69,15 @@ export {
   researchSummarySchema,
   subquestionKindSchema,
 } from "./research";
+export type { ResearchMedia } from "./research";
+export {
+  MEDIA_LIMITS,
+  VISION_MODEL_IDS,
+  isVisionModel,
+  maxVisionInputTokens,
+  visualTokens,
+} from "./media";
+export type { VisionModelId } from "./media";
 export type {
   ResearchNode,
   ResearchOutcome,

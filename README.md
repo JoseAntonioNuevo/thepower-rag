@@ -2,11 +2,13 @@
 
 Aplicación real: https://rag-thepower.josenuevo.dev. Sin RAG, RAG básico y CRAG usan los servicios remotos. [Operación y límites verificados](docs/despliegue-real.md). [Comparación de 40 respuestas](material/comparacion/resultados/tabla-resultados.md). El arranque local sigue siendo una demo offline.
 
+La configuración de producción incluye los recursos durables de S12. Su activación y la evidencia de publicación están en [despliegue de S12](docs/s12-cloud-deployment.md).
+
 # Asistente RAG del AI Engineer
 
 Proyecto de clase para The Power. El producto será un asistente en español del programa completo de AI Engineer, de la sesión 1 a la 20. Cada respuesta con recuperación debe citar sus documentos y reconocer lo que no consta.
 
-El temario de S1 a S20 y los dos calendarios de AI Engineer están en el corpus. El detalle de varios ejercicios sigue siendo solo un título. La cobertura generada está en `corpus/COVERAGE.md`. El índice remoto no está creado.
+El temario de S1 a S20 y los dos calendarios de AI Engineer están en el corpus. El detalle de varios ejercicios sigue siendo solo un título. La cobertura generada está en `corpus/COVERAGE.md`. El despliegue real del RAG usa el perfil Vectorize `p76509a5f9743`, con 69 vectores leídos de vuelta; su estado está en [despliegue real](docs/despliegue-real.md).
 
 ## Dos clases, tres etapas
 
@@ -20,10 +22,10 @@ S10, el 22 de octubre de 2026, cubre las dos primeras etapas. S11, el 27 de octu
 
 El navegador habla con un único Worker. Workers Static Assets sirve React. Hono atiende `/api/*`.
 
-- Vectorize consultará embeddings cuando exista el índice.
-- D1 guardará texto, metadatos y versiones.
-- R2 guardará originales y manifiestos.
-- Workers AI es el candidato de embeddings con `@cf/baai/bge-m3`. Su dimensión no está medida.
+- Vectorize guarda y consulta el índice real BGE-M3 del curso; el perfil y los 69 vectores están verificados en el informe de despliegue.
+- D1 guarda texto, metadatos, versiones y registros de ejecución.
+- R2 guarda el corpus privado y, en S12, adjuntos de investigación en un bucket aparte.
+- Workers AI ejecuta embeddings con `@cf/baai/bge-m3`; la dimensión observada en esta cuenta es 1024.
 - La API de Claude genera con `claude-haiku-5-5`. El evaluador de CRAG usa el mismo modelo.
 
 El perfil demo no usa esos servicios. Usa un índice lexical de 128 dimensiones, etiquetado como prueba. No es una búsqueda semántica ni Vectorize.
@@ -76,7 +78,7 @@ bun run preflight -- --capability rag
 | Nombre                 | Uso                                         |
 | ---------------------- | ------------------------------------------- |
 | `APP_MODE`             | `demo` o `real`                             |
-| `ANTHROPIC_API_KEY`    | Clave de la API de Claude. Va en `.env`     |
+| `ANTHROPIC_API_KEY`    | Secreto de la API de Claude, en `.dev.vars` |
 | `MODEL_ID`             | Modelo generativo del servidor              |
 | `EMBEDDING_MODEL`      | Modelo de embeddings del RAG real           |
 | `EMBEDDING_DIMENSIONS` | Dimensión observada, no supuesta            |
@@ -92,15 +94,15 @@ Los secretos van en `apps/web/.dev.vars`. Ese archivo y cualquier `.dev.vars*` q
 
 En local, `.dev.vars` sustituye las claves repetidas de `vars`. El entorno del proceso no entra en el Worker. `bun run preflight` muestra nombres y perfiles, no valores, y no abre conexiones. Si `APP_MODE=real` y falta la generación, el código de salida es 2.
 
-El Worker ejecutable no declara base de datos, índice ni bucket. Los nombres futuros están en `docs/wrangler.cloud.example.jsonc`, que el desarrollo no carga.
+El perfil demo no declara los recursos de la cuenta. Producción usa los bindings del curso y los bindings durables propios de S12 descritos en `docs/s12-cloud-deployment.md`.
 
 Cuando el perfil real tenga `ANTHROPIC_API_KEY` y `MODEL_ID`, sin RAG llamará a la API de Claude con `claude-haiku-5-5`. RAG real llamará además a Workers AI, Vectorize y D1.
 
 ## Hecho y pendiente
 
-Hecho: ruta real sin RAG, RAG básico con citas o rechazo, corpus de S1 a S20 y los dos calendarios, ejecutor de Wrangler por operación, grafo CRAG con plazo único y ordenación aplicada, y el CLI conectado al Worker del puente. `bun run test:entrypoint` lo recorre en local con D1, R2 y un índice emulado. La investigación de S12, fase 1, corre en demo con guiones. La fase 2 añade conversaciones, trabajos durables y contabilidad propia en un D1 local aislado: `bun run dev:research` en `http://127.0.0.1:5191/`. La investigación real sigue bloqueada. Los contratos están en `docs/s12-research-phase1.md` y `docs/s12-research-phase2.md`.
+Hecho: ruta real sin RAG, RAG básico con citas o rechazo, corpus de S1 a S20 y los dos calendarios, ejecutor de Wrangler por operación, grafo CRAG con plazo único y ordenación aplicada, y el CLI conectado al Worker del puente. `bun run test:entrypoint` lo recorre en local con D1, R2 y un índice emulado. S12 conserva el grafo de investigación de las fases 1 y 2 y suma imagen, audio y voz opcional en la fase 3. Su D1, R2 privado y Workflow se publican en el Worker existente; Tavily es el buscador real configurado con un presupuesto separado de 1 USD total y 0,25 USD por trabajo. No se ha enviado una investigación de pago en vivo ni se ha medido la calidad de búsqueda, visión, transcripción o voz neural. Los contratos y límites están en `docs/s12-research-phase1.md`, `docs/s12-research-phase2.md`, `docs/s12-research-phase3.md` y `docs/s12-cloud-deployment.md`.
 
-Pendiente de ejecución real: tope de gasto, permiso de alta y de Workers AI, arranque con `remote: true`, sonda de BGE-M3, recursos, umbral semántico y la comparación reservada. Sin esa autorización el `--execute` no abre el puente. El detalle de ocho ejercicios sigue siendo solo un título. No se han creado recursos nuevos ni se ha desplegado este cambio de modelo.
+Pendiente: una prueba real de S12 que consuma el presupuesto autorizado, además de medir las salidas de Tavily, visión, Whisper y Aura con proveedores en vivo. La fase local sigue disponible para la clase y no consume ese presupuesto. El detalle de ocho ejercicios del corpus sigue siendo solo un título.
 
 La memoria de OpenViking sigue pendiente. El detalle está en `docs/decisions.md` y `docs/phase-2-verification.md`.
 

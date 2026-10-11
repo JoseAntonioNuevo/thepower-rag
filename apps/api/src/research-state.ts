@@ -114,6 +114,10 @@ export interface ReadLog {
 export interface Ledger {
   reportedUsd: number | null;
   reportedCredits: number | null;
+  /** USD calculado con tarifas. Ausente en checkpoints anteriores a esta distinción. */
+  estimatedUsd?: number | null;
+  estimateProvenance?: string | null;
+  estimateIncomplete?: boolean;
   unknownCalls: number;
   /** Observación reportada sin USD. Los créditos no son una conversión. */
   unpricedCalls: number;
@@ -218,6 +222,9 @@ export function emptyLedger(): Ledger {
   return {
     reportedUsd: null,
     reportedCredits: null,
+    estimatedUsd: null,
+    estimateProvenance: null,
+    estimateIncomplete: false,
     unknownCalls: 0,
     unpricedCalls: 0,
     finalAnswerUsd: null,
@@ -234,6 +241,18 @@ export function addConsumption(ledger: Ledger, consumption: Consumption): Ledger
   }
   if (consumption.kind === "unknown") {
     return { ...ledger, unknownCalls: ledger.unknownCalls + 1 };
+  }
+  if (consumption.kind === "estimated") {
+    const usd = finiteAmount(consumption.usd) ? consumption.usd : null;
+    const incomplete = consumption.complete !== true || usd === null;
+    return {
+      ...ledger,
+      estimatedUsd: usd === null ? (ledger.estimatedUsd ?? null) : (ledger.estimatedUsd ?? 0) + usd,
+      estimateProvenance: consumption.provenance || ledger.estimateProvenance || null,
+      estimateIncomplete: ledger.estimateIncomplete === true || incomplete,
+      unknownCalls: ledger.unknownCalls + 1,
+      unpricedCalls: incomplete ? ledger.unpricedCalls + 1 : ledger.unpricedCalls,
+    };
   }
   const usd = finiteAmount(consumption.usd) ? consumption.usd : null;
   const credits = finiteAmount(consumption.credits) ? consumption.credits : null;

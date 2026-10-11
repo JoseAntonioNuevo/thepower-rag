@@ -31,7 +31,7 @@ import type { LanguageModel } from "ai";
 import { Hono } from "hono";
 import { dependencyCompatibility } from "./compat";
 import { cragHttpResponse } from "./crag-http";
-import { assessWorker, durableResearchConfigured, type WorkerEnv } from "./env";
+import { assessWorker, durableResearchConfigured, mediaReadiness, type WorkerEnv } from "./env";
 import { researchHttpResponse } from "./research-http";
 import { researchRoutes } from "./research-routes";
 import type { ResearchPorts } from "@thepower-rag/research";
@@ -166,6 +166,7 @@ export function createApp(deps: AppDeps = {}) {
       },
       compatibility,
       durableResearch: durableResearchConfigured(context.env),
+      media: mediaReadiness(context.env),
     };
     if (!demoCorpus && assessment.retrieval && context.env.DB) {
       try {

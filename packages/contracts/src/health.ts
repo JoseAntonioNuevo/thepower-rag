@@ -40,6 +40,16 @@ export const healthResponseSchema = z.object({
   }),
   /** True cuando hay base y flujo durable. No autoriza gasto real. */
   durableResearch: z.boolean(),
+  /** Presencia de almacenamiento y modelos. Inspeccionar no llama al proveedor. */
+  media: z
+    .object({
+      storage: z.enum(["ready", "missing"]),
+      vision: z.enum(["fixture", "configured", "missing"]),
+      transcription: z.enum(["fixture", "configured", "missing"]),
+      speech: z.enum(["fixture", "configured", "missing"]),
+      note: z.string().min(1).max(240),
+    })
+    .optional(),
 });
 
 export type HealthResponse = z.infer<typeof healthResponseSchema>;

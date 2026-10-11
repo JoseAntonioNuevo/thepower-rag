@@ -14,9 +14,17 @@ function sid(value: string): Sid {
   return value === "q2" || value === "q3" ? value : "q1";
 }
 
-function accountingNote(measured: boolean, unknown: number, unpriced: number): string {
+function accountingNote(
+  measured: boolean,
+  unknown: number,
+  unpriced: number,
+  estimate: boolean,
+): string {
   if (!measured) {
     return "Adaptadores de prueba: no hay consumo que medir. No medido no significa cero.";
+  }
+  if (estimate) {
+    return "Hay USD calculado con tarifas publicadas. No es un importe del proveedor y el total no está completo.";
   }
   if (unknown > 0) {
     return `Hay ${String(unknown)} llamadas con consumo desconocido. El total no está completo y desconocido no es cero.`;
@@ -146,10 +154,24 @@ export function researchSummary(
       estimatedMaxUsd: ports.estimatedMaxUsd,
       providerReportedUsd: ledger.reportedUsd,
       providerReportedCredits: ledger.reportedCredits,
+      estimatedUsd: ledger.estimatedUsd ?? null,
+      estimateProvenance: ledger.estimateProvenance ?? null,
+      estimateComplete:
+        (ledger.estimatedUsd ?? null) === null ? null : ledger.estimateIncomplete !== true,
       unknownConsumptionCalls: ledger.unknownCalls,
       finalAnswerUsd: ledger.finalAnswerUsd,
-      totalComplete: ports.measured && ledger.unknownCalls === 0 && ledger.unpricedCalls === 0,
-      note: accountingNote(ports.measured, ledger.unknownCalls, ledger.unpricedCalls),
+      totalComplete:
+        ports.measured &&
+        ledger.unknownCalls === 0 &&
+        ledger.unpricedCalls === 0 &&
+        (ledger.estimatedUsd ?? null) === null &&
+        ledger.estimateIncomplete !== true,
+      note: accountingNote(
+        ports.measured,
+        ledger.unknownCalls,
+        ledger.unpricedCalls,
+        (ledger.estimatedUsd ?? null) !== null || ledger.estimateIncomplete === true,
+      ),
     },
     trace: state.trace,
   };

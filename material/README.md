@@ -17,6 +17,8 @@ Material local del 3 de octubre de 2026 para las dos clases de RAG del AI Engine
 
 S10 sigue a S9 del martes 20 de octubre (PostgreSQL y pgvector, Ignacio). S11 sigue a nuestra S10. El QR evalúa la clase anterior. No es un formulario nuevo y no se ha enviado ninguna evaluación.
 
+La guía de la fase 3 de S12, con imagen, audio y voz sobre el grafo de investigación, está en [docs/s12-research-phase3.md](../docs/s12-research-phase3.md). No sustituye los enunciados de S10 y S11 ni las presentaciones de este directorio.
+
 ## Índice
 
 | Pieza                       | Ruta                                                                                   |

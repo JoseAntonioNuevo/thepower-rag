@@ -1,9 +1,9 @@
 import { useCallback, useEffect, useRef, useState } from "react";
-interface Config {
-  enabled: boolean;
-  siteKey: string | null;
-  sessionId: string | null;
-}
+import {
+  VERIFICATION_REQUIRED,
+  consumeVerificationToken,
+  type VerificationConfig,
+} from "./verification-cycle";
 interface Turnstile {
   render(container: HTMLElement, options: Record<string, unknown>): string;
   reset(id: string): void;
@@ -37,7 +37,8 @@ export function useTurnstile() {
   const container = useRef<HTMLDivElement>(null);
   const widget = useRef<string | null>(null);
   const token = useRef<string | null>(null);
-  const [config, setConfig] = useState<Config | null>(null);
+  const waiters = useRef<Array<() => void>>([]);
+  const [config, setConfig] = useState<VerificationConfig | null>(null);
   const [ready, setReady] = useState(false);
   const [error, setError] = useState<string | null>(null);
   const [retry, setRetry] = useState(0);
@@ -52,7 +53,7 @@ export function useTurnstile() {
         const body = await response.json();
         if (!response.ok) throw new Error(body.message ?? "No se pudo verificar la sesión.");
         if (controller.signal.aborted) return;
-        setConfig(body as Config);
+        setConfig(body as VerificationConfig);
         if (!body.enabled) setReady(true);
       })
       .catch((caught: unknown) => {
@@ -78,6 +79,8 @@ export function useTurnstile() {
               token.current = value;
               setReady(true);
               setError(null);
+              const pending = waiters.current.splice(0);
+              for (const resolve of pending) resolve();
             }
           },
           "expired-callback": () => {
@@ -102,6 +105,7 @@ export function useTurnstile() {
     return () => {
       active = false;
       token.current = null;
+      waiters.current.splice(0);
       if (widget.current !== null) {
         window.turnstile?.remove(widget.current);
         widget.current = null;
@@ -115,26 +119,39 @@ export function useTurnstile() {
       if (widget.current !== null) window.turnstile?.reset(widget.current);
     }
   }
-  async function beforeSend(): Promise<string | null> {
-    if (!config) throw new Error("La verificación todavía no está lista.");
-    if (!config.enabled) return null;
-    if (!token.current) throw new Error("Completa la verificación antes de enviar.");
-    // Renew the signed session for a long class; a new session requires a new widget token.
-    const response = await fetch("/api/security", {
-      credentials: "same-origin",
-      cache: "no-store",
+  function waitForToken(): Promise<void> {
+    if (token.current) return Promise.resolve();
+    return new Promise((resolve, reject) => {
+      let timer = 0;
+      const waiter = () => {
+        window.clearTimeout(timer);
+        resolve();
+      };
+      timer = window.setTimeout(() => {
+        waiters.current = waiters.current.filter((item) => item !== waiter);
+        reject(new Error(VERIFICATION_REQUIRED));
+      }, 20_000);
+      waiters.current.push(waiter);
     });
-    const next = (await response.json()) as Config & { message?: string };
-    if (!response.ok) throw new Error(next.message ?? "No se pudo verificar la sesión.");
-    if (next.sessionId !== config.sessionId) {
-      setReady(false);
-      setConfig(next);
-      throw new Error("La sesión se renovó. Espera a la nueva verificación y vuelve a enviar.");
-    }
-    const value = token.current;
-    token.current = null;
-    setReady(false);
-    return value;
+  }
+  async function beforeSend(): Promise<string | null> {
+    return consumeVerificationToken({
+      config,
+      readToken: () => token.current,
+      fetchSession: () => fetch("/api/security", { credentials: "same-origin", cache: "no-store" }),
+      waitForToken,
+      resetWidget: () => {
+        if (config?.enabled && widget.current !== null) window.turnstile?.reset(widget.current);
+      },
+      clearToken: () => {
+        token.current = null;
+        setReady(false);
+      },
+      onRenewed: (next) => {
+        setReady(false);
+        setConfig(next);
+      },
+    });
   }
   const attachContainer = useCallback((node: HTMLDivElement | null) => {
     container.current = node;

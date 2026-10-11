@@ -11,8 +11,9 @@ import { generateObject, type LanguageModel } from "ai";
 import { z } from "zod";
 import type { ResearchSettings, RetrievalSettings } from "./env";
 import { createFirecrawlReader, createFirecrawlSearch } from "./firecrawl";
+import { createTavilyReader, createTavilySearch } from "./tavily";
 import { anthropicProviderOptions } from "./model";
-import { providerCost } from "./provider-cost";
+import { tokenEstimateConsumption } from "./provider-cost";
 import {
   ASSESS_PROMPT,
   FOLLOW_UP_PROMPT,
@@ -119,9 +120,12 @@ export function estimateResearchMaxUsd(settings: ResearchSettings): number {
         outputTokens * settings.outputUsdPerMillion)) /
     1_000_000;
   const crawl =
-    (RESEARCH_LIMITS.maxSearchCalls * FIRECRAWL_CREDITS_ESTIMATE.search +
-      RESEARCH_LIMITS.maxPagesRead * FIRECRAWL_CREDITS_ESTIMATE.read) *
-    settings.firecrawlUsdPerCredit;
+    settings.searchProvider === "tavily"
+      ? (RESEARCH_LIMITS.maxSearchCalls + RESEARCH_LIMITS.maxPagesRead) *
+        (settings.tavilyUsdPerCredit ?? 0)
+      : (RESEARCH_LIMITS.maxSearchCalls * FIRECRAWL_CREDITS_ESTIMATE.search +
+          RESEARCH_LIMITS.maxPagesRead * FIRECRAWL_CREDITS_ESTIMATE.read) *
+        settings.firecrawlUsdPerCredit;
   const embeddings = (RESEARCH_LIMITS.maxCourseQueries * 2_000 * 0.0118) / 1_000_000;
   return 1.25 * (model + crawl + embeddings);
 }
@@ -135,10 +139,7 @@ function consumptionFrom(
     | null
     | undefined,
 ): Consumption {
-  const cost = providerCost(usage);
-  return cost === null
-    ? { kind: "unknown" }
-    : { kind: "reported", usd: cost.amount, credits: null };
+  return tokenEstimateConsumption(usage);
 }
 
 function failed(signal: AbortSignal): PortResult<never> {
@@ -301,6 +302,7 @@ export interface RealResearchInput {
   audience: Audience;
   corpusVersion: string;
   settings: ResearchSettings;
+  priceSearchProvider: "firecrawl" | "tavily";
   retrieval: RetrievalSettings;
   planner: LanguageModel;
   generator: LanguageModel;
@@ -316,6 +318,9 @@ export interface RealResearchInput {
  * no los usa porque la capacidad sigue bloqueada sin contabilidad durable.
  */
 export function createRealResearchPorts(input: RealResearchInput): ResearchPorts {
+  if (input.priceSearchProvider !== (input.settings.searchProvider ?? "firecrawl")) {
+    throw new Error("research-search-provider-price-mismatch");
+  }
   const usdPerCredit = input.settings.firecrawlUsdPerCredit;
   return {
     measured: true,
@@ -336,16 +341,27 @@ export function createRealResearchPorts(input: RealResearchInput): ResearchPorts
       audience: input.audience,
       read: (corpusVersion, chunkId) => readChunk(input.database, corpusVersion, chunkId),
     }),
-    search: createFirecrawlSearch({
-      apiKey: input.settings.firecrawlApiKey,
-      usdPerCredit,
-      fetch: input.fetch,
-    }),
-    reader: createFirecrawlReader({
-      apiKey: input.settings.firecrawlApiKey,
-      usdPerCredit,
-      fetch: input.fetch,
-      now: input.now,
-    }),
+    search:
+      input.settings.searchProvider === "tavily"
+        ? createTavilySearch({ apiKey: input.settings.tavilyApiKey ?? "", fetch: input.fetch })
+        : createFirecrawlSearch({
+            apiKey: input.settings.firecrawlApiKey,
+            usdPerCredit,
+            fetch: input.fetch,
+          }),
+    reader:
+      input.settings.searchProvider === "tavily"
+        ? createTavilyReader({
+            apiKey: input.settings.tavilyApiKey ?? "",
+            allowedDomains: input.settings.allowedDomains,
+            fetch: input.fetch,
+            now: input.now,
+          })
+        : createFirecrawlReader({
+            apiKey: input.settings.firecrawlApiKey,
+            usdPerCredit,
+            fetch: input.fetch,
+            now: input.now,
+          }),
   };
 }

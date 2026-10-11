@@ -11,7 +11,12 @@ import type { EmbeddingRunner } from "./vectors";
  * Puertos de pago. Solo se construyen si la capacidad real está lista.
  * Construirlos no llama a la red. Si falta algo, no hay caída a los guiones.
  */
-export function liveResearchPorts(env: WorkerEnv, signal: AbortSignal, job: JobRow): ResearchPorts {
+export function liveResearchPorts(
+  env: WorkerEnv,
+  signal: AbortSignal,
+  job: JobRow,
+  priceSearchProvider: "firecrawl" | "tavily",
+): ResearchPorts {
   const assessment = assessWorker(env);
   const settings = researchSettings(env);
   const embedder = env.AI;
@@ -49,5 +54,6 @@ export function liveResearchPorts(env: WorkerEnv, signal: AbortSignal, job: JobR
     embedder: embedder as EmbeddingRunner,
     index: index as VectorIndex,
     database: database as SqlDatabase,
+    priceSearchProvider,
   });
 }

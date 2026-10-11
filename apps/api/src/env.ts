@@ -1,11 +1,13 @@
 import {
   CRAG_VARIABLES,
   GENERATION_VARIABLES,
+  MEDIA_LIMITS,
   RAG_BINDING_NAMES,
   RAG_SETTING_VARIABLES,
   RESEARCH_SPEND_TOKEN,
   RESEARCH_VARIABLES,
   isConfiguredValue,
+  isVisionModel,
   type CapabilityStatus,
 } from "@thepower-rag/contracts";
 import { parseAllowedDomains } from "@thepower-rag/research";
@@ -35,6 +37,9 @@ export interface WorkerEnv {
   MIN_RETRIEVAL_SCORE?: string;
   RESEARCH_MODEL_ID?: string;
   FIRECRAWL_API_KEY?: string;
+  RESEARCH_SEARCH_PROVIDER?: string;
+  TAVILY_API_KEY?: string;
+  TAVILY_USD_PER_CREDIT?: string;
   RESEARCH_ALLOWED_DOMAINS?: string;
   RESEARCH_SPEND_AUTHORIZATION?: string;
   RESEARCH_BUDGET_USD?: string;
@@ -53,6 +58,10 @@ export interface WorkerEnv {
   CORPUS?: unknown;
   RESEARCH_DB?: unknown;
   RESEARCH_WORKFLOW?: unknown;
+  RESEARCH_MEDIA?: unknown;
+  RESEARCH_VISION_MODEL_ID?: string;
+  RESEARCH_STT_MODEL_ID?: string;
+  RESEARCH_TTS_MODEL_ID?: string;
 }
 
 export interface CapabilityReport {
@@ -89,6 +98,9 @@ export interface Assessment {
 }
 
 export interface ResearchSettings {
+  searchProvider?: "firecrawl" | "tavily";
+  tavilyApiKey?: string;
+  tavilyUsdPerCredit?: number;
   plannerModelId: string;
   firecrawlApiKey: string;
   allowedDomains: string[];
@@ -111,6 +123,12 @@ export function researchSettings(
   env: WorkerEnv,
 ): { ok: true; settings: ResearchSettings } | { ok: false; missing: string[] } {
   const missing = new Set<string>(absent(env, RESEARCH_VARIABLES));
+  const provider = env.RESEARCH_SEARCH_PROVIDER?.trim() || "firecrawl";
+  if (provider !== "firecrawl" && provider !== "tavily") missing.add("RESEARCH_SEARCH_PROVIDER");
+  if (provider === "tavily") {
+    missing.delete("FIRECRAWL_API_KEY");
+    if (!isConfiguredValue(env.TAVILY_API_KEY)) missing.add("TAVILY_API_KEY");
+  }
   if (
     isConfiguredValue(env.RESEARCH_SPEND_AUTHORIZATION) &&
     env.RESEARCH_SPEND_AUTHORIZATION?.trim() !== RESEARCH_SPEND_TOKEN
@@ -124,11 +142,15 @@ export function researchSettings(
   const budgetUsd = positiveNumber(env.RESEARCH_BUDGET_USD);
   const inputUsdPerMillion = positiveNumber(env.RESEARCH_INPUT_USD_PER_MILLION);
   const outputUsdPerMillion = positiveNumber(env.RESEARCH_OUTPUT_USD_PER_MILLION);
-  const firecrawlUsdPerCredit = positiveNumber(env.FIRECRAWL_USD_PER_CREDIT);
+  const firecrawlUsdPerCredit =
+    provider === "tavily"
+      ? positiveNumber(env.TAVILY_USD_PER_CREDIT)
+      : positiveNumber(env.FIRECRAWL_USD_PER_CREDIT);
   if (budgetUsd === null) missing.add("RESEARCH_BUDGET_USD");
   if (inputUsdPerMillion === null) missing.add("RESEARCH_INPUT_USD_PER_MILLION");
   if (outputUsdPerMillion === null) missing.add("RESEARCH_OUTPUT_USD_PER_MILLION");
-  if (firecrawlUsdPerCredit === null) missing.add("FIRECRAWL_USD_PER_CREDIT");
+  if (firecrawlUsdPerCredit === null)
+    missing.add(provider === "tavily" ? "TAVILY_USD_PER_CREDIT" : "FIRECRAWL_USD_PER_CREDIT");
   if (
     missing.size > 0 ||
     !domains.ok ||
@@ -142,6 +164,13 @@ export function researchSettings(
   return {
     ok: true,
     settings: {
+      searchProvider: provider === "tavily" ? "tavily" : "firecrawl",
+      ...(provider === "tavily"
+        ? {
+            tavilyApiKey: env.TAVILY_API_KEY?.trim() ?? "",
+            tavilyUsdPerCredit: firecrawlUsdPerCredit,
+          }
+        : {}),
       plannerModelId: env.RESEARCH_MODEL_ID?.trim() ?? "",
       firecrawlApiKey: env.FIRECRAWL_API_KEY?.trim() ?? "",
       allowedDomains: domains.domains,
@@ -169,6 +198,67 @@ export function researchOwnerReady(env: WorkerEnv): boolean {
 /** Bindings y propietario del perfil durable. No autoriza gasto. */
 export function durableResearchConfigured(env: WorkerEnv): boolean {
   return env.RESEARCH_DB != null && env.RESEARCH_WORKFLOW != null && researchOwnerReady(env);
+}
+
+export interface MediaReadiness {
+  storage: "ready" | "missing";
+  vision: "fixture" | "configured" | "missing";
+  transcription: "fixture" | "configured" | "missing";
+  speech: "fixture" | "configured" | "missing";
+  note: string;
+}
+
+/** No llama a ningún proveedor. Solo mira bindings y nombres. */
+export function mediaReadiness(env: WorkerEnv): MediaReadiness {
+  const storage = env.RESEARCH_MEDIA == null ? "missing" : "ready";
+  if (env.APP_MODE !== "real") {
+    return {
+      storage,
+      vision: "fixture",
+      transcription: "fixture",
+      speech: "fixture",
+      note: "Los medios de la demostración usan guiones y un tono local. No hay llamada de pago.",
+    };
+  }
+  const visionId = env.RESEARCH_VISION_MODEL_ID?.trim() || env.RESEARCH_MODEL_ID?.trim() || "";
+  const ai = env.AI != null;
+  return {
+    storage,
+    vision:
+      isVisionModel(visionId) && isConfiguredValue(env.ANTHROPIC_API_KEY)
+        ? "configured"
+        : "missing",
+    transcription:
+      ai && (env.RESEARCH_STT_MODEL_ID?.trim() || MEDIA_LIMITS.sttModelId).length > 0
+        ? "configured"
+        : "missing",
+    speech:
+      ai && (env.RESEARCH_TTS_MODEL_ID?.trim() || MEDIA_LIMITS.ttsModelId).length > 0
+        ? "configured"
+        : "missing",
+    note: "Configurar no ejecuta visión, transcripción ni voz.",
+  };
+}
+
+export function mediaMissing(
+  env: WorkerEnv,
+  request: { image: boolean; audio: boolean; voice: boolean },
+): string[] {
+  const ready = mediaReadiness(env);
+  const missing: string[] = [];
+  if ((request.image || request.audio || request.voice) && ready.storage !== "ready") {
+    missing.push("RESEARCH_MEDIA");
+  }
+  if (env.APP_MODE !== "real") return missing;
+  if (request.image && ready.vision !== "configured") {
+    const visionId = env.RESEARCH_VISION_MODEL_ID?.trim() || env.RESEARCH_MODEL_ID?.trim() || "";
+    if (!isVisionModel(visionId)) missing.push("RESEARCH_VISION_MODEL_ID");
+    if (!isConfiguredValue(env.ANTHROPIC_API_KEY)) missing.push("ANTHROPIC_API_KEY");
+  }
+  if ((request.audio || request.voice) && env.AI == null) {
+    missing.push("AI");
+  }
+  return [...new Set(missing)];
 }
 
 /**

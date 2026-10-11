@@ -225,11 +225,26 @@ function coverageFor(
   }
 }
 
+/** El aula de la captura y el audio. No se aplica a un archivo arbitrario. */
+export function classroomFixtureScenario(question: string): ResearchScenarioId | null {
+  if (
+    /expected 1024,\s*got 768/i.test(question) &&
+    /he cambiado el modelo de embeddings/i.test(question)
+  ) {
+    return "sufficient-first-round";
+  }
+  return null;
+}
+
 function planFor(
   scenario: ResearchScenarioId | null,
   question: string,
   audience: Audience,
 ): unknown {
+  if (scenario === null) {
+    const classroom = classroomFixtureScenario(question);
+    if (classroom !== null) return planFor(classroom, question, audience);
+  }
   if (scenario !== null && MAIN_SCENARIOS.includes(scenario)) {
     return {
       route: "investigate",
@@ -513,14 +528,25 @@ function waitFor(signal: AbortSignal, ms: number): Promise<void> {
   });
 }
 
-export function createFixtureResearchPorts(options: FixtureResearchOptions): ResearchPorts {
+export interface FixtureScenarioLatch {
+  noteFixtureQuestion(question: string): void;
+}
+
+export function createFixtureResearchPorts(
+  options: FixtureResearchOptions,
+): ResearchPorts & FixtureScenarioLatch {
   const requested = options.scenarioId;
-  const scenario =
+  let scenario: ResearchScenarioId | null =
     requested === "slow-search" ||
     requested === "ambiguous-operation" ||
     requested === "crash-after-plan"
       ? "sufficient-first-round"
       : requested;
+  const noteFixtureQuestion = (question: string) => {
+    if (scenario !== null) return;
+    const classroom = classroomFixtureScenario(question);
+    if (classroom !== null) scenario = classroom;
+  };
   const library = fixtureChunks();
   const scores = new Map<string, number | null>();
   const toCourse = (chunkId: string, score: number | null): CourseEvidence | null => {
@@ -540,7 +566,10 @@ export function createFixtureResearchPorts(options: FixtureResearchOptions): Res
         };
   };
   const model: ResearchModelPort = {
-    plan: ({ question, audience }) => Promise.resolve(ok(planFor(scenario, question, audience))),
+    plan: ({ question, audience }) => {
+      noteFixtureQuestion(question);
+      return Promise.resolve(ok(planFor(scenario, question, audience)));
+    },
     assess: ({ evidence, round, subquestions }) =>
       Promise.resolve(ok(assessFor(scenario, round, evidence, scores, subquestions))),
     followUp: ({ gaps }) => Promise.resolve(ok(followUpFor(scenario, gaps))),
@@ -548,6 +577,7 @@ export function createFixtureResearchPorts(options: FixtureResearchOptions): Res
       Promise.resolve(ok(synthesizeFor(scenario, evidence, subquestions))),
   };
   return {
+    noteFixtureQuestion,
     measured: false,
     fixture: true,
     now: options.now ?? Date.now,

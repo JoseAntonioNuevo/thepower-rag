@@ -1,0 +1,27 @@
+{
+  "dimension-mismatch.png": {
+    "sha256": "933c9557ac8d0ef3ca3687ba8a1c5d3d7cc538eec0cd0666df2ebfa0d957f596",
+    "bytes": 11911,
+    "provenance": "Imagen sintética generada con Pillow el 10 de octubre de 2026. Texto visible: Dimension mismatch: expected 1024, got 768. No es una captura de un alumno."
+  },
+  "embedding-request.wav": {
+    "sha256": "d0415834d9c5876dfcca7e6c79bdb53791039f681750804bf134ac4db095be22",
+    "bytes": 333142,
+    "provenance": "Audio PCM 16 kHz mono 16 bit generado en local con say -v Mónica el 10 de octubre de 2026. No es una transcripción de Workers AI."
+  },
+  "sample-square.jpg": {
+    "sha256": "701ea1e6cf863283f421bf01b21e87ea8d298dfc850fe7b03f1ec263f103f808",
+    "bytes": 646,
+    "provenance": "JPEG sintético de 32x32 generado con Pillow el 10 de octubre de 2026 para comprobar el lector de marcadores. No contiene el error de dimensiones."
+  },
+  "scan-stuffed-ff.jpg": {
+    "sha256": "ac0ab3be3f89d46a33003b9b0e6d97f39810b5b22c395e3172bdceaeaf538be7",
+    "bytes": 942,
+    "provenance": "JPEG baseline 48x40, 4:2:0, generado con Pillow el 11 de octubre de 2026. El escaneo contiene bytes 0xFF rellenados como 0xFF 0x00. No es progresivo y no contiene el error de dimensiones."
+  },
+  "unknown-square.png": {
+    "sha256": "15e210104a87092bf3f54de5c96115ca07bb5ccdd95cb21fce6623d1c77695df",
+    "bytes": 115,
+    "provenance": "PNG válido de 32x32 sin el texto del ejemplo. El guion no lo reconoce."
+  }
+}

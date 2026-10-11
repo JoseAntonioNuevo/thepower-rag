@@ -1,4 +1,5 @@
 import { spawn, type ChildProcess } from "node:child_process";
+import { readFileSync } from "node:fs";
 import { mkdtemp, rm, writeFile } from "node:fs/promises";
 import net from "node:net";
 import os from "node:os";
@@ -98,6 +99,12 @@ async function boot(
           name: "thepower-research-job",
           binding: "RESEARCH_WORKFLOW",
           class_name: "ResearchJobWorkflow",
+        },
+      ],
+      r2_buckets: [
+        {
+          binding: "RESEARCH_MEDIA",
+          bucket_name: "thepower-research-media-local",
         },
       ],
     }),
@@ -394,6 +401,132 @@ describe("investigación durable en workerd", () => {
         });
         const crashPayload = (await crashResult.json()) as { report: { text: string } };
         expect(crashPayload.report.text).toContain("Informe de prueba");
+      } finally {
+        stop(second.child);
+        await waitExit(second.child);
+      }
+    } finally {
+      stop(first.child);
+      await rm(persist, { recursive: true, force: true });
+    }
+  }, 180_000);
+
+  it("termina un trabajo con imagen, audio y voz y lo conserva al reiniciar", async () => {
+    const persist = await mkdtemp(path.join(os.tmpdir(), "thepower-research-media-"));
+    const port = await freePort();
+    const inspector = await freePort();
+    const first = await boot(persist, port, inspector);
+    const base = `http://127.0.0.1:${String(port)}`;
+    const image = readFileSync(path.join(root, "apps/api/fixtures/media/dimension-mismatch.png"));
+    const audio = readFileSync(path.join(root, "apps/api/fixtures/media/embedding-request.wav"));
+    try {
+      await ready(base, first.child, first.logs);
+      const session = await fetch(`${base}/api/research/session`);
+      const cookie = cookieFrom(session);
+      const created = await fetch(`${base}/api/research/conversations`, {
+        method: "POST",
+        headers: mutateHeaders(base, cookie),
+        body: JSON.stringify({ audience: "M/J" }),
+      });
+      expect(created.status).toBe(201);
+      const conversation = (await created.json()) as { id: string };
+      const upload = async (bytes: Buffer, key: string) => {
+        const response = await fetch(
+          `${base}/api/research/conversations/${conversation.id}/media`,
+          {
+            method: "POST",
+            headers: {
+              ...mutateHeaders(base, cookie),
+              "content-type": "application/octet-stream",
+              "x-idempotency-key": key,
+            },
+            body: bytes,
+          },
+        );
+        expect(response.status).toBe(201);
+        return (await response.json()) as { id: string };
+      };
+      const imageAsset = await upload(image, "idem-workerd-image");
+      const audioAsset = await upload(audio, "idem-workerd-audio");
+      const submitted = await fetch(`${base}/api/research/conversations/${conversation.id}/jobs`, {
+        method: "POST",
+        headers: mutateHeaders(base, cookie),
+        body: JSON.stringify({
+          idempotencyKey: "idem-workerd-media",
+          question: "",
+          voice: true,
+          imageAssetId: imageAsset.id,
+          audioAssetId: audioAsset.id,
+        }),
+      });
+      expect(submitted.status).toBe(202);
+      const job = (await submitted.json()) as { jobId: string };
+      let execution = "queued";
+      for (let attempt = 0; attempt < 80 && execution !== "complete"; attempt += 1) {
+        const status = await fetch(`${base}/api/research/jobs/${job.jobId}`, {
+          headers: { cookie },
+        });
+        const body = (await status.json()) as { execution: string; attention: string | null };
+        execution = body.execution;
+        if (execution === "attention" || execution === "failed") {
+          throw new Error(`${JSON.stringify(body)}\n${first.logs().slice(-2_000)}`);
+        }
+        await new Promise((resolve) => setTimeout(resolve, 250));
+      }
+      expect(execution).toBe("complete");
+      const result = await fetch(`${base}/api/research/jobs/${job.jobId}/result`, {
+        headers: { cookie },
+      });
+      const payload = (await result.json()) as {
+        summary: unknown;
+        sources: { sourceId: string; kind: string }[];
+        report: { text: string } | null;
+      };
+      const summary = researchSummarySchema.parse(payload.summary);
+      expect(summary.outcome).toBe("complete");
+      expect(summary.pagesRead.length).toBeGreaterThan(0);
+      expect(summary.accepted.length).toBeGreaterThan(0);
+      expect(summary.media?.image?.observedText).toContain("expected 1024, got 768");
+      expect(summary.media?.audio?.transcript).toContain("He cambiado el modelo de embeddings");
+      expect(summary.media?.speech?.status).toBe("ready");
+      expect(summary.media?.speech?.detail ?? "").toContain("no es");
+      expect(payload.report?.text).toContain("Informe de prueba");
+      expect(payload.sources.some((source) => source.kind !== "attachment")).toBe(true);
+      const speechUrl = `${base}/api/research/media/${summary.media?.speech?.assetId ?? ""}`;
+      const speech = await fetch(speechUrl, { headers: { cookie } });
+      expect(speech.status).toBe(200);
+      const speechBytes = new Uint8Array(await speech.arrayBuffer());
+      expect(
+        String.fromCharCode(
+          speechBytes[0] ?? 0,
+          speechBytes[1] ?? 0,
+          speechBytes[2] ?? 0,
+          speechBytes[3] ?? 0,
+        ),
+      ).toBe("RIFF");
+      stop(first.child);
+      await waitExit(first.child);
+      const port2 = await freePort();
+      const second = await boot(persist, port2, await freePort());
+      const restarted = `http://127.0.0.1:${String(port2)}`;
+      try {
+        await ready(restarted, second.child, second.logs);
+        const again = await fetch(`${restarted}/api/research/jobs/${job.jobId}/result`, {
+          headers: { cookie },
+        });
+        expect(again.status).toBe(200);
+        const againSpeech = await fetch(speechUrl.replace(base, restarted), {
+          headers: { cookie },
+        });
+        expect(new Uint8Array(await againSpeech.arrayBuffer())).toEqual(speechBytes);
+        const messages = await fetch(`${restarted}/api/research/conversations/${conversation.id}`, {
+          headers: { cookie },
+        });
+        expect(messages.status).toBe(200);
+        const history = (await messages.json()) as { messages?: { text: string }[] };
+        const remembered = (history.messages ?? []).map((message) => message.text).join("\n");
+        expect(remembered).toContain("1024");
+        expect(remembered).toContain("He cambiado el modelo de embeddings");
       } finally {
         stop(second.child);
         await waitExit(second.child);

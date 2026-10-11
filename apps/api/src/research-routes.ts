@@ -1,4 +1,9 @@
-import { RESEARCH_LIMITS, researchScenarioSchema, type Audience } from "@thepower-rag/contracts";
+import {
+  MEDIA_LIMITS,
+  RESEARCH_LIMITS,
+  researchScenarioSchema,
+  type Audience,
+} from "@thepower-rag/contracts";
 import { Hono } from "hono";
 import { protectChat, protectionRequired } from "./chat-protection";
 import { asResearchDatabase, ensureResearchSchema } from "./research-db";
@@ -9,9 +14,21 @@ import {
   workflowActivity,
   type ResearchWorkflowBinding,
 } from "./research-dispatch";
-import { assessWorker, durableResearchConfigured, type WorkerEnv } from "./env";
+import { assessWorker, durableResearchConfigured, mediaMissing, type WorkerEnv } from "./env";
+import { inspectMedia, sha256Bytes } from "./media-bytes";
 import { contextualize } from "./research-memory";
-import { RESEARCH_QUEUE_MS, formatMicros, priceSnapshot } from "./research-money";
+import {
+  assetById,
+  assetByIdempotency,
+  insertAsset,
+  mediaDownloadName,
+  mediaResponse,
+  parseRange,
+  purgeOrphanMedia,
+  readMediaObject,
+  asMediaBucket,
+} from "./research-media";
+import { RESEARCH_QUEUE_MS, formatMicros, holdForJob, priceSnapshot } from "./research-money";
 import { loopback, resolveOwner } from "./research-owner";
 import { presentResearchResult } from "./research-result";
 import {
@@ -246,6 +263,9 @@ export function researchRoutes() {
       question?: string;
       scenarioId?: string | null;
       audience?: string;
+      voice?: boolean;
+      imageAssetId?: string | null;
+      audioAssetId?: string | null;
     } | null;
     if (!body || !body.idempotencyKey || !IDEMPOTENCY.test(body.idempotencyKey)) {
       return json(
@@ -254,7 +274,14 @@ export function researchRoutes() {
       );
     }
     const question = normalizeQuestion(body.question ?? "");
-    if (question.length === 0 || question.length > RESEARCH_LIMITS.maxQuestionChars) {
+    const voice = body.voice === true;
+    const imageAssetId = body.imageAssetId ?? null;
+    const audioAssetId = body.audioAssetId ?? null;
+    const hasMedia = voice || imageAssetId !== null || audioAssetId !== null;
+    if (
+      (question.length === 0 && !imageAssetId && !audioAssetId) ||
+      question.length > RESEARCH_LIMITS.maxQuestionChars
+    ) {
       return json(
         { error: "invalid_request", message: "La pregunta no es válida.", issues: [] },
         400,
@@ -280,13 +307,91 @@ export function researchRoutes() {
         409,
       );
     }
+    const missingMedia = mediaMissing(context.env, {
+      image: imageAssetId !== null,
+      audio: audioAssetId !== null,
+      voice,
+    });
+    if (missingMedia.length > 0) {
+      return json(
+        {
+          error: "configuration",
+          message: "Falta una capacidad de medios. No se usa un guion en su lugar.",
+          missing: missingMedia,
+        },
+        409,
+      );
+    }
+    const imageAsset = imageAssetId ? await assetById(database, owner.id, imageAssetId) : null;
+    const audioAsset = audioAssetId ? await assetById(database, owner.id, audioAssetId) : null;
+    if (
+      (imageAssetId &&
+        (!imageAsset ||
+          imageAsset.conversation_id !== conversation.id ||
+          imageAsset.role !== "image")) ||
+      (audioAssetId &&
+        (!audioAsset ||
+          audioAsset.conversation_id !== conversation.id ||
+          audioAsset.role !== "audio"))
+    ) {
+      return json(
+        {
+          error: "invalid_request",
+          message: "El adjunto no pertenece a esta conversación o ya está usado.",
+          issues: [],
+        },
+        409,
+      );
+    }
     const history = await memoryTurns(database, owner.id, conversation.id);
     const contextual = contextualize(history, question);
-    const fingerprint = await fingerprintOf({
-      question,
-      audience: conversation.audience,
-      scenarioId: scenario?.success ? scenario.data : null,
+    const mediaBinding = hasMedia
+      ? {
+          voice,
+          image: imageAsset ? { id: imageAsset.id, hash: imageAsset.content_hash } : null,
+          audio: audioAsset
+            ? {
+                id: audioAsset.id,
+                hash: audioAsset.content_hash,
+                durationMs: audioAsset.duration_ms ?? 0,
+              }
+            : null,
+        }
+      : null;
+    const fingerprint = await fingerprintOf(
+      mediaBinding
+        ? {
+            question,
+            audience: conversation.audience,
+            scenarioId: scenario?.success ? scenario.data : null,
+            voice,
+            image: mediaBinding.image,
+            audio: mediaBinding.audio
+              ? { id: mediaBinding.audio.id, hash: mediaBinding.audio.hash }
+              : null,
+          }
+        : {
+            question,
+            audience: conversation.audience,
+            scenarioId: scenario?.success ? scenario.data : null,
+          },
+    );
+    const hold = holdForJob(prices, {
+      image: imageAsset !== null,
+      audioDurationMs: audioAsset?.duration_ms ?? null,
+      voice,
     });
+    if (hold === null) {
+      return json(
+        {
+          error: "configuration",
+          message: "La reserva de medios no cabe en el tope del trabajo.",
+          missing: ["RESEARCH_JOB_LIMIT_USD"],
+        },
+        402,
+      );
+    }
+    const jobPrices = { ...prices, holdMicros: hold };
     const admitted = await admitJob(database, {
       ownerId: owner.id,
       conversationId: conversation.id,
@@ -296,10 +401,11 @@ export function researchRoutes() {
       contextualized: contextual.contextualized,
       scenarioId: scenario?.success ? scenario.data : null,
       corpusVersion,
-      prices,
+      prices: jobPrices,
       now: Date.now(),
       deadlineMs: RESEARCH_LIMITS.deadlineMs,
       queueMs: RESEARCH_QUEUE_MS,
+      media: mediaBinding,
     });
     if (!admitted.ok) {
       const status =
@@ -316,7 +422,9 @@ export function researchRoutes() {
                   ? "Esta conversación ya tiene un trabajo activo."
                   : admitted.reason === "turns"
                     ? "La conversación alcanzó el tope de turnos."
-                    : "No se pudo crear el trabajo.",
+                    : admitted.reason === "attachment"
+                      ? "El adjunto cambió o pertenece a otro trabajo."
+                      : "No se pudo crear el trabajo.",
           missing: admitted.reason === "budget" ? ["RESEARCH_BUDGET_USD"] : [],
         },
         status,
@@ -611,6 +719,173 @@ export function researchRoutes() {
     });
   });
 
+  routes.post("/conversations/:id/media", async (context) => {
+    const blocked = await guardMutation(context.req.raw, context.env);
+    if (blocked) return blocked;
+    const owner = await resolveOwner(context.req.raw, context.env);
+    if (owner instanceof Response) return owner;
+    const database = asResearchDatabase(context.env.RESEARCH_DB);
+    const bucket = asMediaBucket(context.env.RESEARCH_MEDIA);
+    const prices = pricesFrom(context.env);
+    if (!database || !prices || !bucket) {
+      return json(
+        {
+          error: "configuration",
+          message: "Falta el almacén de medios.",
+          missing: ["RESEARCH_MEDIA"],
+        },
+        409,
+      );
+    }
+    await ensureResearchSchema(database, prices.budgetMicros);
+    const conversation = await getConversation(database, owner.id, context.req.param("id"));
+    if (!conversation) {
+      return json(
+        { error: "configuration", message: "La conversación no existe.", missing: [] },
+        404,
+      );
+    }
+    const key = context.req.header("x-idempotency-key") ?? "";
+    if (!IDEMPOTENCY.test(key)) {
+      return json(
+        { error: "invalid_request", message: "Falta la clave de idempotencia.", issues: [] },
+        400,
+      );
+    }
+    const bytes = await readLimited(context.req.raw, MEDIA_LIMITS.maxImageBytes);
+    if (bytes === "too-large") {
+      return json(
+        { error: "invalid_request", message: "El archivo supera el tope.", issues: [] },
+        413,
+      );
+    }
+    if (bytes === "missing") {
+      return json({ error: "invalid_request", message: "No llegó el archivo.", issues: [] }, 400);
+    }
+    const inspected = await inspectMedia(bytes);
+    if (!inspected.ok) {
+      return json(
+        {
+          error: "invalid_request",
+          message: `Archivo rechazado: ${inspected.reason}.`,
+          issues: [],
+        },
+        400,
+      );
+    }
+    const hash = await sha256Bytes(bytes);
+    const existing = await assetByIdempotency(database, owner.id, conversation.id, key);
+    if (existing) {
+      if (existing.content_hash !== hash) {
+        return json(
+          { error: "invalid_request", message: "Esa clave ya se usó con otros bytes.", issues: [] },
+          409,
+        );
+      }
+      return json(publicAsset(existing), 200, owner.setCookie);
+    }
+    const id = crypto.randomUUID();
+    const objectKey = `research/${owner.id}/${conversation.id}/${id}`;
+    await bucket.put(objectKey, bytes, { httpMetadata: { contentType: inspected.facts.mime } });
+    const row = {
+      id,
+      owner_id: owner.id,
+      conversation_id: conversation.id,
+      role: inspected.facts.role,
+      object_key: objectKey,
+      content_hash: hash,
+      mime: inspected.facts.mime,
+      byte_size: bytes.byteLength,
+      width: inspected.facts.role === "image" ? inspected.facts.width : null,
+      height: inspected.facts.role === "image" ? inspected.facts.height : null,
+      duration_ms: inspected.facts.role === "audio" ? inspected.facts.durationMs : null,
+      sample_rate: inspected.facts.role === "audio" ? inspected.facts.sampleRate : null,
+      channels: inspected.facts.role === "audio" ? inspected.facts.channels : null,
+      bit_depth: inspected.facts.role === "audio" ? inspected.facts.bitDepth : null,
+      status: "admitted",
+      extracted_text: null,
+      detail: null,
+      job_id: null,
+      idempotency_key: key,
+      created_at: Date.now(),
+    };
+    try {
+      await insertAsset(database, row);
+    } catch {
+      await bucket.delete(objectKey);
+      const raced = await assetByIdempotency(database, owner.id, conversation.id, key);
+      if (raced?.content_hash === hash) return json(publicAsset(raced), 200, owner.setCookie);
+      return json(
+        { error: "invalid_request", message: "No se pudo guardar el archivo.", issues: [] },
+        409,
+      );
+    }
+    return json(publicAsset(row), 201, owner.setCookie);
+  });
+
+  routes.on(["GET", "HEAD"], "/media/:id", async (context) => {
+    const owner = await resolveOwner(context.req.raw, context.env);
+    if (owner instanceof Response) return owner;
+    const database = asResearchDatabase(context.env.RESEARCH_DB);
+    const bucket = asMediaBucket(context.env.RESEARCH_MEDIA);
+    if (!database || !bucket) {
+      return json(
+        { error: "configuration", message: "Falta el almacén de medios.", missing: [] },
+        409,
+      );
+    }
+    const asset = await assetById(database, owner.id, context.req.param("id"));
+    if (!asset) {
+      return json({ error: "configuration", message: "El archivo no existe.", missing: [] }, 404);
+    }
+    const head = await bucket.head(asset.object_key);
+    if (!head) {
+      return json(
+        { error: "configuration", message: "El archivo no está en el almacén.", missing: [] },
+        404,
+      );
+    }
+    const safeName = mediaDownloadName(asset.role, asset.mime);
+    if (context.req.method === "HEAD") {
+      return new Response(null, {
+        status: 200,
+        headers: {
+          "content-type": asset.mime,
+          "content-length": String(head.size),
+          "accept-ranges": "bytes",
+          "x-content-type-options": "nosniff",
+          "content-disposition": `inline; filename="${safeName}"`,
+          "cache-control": "private, no-store",
+        },
+      });
+    }
+    const range = parseRange(context.req.header("range") ?? null, head.size);
+    if (range === "invalid") {
+      return new Response(null, {
+        status: 416,
+        headers: { "content-range": `bytes */${String(head.size)}` },
+      });
+    }
+    const object = await readMediaObject(
+      bucket,
+      asset.object_key,
+      range ? { offset: range.start, length: range.end - range.start + 1 } : undefined,
+    );
+    if (!object) {
+      return json(
+        { error: "configuration", message: "El archivo no está en el almacén.", missing: [] },
+        404,
+      );
+    }
+    return mediaResponse({
+      bytes: object.body,
+      mime: asset.mime,
+      total: head.size,
+      filename: safeName,
+      range,
+    });
+  });
+
   routes.post("/retention", async (context) => {
     const blocked = await guardMutation(context.req.raw, context.env);
     if (blocked) {
@@ -625,10 +900,68 @@ export function researchRoutes() {
       return json({ error: "configuration", message: "Falta la base.", missing: [] }, 409);
     }
     const removed = await purgeCheckpoints(database, Date.now());
-    return json({ removed });
+    const bucket = asMediaBucket(context.env.RESEARCH_MEDIA);
+    const orphans = bucket
+      ? await purgeOrphanMedia(database, bucket, Date.now(), MEDIA_LIMITS.orphanAfterMs)
+      : 0;
+    return json({ removed, orphans });
   });
 
   return routes;
+}
+
+function publicAsset(row: {
+  id: string;
+  role: string;
+  mime: string;
+  byte_size: number;
+  content_hash: string;
+  width: number | null;
+  height: number | null;
+  duration_ms: number | null;
+}) {
+  return {
+    id: row.id,
+    role: row.role,
+    mime: row.mime,
+    bytes: row.byte_size,
+    contentHash: row.content_hash,
+    width: row.width,
+    height: row.height,
+    durationMs: row.duration_ms,
+  };
+}
+
+async function readLimited(
+  request: Request,
+  max: number,
+): Promise<Uint8Array | "too-large" | "missing"> {
+  const header = request.headers.get("content-length");
+  if (header !== null) {
+    const declared = Number(header);
+    if (!Number.isFinite(declared) || declared < 1 || declared > max) return "too-large";
+  }
+  const reader = request.body?.getReader();
+  if (!reader) return "missing";
+  const chunks: Uint8Array[] = [];
+  let total = 0;
+  for (;;) {
+    const next = await reader.read();
+    if (next.done) break;
+    total += next.value.byteLength;
+    if (total > max) {
+      await reader.cancel();
+      return "too-large";
+    }
+    chunks.push(next.value);
+  }
+  const bytes = new Uint8Array(total);
+  let offset = 0;
+  for (const chunk of chunks) {
+    bytes.set(chunk, offset);
+    offset += chunk.byteLength;
+  }
+  return bytes;
 }
 
 function pricesFrom(env: WorkerEnv) {
@@ -640,5 +973,7 @@ function pricesFrom(env: WorkerEnv) {
     searchUsd: env.RESEARCH_SEARCH_USD,
     readUsd: env.RESEARCH_READ_USD,
     firecrawlUsdPerCredit: env.FIRECRAWL_USD_PER_CREDIT,
+    searchProvider: env.RESEARCH_SEARCH_PROVIDER === "tavily" ? "tavily" : "firecrawl",
+    tavilyUsdPerCredit: env.TAVILY_USD_PER_CREDIT,
   });
 }

@@ -24,7 +24,14 @@ function Section({ title, children }: { title: string; children: ReactNode }) {
 }
 
 export function ResearchSourceCard({ source }: { source: ResearchSource }) {
-  const tone = source.kind === "web" ? "web" : source.kind === "tool" ? "tool" : "session";
+  const tone =
+    source.kind === "web"
+      ? "web"
+      : source.kind === "tool"
+        ? "tool"
+        : source.kind === "attachment"
+          ? "note"
+          : "session";
   return (
     <li className="citation is-shown research-source" title={source.sourceId}>
       <div className="citation-head">
@@ -53,6 +60,11 @@ export function ResearchSourceCard({ source }: { source: ResearchSource }) {
         <p className="research-meta">
           get_course_session · grupo {source.audience} · fuentes del curso:{" "}
           {source.backingSourceIds.join(", ")}
+        </p>
+      ) : source.kind === "attachment" ? (
+        <p className="research-meta">
+          {source.role === "image" ? "Imagen" : "Audio"} · {shortHash(source.contentHash)}. No es
+          evidencia del curso ni de una fuente técnica.
         </p>
       ) : (
         <p className="research-meta">
@@ -281,7 +293,17 @@ export function ResearchTrace({ summary }: { summary: ResearchSummary }) {
           </li>
           <li>
             Reserva estimada: {money(a.estimatedMaxUsd, a.measured)}. USD informado por proveedores:{" "}
-            {money(a.providerReportedUsd, a.measured)}. Créditos informados:{" "}
+            {money(a.providerReportedUsd, a.measured)}.
+            {a.estimatedUsd != null || a.estimateProvenance ? (
+              <>
+                {" "}
+                USD calculado con tarifas publicadas: {money(a.estimatedUsd ?? null, a.measured)}.
+                {a.estimateProvenance ? ` Procedencia: ${a.estimateProvenance}` : ""} Completo:{" "}
+                {a.estimateComplete === true ? "sí" : "no"}. No es un importe informado por el
+                proveedor.
+              </>
+            ) : null}{" "}
+            Créditos informados:{" "}
             {a.measured
               ? a.providerReportedCredits === null
                 ? "ninguno"

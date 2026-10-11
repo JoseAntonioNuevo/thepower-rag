@@ -646,6 +646,24 @@ fieldset:disabled {
   gap: 1rem;
 }
 
+.media-row {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  align-items: end;
+}
+
+.media-preview {
+  max-width: min(100%, 280px);
+  height: auto;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+}
+
+.media-audio {
+  width: min(100%, 320px);
+}
+
 .research-status-skel {
   min-height: 1.6rem;
 }

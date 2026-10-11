@@ -36,6 +36,7 @@ import { fixtureCorpusVersion } from "./fixture";
 function prices(hold = 100): PriceSnapshot {
   return {
     version: RESEARCH_PRICE_VERSION,
+    searchProvider: "firecrawl",
     budgetMicros: 1_000_000,
     jobLimitMicros: 250_000,
     modelCallMicros: 10,
@@ -43,6 +44,10 @@ function prices(hold = 100): PriceSnapshot {
     readMicros: 10,
     courseMicros: 10,
     holdMicros: hold,
+    visionCallMicros: 10,
+    sttMicrosPerMinute: 510,
+    ttsMicrosPerChar: 30,
+    speechCapMicros: 18_000,
   };
 }
 

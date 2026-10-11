@@ -15,6 +15,7 @@
   "env": {
     "production": {
       "name": "thepower-rag",
+      "main": "../api/src/research-worker.ts",
       "workers_dev": false,
       "preview_urls": false,
       "vars": {
@@ -23,6 +24,17 @@
         "MODEL_ID": "claude-haiku-5-5",
         "EVALUATOR_MODEL_ID": "claude-haiku-5-5",
         "RESEARCH_MODEL_ID": "claude-haiku-5-5",
+        "RESEARCH_SEARCH_PROVIDER": "tavily",
+        "TAVILY_USD_PER_CREDIT": "0.008000",
+        "RESEARCH_SPEND_AUTHORIZATION": "s12-research-phase1",
+        "RESEARCH_BUDGET_USD": "1.000000",
+        "RESEARCH_JOB_LIMIT_USD": "0.250000",
+        "RESEARCH_VISION_MODEL_ID": "claude-haiku-5-5",
+        "RESEARCH_STT_MODEL_ID": "@cf/openai/whisper-large-v3-turbo",
+        "RESEARCH_TTS_MODEL_ID": "@cf/deepgram/aura-2-es",
+        "RESEARCH_ALLOWED_DOMAINS": "developers.cloudflare.com,docs.langchain.com,langchain-ai.github.io",
+        "RESEARCH_INPUT_USD_PER_MILLION": "0.100000",
+        "RESEARCH_OUTPUT_USD_PER_MILLION": "0.500000",
         "EMBEDDING_MODEL": "@cf/baai/bge-m3",
         "EMBEDDING_DIMENSIONS": "1024",
         "CORPUS_VERSION": "c3a59a406888b",
@@ -56,12 +68,31 @@
           "migrations_dir": "../api/migrations",
           "remote": true,
         },
+        {
+          "binding": "RESEARCH_DB",
+          "database_name": "thepower-ai-course-research-d1",
+          "database_id": "1ffb3158-165b-447b-bfdf-34515bbacc55",
+          "migrations_dir": "../api/migrations-research",
+          "remote": true,
+        },
       ],
       "r2_buckets": [
         {
           "binding": "CORPUS",
           "bucket_name": "thepower-ai-course-rag-corpus",
           "remote": true,
+        },
+        {
+          "binding": "RESEARCH_MEDIA",
+          "bucket_name": "thepower-ai-course-research-media",
+          "remote": true,
+        },
+      ],
+      "workflows": [
+        {
+          "name": "thepower-research-job",
+          "binding": "RESEARCH_WORKFLOW",
+          "class_name": "ResearchJobWorkflow",
         },
       ],
       "assets": {
@@ -174,6 +205,12 @@
           "name": "thepower-research-job",
           "binding": "RESEARCH_WORKFLOW",
           "class_name": "ResearchJobWorkflow",
+        },
+      ],
+      "r2_buckets": [
+        {
+          "binding": "RESEARCH_MEDIA",
+          "bucket_name": "thepower-research-media-local",
         },
       ],
     },

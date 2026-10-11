@@ -66,6 +66,7 @@ export const SOURCE_KIND_LABEL = {
   course: "Curso",
   tool: "Herramienta",
   web: "Web",
+  attachment: "Entrada del alumno",
 } as const;
 
 export function money(value: number | null, measured: boolean): string {

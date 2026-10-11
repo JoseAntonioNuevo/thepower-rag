@@ -309,6 +309,14 @@ export function formatPreflight(
   lines.push(
     `Investigación: ${research.status}${research.status === "blocked" ? ` (falta: ${research.missing.join(", ")})` : ""}`,
   );
+  lines.push(
+    "Medios: imagen PNG/JPEG, audio PCM WAV 16 kHz mono de hasta 30 s y voz opcional. La inspección no llama al proveedor.",
+  );
+  lines.push(
+    config.assessment.execution === "demo"
+      ? "Medios en demo: guion ligado al hash del archivo y tono local. Un archivo desconocido no se presenta como comprendido."
+      : "Medios en real: hace falta RESEARCH_MEDIA, un modelo de visión admitido y Workers AI. Si falta, no hay caída al guion.",
+  );
   lines.push("pruebas de conexión: no ejecutadas");
   lines.push("verificado remotamente: no");
   const capability = selection.capability;

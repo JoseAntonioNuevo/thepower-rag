@@ -215,6 +215,17 @@ export const researchSourceSchema = z.discriminatedUnion("kind", [
     subquestionIds: z.array(subquestionId).max(L.maxSubquestions),
     fixture: z.boolean(),
   }),
+  z.object({
+    kind: z.literal("attachment"),
+    sourceId: researchSourceIdSchema,
+    role: z.enum(["image", "audio"]),
+    assetId: z.string().regex(/^[0-9a-f-]{36}$/i),
+    title: z.string().min(1).max(L.maxTitleChars),
+    excerpts: z.array(excerpt).min(1).max(L.maxExcerptsPerSource),
+    contentHash: z.string().regex(/^sha256:[0-9a-f]{64}$/),
+    authority: z.literal("user-input"),
+    subquestionIds: z.array(subquestionId).max(L.maxSubquestions),
+  }),
 ]);
 export type ResearchSource = z.infer<typeof researchSourceSchema>;
 
@@ -274,6 +285,49 @@ export const researchOutcomeSchema = z.enum([
 export type ResearchOutcome = z.infer<typeof researchOutcomeSchema>;
 
 const callStatus = z.enum(["ok", "error", "timeout", "late", "skipped"]);
+const assetId = z.string().regex(/^[0-9a-f-]{36}$/i);
+const contentHash = z.string().regex(/^sha256:[0-9a-f]{64}$/);
+const mediaDetail = z.string().max(L.maxReasonChars);
+
+export const researchMediaSchema = z.object({
+  visionCalls: z.number().int().min(0).max(1),
+  transcriptionCalls: z.number().int().min(0).max(1),
+  speechCalls: z.number().int().min(0).max(1),
+  image: z
+    .object({
+      assetId,
+      contentHash,
+      status: z.enum(["read", "failed", "unknown-fixture"]),
+      observedText: z.string().max(1_000),
+      notes: z.string().max(500),
+      uncertain: z.boolean(),
+      detail: mediaDetail,
+    })
+    .nullable(),
+  audio: z
+    .object({
+      assetId,
+      contentHash,
+      status: z.enum(["read", "failed", "unknown-fixture"]),
+      transcript: z.string().max(1_000),
+      detail: mediaDetail,
+      language: z.string().max(16).nullable(),
+      durationSeconds: z.number().finite().nonnegative().nullable(),
+      wordCount: z.number().int().nonnegative().nullable(),
+    })
+    .nullable(),
+  conflict: z.string().max(L.maxReasonChars).nullable(),
+  speech: z
+    .object({
+      status: z.enum(["ready", "failed", "skipped", "ambiguous", "unconfigured"]),
+      text: z.string().max(600),
+      assetId: assetId.nullable(),
+      mime: z.string().max(80).nullable(),
+      detail: mediaDetail,
+      fixture: z.boolean(),
+    })
+    .nullable(),
+});
 
 export const researchSummarySchema = z.object({
   runId: z.string().min(1).max(128),
@@ -426,6 +480,10 @@ export const researchSummarySchema = z.object({
     estimatedMaxUsd: z.number().finite().nonnegative().nullable(),
     providerReportedUsd: z.number().finite().nonnegative().nullable(),
     providerReportedCredits: z.number().finite().nonnegative().nullable(),
+    /** USD calculado con tarifas publicadas. No es providerReportedUsd. */
+    estimatedUsd: z.number().finite().nonnegative().nullable().optional(),
+    estimateProvenance: z.string().min(1).max(L.maxReasonChars).nullable().optional(),
+    estimateComplete: z.boolean().nullable().optional(),
     unknownConsumptionCalls: z.number().int().min(0),
     finalAnswerUsd: z.number().finite().nonnegative().nullable(),
     totalComplete: z.boolean(),
@@ -435,6 +493,8 @@ export const researchSummarySchema = z.object({
   threadId: z.string().min(1).max(80).nullable().optional(),
   jobId: z.string().min(1).max(80).nullable().optional(),
   contextualizedQuestion: z.string().max(L.maxQuestionChars).nullable().optional(),
+  media: researchMediaSchema.optional(),
 });
 
+export type ResearchMedia = z.infer<typeof researchMediaSchema>;
 export type ResearchSummary = z.infer<typeof researchSummarySchema>;

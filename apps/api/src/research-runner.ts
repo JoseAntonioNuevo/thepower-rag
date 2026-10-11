@@ -1,7 +1,11 @@
 import {
+  MEDIA_LIMITS,
   researchSummarySchema,
+  type ResearchMedia,
   type ResearchOutcome,
   type ResearchScenarioId,
+  type ResearchSource,
+  type ResearchSummary,
 } from "@thepower-rag/contracts";
 import type { ResearchPorts, ResearchRequest } from "@thepower-rag/research";
 import { checkpointConfig, checkpointThread, D1CheckpointSaver } from "./research-checkpointer";
@@ -9,7 +13,7 @@ import type { ResearchDatabase } from "./research-db";
 import { createFixtureResearchPorts } from "./research-fixture";
 import { journalPorts } from "./research-journal";
 import { runResearchGraph } from "./research-graph";
-import { parsePriceSnapshot } from "./research-money";
+import { parsePriceSnapshot, type PriceSnapshot } from "./research-money";
 import {
   appendEvent,
   claimJob,
@@ -21,9 +25,16 @@ import {
   promoteDispatched,
   recordAssistantMessage,
   releaseReservedOperations,
+  saveResultDraft,
   setProgress,
   type JobRow,
 } from "./research-store";
+import {
+  perceiveJob,
+  shellSummary,
+  speakAnswer,
+  type MultimodalContext,
+} from "./research-multimodal";
 import { buildStoredResult } from "./research-result";
 import { citedSources, researchSummary } from "./research-summary";
 import { controlError, ResearchAttention, ResearchStepCrash } from "./research-state";
@@ -31,6 +42,53 @@ import { controlError, ResearchAttention, ResearchStepCrash } from "./research-s
 export interface TickResult {
   done: boolean;
   status: JobRow["execution_status"] | "missing";
+}
+
+async function saveSpeechFailureDraft(
+  database: ResearchDatabase,
+  input: {
+    ownerId: string;
+    jobId: string;
+    leaseToken: number;
+    summary: ResearchSummary;
+    media: ResearchMedia;
+    sources: readonly ResearchSource[];
+    reportText: string;
+    fixture: boolean;
+    error: unknown;
+  },
+): Promise<void> {
+  const attention = controlError(input.error) instanceof ResearchAttention;
+  input.summary.media = {
+    ...input.media,
+    speech: {
+      status: attention ? "ambiguous" : "failed",
+      text: "",
+      assetId: null,
+      mime: null,
+      detail: attention
+        ? "La voz quedó sin resultado durable. El informe se conserva y la reserva no se libera."
+        : "La voz falló. El informe se conserva.",
+      fixture: input.fixture,
+    },
+  };
+  input.summary.accounting = { ...input.summary.accounting, totalComplete: false };
+  const draft = await buildStoredResult(database, {
+    ownerId: input.ownerId,
+    jobId: input.jobId,
+    summary: input.summary,
+    sources: [...input.sources],
+    reportText: input.reportText,
+    now: Date.now(),
+  });
+  if (!draft) return;
+  await saveResultDraft(database, {
+    ownerId: input.ownerId,
+    jobId: input.jobId,
+    leaseToken: input.leaseToken,
+    outcome: input.summary.outcome,
+    resultJson: JSON.stringify(draft),
+  });
 }
 
 const EXECUTOR = "research-workflow";
@@ -48,13 +106,25 @@ export async function runResearchTick(
   database: ResearchDatabase,
   jobId: string,
   ownerId: string,
-  createPorts: (signal: AbortSignal, job: JobRow) => ResearchPorts = (signal, job) =>
+  createPorts: (signal: AbortSignal, job: JobRow, prices: PriceSnapshot) => ResearchPorts = (
+    signal,
+    job,
+  ) =>
     createFixtureResearchPorts({
       signal,
       scenarioId: scenarioOf(job),
       audience: job.audience,
       corpusVersion: job.corpus_version,
     }),
+  mediaContext: Omit<MultimodalContext, "signal"> = {
+    mode: "demo",
+    bucket: null,
+    ai: null,
+    vision: null,
+    visionModelId: null,
+    sttModelId: MEDIA_LIMITS.sttModelId,
+    ttsModelId: MEDIA_LIMITS.ttsModelId,
+  },
 ): Promise<TickResult> {
   const promoted = await promoteDispatched(database, ownerId, jobId);
   if (promoted > 0) {
@@ -95,7 +165,7 @@ export async function runResearchTick(
       database,
       claimed,
       prices,
-      createPorts(controller.signal, claimed),
+      createPorts(controller.signal, claimed, prices),
       scenarioOf(claimed),
     );
   } catch {
@@ -109,16 +179,113 @@ export async function runResearchTick(
       }
     });
   }, 200);
+  const multimodal: MultimodalContext = { ...mediaContext, signal: controller.signal };
+  let graphQuestion = claimed.contextualized_question ?? claimed.original_question;
+  let ahead: ResearchMedia | null = null;
+  let aheadSources: ResearchSource[] = [];
   const request: ResearchRequest = {
     runId: claimed.run_id,
     threadId: claimed.conversation_id,
-    question: claimed.contextualized_question ?? claimed.original_question,
+    question: graphQuestion,
     observations: [{ kind: "text", text: claimed.original_question }],
     audience: claimed.audience,
     corpusVersion: claimed.corpus_version,
     scenarioId: scenarioOf(claimed),
   };
   try {
+    const perceived = await perceiveJob(database, claimed, prices, multimodal);
+    if (perceived.kind === "blocked") {
+      const summary = shellSummary(claimed, ports, "error", perceived.detail, perceived.detail, {
+        visionCalls: 0,
+        transcriptionCalls: 0,
+        speechCalls: 0,
+        image: null,
+        audio: null,
+        conflict: null,
+        speech: null,
+      });
+      const storedResult = await buildStoredResult(database, {
+        ownerId,
+        jobId,
+        summary,
+        sources: [],
+        reportText: perceived.detail,
+        now: Date.now(),
+      });
+      await finishOrAttention(database, {
+        ownerId,
+        jobId,
+        leaseToken: claimed.lease_token,
+        now: Date.now(),
+        execution: "failed",
+        outcome: "error",
+        resultJson: storedResult ? JSON.stringify(storedResult) : null,
+      });
+      return { done: true, status: "failed" };
+    }
+    if (perceived.kind === "ready" && !perceived.proceed) {
+      const summary = shellSummary(
+        claimed,
+        ports,
+        "clarify",
+        perceived.clarify ?? "Hace falta aclarar la entrada.",
+        perceived.clarify ?? "Hace falta aclarar la entrada.",
+        perceived.media,
+      );
+      let spoken = perceived.media;
+      try {
+        spoken = await speakAnswer({
+          database,
+          job: claimed,
+          prices,
+          context: multimodal,
+          outcome: "clarify",
+          reportText: summary.stopDetail,
+          excerpts: [],
+          media: perceived.media,
+        });
+      } catch (error) {
+        await saveSpeechFailureDraft(database, {
+          ownerId,
+          jobId,
+          leaseToken: claimed.lease_token,
+          summary,
+          media: perceived.media,
+          sources: perceived.sources,
+          reportText: perceived.clarify ?? "Hace falta aclarar la entrada.",
+          fixture: ports.fixture,
+          error,
+        });
+        throw error;
+      }
+      summary.media = spoken;
+      const storedResult = await buildStoredResult(database, {
+        ownerId,
+        jobId,
+        summary,
+        sources: perceived.sources,
+        reportText: perceived.clarify ?? "Hace falta aclarar la entrada.",
+        now: Date.now(),
+      });
+      await finishOrAttention(database, {
+        ownerId,
+        jobId,
+        leaseToken: claimed.lease_token,
+        now: Date.now(),
+        execution: "complete",
+        outcome: "clarify",
+        resultJson: storedResult ? JSON.stringify(storedResult) : null,
+      });
+      const latest = await getJob(database, ownerId, jobId);
+      return { done: true, status: latest?.execution_status ?? "complete" };
+    }
+    if (perceived.kind === "ready") {
+      request.question = perceived.question;
+      ahead = perceived.media;
+      aheadSources = perceived.sources;
+    }
+    const latch = ports as ResearchPorts & { noteFixtureQuestion?: (question: string) => void };
+    latch.noteFixtureQuestion?.(request.question);
     const interrupt = claimed.scenario_id === "crash-after-plan" && claimed.crash_consumed === 0;
     const state = await runResearchGraph(
       request,
@@ -148,14 +315,63 @@ export async function runResearchTick(
       await markAttention(database, ownerId, jobId, "reconciliation-required");
       return { done: true, status: "attention" };
     }
-    const summary = researchSummarySchema.parse(
-      researchSummary({ ...state, jobId: claimed.id, threadId: claimed.conversation_id }, ports),
-    );
+    const summary = researchSummarySchema.parse({
+      ...researchSummary({ ...state, jobId: claimed.id, threadId: claimed.conversation_id }, ports),
+      media: ahead ?? undefined,
+    });
+    const excerpts = state.accepted.flatMap((entry) => entry.excerpts);
+    let media = ahead;
+    if (media) {
+      try {
+        media = await speakAnswer({
+          database,
+          job: claimed,
+          prices,
+          context: multimodal,
+          outcome: summary.outcome,
+          reportText: state.reportText,
+          excerpts,
+          media,
+        });
+      } catch (error) {
+        await saveSpeechFailureDraft(database, {
+          ownerId,
+          jobId,
+          leaseToken: claimed.lease_token,
+          summary,
+          media,
+          sources: [...citedSources(state), ...aheadSources],
+          reportText: state.reportText,
+          fixture: ports.fixture,
+          error,
+        });
+        throw error;
+      }
+      summary.media = media;
+      const unknown = (await listOperations(database, jobId)).filter(
+        (operation) =>
+          (operation.kind === "vision" ||
+            operation.kind === "transcribe" ||
+            operation.kind === "speech") &&
+          (operation.state === "unknown" || operation.unknown_hold_micros > 0),
+      ).length;
+      if (
+        unknown > 0 ||
+        media.speech?.status === "failed" ||
+        media.speech?.status === "ambiguous"
+      ) {
+        summary.accounting = {
+          ...summary.accounting,
+          totalComplete: false,
+          unknownConsumptionCalls: summary.accounting.unknownConsumptionCalls + unknown,
+        };
+      }
+    }
     const storedResult = await buildStoredResult(database, {
       ownerId,
       jobId,
       summary,
-      sources: citedSources(state),
+      sources: [...citedSources(state), ...aheadSources],
       reportText: state.reportText,
       now: Date.now(),
     });
@@ -205,6 +421,7 @@ export async function runResearchTick(
     if (latest?.cancel_requested === 1) {
       return { done: true, status: "cancelled" };
     }
+    const preserved = await getJob(database, ownerId, jobId);
     await finishOrAttention(database, {
       ownerId,
       jobId,
@@ -212,7 +429,7 @@ export async function runResearchTick(
       now: Date.now(),
       execution: "failed",
       outcome: "error",
-      resultJson: null,
+      resultJson: preserved?.result_json ?? null,
     });
     const afterFailure = await getJob(database, ownerId, jobId);
     return { done: true, status: afterFailure?.execution_status ?? "failed" };

@@ -29,6 +29,16 @@ export interface CallContext {
 export type Consumption =
   | { kind: "none" }
   | { kind: "reported"; usd: number | null; credits: number | null }
+  | {
+      /** USD calculado con tarifas publicadas a partir de tokens. No es un importe del proveedor. */
+      kind: "estimated";
+      usd: number | null;
+      provenance: string;
+      /** Falso cuando falta el uso de entrada o de salida. La cifra parcial no cierra el cargo. */
+      complete: boolean;
+      inputTokens: number | null;
+      outputTokens: number | null;
+    }
   | { kind: "unknown" };
 
 export type PortFailure = "timeout" | "aborted" | "provider" | "invalid" | "blocked";

@@ -20,7 +20,7 @@ const storedReportSchema = z.discriminatedUnion("kind", [
 
 const storedResultSchema = z.object({
   summary: researchSummarySchema,
-  sources: z.array(researchSourceSchema).max(RESEARCH_LIMITS.maxEvidenceItems),
+  sources: z.array(researchSourceSchema).max(RESEARCH_LIMITS.maxEvidenceItems + 2),
   report: storedReportSchema.optional(),
 });
 
