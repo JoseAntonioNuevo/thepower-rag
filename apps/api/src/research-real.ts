@@ -7,7 +7,7 @@ import type {
   ResearchModelPort,
   ResearchPorts,
 } from "@thepower-rag/research";
-import { generateObject, NoObjectGeneratedError, type LanguageModel } from "ai";
+import { APICallError, generateObject, NoObjectGeneratedError, type LanguageModel } from "ai";
 import { z } from "zod";
 import type { ResearchSettings, RetrievalSettings } from "./env";
 import { createFirecrawlReader, createFirecrawlSearch } from "./firecrawl";
@@ -52,7 +52,7 @@ const assessSchema = z.object({
         decision: z.enum(["accept", "reject"]),
         subquestionIds: z.array(sid).max(RESEARCH_LIMITS.maxSubquestions),
         excerptIds: z.array(z.number().int().min(0)).max(RESEARCH_LIMITS.maxExcerptsPerSource),
-        reason: z.string().max(RESEARCH_LIMITS.maxReasonChars),
+        reason: z.string(),
       }),
     )
     .max(RESEARCH_LIMITS.maxEvidenceItems),
@@ -61,7 +61,7 @@ const assessSchema = z.object({
       z.object({
         subquestionId: sid,
         status: z.enum(["covered", "partial", "uncovered"]),
-        gap: z.string().max(RESEARCH_LIMITS.maxReasonChars).nullable(),
+        gap: z.string().nullable(),
         followUp: z.boolean(),
       }),
     )
@@ -70,22 +70,18 @@ const assessSchema = z.object({
 });
 
 function boundedAssessmentSchema(catalog: readonly { sourceId: string; excerpts: string[] }[]) {
-  const rows = catalog.map((source) =>
-    assessSchema.shape.items.element.extend({
-      sourceId: z.literal(source.sourceId),
-      excerptIds: z
-        .array(
-          z
-            .number()
-            .int()
-            .min(0)
-            .max(Math.max(0, source.excerpts.length - 1)),
-        )
-        .max(source.excerpts.length === 0 ? 0 : RESEARCH_LIMITS.maxExcerptsPerSource),
-    }),
-  );
+  // A flat provider schema avoids an anyOf branch for every source. The
+  // resolver below still checks each index against its own source.
+  const sources = catalog.map((source) => source.sourceId);
+  const maxIndex = Math.max(0, ...catalog.map((source) => source.excerpts.length - 1));
+  const row = assessSchema.shape.items.element.extend({
+    sourceId: sources.length ? z.enum(sources) : z.never(),
+    excerptIds: z
+      .array(z.number().int().min(0).max(maxIndex))
+      .max(RESEARCH_LIMITS.maxExcerptsPerSource),
+  });
   return assessSchema.extend({
-    items: z.array(z.union(rows.length ? rows : [z.never()])).max(RESEARCH_LIMITS.maxEvidenceItems),
+    items: z.array(row).max(RESEARCH_LIMITS.maxEvidenceItems),
   });
 }
 
@@ -159,12 +155,15 @@ function consumptionFrom(
 
 function failed(signal: AbortSignal, error?: unknown): PortResult<never> {
   const structured = NoObjectGeneratedError.isInstance(error);
+  const http = APICallError.isInstance(error) ? error.statusCode : undefined;
   // Never expose the generated text, provider body, request or error message.
   const detail = structured
     ? error.finishReason === "length"
       ? "El modelo agotó el tope de salida antes de completar el objeto."
       : `La salida estructurada no cumple el esquema${validationPaths(error.cause)}.`
-    : "El modelo no completó la llamada.";
+    : http !== undefined
+      ? `El proveedor del modelo respondió HTTP ${String(http)}.`
+      : "El modelo no completó la llamada.";
   return {
     ok: false,
     error: signal.aborted
@@ -302,8 +301,13 @@ export function createResearchModelPort(input: {
             ok: true,
             value: {
               ...result.object,
+              coverage: result.object.coverage.map((entry) => ({
+                ...entry,
+                gap: entry.gap === null ? null : boundedExplanation(entry.gap),
+              })),
               items: result.object.items.map(({ excerptIds, ...item }) => ({
                 ...item,
+                reason: boundedExplanation(item.reason),
                 excerpts: excerptIds.map(
                   (excerptIndex) =>
                     resolveExcerpt({ sourceId: item.sourceId, excerptIndex }, catalog).text,

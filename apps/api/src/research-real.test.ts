@@ -1,5 +1,6 @@
 import type { ChunkRecord } from "@thepower-rag/core";
 import { validatePlan } from "@thepower-rag/research";
+import { APICallError } from "ai";
 import { MockLanguageModelV4 } from "ai/test";
 import { describe, expect, it } from "vite-plus/test";
 import type { ResearchSettings, RetrievalSettings } from "./env";
@@ -47,6 +48,34 @@ function chunk(id: string): ChunkRecord {
 }
 
 describe("adaptadores reales simulados", () => {
+  it("muestra el HTTP del proveedor sin revelar su cuerpo ni reintentar", async () => {
+    let calls = 0;
+    const model = new MockLanguageModelV4({
+      doGenerate: async () => {
+        calls += 1;
+        throw new APICallError({
+          message: "private-provider-body",
+          url: "https://provider.example",
+          requestBodyValues: { private: "private-question" },
+          statusCode: 429,
+          responseBody: "private-provider-body",
+          isRetryable: true,
+        });
+      },
+    });
+    const result = await createResearchModelPort({ planner: model, generator: model }).plan(
+      { question: "Vectorize", audience: "program" },
+      call,
+    );
+    expect(calls).toBe(1);
+    expect(result).toMatchObject({
+      ok: false,
+      error: "provider",
+      detail: "El proveedor del modelo respondió HTTP 429.",
+      consumption: { kind: "unknown" },
+    });
+    expect(JSON.stringify(result)).not.toContain("private");
+  });
   it("identifica la salida estructurada truncada sin exponerla ni reintentar", async () => {
     let calls = 0;
     const model = new MockLanguageModelV4({
