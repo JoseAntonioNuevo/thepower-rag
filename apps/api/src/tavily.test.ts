@@ -6,6 +6,7 @@ import {
   priceSnapshot,
   RESEARCH_PRICE_VERSION_V2,
   searchProviderForSnapshot,
+  modelOutputCap,
 } from "./research-money";
 
 const context = { signal: new AbortController().signal, timeoutMs: 5000 };
@@ -57,6 +58,11 @@ describe("Tavily en la investigación durable", () => {
     expect(prices?.searchMicros).toBe(8000);
     expect(prices?.readMicros).toBe(8000);
     expect(prices?.searchProvider).toBe("tavily");
+    expect(prices && modelOutputCap(prices, 0.1, 0.5)).toBe(3200);
+    const legacyOutput = { ...prices!, modelCallMicros: 1700 };
+    expect(modelOutputCap(legacyOutput, 0.1, 0.5)).toBe(1800);
+    expect(modelOutputCap(legacyOutput, 1, 0.5)).toBeNull();
+    expect(legacyOutput.modelCallMicros).toBe(1700);
     const parsed = prices && parsePriceSnapshot(JSON.stringify(prices));
     expect(parsed && searchProviderForSnapshot(parsed)).toBe("tavily");
     const legacy = parsePriceSnapshot(

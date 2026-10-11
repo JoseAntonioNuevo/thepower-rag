@@ -154,6 +154,7 @@ function failed(signal: AbortSignal, error?: unknown): PortResult<never> {
 export function createResearchModelPort(input: {
   planner: LanguageModel;
   generator: LanguageModel;
+  maxOutputTokens?: number;
 }): ResearchModelPort {
   return {
     async plan({ question, audience }, context) {
@@ -164,7 +165,10 @@ export function createResearchModelPort(input: {
           schemaName: "research-plan",
           system: PLAN_PROMPT,
           prompt: `Grupo seleccionado: ${audience}\n\nPregunta original:\n${question}`,
-          maxOutputTokens: RESEARCH_LIMITS.maxOutputTokens.plan,
+          maxOutputTokens: Math.min(
+            RESEARCH_LIMITS.maxOutputTokens.plan,
+            input.maxOutputTokens ?? Infinity,
+          ),
           maxRetries: 0,
           abortSignal: context.signal,
           providerOptions: anthropicProviderOptions,
@@ -192,7 +196,10 @@ export function createResearchModelPort(input: {
           schemaName: "research-evidence",
           system: ASSESS_PROMPT,
           prompt: `Pregunta original:\n${question}\n\nRonda: ${String(round)}\n\nSubpreguntas:\n${JSON.stringify(subquestions)}\n\nCobertura previa:\n${JSON.stringify(priorCoverage)}\n\nDATOS (índices de extractos desde 0):\n${JSON.stringify(catalog)}`,
-          maxOutputTokens: RESEARCH_LIMITS.maxOutputTokens.assess,
+          maxOutputTokens: Math.min(
+            RESEARCH_LIMITS.maxOutputTokens.assess,
+            input.maxOutputTokens ?? Infinity,
+          ),
           maxRetries: 0,
           abortSignal: context.signal,
           providerOptions: anthropicProviderOptions,
@@ -233,7 +240,10 @@ export function createResearchModelPort(input: {
           schemaName: "research-follow-up",
           system: FOLLOW_UP_PROMPT,
           prompt: `Pregunta original:\n${question}\n\nLagunas:\n${JSON.stringify(gaps)}\n\nConsultas anteriores:\n${previousQueries.join("\n")}`,
-          maxOutputTokens: RESEARCH_LIMITS.maxOutputTokens.followUp,
+          maxOutputTokens: Math.min(
+            RESEARCH_LIMITS.maxOutputTokens.followUp,
+            input.maxOutputTokens ?? Infinity,
+          ),
           maxRetries: 0,
           abortSignal: context.signal,
           providerOptions: anthropicProviderOptions,
@@ -255,7 +265,10 @@ export function createResearchModelPort(input: {
           schemaName: "research-report",
           system: SYNTHESIS_PROMPT,
           prompt: `Pregunta original:\n${question}\n\nSubpreguntas:\n${JSON.stringify(subquestions)}\n\nCobertura:\n${JSON.stringify(coverage)}\n\nContradicciones:\n${JSON.stringify(contradictions)}\n\nDATOS: extractos admitidos, índices desde 0:\n${JSON.stringify(evidence.map((item) => ({ sourceId: item.sourceId, subquestionIds: item.subquestionIds, excerpts: item.excerpts })))}`,
-          maxOutputTokens: RESEARCH_LIMITS.maxOutputTokens.synthesis,
+          maxOutputTokens: Math.min(
+            RESEARCH_LIMITS.maxOutputTokens.synthesis,
+            input.maxOutputTokens ?? Infinity,
+          ),
           maxRetries: 0,
           abortSignal: context.signal,
           providerOptions: anthropicProviderOptions,
@@ -350,6 +363,7 @@ export interface RealResearchInput {
   corpusVersion: string;
   settings: ResearchSettings;
   priceSearchProvider: "firecrawl" | "tavily";
+  modelOutputTokenCap?: number;
   retrieval: RetrievalSettings;
   planner: LanguageModel;
   generator: LanguageModel;
@@ -376,7 +390,11 @@ export function createRealResearchPorts(input: RealResearchInput): ResearchPorts
     signal: input.signal,
     allowedDomains: input.settings.allowedDomains,
     estimatedMaxUsd: estimateResearchMaxUsd(input.settings),
-    model: createResearchModelPort({ planner: input.planner, generator: input.generator }),
+    model: createResearchModelPort({
+      planner: input.planner,
+      generator: input.generator,
+      maxOutputTokens: input.modelOutputTokenCap,
+    }),
     course: createVectorCoursePort({
       embedder: input.embedder,
       index: input.index,

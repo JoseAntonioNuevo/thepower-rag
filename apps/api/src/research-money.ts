@@ -93,6 +93,25 @@ export function tokenMicros(tokens: number, microsPerMillion: number): number {
   return ceilDiv(tokens * microsPerMillion, 1_000_000);
 }
 
+/** A resumed job keeps its stored reservation, including after output caps change. */
+export function modelOutputCap(
+  prices: PriceSnapshot,
+  inputUsdPerMillion: number,
+  outputUsdPerMillion: number,
+): number | null {
+  if (
+    !Number.isFinite(inputUsdPerMillion) ||
+    !Number.isFinite(outputUsdPerMillion) ||
+    inputUsdPerMillion <= 0 ||
+    outputUsdPerMillion <= 0
+  )
+    return null;
+  const remaining =
+    prices.modelCallMicros - tokenMicros(INPUT_TOKEN_CAP, inputUsdPerMillion * 1_000_000);
+  const tokens = Math.floor(remaining / outputUsdPerMillion);
+  return tokens > 0 ? Math.min(tokens, OUTPUT_TOKEN_CAP) : null;
+}
+
 export function sttMicros(durationMs: number, microsPerMinute: number): number | null {
   if (!Number.isSafeInteger(durationMs) || durationMs <= 0 || microsPerMinute <= 0) {
     return null;

@@ -9,8 +9,10 @@ const call = { signal: new AbortController().signal, timeoutMs: 5000 };
 
 function modelFor(value: unknown) {
   let calls = 0;
+  let outputCap: number | undefined;
   const model = new MockLanguageModelV4({
-    doGenerate: async () => {
+    doGenerate: async (options) => {
+      outputCap = options.maxOutputTokens;
       calls += 1;
       return {
         content: [{ type: "text", text: JSON.stringify(value) }],
@@ -24,8 +26,9 @@ function modelFor(value: unknown) {
     },
   });
   return {
-    port: createResearchModelPort({ planner: model, generator: model }),
+    port: createResearchModelPort({ planner: model, generator: model, maxOutputTokens: 1800 }),
     calls: () => calls,
+    outputCap: () => outputCap,
   };
 }
 
@@ -64,6 +67,7 @@ describe("selección de extractos del proveedor real", () => {
         call,
       );
       expect(mock.calls()).toBe(1);
+      expect(mock.outputCap()).toBe(1800);
       const selected = [
         "No se puede cambiar la dimensión.",
         "El índice espera 1024 y el vector contiene 768.",
@@ -99,6 +103,7 @@ describe("selección de extractos del proveedor real", () => {
         call,
       );
       expect(mock.calls()).toBe(1);
+      expect(mock.outputCap()).toBe(1800);
       const expected =
         sourceId === "web-test"
           ? {
