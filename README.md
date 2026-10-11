@@ -1,8 +1,8 @@
-# Estado publicado · 3 de octubre de 2026
+# Estado publicado · 11 de octubre de 2026
 
 Aplicación real: https://rag-thepower.josenuevo.dev. Sin RAG, RAG básico y CRAG usan los servicios remotos. [Operación y límites verificados](docs/despliegue-real.md). [Comparación de 40 respuestas](material/comparacion/resultados/tabla-resultados.md). El arranque local sigue siendo una demo offline.
 
-La configuración de producción incluye los recursos durables de S12. Su activación y la evidencia de publicación están en [despliegue de S12](docs/s12-cloud-deployment.md).
+S12 también está publicado: conversaciones aisladas, investigación asíncrona, contabilidad durable e imagen, audio y voz opcional. Su configuración y la evidencia de publicación están en [despliegue de S12](docs/s12-cloud-deployment.md).
 
 # Asistente RAG del AI Engineer
 
@@ -10,13 +10,14 @@ Proyecto de clase para The Power. El producto será un asistente en español del
 
 El temario de S1 a S20 y los dos calendarios de AI Engineer están en el corpus. El detalle de varios ejercicios sigue siendo solo un título. La cobertura generada está en `corpus/COVERAGE.md`. El despliegue real del RAG usa el perfil Vectorize `p76509a5f9743`, con 69 vectores leídos de vuelta; su estado está en [despliegue real](docs/despliegue-real.md).
 
-## Dos clases, tres etapas
+## Clases 10, 11 y 12, cuatro etapas
 
-S10, el 22 de octubre de 2026, cubre las dos primeras etapas. S11, el 27 de octubre de 2026, evoluciona la misma aplicación.
+S10, el 22 de octubre de 2026, cubre las dos primeras etapas. S11, el 27 de octubre de 2026, evoluciona la misma aplicación. S12 añade investigación y entradas multimodales sobre el mismo grafo.
 
-1. **Sin RAG.** Conversación sin documentos. En demo es un stream sin modelo. En real llama a OpenRouter.
-2. **RAG básico.** Una búsqueda, un umbral y una respuesta con fuentes, un rechazo o una petición de cohorte.
+1. **Sin RAG.** Conversación sin documentos. En demo es un stream sin modelo. En real llama a la API de Claude.
+2. **RAG básico.** La configuración publicada `RAG_CONTEXT_MODE=complete` lee todos los fragmentos autorizados del curso para el grupo. Responde con fuentes, rechazo o petición de cohorte. La variante semántica conserva la búsqueda vectorial.
 3. **CRAG.** Un grafo correctivo con tres búsquedas y dos reformulaciones como máximo, un solo plazo de 20 segundos y la ordenación validada. En demo usa guiones. En real, si falta configuración o una sesión de gasto, no llama al proveedor y no usa otra etapa.
+4. **Investigación.** Plan y fuentes externas acotados, conversaciones aisladas, Workflow asíncrono y un presupuesto propio. Admite imagen PNG/JPEG, audio WAV corto y voz opcional. La demostración local conserva los guiones; producción usa Tavily y los adaptadores reales configurados.
 
 ## Arquitectura
 
@@ -112,4 +113,4 @@ Turnstile Managed aparece solo cuando pide interacción. El servidor aplica cuot
 
 ## Desarrollo local con servicios reales
 
-`bun run preflight:real` comprueba la configuración privada y `bun run dev:real` arranca el frontend/API en este Mac con OpenRouter y los bindings del curso en Cloudflare. Abrir http://127.0.0.1:5173/. Las variables están en `apps/web/.dev.vars.local`, ignorado por Git; las llamadas consumen el presupuesto existente. `bun run dev` conserva la demo offline. [Detalle del perfil local](docs/desarrollo-local-real.md).
+`bun run preflight:real` comprueba la configuración privada y `bun run dev:real` arranca el frontend/API en este Mac con la API de Claude y los bindings del curso en Cloudflare. Abrir http://127.0.0.1:5173/. Las variables están en `apps/web/.dev.vars.local`, ignorado por Git; las llamadas consumen el presupuesto existente. `bun run dev` conserva la demo offline. [Detalle del perfil local](docs/desarrollo-local-real.md).
