@@ -67,6 +67,26 @@ const assessSchema = z.object({
   contradictions: z.array(z.string().max(RESEARCH_LIMITS.maxReasonChars)).max(3),
 });
 
+function boundedAssessmentSchema(catalog: readonly { sourceId: string; excerpts: string[] }[]) {
+  const rows = catalog.map((source) =>
+    assessSchema.shape.items.element.extend({
+      sourceId: z.literal(source.sourceId),
+      excerptIds: z
+        .array(
+          z
+            .number()
+            .int()
+            .min(0)
+            .max(Math.max(0, source.excerpts.length - 1)),
+        )
+        .max(source.excerpts.length === 0 ? 0 : RESEARCH_LIMITS.maxExcerptsPerSource),
+    }),
+  );
+  return assessSchema.extend({
+    items: z.array(z.union(rows.length ? rows : [z.never()])).max(RESEARCH_LIMITS.maxEvidenceItems),
+  });
+}
+
 const followUpSchema = z.object({
   queries: z
     .array(z.object({ subquestionId: sid, query: z.string().max(RESEARCH_LIMITS.maxQueryChars) }))
@@ -145,7 +165,11 @@ function failed(signal: AbortSignal, error?: unknown): PortResult<never> {
     : "El modelo no completó la llamada.";
   return {
     ok: false,
-    error: signal.aborted ? "aborted" : "provider",
+    error: signal.aborted
+      ? "aborted"
+      : structured && error.finishReason !== "length"
+        ? "invalid"
+        : "provider",
     detail: signal.aborted ? "La llamada se canceló." : detail,
     consumption: structured ? consumptionFrom(error.usage) : { kind: "unknown" },
   };
@@ -192,10 +216,10 @@ export function createResearchModelPort(input: {
       try {
         const result = await generateObject({
           model: input.planner,
-          schema: assessSchema,
+          schema: boundedAssessmentSchema(catalog),
           schemaName: "research-evidence",
           system: ASSESS_PROMPT,
-          prompt: `Pregunta original:\n${question}\n\nRonda: ${String(round)}\n\nSubpreguntas:\n${JSON.stringify(subquestions)}\n\nCobertura previa:\n${JSON.stringify(priorCoverage)}\n\nDATOS (índices de extractos desde 0):\n${JSON.stringify(catalog)}`,
+          prompt: `Pregunta original:\n${question}\n\nRonda: ${String(round)}\n\nSubpreguntas:\n${JSON.stringify(subquestions)}\n\nCobertura previa:\n${JSON.stringify(priorCoverage)}\n\nDATOS (usa únicamente los números excerptIndex mostrados):\n${JSON.stringify(catalog.map((source) => ({ ...source, excerpts: source.excerpts.map((text, excerptIndex) => ({ excerptIndex, text })) })))}`,
           maxOutputTokens: Math.min(
             RESEARCH_LIMITS.maxOutputTokens.assess,
             input.maxOutputTokens ?? Infinity,
@@ -264,7 +288,7 @@ export function createResearchModelPort(input: {
           schema: synthesisSchema,
           schemaName: "research-report",
           system: SYNTHESIS_PROMPT,
-          prompt: `Pregunta original:\n${question}\n\nSubpreguntas:\n${JSON.stringify(subquestions)}\n\nCobertura:\n${JSON.stringify(coverage)}\n\nContradicciones:\n${JSON.stringify(contradictions)}\n\nDATOS: extractos admitidos, índices desde 0:\n${JSON.stringify(evidence.map((item) => ({ sourceId: item.sourceId, subquestionIds: item.subquestionIds, excerpts: item.excerpts })))}`,
+          prompt: `Pregunta original:\n${question}\n\nSubpreguntas:\n${JSON.stringify(subquestions)}\n\nCobertura:\n${JSON.stringify(coverage)}\n\nContradicciones:\n${JSON.stringify(contradictions)}\n\nDATOS: extractos admitidos con excerptIndex explícito:\n${JSON.stringify(evidence.map((item) => ({ sourceId: item.sourceId, subquestionIds: item.subquestionIds, excerpts: item.excerpts.map((text, excerptIndex) => ({ excerptIndex, text })) })))}`,
           maxOutputTokens: Math.min(
             RESEARCH_LIMITS.maxOutputTokens.synthesis,
             input.maxOutputTokens ?? Infinity,
