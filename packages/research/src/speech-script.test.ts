@@ -20,6 +20,7 @@ describe("guion hablado", () => {
     expect(text).not.toContain("cite:");
     expect(text).not.toContain(invented);
     expect(text).not.toMatch(/^que también/);
+    expect(text).not.toContain(".;.");
     const refused = spokenScript({
       outcome: "refused",
       reportText: `**Sin informe.** Sin afirmaciones.\n\n**Puntos sin resolver**\n- ${invented} [cite:web]`,

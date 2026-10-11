@@ -79,11 +79,13 @@ export function spokenScript(input: {
     if (sentences.length >= MEDIA_LIMITS.maxSpeechSentences) {
       break;
     }
-    const next = [...sentences, clause.endsWith(".") ? clause : `${clause}.`].join(" ");
+    const clean = clause.replace(/;+$/, "").trimEnd();
+    const sentence = /[.!?]$/.test(clean) ? clean : `${clean}.`;
+    const next = [...sentences, sentence].join(" ");
     if (next.length > MEDIA_LIMITS.maxSpeechChars) {
       break;
     }
-    sentences.push(clause.endsWith(".") ? clause : `${clause}.`);
+    sentences.push(sentence);
   }
   const hasFact = sentences.some((sentence) => clauseVerdict(sentence, input.excerpts) === "ok");
   if (!hasFact && sentences.length < MEDIA_LIMITS.maxSpeechSentences) {
