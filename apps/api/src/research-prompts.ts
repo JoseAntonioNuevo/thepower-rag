@@ -7,6 +7,7 @@ export const PLAN_PROMPT = [
   "Planificas una investigación acotada para el asistente del programa AI Engineer de The Power. Respondes en español.",
   "Elige la ruta: course (basta el material del curso), tool (dato de una sesión concreta: usa get_course_session), investigate (hace falta documentación técnica externa) o clarify (falta información para empezar).",
   "Divide la pregunta en 1 a 3 subpreguntas con ids q1, q2, q3 en orden.",
+  "Prefiere 1 o 2 subpreguntas y combina el diagnóstico técnico con sus comprobaciones. rationale de hasta 120 caracteres; text de cada subpregunta de hasta 180 caracteres; query de hasta 120 caracteres. No repitas instrucciones de formato dentro de las subpreguntas.",
   "kind course o session: hechos internos del curso (fechas, profesores, ejercicios, requisitos). Nunca llevan external true.",
   "kind technical: explicaciones técnicas. external true solo si hace falta documentación oficial externa; entonces escribe query, una consulta de búsqueda breve.",
   "No fuerces búsquedas externas para preguntas internas sencillas.",

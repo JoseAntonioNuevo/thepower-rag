@@ -1,4 +1,5 @@
 import type { ChunkRecord } from "@thepower-rag/core";
+import { validatePlan } from "@thepower-rag/research";
 import { MockLanguageModelV4 } from "ai/test";
 import { describe, expect, it } from "vite-plus/test";
 import type { ResearchSettings, RetrievalSettings } from "./env";
@@ -170,7 +171,7 @@ describe("adaptadores reales simulados", () => {
     let calls = 0;
     const plan = {
       route: "course",
-      rationale: "Basta el material del curso.",
+      rationale: "Basta el material del curso. ".repeat(20),
       clarification: null,
       subquestions: [
         {
@@ -205,7 +206,12 @@ describe("adaptadores reales simulados", () => {
     );
     expect(calls).toBe(1);
     expect(result.ok).toBe(true);
-    expect(result.ok ? result.value : null).toMatchObject({ route: "course" });
+    expect(result.ok ? result.value : null).toMatchObject({
+      route: "course",
+      rationale: plan.rationale.trim().slice(0, 240).trimEnd(),
+      subquestions: plan.subquestions,
+    });
+    expect(result.ok && validatePlan(result.value, "program").ok).toBe(true);
     expect(result.consumption).toMatchObject({
       kind: "estimated",
       usd: 0.0000044,

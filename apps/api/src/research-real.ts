@@ -24,7 +24,9 @@ const sid = z.enum(["q1", "q2", "q3"]);
 
 const planSchema = z.object({
   route: z.enum(["course", "tool", "investigate", "clarify"]),
-  rationale: z.string().max(RESEARCH_LIMITS.maxReasonChars),
+  // Explanatory metadata is bounded after generation; factual questions and
+  // provider/tool arguments retain their strict schema constraints.
+  rationale: z.string(),
   clarification: z.string().max(RESEARCH_LIMITS.maxReasonChars).nullable(),
   subquestions: z
     .array(
@@ -161,7 +163,7 @@ function failed(signal: AbortSignal, error?: unknown): PortResult<never> {
   const detail = structured
     ? error.finishReason === "length"
       ? "El modelo agotó el tope de salida antes de completar el objeto."
-      : "La salida estructurada del modelo no cumple el esquema."
+      : `La salida estructurada no cumple el esquema${validationPaths(error.cause)}.`
     : "El modelo no completó la llamada.";
   return {
     ok: false,
@@ -173,6 +175,72 @@ function failed(signal: AbortSignal, error?: unknown): PortResult<never> {
     detail: signal.aborted ? "La llamada se canceló." : detail,
     consumption: structured ? consumptionFrom(error.usage) : { kind: "unknown" },
   };
+}
+
+function validationPaths(error: unknown): string {
+  let current = error;
+  const allowed = new Set([
+    "rationale",
+    "clarification",
+    "subquestions",
+    "id",
+    "text",
+    "kind",
+    "external",
+    "query",
+    "tool",
+    "sessionId",
+    "audience",
+    "route",
+    "items",
+    "sourceId",
+    "decision",
+    "excerptIds",
+    "reason",
+    "coverage",
+    "subquestionId",
+    "status",
+    "gap",
+    "followUp",
+    "contradictions",
+    "answerRefs",
+    "findings",
+    "reference",
+    "checks",
+    "unresolved",
+    "excerptIndex",
+  ]);
+  for (let depth = 0; depth < 4; depth += 1) {
+    if (typeof current !== "object" || current === null) break;
+    if ("issues" in current && Array.isArray(current.issues)) {
+      const paths = current.issues.slice(0, 3).flatMap((issue: unknown) => {
+        if (
+          typeof issue !== "object" ||
+          issue === null ||
+          !("path" in issue) ||
+          !Array.isArray(issue.path)
+        )
+          return [];
+        const path = issue.path;
+        if (
+          !path.every(
+            (part: unknown) =>
+              (typeof part === "number" && Number.isSafeInteger(part)) ||
+              (typeof part === "string" && allowed.has(part)),
+          )
+        )
+          return [];
+        return [path.join(".")];
+      });
+      return paths.length ? ` (${paths.join(", ")})` : "";
+    }
+    current = "cause" in current ? current.cause : null;
+  }
+  return "";
+}
+
+function boundedExplanation(text: string): string {
+  return text.replace(/\s+/g, " ").trim().slice(0, RESEARCH_LIMITS.maxReasonChars).trimEnd();
 }
 
 export function createResearchModelPort(input: {
@@ -199,7 +267,7 @@ export function createResearchModelPort(input: {
         });
         return {
           ok: true,
-          value: result.object,
+          value: { ...result.object, rationale: boundedExplanation(result.object.rationale) },
           consumption: consumptionFrom(result.usage),
         };
       } catch (error) {
