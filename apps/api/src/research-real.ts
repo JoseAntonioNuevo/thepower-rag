@@ -14,13 +14,8 @@ import { createFirecrawlReader, createFirecrawlSearch } from "./firecrawl";
 import { createTavilyReader, createTavilySearch } from "./tavily";
 import { anthropicProviderOptions } from "./model";
 import { tokenEstimateConsumption } from "./provider-cost";
-import {
-  ASSESS_PROMPT,
-  FOLLOW_UP_PROMPT,
-  PLAN_PROMPT,
-  SYNTHESIS_PROMPT,
-  dataBlock,
-} from "./research-prompts";
+import { excerptChoices, resolveExcerpt } from "./research-excerpts";
+import { ASSESS_PROMPT, FOLLOW_UP_PROMPT, PLAN_PROMPT, SYNTHESIS_PROMPT } from "./research-prompts";
 import { createCourseSessionTool } from "./research-tool";
 import { queryVectorize, readChunk, type SqlDatabase, type VectorIndex } from "./stores";
 import { embedWithWorkersAi, type EmbeddingRunner } from "./vectors";
@@ -54,9 +49,7 @@ const assessSchema = z.object({
         sourceId: z.string().max(128),
         decision: z.enum(["accept", "reject"]),
         subquestionIds: z.array(sid).max(RESEARCH_LIMITS.maxSubquestions),
-        excerpts: z
-          .array(z.string().max(RESEARCH_LIMITS.maxExcerptChars))
-          .max(RESEARCH_LIMITS.maxExcerptsPerSource),
+        excerptIds: z.array(z.number().int().min(0)).max(RESEARCH_LIMITS.maxExcerptsPerSource),
         reason: z.string().max(RESEARCH_LIMITS.maxReasonChars),
       }),
     )
@@ -80,22 +73,22 @@ const followUpSchema = z.object({
     .max(RESEARCH_LIMITS.maxSubquestions),
 });
 
-const ids = z.array(z.string().max(128)).max(RESEARCH_LIMITS.maxEvidenceItems);
+const excerptReference = z.object({
+  sourceId: z.string().max(128),
+  excerptIndex: z.number().int().min(0),
+});
 
 const synthesisSchema = z.object({
-  answer: z.object({ text: z.string().max(RESEARCH_LIMITS.maxAnswerChars), sourceIds: ids }),
+  answerRefs: z.array(excerptReference).max(2),
   findings: z
     .array(
       z.object({
         subquestionId: sid,
-        text: z.string().max(RESEARCH_LIMITS.maxClaimChars),
-        sourceIds: ids,
+        reference: excerptReference,
       }),
     )
     .max(RESEARCH_LIMITS.maxFindings),
-  checks: z
-    .array(z.object({ text: z.string().max(RESEARCH_LIMITS.maxClaimChars), sourceIds: ids }))
-    .max(RESEARCH_LIMITS.maxChecks),
+  checks: z.array(excerptReference).max(RESEARCH_LIMITS.maxChecks),
   unresolved: z
     .array(z.string().max(RESEARCH_LIMITS.maxReasonChars))
     .max(RESEARCH_LIMITS.maxUnresolved),
@@ -186,23 +179,48 @@ export function createResearchModelPort(input: {
       }
     },
     async assess({ question, subquestions, evidence, priorCoverage, round }, context) {
+      const catalog = evidence.map((item) => ({
+        sourceId: item.sourceId,
+        kind: item.kind,
+        title: item.title,
+        excerpts: excerptChoices(item.text),
+      }));
       try {
         const result = await generateObject({
           model: input.planner,
           schema: assessSchema,
           schemaName: "research-evidence",
           system: ASSESS_PROMPT,
-          prompt: `Pregunta original:\n${question}\n\nRonda: ${String(round)}\n\nSubpreguntas:\n${JSON.stringify(subquestions)}\n\nCobertura previa:\n${JSON.stringify(priorCoverage)}\n\nDATOS:\n${dataBlock(evidence)}`,
+          prompt: `Pregunta original:\n${question}\n\nRonda: ${String(round)}\n\nSubpreguntas:\n${JSON.stringify(subquestions)}\n\nCobertura previa:\n${JSON.stringify(priorCoverage)}\n\nDATOS (índices de extractos desde 0):\n${JSON.stringify(catalog)}`,
           maxOutputTokens: RESEARCH_LIMITS.maxOutputTokens.assess,
           maxRetries: 0,
           abortSignal: context.signal,
           providerOptions: anthropicProviderOptions,
         });
-        return {
-          ok: true,
-          value: result.object,
-          consumption: consumptionFrom(result.usage),
-        };
+        const consumption = consumptionFrom(result.usage);
+        try {
+          return {
+            ok: true,
+            value: {
+              ...result.object,
+              items: result.object.items.map(({ excerptIds, ...item }) => ({
+                ...item,
+                excerpts: excerptIds.map(
+                  (excerptIndex) =>
+                    resolveExcerpt({ sourceId: item.sourceId, excerptIndex }, catalog).text,
+                ),
+              })),
+            },
+            consumption,
+          };
+        } catch {
+          return {
+            ok: false,
+            error: "invalid",
+            detail: "La evaluación seleccionó un extracto inexistente.",
+            consumption,
+          };
+        }
       } catch (error) {
         return failed(context.signal, error);
       }
@@ -236,17 +254,39 @@ export function createResearchModelPort(input: {
           schema: synthesisSchema,
           schemaName: "research-report",
           system: SYNTHESIS_PROMPT,
-          prompt: `Pregunta original:\n${question}\n\nSubpreguntas:\n${JSON.stringify(subquestions)}\n\nCobertura:\n${JSON.stringify(coverage)}\n\nContradicciones:\n${JSON.stringify(contradictions)}\n\nDATOS:\n${dataBlock(evidence)}\n\nExtractos admitidos:\n${JSON.stringify(evidence.map((item) => ({ sourceId: item.sourceId, subquestionIds: item.subquestionIds, excerpts: item.excerpts })))}`,
+          prompt: `Pregunta original:\n${question}\n\nSubpreguntas:\n${JSON.stringify(subquestions)}\n\nCobertura:\n${JSON.stringify(coverage)}\n\nContradicciones:\n${JSON.stringify(contradictions)}\n\nDATOS: extractos admitidos, índices desde 0:\n${JSON.stringify(evidence.map((item) => ({ sourceId: item.sourceId, subquestionIds: item.subquestionIds, excerpts: item.excerpts })))}`,
           maxOutputTokens: RESEARCH_LIMITS.maxOutputTokens.synthesis,
           maxRetries: 0,
           abortSignal: context.signal,
           providerOptions: anthropicProviderOptions,
         });
-        return {
-          ok: true,
-          value: result.object,
-          consumption: consumptionFrom(result.usage),
-        };
+        const consumption = consumptionFrom(result.usage);
+        try {
+          const answers = result.object.answerRefs.map((ref) => resolveExcerpt(ref, evidence));
+          return {
+            ok: true,
+            value: {
+              answer: {
+                text: answers.map((item) => item.text).join(";\n"),
+                sourceIds: [...new Set(answers.flatMap((item) => item.sourceIds))],
+              },
+              findings: result.object.findings.map((item) => ({
+                subquestionId: item.subquestionId,
+                ...resolveExcerpt(item.reference, evidence),
+              })),
+              checks: result.object.checks.map((ref) => resolveExcerpt(ref, evidence)),
+              unresolved: result.object.unresolved,
+            },
+            consumption,
+          };
+        } catch {
+          return {
+            ok: false,
+            error: "invalid",
+            detail: "El informe seleccionó un extracto inexistente.",
+            consumption,
+          };
+        }
       } catch (error) {
         return failed(context.signal, error);
       }
