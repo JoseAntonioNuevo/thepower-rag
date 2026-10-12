@@ -1,9 +1,14 @@
+// GUÍA DE LECTURA · apps/api/src/research-fixture.ts
+// Puertos de prueba de la investigación: un guion por escenario decide plan, búsquedas, páginas leídas,
+// evaluación e informe. Sirven para ver el flujo del grafo sin red ni modelos; no miden calidad.
+// Dominios por defecto, escenarios de demo y tipos.
 import {
   DEFAULT_RESEARCH_DOMAINS,
   DEMO_RESEARCH_SCENARIOS,
   type Audience,
   type ResearchScenarioId,
 } from "@thepower-rag/contracts";
+// Núcleo RAG: audiencias, coseno, umbral y embedding de prueba.
 import {
   allowsAudience,
   cosine,
@@ -11,6 +16,7 @@ import {
   fixtureEmbed,
   normalizeQuery,
 } from "@thepower-rag/core";
+// Utilidades y tipos del paquete de investigación.
 import {
   flatten,
   webSourceId,
@@ -21,27 +27,42 @@ import {
   type SearchHit,
   type ShownEvidence,
 } from "@thepower-rag/research";
+// Fragmentos de ejemplo del corpus.
 import { fixtureChunks } from "./fixture";
+// Páginas web simuladas.
 import { FIXTURE_PAGES, fixturePageByUrl, type FixturePage } from "./research-fixture-data";
+// Herramienta de sesiones del curso.
 import { createCourseSessionTool } from "./research-tool";
+// Hash SHA-256.
 import { sha256Hex } from "./snapshot-hash";
 
 /** Hora fija de las lecturas de prueba: la demo es determinista. */
 export const FIXTURE_RETRIEVED_AT = "2026-10-10T00:00:00.000Z";
 
+// Subpregunta 1 del escenario principal.
 export const MAIN_Q1 =
   "¿Qué significa «Dimension mismatch: expected 1024, got 768» en un índice vectorial?";
+// Subpregunta 2.
 export const MAIN_Q2 =
   "¿Cómo se comprueban las dimensiones del índice y las del modelo de embeddings?";
+// Subpregunta 3 (curso).
 export const MAIN_Q3 = "¿Qué se vio en el curso sobre embeddings y sus dimensiones?";
+// Consulta web de la subpregunta 1.
 export const MAIN_Q1_QUERY = "vector index dimension mismatch expected 1024 got 768 embeddings";
+// Consulta web de la subpregunta 2.
 export const MAIN_Q2_QUERY = "check vectorize index dimensions wrangler embedding vector length";
+// Consulta de seguimiento.
 export const FOLLOW_Q2_QUERY = "wrangler vectorize get index dimensions";
+// Consulta que no avanza.
 export const STALL_Q2_QUERY = "vectorize index dimensions command";
+// Dato interno que no consta.
 const FACT_Q1 = "¿Qué nota mínima exige el profesor para aprobar el ejercicio de S12?";
+// Pregunta técnica del mismo escenario.
 const FACT_Q2 = "¿Para qué sirve un checkpointer en LangGraph?";
+// Su consulta web.
 const FACT_Q2_QUERY = "LangGraph checkpointer persistence thread_id";
 
+// Escenarios que usan el plan principal.
 const MAIN_SCENARIOS: readonly ResearchScenarioId[] = [
   "sufficient-first-round",
   "partial-follow-up",
@@ -51,55 +72,82 @@ const MAIN_SCENARIOS: readonly ResearchScenarioId[] = [
   "invalid-citation",
 ];
 
+// Escenario indicado o el de una pregunta de demo idéntica.
 export function resolveResearchScenario(
   explicit: ResearchScenarioId | undefined,
   question: string,
 ): ResearchScenarioId | null {
+  // Indicado: se usa.
   if (explicit !== undefined) {
+    // Ese.
     return explicit;
   }
+  // Pregunta sin espacios.
   const trimmed = question.trim();
+  // Escenario cuya pregunta coincide.
   const match = DEMO_RESEARCH_SCENARIOS.find((item) => item.question === trimmed);
+  // Id o null.
   return match?.id ?? null;
 }
 
+// Resultado correcto sin consumo.
 const ok = <T>(value: T): PortResult<T> => ({ ok: true, value, consumption: { kind: "none" } });
 
+// Resultados de búsqueda a partir de páginas simuladas.
 function hits(...pages: FixturePage[]): PortResult<SearchHit[]> {
+  // URL, título y extracto.
   return ok(pages.map((page) => ({ url: page.url, title: page.title, snippet: page.snippet })));
 }
 
+// Alias corto de las páginas.
 const P = FIXTURE_PAGES;
+// Id de fuente web de una página.
 const webId = (page: FixturePage) => webSourceId(page.finalUrl ?? page.url);
 
 /** Busca la frase que contiene la palabra clave: siempre es un extracto literal. */
 export function pickExcerpt(text: string, keyword: string): string {
+  // Texto en una línea.
   const flat = flatten(text);
+  // Posición de la palabra clave.
   const index = flat.indexOf(keyword);
+  // No aparece.
   if (index === -1) {
+    // Primeros 200 caracteres.
     return flat.slice(0, 200).trim();
   }
+  // Inicio de la frase.
   const start = Math.max(0, flat.lastIndexOf(". ", index) + 2);
+  // Fin de la frase.
   const end = flat.indexOf(".", index + keyword.length);
+  // Frase recortada.
   return flat
     .slice(start === 1 ? 0 : start, end === -1 ? undefined : end + 1)
     .slice(0, 300)
     .trim();
 }
 
+// Regla del guion para una fuente.
 interface Rule {
+  // Subpreguntas que cubre.
   subs: string[];
+  // Palabra clave del extracto.
   keyword: string;
+  // Motivo.
   reason: string;
 }
 
+// Tabla de reglas: aceptar con regla o rechazar con motivo.
 type RuleTable = Record<string, Rule | { reject: string }>;
 
+// Id del fragmento sin la versión.
 function courseKey(sourceId: string): string {
+  // Quita el prefijo de versión.
   return sourceId.replace(/^[^:]+:/, "");
 }
 
+// Reglas del escenario y la ronda.
 function rulesFor(scenario: ResearchScenarioId | null, round: number): RuleTable {
+  // Reglas del escenario principal.
   const main: RuleTable = {
     [webId(P.vectorizeCreate)]: {
       subs: ["q1"],
@@ -131,7 +179,9 @@ function rulesFor(scenario: ResearchScenarioId | null, round: number): RuleTable
     [webId(P.injected)]: { reject: "Contiene instrucciones embebidas y no aporta a la pregunta." },
     "s16-cloud-aws:00": { reject: "Despliegue en AWS; no trata embeddings." },
   };
+  // Dato interno que falta.
   if (scenario === "internal-fact-missing") {
+    // Reglas propias.
     return {
       "s12-deep-research:01": {
         reject: "Describe el ejercicio de S12, pero no menciona una nota mínima.",
@@ -149,7 +199,9 @@ function rulesFor(scenario: ResearchScenarioId | null, round: number): RuleTable
       },
     };
   }
+  // Seguimiento parcial en la ronda 1.
   if (scenario === "partial-follow-up" && round === 1) {
+    // bgeM3 solo cubre en parte.
     return {
       ...main,
       [webId(P.bgeM3)]: {
@@ -159,23 +211,35 @@ function rulesFor(scenario: ResearchScenarioId | null, round: number): RuleTable
       },
     };
   }
+  // Reglas principales.
   return main;
 }
 
+// Cobertura guionizada de una subpregunta.
 type Cover = { status: "covered" | "partial" | "uncovered"; gap: string | null; followUp: boolean };
 
+// Cobertura guionizada de cada subpregunta según escenario y ronda; null si no hay guion.
 function coverageFor(
   scenario: ResearchScenarioId | null,
   round: number,
 ): Record<string, Cover> | null {
+  // Cubierta.
   const covered: Cover = { status: "covered", gap: null, followUp: false };
+  // Todas cubiertas.
   const all = { q1: covered, q2: covered, q3: covered };
+  // Según el escenario.
   switch (scenario) {
+    // Primera ronda suficiente.
     case "sufficient-first-round":
+    // Irrelevantes descartadas.
     case "irrelevant-discarded":
+    // Cita inventada.
     case "invalid-citation":
+      // Todo cubierto.
       return all;
+    // Seguimiento parcial.
     case "partial-follow-up":
+      // q2 parcial en la ronda 1.
       return round === 1
         ? {
             ...all,
@@ -186,7 +250,9 @@ function coverageFor(
             },
           }
         : all;
+    // Fallo del proveedor.
     case "provider-failure":
+      // q1 sin cubrir.
       return {
         ...all,
         q1: {
@@ -195,7 +261,9 @@ function coverageFor(
           followUp: true,
         },
       };
+    // Sin progreso.
     case "no-progress-stop":
+      // Dos parciales.
       return {
         q1: {
           status: "partial",
@@ -209,7 +277,9 @@ function coverageFor(
         },
         q3: covered,
       };
+    // Dato interno que falta.
     case "internal-fact-missing":
+      // q1 sin cubrir.
       return {
         q1: {
           status: "uncovered",
@@ -218,34 +288,47 @@ function coverageFor(
         },
         q2: covered,
       };
+    // Herramienta del curso.
     case "course-tool":
+      // q1 cubierta.
       return { q1: covered };
+    // Otro: sin guion.
     default:
+      // null.
       return null;
   }
 }
 
 /** El aula de la captura y el audio. No se aplica a un archivo arbitrario. */
 export function classroomFixtureScenario(question: string): ResearchScenarioId | null {
+  // Pregunta con el error de la imagen y la transcripción del audio.
   if (
     /expected 1024,\s*got 768/i.test(question) &&
     /he cambiado el modelo de embeddings/i.test(question)
   ) {
+    // Escenario principal.
     return "sufficient-first-round";
   }
+  // Otro texto: sin escenario.
   return null;
 }
 
+// Plan guionizado según escenario y pregunta.
 function planFor(
   scenario: ResearchScenarioId | null,
   question: string,
   audience: Audience,
 ): unknown {
+  // Sin escenario.
   if (scenario === null) {
+    // ¿Es la pregunta del aula?
     const classroom = classroomFixtureScenario(question);
+    // Usa su escenario.
     if (classroom !== null) return planFor(classroom, question, audience);
   }
+  // Escenario principal.
   if (scenario !== null && MAIN_SCENARIOS.includes(scenario)) {
+    // Tres subpreguntas.
     return {
       route: "investigate",
       rationale:
@@ -258,7 +341,9 @@ function planFor(
       tool: null,
     };
   }
+  // Dato interno que falta.
   if (scenario === "internal-fact-missing") {
+    // Dos subpreguntas.
     return {
       route: "investigate",
       rationale: "Un dato interno del curso y una explicación técnica separada.",
@@ -269,9 +354,13 @@ function planFor(
       tool: null,
     };
   }
+  // ¿Menciona una sesión?
   const session = /\bs(?:esi[oó]n)?\s*(\d{1,2})\b/i.exec(question);
+  // Escenario de herramienta o sesión con grupo.
   if (scenario === "course-tool" || (session !== null && audience !== "program")) {
+    // Número de sesión.
     const number = scenario === "course-tool" ? 12 : Number(session?.[1] ?? 0);
+    // Ruta tool.
     return {
       route: "tool",
       rationale: "Dato interno de una sesión: basta la herramienta de solo lectura.",
@@ -286,6 +375,7 @@ function planFor(
       tool: { sessionId: `S${String(number)}`, audience },
     };
   }
+  // Pregunta libre: solo curso.
   return {
     route: "course",
     rationale: "Pregunta libre: se responde con el material del curso, sin búsquedas externas.",
@@ -294,6 +384,7 @@ function planFor(
   };
 }
 
+// Evaluación guionizada.
 function assessFor(
   scenario: ResearchScenarioId | null,
   round: number,
@@ -301,11 +392,17 @@ function assessFor(
   scores: ReadonlyMap<string, number | null>,
   subquestions: readonly { id: string }[],
 ): unknown {
+  // Reglas.
   const table = rulesFor(scenario, round);
+  // Sin guion: se usa el umbral lexical.
   const free = coverageFor(scenario, round) === null;
+  // Decisión por fuente.
   const items = evidence.map((shown) => {
+    // Regla de la fuente.
     const rule = table[shown.sourceId] ?? table[courseKey(shown.sourceId)];
+    // Herramienta: se acepta.
     if (shown.kind === "tool") {
+      // Aceptada.
       return {
         sourceId: shown.sourceId,
         decision: "accept",
@@ -314,8 +411,11 @@ function assessFor(
         reason: "Resultado de la herramienta con fuentes del curso.",
       };
     }
+    // Sin guion.
     if (free) {
+      // Puntuación.
       const score = scores.get(shown.sourceId) ?? null;
+      // Acepta si supera el umbral.
       return score !== null && score >= FIXTURE_MIN_SCORE
         ? {
             sourceId: shown.sourceId,
@@ -332,7 +432,9 @@ function assessFor(
             reason: "No supera el umbral lexical de prueba.",
           };
     }
+    // Sin regla o con rechazo.
     if (rule === undefined || "reject" in rule) {
+      // Rechazada.
       return {
         sourceId: shown.sourceId,
         decision: "reject",
@@ -341,6 +443,7 @@ function assessFor(
         reason: rule === undefined ? "Guion: no aporta a ninguna subpregunta." : rule.reject,
       };
     }
+    // Aceptada con su extracto.
     return {
       sourceId: shown.sourceId,
       decision: "accept",
@@ -349,48 +452,66 @@ function assessFor(
       reason: rule.reason,
     };
   });
+  // Cobertura guionizada.
   const scripted = coverageFor(scenario, round);
+  // ¿Se aceptó algo?
   const anyAccepted = items.some((item) => item.decision === "accept");
+  // Cobertura por subpregunta.
   const coverage = subquestions.map((sub) => {
+    // Guion o según lo aceptado.
     const cover = scripted?.[sub.id] ?? {
       status: anyAccepted ? "covered" : "uncovered",
       gap: anyAccepted ? null : "Ningún fragmento supera el umbral lexical de prueba.",
       followUp: false,
     };
+    // Entrada de cobertura.
     return { subquestionId: sub.id, ...cover };
   });
+  // Evaluación.
   return { items, coverage, contradictions: [] };
 }
 
+// Evidencia con un id concreto.
 function claimFrom(
   evidence: readonly (ShownEvidence & { subquestionIds: string[]; excerpts: string[] })[],
   sourceId: string,
 ) {
+  // Primera coincidencia.
   return evidence.find((item) => item.sourceId === sourceId);
 }
 
+// Informe guionizado.
 function synthesizeFor(
   scenario: ResearchScenarioId | null,
   evidence: readonly (ShownEvidence & { subquestionIds: string[]; excerpts: string[] })[],
   subquestions: readonly { id: string }[],
 ): unknown {
+  // Hallazgos por subpregunta.
   const findings = subquestions.flatMap((sub) => {
+    // Hasta 2 fuentes (1 si hay cita inventada).
     const support = evidence
       .filter((item) => item.subquestionIds.includes(sub.id))
       .slice(0, scenario === "invalid-citation" ? 1 : 2);
+    // Extracto con su fuente.
     return support.map((item) => ({
       subquestionId: sub.id,
       text: item.excerpts[0] ?? item.text.slice(0, 200),
       sourceIds: [item.sourceId],
     }));
   });
+  // Fuente vectorizeCreate.
   const create = claimFrom(evidence, webId(P.vectorizeCreate));
+  // Fuente vectorizeGet.
   const get = claimFrom(evidence, webId(P.vectorizeGet));
+  // Fuente de LangChain.
   const lc = claimFrom(evidence, webId(P.langchainEmbeddings));
+  // Comprobaciones con esas fuentes.
   const checks = [get, create, lc].flatMap((item) =>
     item?.excerpts[0] === undefined ? [] : [{ text: item.excerpts[0], sourceIds: [item.sourceId] }],
   );
+  // Primera evidencia.
   const first = evidence[0];
+  // Respuesta.
   const answer =
     create?.excerpts[0] !== undefined
       ? { text: create.excerpts[0], sourceIds: [create.sourceId] }
@@ -398,7 +519,9 @@ function synthesizeFor(
           text: first?.excerpts[0] ?? "Sin evidencia.",
           sourceIds: first === undefined ? [] : [first.sourceId],
         };
+  // Cita inventada.
   if (scenario === "invalid-citation") {
+    // Añade afirmaciones falsas que la verificación debe retirar.
     findings.push(
       {
         subquestionId: "q1",
@@ -417,17 +540,23 @@ function synthesizeFor(
       },
     );
   }
+  // Informe.
   return { answer, findings: findings.slice(0, 6), checks, unresolved: [] };
 }
 
+// Seguimiento guionizado.
 function followUpFor(
   scenario: ResearchScenarioId | null,
   gaps: readonly { subquestionId: string; text: string }[],
 ): unknown {
+  // Seguimiento parcial.
   if (scenario === "partial-follow-up") {
+    // Una consulta.
     return { queries: [{ subquestionId: "q2", query: FOLLOW_Q2_QUERY }] };
   }
+  // Sin progreso.
   if (scenario === "no-progress-stop") {
+    // Consultas repetidas o que no avanzan.
     return {
       queries: [
         { subquestionId: "q1", query: `  ${MAIN_Q1_QUERY.toUpperCase()}   ` },
@@ -435,6 +564,7 @@ function followUpFor(
       ],
     };
   }
+  // Otro: una consulta por laguna.
   return {
     queries: gaps.map((gap) => ({
       subquestionId: gap.subquestionId,
@@ -443,26 +573,47 @@ function followUpFor(
   };
 }
 
+// Búsqueda guionizada.
 function searchFor(scenario: ResearchScenarioId | null, query: string): PortResult<SearchHit[]> {
+  // Consulta normalizada.
   const q = normalizeQuery(query);
+  // ¿Coincide con una consulta?
   const is = (value: string) => q === normalizeQuery(value);
+  // Según el escenario.
   switch (scenario) {
+    // Primera ronda suficiente.
     case "sufficient-first-round":
+    // Cita inventada.
     case "invalid-citation":
+      // q1.
       if (is(MAIN_Q1_QUERY)) return hits(P.vectorizeCreate, P.langchainEmbeddings);
+      // q2.
       if (is(MAIN_Q2_QUERY)) return hits(P.vectorizeGet, P.bgeM3);
+      // Fin.
       break;
+    // Seguimiento parcial.
     case "partial-follow-up":
+      // q1.
       if (is(MAIN_Q1_QUERY)) return hits(P.vectorizeCreate);
+      // q2 incompleto.
       if (is(MAIN_Q2_QUERY)) return hits(P.bgeM3);
+      // Seguimiento.
       if (is(FOLLOW_Q2_QUERY)) return hits(P.vectorizeGet, P.bgeM3);
+      // Fin.
       break;
+    // Irrelevantes.
     case "irrelevant-discarded":
+      // Con páginas ajenas.
       if (is(MAIN_Q1_QUERY)) return hits(P.vectorizeCreate, P.blog, P.d1Overview);
+      // Con instrucciones embebidas.
       if (is(MAIN_Q2_QUERY)) return hits(P.vectorizeGet, P.injected);
+      // Fin.
       break;
+    // Fallo del proveedor.
     case "provider-failure":
+      // q1 falla.
       if (is(MAIN_Q1_QUERY)) {
+        // HTTP 503.
         return {
           ok: false,
           error: "provider",
@@ -470,42 +621,71 @@ function searchFor(scenario: ResearchScenarioId | null, query: string): PortResu
           consumption: { kind: "none" },
         };
       }
+      // q2.
       if (is(MAIN_Q2_QUERY)) return hits(P.vectorizeGet, P.bgeM3);
+      // Fin.
       break;
+    // Sin progreso.
     case "no-progress-stop":
+      // q1.
       if (is(MAIN_Q1_QUERY)) return hits(P.vectorizeCreate);
+      // q2.
       if (is(MAIN_Q2_QUERY)) return hits(P.bgeM3);
+      // Consulta que no avanza.
       if (is(STALL_Q2_QUERY)) return hits(P.bgeM3, P.blog);
+      // Fin.
       break;
+    // Dato interno.
     case "internal-fact-missing":
+      // checkpointer.
       if (is(FACT_Q2_QUERY)) return hits(P.checkpointer);
+      // Fin.
       break;
+    // Otro.
     default:
+      // Fin.
       break;
   }
+  // Sin resultados.
   return ok([]);
 }
 
+// Fragmentos del curso guionizados por consulta.
 function courseIdsFor(scenario: ResearchScenarioId | null, query: string): string[] | null {
+  // Escenario principal.
   if (scenario !== null && MAIN_SCENARIOS.includes(scenario)) {
+    // q3.
     if (query === MAIN_Q3) return ["s10-rag:01", "s10-rag:00"];
+    // q1.
     if (query === MAIN_Q1)
       return scenario === "irrelevant-discarded" ? ["s16-cloud-aws:00"] : ["s10-rag:00"];
+    // Otra.
     return [];
   }
+  // Dato interno.
   if (scenario === "internal-fact-missing") {
+    // q1.
     if (query === FACT_Q1) return ["s12-deep-research:01", "s19-evaluacion:00"];
+    // q2.
     if (query === FACT_Q2) return ["s05-langgraph:00"];
+    // Otra.
     return [];
   }
+  // Sin guion: búsqueda lexical.
   return null;
 }
 
+// Opciones de los puertos de prueba.
 export interface FixtureResearchOptions {
+  // Señal.
   signal: AbortSignal;
+  // Escenario.
   scenarioId: ResearchScenarioId | null;
+  // Audiencia.
   audience: Audience;
+  // Versión del corpus.
   corpusVersion: string;
+  // Reloj.
   now?: () => number;
 }
 
@@ -514,43 +694,66 @@ export interface FixtureResearchOptions {
  * calidad de un modelo ni hacen una investigación real en internet.
  */
 function waitFor(signal: AbortSignal, ms: number): Promise<void> {
+  // Espera unos milisegundos o hasta cancelar.
   return new Promise((resolve) => {
+    // Temporizador.
     const timer = setTimeout(resolve, ms);
+    // Termina.
     const finish = () => {
+      // Cancela el temporizador.
       clearTimeout(timer);
+      // Resuelve.
       resolve();
     };
+    // Ya cancelada.
     if (signal.aborted) {
+      // Termina.
       finish();
+      // Sale.
       return;
     }
+    // Escucha la cancelación.
     signal.addEventListener("abort", finish, { once: true });
   });
 }
 
+// Permite fijar el escenario cuando se conoce la pregunta final.
 export interface FixtureScenarioLatch {
+  // Recibe la pregunta.
   noteFixtureQuestion(question: string): void;
 }
 
+// Crea los puertos de prueba.
 export function createFixtureResearchPorts(
   options: FixtureResearchOptions,
 ): ResearchPorts & FixtureScenarioLatch {
+  // Escenario pedido.
   const requested = options.scenarioId;
+  // Escenarios de control usan el guion principal.
   let scenario: ResearchScenarioId | null =
     requested === "slow-search" ||
     requested === "ambiguous-operation" ||
     requested === "crash-after-plan"
       ? "sufficient-first-round"
       : requested;
+  // Si no hay escenario, lo deduce de la pregunta del aula.
   const noteFixtureQuestion = (question: string) => {
+    // Ya hay uno.
     if (scenario !== null) return;
+    // ¿Pregunta del aula?
     const classroom = classroomFixtureScenario(question);
+    // Lo fija.
     if (classroom !== null) scenario = classroom;
   };
+  // Fragmentos de ejemplo.
   const library = fixtureChunks();
+  // Puntuaciones vistas.
   const scores = new Map<string, number | null>();
+  // Convierte un fragmento en evidencia del curso.
   const toCourse = (chunkId: string, score: number | null): CourseEvidence | null => {
+    // Fragmento.
     const chunk = library.find((item) => item.chunkId === chunkId);
+    // Evidencia o null.
     return chunk === undefined
       ? null
       : {
@@ -565,9 +768,12 @@ export function createFixtureResearchPorts(
           score,
         };
   };
+  // Modelo guionizado.
   const model: ResearchModelPort = {
     plan: ({ question, audience }) => {
+      // Deduce el escenario.
       noteFixtureQuestion(question);
+      // Plan.
       return Promise.resolve(ok(planFor(scenario, question, audience)));
     },
     assess: ({ evidence, round, subquestions }) =>
@@ -576,6 +782,7 @@ export function createFixtureResearchPorts(
     synthesize: ({ evidence, subquestions }) =>
       Promise.resolve(ok(synthesizeFor(scenario, evidence, subquestions))),
   };
+  // Puertos completos.
   return {
     noteFixtureQuestion,
     measured: false,
@@ -587,14 +794,20 @@ export function createFixtureResearchPorts(
     model,
     course: {
       retrieve({ query, audience, corpusVersion, limit }) {
+        // Fragmentos guionizados.
         const scripted = courseIdsFor(scenario, query);
+        // Con guion.
         if (scripted !== null) {
+          // Evidencia con puntuación 0,9.
           const rows = scripted
             .map((key) => toCourse(`${corpusVersion}:${key}`, 0.9))
             .filter((item): item is CourseEvidence => item !== null);
+          // Hasta el límite.
           return Promise.resolve(ok(rows.slice(0, limit)));
         }
+        // Sin guion: embedding de prueba.
         const vector = fixtureEmbed(query);
+        // Fragmentos por similitud.
         const rows = library
           .filter(
             (chunk) =>
@@ -604,10 +817,13 @@ export function createFixtureResearchPorts(
           .sort((left, right) => right.score - left.score)
           .slice(0, limit)
           .map(({ chunk, score }) => {
+            // Guarda la puntuación.
             scores.set(chunk.chunkId, score);
+            // Evidencia.
             return toCourse(chunk.chunkId, score);
           })
           .filter((item): item is CourseEvidence => item !== null);
+        // Resultados.
         return Promise.resolve(ok(rows));
       },
     },
@@ -615,17 +831,23 @@ export function createFixtureResearchPorts(
       corpusVersion: options.corpusVersion,
       audience: options.audience,
       read: (corpusVersion, chunkId) => {
+        // Fragmento de esa versión.
         const chunk = library.find(
           (item) => item.chunkId === chunkId && item.corpusVersion === corpusVersion,
         );
+        // Copia o null.
         return Promise.resolve(chunk === undefined ? null : { ...chunk });
       },
     }),
     search: {
       async search({ query }) {
+        // Búsqueda lenta.
         if (requested === "slow-search") {
+          // Espera 12 s o cancelación.
           await waitFor(options.signal, 12_000);
+          // Cancelada.
           if (options.signal.aborted) {
+            // Error aborted.
             return {
               ok: false,
               error: "aborted",
@@ -634,13 +856,17 @@ export function createFixtureResearchPorts(
             };
           }
         }
+        // Resultados guionizados.
         return searchFor(scenario, query);
       },
     },
     reader: {
       async read({ url }) {
+        // Página simulada.
         const page = fixturePageByUrl(url);
+        // No existe.
         if (page === null) {
+          // Error.
           return {
             ok: false,
             error: "provider",
@@ -648,7 +874,9 @@ export function createFixtureResearchPorts(
             consumption: { kind: "none" },
           };
         }
+        // Fallo del proveedor en bgeM3.
         if (scenario === "provider-failure" && page.key === "bgeM3") {
+          // timeout.
           return {
             ok: false,
             error: "timeout",
@@ -656,6 +884,7 @@ export function createFixtureResearchPorts(
             consumption: { kind: "none" },
           };
         }
+        // Página leída con hash.
         return ok({
           requestedUrl: url,
           finalUrl: page.finalUrl ?? page.url,

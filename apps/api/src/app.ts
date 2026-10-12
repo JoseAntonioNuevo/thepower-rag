@@ -1,3 +1,8 @@
+// GUÍA DE LECTURA · apps/api/src/app.ts
+// Aplicación Hono de la API: /api/health describe qué capacidades están listas y /api/chat atiende
+// los cuatro modos (sin RAG, RAG, CRAG e investigación). Recorrido de /api/chat: protección →
+// validación del cuerpo → modo → recuperación (demo, prueba o Vectorize) → decisión → generación en streaming.
+// Esquemas de petición y salud, límites y tipos del contrato.
 import {
   chatRequestSchema,
   healthResponseSchema,
@@ -9,6 +14,7 @@ import {
   type HealthResponse,
   type RunMetadata,
 } from "@thepower-rag/contracts";
+// Núcleo RAG: audiencias, calendario, citas, índice de prueba, recuperación y tipos.
 import {
   allowsAudience,
   isWeeklyScheduleQuestion,
@@ -27,20 +33,31 @@ import {
   type IndexedChunk,
   type RetrievalOutcome,
 } from "@thepower-rag/core";
+// Tipo del modelo de lenguaje del AI SDK.
 import type { LanguageModel } from "ai";
+// Hono: enrutador HTTP ligero que funciona en Workers.
 import { Hono } from "hono";
+// Versiones de las dependencias para /api/health.
 import { dependencyCompatibility } from "./compat";
+// Respuesta HTTP del modo CRAG.
 import { cragHttpResponse } from "./crag-http";
+// Lectura de configuración y capacidades.
 import { assessWorker, durableResearchConfigured, mediaReadiness, type WorkerEnv } from "./env";
+// Respuesta HTTP del modo investigación sin trabajo durable.
 import { researchHttpResponse } from "./research-http";
+// Rutas del trabajo durable de investigación.
 import { researchRoutes } from "./research-routes";
+// Tipo de los puertos de investigación.
 import type { ResearchPorts } from "@thepower-rag/research";
+// Mensaje público de error y respuestas en streaming.
 import {
   PUBLIC_PROVIDER_MESSAGE,
   streamFixedCourseResponse,
   streamProviderCourseResponse,
 } from "./course-stream";
+// Respuesta de demo sin red.
 import { offlineDemoResponse } from "./demo-stream";
+// Corpus y perfil de prueba incluidos en el código.
 import {
   fixtureChunks,
   fixtureContentVersion,
@@ -48,11 +65,17 @@ import {
   fixtureCoverage,
   fixtureProfile,
 } from "./fixture";
+// Contexto completo del curso (modo complete).
 import { readCourseContext, completeContextOutcome, CourseContextError } from "./course-context";
+// Origen, Turnstile y límites de peticiones.
 import { protectChat } from "./chat-protection";
+// Presupuesto público por turno.
 import { reservePublicTurn } from "./public-budget";
+// Fábrica del modelo generador.
 import { createGenerationModel } from "./model";
+// Tarifa del coste mostrado.
 import { generationPricing } from "./provider-cost";
+// Prompts de cada modo.
 import {
   RAG_PROMPT,
   SIN_RAG_PROMPT,
@@ -60,6 +83,7 @@ import {
   COMPLETE_RAG_PROMPT,
   completeRagSystem,
 } from "./prompts";
+// Vectorize, D1 y perfil del índice.
 import {
   profileReady,
   queryVectorize,
@@ -69,55 +93,77 @@ import {
   type SqlDatabase,
   type VectorIndex,
 } from "./stores";
+// Embeddings con Workers AI.
 import { embedWithWorkersAi, type EmbeddingRunner } from "./vectors";
 
+// Dependencias que los tests pueden sustituir.
 export interface AppDeps {
+  // Sesión de gasto.
   allowance?: AllowanceLedger;
+  // Aviso de cada llamada al proveedor.
   onProviderCall?: () => void;
+  // Modelo simulado.
   languageModel?: LanguageModel;
+  // Fragmentos de prueba.
   chunks?: readonly IndexedChunk[];
+  // Embedding de prueba.
   embed?: (text: string) => readonly number[];
+  // Perfil del índice de prueba.
   profile?: IndexProfileRow | null;
+  // Puertos CRAG simulados.
   cragPorts?: CragPorts;
   /** Solo pruebas: puertos de investigación inyectados. */
   researchPorts?: ResearchPorts;
 }
 
+// Error JSON sin caché con su estado HTTP.
 function jsonError(body: ErrorResponse, status: 400 | 409 | 501 | 502): Response {
+  // Response.json con cabecera no-store.
   return Response.json(body, { status, headers: { "cache-control": "no-store" } });
 }
 
+// Nombre del runtime para /api/health.
 function runtimeLabel(): string {
+  // userAgent de workerd o de Node.
   return navigator.userAgent || "runtime-desconocido";
 }
 
+// Historial en el formato del modelo: papel y texto, sin mensajes vacíos.
 function modelMessages(
   messages: { role: "user" | "assistant"; parts: { type: string; text?: string }[] }[],
 ) {
+  // Une las partes de texto y quita los vacíos.
   return messages
     .map((message) => ({ role: message.role, content: messageText(message as never) }))
     .filter((message) => message.content.trim().length > 0);
 }
 
+// Respuesta de plantilla de la demo: cita cada fragmento recuperado.
 function fixtureAnswer(evidence: readonly IndexedChunk[]): string {
+  // Una línea por fragmento con su cita.
   const lines = evidence.map(
     (chunk) =>
       `Según [cite:${chunk.chunkId}] (${chunk.section}): ${chunk.text.replace(/\s+/g, " ").slice(0, 280)}`,
   );
+  // Texto completo.
   return `Respuesta de la canalización local de prueba. No es un modelo ni un índice de Vectorize.\n${lines.join("\n")}`;
 }
 
+// Respuesta cuando falta el grupo en una pregunta de calendario.
 const CLARIFY =
   "La pregunta parece de calendario. Elige el grupo con clases los lunes y miércoles o el grupo con clases los martes y jueves. La selección general no muestra los dos calendarios.";
+// Respuesta cuando no hay contexto útil.
 const REFUSE =
   "No hay contexto utilizable en el corpus seleccionado. No consta en los documentos recuperados y no se ha llamado a un modelo.";
 
+// Metadatos de una ejecución.
 function metadata(
   origin: RunMetadata["origin"],
   modelId: string | null,
   promptId: string,
   completion: RunMetadata["completion"],
 ): RunMetadata {
+  // Id nuevo, origen, modelo, prompt y estado; sin consumo ni coste.
   return {
     runId: crypto.randomUUID(),
     origin,
@@ -129,17 +175,28 @@ function metadata(
   };
 }
 
+// Crea la aplicación con dependencias opcionales.
 export function createApp(deps: AppDeps = {}) {
+  // App Hono tipada con las variables del Worker.
   const app = new Hono<{ Bindings: WorkerEnv }>();
+  // Monta las rutas de investigación durable.
   app.route("/api/research", researchRoutes());
 
+  // GET /api/health: estado de la configuración sin llamar a proveedores.
   app.get("/api/health", async (context) => {
+    // Capacidades según el entorno.
     const assessment = assessWorker(context.env);
+    // Versiones de dependencias.
     const compatibility = await dependencyCompatibility();
+    // ¿Corpus de demo?
     const demoCorpus = assessment.execution === "demo";
+    // Versión del corpus incluido.
     const bundled = fixtureCorpusVersion();
+    // Versión configurada.
     const configuredVersion = assessment.retrieval?.corpusVersion ?? null;
+    // ¿Se conoce el contenido del corpus?
     const sourceKnown = demoCorpus || configuredVersion === bundled;
+    // Cobertura desconocida.
     const unknownCoverage = {
       curriculum: "unknown" as const,
       calendarLx: "unknown" as const,
@@ -147,6 +204,7 @@ export function createApp(deps: AppDeps = {}) {
       exerciseDetail: "unknown" as const,
       remote: "not-verified" as const,
     };
+    // Cuerpo de la respuesta.
     const body: HealthResponse = {
       app: "thepower-rag",
       phase: "crag",
@@ -169,29 +227,40 @@ export function createApp(deps: AppDeps = {}) {
       durableResearch: durableResearchConfigured(context.env),
       media: mediaReadiness(context.env),
     };
+    // En real con D1, comprueba el perfil del índice.
     if (!demoCorpus && assessment.retrieval && context.env.DB) {
+      // Fallo de lectura: no se marca como verificado.
       try {
+        // Perfil.
         const row = await readIndexProfile(
           context.env.DB as SqlDatabase,
           assessment.retrieval.indexProfile,
           assessment.retrieval.corpusVersion,
         );
+        // Si coincide, índice verificado.
         if (profileReady(row, assessment.retrieval).ok)
           body.corpus.coverage.remote = "index-verified";
       } catch {
         /* Connectivity is not inferred from the binding declaration. */
       }
     }
+    // Respuesta validada con el esquema y sin caché.
     return Response.json(healthResponseSchema.parse(body), {
       headers: { "cache-control": "no-store" },
     });
   });
 
+  // POST /api/chat: un turno de conversación.
   app.post("/api/chat", async (context) => {
+    // Origen, Turnstile y límites; si falla, devuelve el rechazo.
     const rejected = await protectChat(context.req.raw, context.env ?? {});
+    // Rechazada.
     if (rejected) return rejected;
+    // Cuerpo como texto.
     const raw = await context.req.text();
+    // Demasiado grande.
     if (raw.length > LIMITS.maxBodyChars) {
+      // 400.
       return jsonError(
         {
           error: "invalid_request",
@@ -201,17 +270,24 @@ export function createApp(deps: AppDeps = {}) {
         400,
       );
     }
+    // JSON del cuerpo.
     let payload: unknown;
+    // Parseo protegido.
     try {
+      // JSON.
       payload = JSON.parse(raw) as unknown;
     } catch {
+      // No es JSON: 400.
       return jsonError(
         { error: "invalid_request", message: "El cuerpo no es JSON válido.", issues: [] },
         400,
       );
     }
+    // Valida contra el contrato.
     const parsed = chatRequestSchema.safeParse(payload);
+    // Inválido.
     if (!parsed.success) {
+      // 400 con los problemas.
       return jsonError(
         {
           error: "invalid_request",
@@ -221,8 +297,11 @@ export function createApp(deps: AppDeps = {}) {
         400,
       );
     }
+    // Capacidades.
     const assessment = assessWorker(context.env);
+    // APP_MODE inválido.
     if (assessment.execution === "misconfigured") {
+      // 409.
       return jsonError(
         {
           error: "configuration",
@@ -232,16 +311,21 @@ export function createApp(deps: AppDeps = {}) {
         409,
       );
     }
+    // Texto del último mensaje.
     const question = messageText(
       parsed.data.messages.at(-1) ?? { id: "", role: "user", parts: [] },
     );
+    // Historial para el modelo.
     const history = modelMessages(parsed.data.messages);
+    // Señal de cancelación de la petición.
     const signal = context.req.raw.signal;
 
     // La investigación va antes del presupuesto público: no consume la reserva
     // del RAG. En real queda bloqueada sin su propia autorización y contabilidad.
     if (parsed.data.mode === "research") {
+      // Con Workflow configurado, este endpoint no investiga.
       if (durableResearchConfigured(context.env)) {
+        // 409 explicando dónde se crea el trabajo.
         return jsonError(
           {
             error: "configuration",
@@ -252,6 +336,7 @@ export function createApp(deps: AppDeps = {}) {
           409,
         );
       }
+      // Investigación en primer plano (demo o prueba).
       const research = await researchHttpResponse({
         assessment,
         request: parsed.data,
@@ -259,20 +344,26 @@ export function createApp(deps: AppDeps = {}) {
         signal,
         deps: { researchPorts: deps.researchPorts },
       });
+      // Si no es una respuesta, es un bloqueo de configuración.
       if (!(research instanceof Response)) {
+        // 409.
         return jsonError(
           { error: "configuration", message: research.message, missing: research.missing },
           409,
         );
       }
+      // Respuesta en streaming.
       return research;
     }
 
+    // ¿Hay presupuesto público en real?
     const publicBudget =
       assessment.execution === "real" && context.env.PUBLIC_BUDGET_USD !== undefined;
+    // Reserva de presupuesto del turno o la sesión inyectada.
     const allowance = publicBudget
       ? await reservePublicTurn(context.env, parsed.data.mode)
       : deps.allowance;
+    // Presupuesto agotado: 429.
     if (publicBudget && !allowance)
       return Response.json(
         {
@@ -282,7 +373,9 @@ export function createApp(deps: AppDeps = {}) {
         },
         { status: 429 },
       );
+    // Modo CRAG.
     if (parsed.data.mode === "crag") {
+      // Respuesta CRAG.
       const crag = await cragHttpResponse({
         env: context.env,
         assessment,
@@ -293,18 +386,25 @@ export function createApp(deps: AppDeps = {}) {
         deps,
         allowance: allowance ?? undefined,
       });
+      // Bloqueo de configuración.
       if (!(crag instanceof Response)) {
+        // 409.
         return jsonError(
           { error: "configuration", message: crag.message, missing: crag.missing },
           409,
         );
       }
+      // Respuesta.
       return crag;
     }
 
+    // Modo.
     const mode = parsed.data.mode;
+    // Capacidad del modo.
     const capability = assessment.capabilities[mode];
+    // En real sin capacidad: 409, sin volver a la demo.
     if (assessment.execution === "real" && capability.status === "blocked") {
+      // 409.
       return jsonError(
         {
           error: "configuration",
@@ -315,19 +415,28 @@ export function createApp(deps: AppDeps = {}) {
       );
     }
 
+    // Modo sin RAG.
     if (parsed.data.mode === "sin-rag") {
+      // Demo.
       if (assessment.execution === "demo") {
+        // Respuesta de demo.
         return offlineDemoResponse(signal);
       }
+      // Ajustes de generación.
       const settings = assessment.generation;
+      // Sin ajustes.
       if (settings === null) {
+        // 409.
         return jsonError(
           { error: "configuration", message: "Falta la generación.", missing: capability.missing },
           409,
         );
       }
+      // try/catch: un fallo al crear el modelo da 502.
       try {
+        // Modelo inyectado o el del proveedor configurado.
         const model = deps.languageModel ?? createGenerationModel(settings, deps.onProviderCall);
+        // Generación en streaming sin fuentes ni citas.
         return streamProviderCourseResponse({
           model,
           system: SIN_RAG_PROMPT.text,
@@ -350,15 +459,22 @@ export function createApp(deps: AppDeps = {}) {
           signal,
         });
       } catch {
+        // 502 con mensaje público.
         return jsonError({ error: "provider", message: PUBLIC_PROVIDER_MESSAGE }, 502);
       }
     }
 
+    // Fragmentos de prueba.
     const chunks = deps.chunks ?? fixtureChunks();
+    // Embedding de prueba.
     const embed = deps.embed ?? fixtureEmbed;
+    // ¿Recuperación de prueba?
     const useFixture = assessment.execution === "demo" || deps.chunks !== undefined;
+    // Resultado de la recuperación.
     let outcome: RetrievalOutcome;
+    // Demo: índice incluido en el código.
     if (useFixture && assessment.execution === "demo") {
+      // Recuperación básica con el embedding de prueba.
       outcome = retrieveBasic({
         question,
         audience: parsed.data.audience,
@@ -371,8 +487,11 @@ export function createApp(deps: AppDeps = {}) {
           "Coseno del índice de prueba por tokens. No es una probabilidad ni un embedding de BGE-M3.",
       });
     } else if (deps.chunks !== undefined) {
+      // Fragmentos inyectados por un test.
       const retrieval = assessment.retrieval;
+      // Ajustes de recuperación.
       if (retrieval === null) {
+        // Sin ajustes: 409.
         return jsonError(
           {
             error: "configuration",
@@ -382,7 +501,9 @@ export function createApp(deps: AppDeps = {}) {
           409,
         );
       }
+      // Calendario sin grupo: aclaración.
       if (isScheduleQuestion(question) && parsed.data.audience === "program") {
+        // Resultado clarify.
         outcome = {
           decision: "clarify",
           evidence: [],
@@ -399,8 +520,11 @@ export function createApp(deps: AppDeps = {}) {
           },
         };
       } else {
+        // Comprueba el perfil inyectado.
         const gate = profileReady(deps.profile ?? null, retrieval);
+        // No coincide.
         if (!gate.ok) {
+          // 409.
           return jsonError(
             {
               error: "configuration",
@@ -410,6 +534,7 @@ export function createApp(deps: AppDeps = {}) {
             409,
           );
         }
+        // Recuperación básica con el índice inyectado.
         outcome = retrieveBasic({
           question,
           audience: parsed.data.audience,
@@ -422,8 +547,11 @@ export function createApp(deps: AppDeps = {}) {
         });
       }
     } else {
+      // Ajustes de recuperación.
       const retrieval = assessment.retrieval;
+      // Sin ajustes.
       if (retrieval === null) {
+        // 409.
         return jsonError(
           {
             error: "configuration",
@@ -433,10 +561,15 @@ export function createApp(deps: AppDeps = {}) {
           409,
         );
       }
+      // Workers AI.
       const runner = context.env.AI as EmbeddingRunner | undefined;
+      // Vectorize.
       const index = context.env.VECTORIZE as VectorIndex | undefined;
+      // D1.
       const database = context.env.DB as SqlDatabase | undefined;
+      // Falta algún binding.
       if (!runner || !index || !database) {
+        // 409.
         return jsonError(
           {
             error: "configuration",
@@ -446,7 +579,9 @@ export function createApp(deps: AppDeps = {}) {
           409,
         );
       }
+      // Calendario sin grupo: aclaración.
       if (isScheduleQuestion(question) && parsed.data.audience === "program") {
+        // Resultado clarify.
         outcome = {
           decision: "clarify",
           evidence: [],
@@ -463,12 +598,16 @@ export function createApp(deps: AppDeps = {}) {
           },
         };
       } else {
+        // Perfil inyectado o leído de D1.
         const row =
           deps.profile !== undefined
             ? deps.profile
             : await readIndexProfile(database, retrieval.indexProfile, retrieval.corpusVersion);
+        // Comprueba el perfil.
         const gate = profileReady(row, retrieval);
+        // No coincide.
         if (!gate.ok) {
+          // 409.
           return jsonError(
             {
               error: "configuration",
@@ -478,19 +617,26 @@ export function createApp(deps: AppDeps = {}) {
             409,
           );
         }
+        // try/catch: errores de contexto, cancelación o proveedor.
         try {
+          // Modo complete: todo el curso como contexto.
           if (context.env.RAG_CONTEXT_MODE === "complete") {
+            // Lee todos los documentos de la audiencia.
             const contextChunks = await readCourseContext(
               database,
               retrieval.corpusVersion,
               parsed.data.audience,
               signal,
             );
+            // Resultado con el contexto completo.
             outcome = completeContextOutcome(question, retrieval.corpusVersion, contextChunks);
           } else if (isWeeklyScheduleQuestion(question)) {
+            // Pregunta de calendario semanal: ficha resumen del grupo.
             const id = calendarOverviewId(parsed.data.audience, retrieval.corpusVersion);
+            // Ficha leída de D1.
             const record =
               id === null ? null : await readChunk(database, retrieval.corpusVersion, id);
+            // Resultado con esa ficha.
             outcome = calendarOverviewOutcome({
               question,
               audience: parsed.data.audience,
@@ -498,6 +644,7 @@ export function createApp(deps: AppDeps = {}) {
               chunk: record ? { ...record, vector: [] } : null,
             });
           } else {
+            // RAG con Vectorize: embedding de la pregunta.
             const [vector] = await embedWithWorkersAi(
               runner,
               retrieval.embeddingModel,
@@ -505,9 +652,12 @@ export function createApp(deps: AppDeps = {}) {
               retrieval.dimensions,
               signal,
             );
+            // Sin vector: 502.
             if (vector === undefined) {
+              // 502.
               return jsonError({ error: "provider", message: PUBLIC_PROVIDER_MESSAGE }, 502);
             }
+            // Vecinos en Vectorize.
             const hits = await queryVectorize(
               index,
               {
@@ -519,17 +669,24 @@ export function createApp(deps: AppDeps = {}) {
               },
               signal,
             );
+            // Fragmentos con puntuación.
             const ranked: { chunk: IndexedChunk; score: number | null }[] = [];
+            // Cada resultado.
             for (const hit of hits) {
+              // Texto de D1.
               const record = await readChunk(database, retrieval.corpusVersion, hit.chunkId);
+              // Inexistente o de otra audiencia: se salta.
               if (record === null || !allowsAudience(record.audience, parsed.data.audience)) {
+                // Siguiente.
                 continue;
               }
+              // Lo añade.
               ranked.push({
                 chunk: { ...record, vector: [] },
                 score: hit.score,
               });
             }
+            // Decide con el umbral mínimo.
             outcome = gateScoredChunks({
               question,
               audience: parsed.data.audience,
@@ -541,6 +698,7 @@ export function createApp(deps: AppDeps = {}) {
             });
           }
         } catch (error) {
+          // Contexto incompleto: 409 sin responder.
           if (error instanceof CourseContextError)
             return jsonError(
               {
@@ -551,18 +709,26 @@ export function createApp(deps: AppDeps = {}) {
               },
               409,
             );
+          // Cancelado: 499.
           if (error instanceof DOMException && error.name === "AbortError") {
+            // Sin cuerpo.
             return new Response(null, { status: 499 });
           }
+          // Otro fallo: 502.
           return jsonError({ error: "provider", message: PUBLIC_PROVIDER_MESSAGE }, 502);
         }
       }
     }
 
+    // Citas de la evidencia.
     const sources: Citation[] = citationsFor(outcome.evidence);
+    // Sin respuesta (aclarar o rechazar).
     if (outcome.decision !== "answer") {
+      // Texto fijo.
       const text = outcome.decision === "clarify" ? CLARIFY : REFUSE;
+      // Origen.
       const origin = assessment.execution === "demo" ? "offline-fixture" : "pipeline";
+      // Respuesta fija.
       return streamFixedCourseResponse({
         metadata: metadata(
           origin,
@@ -578,7 +744,9 @@ export function createApp(deps: AppDeps = {}) {
       });
     }
 
+    // Demo: respuesta de plantilla.
     if (assessment.execution === "demo") {
+      // Respuesta fija con citas validadas.
       return streamFixedCourseResponse({
         metadata: metadata("offline-fixture", null, "rag-fixture-v1", "complete"),
         validateCitations: true,
@@ -593,15 +761,21 @@ export function createApp(deps: AppDeps = {}) {
       });
     }
 
+    // Ajustes de generación.
     const settings = assessment.generation;
+    // Sin ajustes.
     if (settings === null) {
+      // 409.
       return jsonError(
         { error: "configuration", message: "Falta la generación.", missing: capability.missing },
         409,
       );
     }
+    // try/catch: un fallo al crear el modelo da 502.
     try {
+      // Modelo inyectado o el configurado.
       const model = deps.languageModel ?? createGenerationModel(settings, deps.onProviderCall);
+      // Generación con la evidencia en el sistema, citas validadas y coste.
       return streamProviderCourseResponse({
         model,
         system:
@@ -624,9 +798,11 @@ export function createApp(deps: AppDeps = {}) {
         costPricing: generationPricing(settings),
       });
     } catch {
+      // 502.
       return jsonError({ error: "provider", message: PUBLIC_PROVIDER_MESSAGE }, 502);
     }
   });
 
+  // App lista.
   return app;
 }

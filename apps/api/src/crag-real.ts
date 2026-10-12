@@ -1,6 +1,13 @@
+// GUÍA DE LECTURA · apps/api/src/crag-real.ts
+// Puertos reales de CRAG: buscar en Vectorize, evaluar la evidencia con el modelo evaluador, reformular
+// la consulta y generar la respuesta. Cada llamada tiene plazo propio y descuenta de la sesión de gasto.
+// Detecta si el modelo se negó a responder.
 import { refusedByModel } from "./model";
+// Coste estimado y su tarifa.
 import { providerCost, type CostPricing } from "./provider-cost";
+// Límites de plazos, salida y reintentos.
 import { LIMITS } from "@thepower-rag/contracts";
+// Cotas de CRAG y tipos del grafo del núcleo.
 import {
   CRAG_BOUNDS,
   OPERATION_BOUNDS,
@@ -9,12 +16,18 @@ import {
   type CragPorts,
   type CragScope,
 } from "@thepower-rag/core";
+// Funciones del AI SDK: objeto con esquema y texto libre.
 import { generateObject, generateText, type LanguageModel } from "ai";
+// Zod define los esquemas de salida estructurada.
 import { z } from "zod";
+// Prompt de sistema de la respuesta final de CRAG.
 import { cragSystem } from "./prompts";
+// Acceso a Vectorize y D1.
 import { queryVectorize, readChunk, type SqlDatabase, type VectorIndex } from "./stores";
+// Embeddings con Workers AI.
 import { embedWithWorkersAi, type EmbeddingRunner } from "./vectors";
 
+// Esquema del evaluador: ranking de fragmentos, estado, motivo, lagunas e ids útiles.
 const evidenceSchema = z.object({
   ranking: z
     .array(
@@ -31,10 +44,12 @@ const evidenceSchema = z.object({
   usefulIds: z.array(z.string().min(1).max(CRAG_BOUNDS.maxIdChars)).max(CRAG_BOUNDS.maxRetained),
 });
 
+// Esquema de la reformulación: una nueva consulta.
 const rewriteSchema = z.object({
   query: z.string().min(1).max(CRAG_BOUNDS.maxQueryChars),
 });
 
+// Instrucciones del evaluador: ordenar todos los fragmentos y decidir si bastan.
 const EVALUATOR_PROMPT = [
   "Eres el evaluador del corpus privado del programa AI Engineer.",
   "ranking debe incluir EXACTAMENTE TODOS los fragmentos recibidos, cada id una sola vez, también los irrelevantes. Copia sus ids completos.",
@@ -46,56 +61,82 @@ const EVALUATOR_PROMPT = [
   "No inventes ids ni hechos. La puntuación es relevancia, no una probabilidad. No respondas al alumno ni busques fuera del corpus.",
 ].join("\n");
 
+// Instrucciones de la reformulación: nueva consulta para cubrir la laguna.
 const REWRITE_PROMPT = [
   "Reformula la búsqueda en el corpus del curso para cubrir la laguna.",
   "Conserva la intención de la pregunta original y no añadas un hecho que no esté pedido.",
   "La consulta tiene que ser distinta de las anteriores.",
 ].join("\n");
 
+// Plazo que se da al proveedor: lo que queda, sin pasar del máximo de la llamada.
 export function providerTimeoutMs(remainingMs: number, capMs: number): number {
+  // Sin tiempo restante, 0.
   if (!Number.isFinite(remainingMs) || remainingMs <= 0) {
+    // 0 milisegundos.
     return 0;
   }
+  // El menor entre el máximo y lo que queda.
   return Math.min(capMs, Math.floor(remainingMs));
 }
 
+// Ejecuta una llamada con su propio plazo y cancelación encadenada a la del padre.
 async function withDeadline<T>(
   parent: AbortSignal,
   remainingMs: number,
   capMs: number,
   run: (signal: AbortSignal, timeoutMs: number) => Promise<T>,
 ): Promise<T> {
+  // Plazo de esta llamada.
   const timeoutMs = providerTimeoutMs(remainingMs, capMs);
+  // Ya cancelada o sin tiempo: no llama.
   if (parent.aborted || timeoutMs <= 0) {
+    // AbortError.
     throw new DOMException("The operation was aborted.", "AbortError");
   }
+  // Controlador propio de la llamada.
   const controller = new AbortController();
+  // Si el padre se cancela, cancela la llamada.
   const onAbort = () => {
+    // Cancela.
     controller.abort();
   };
+  // Escucha al padre una vez.
   parent.addEventListener("abort", onAbort, { once: true });
+  // Temporizador del plazo.
   let timer: ReturnType<typeof setTimeout> | undefined;
+  // Lanza la llamada.
   const pending = run(controller.signal, timeoutMs);
+  // Evita un rechazo sin manejar si pierde la carrera.
   void pending.catch(() => undefined);
+  // try/finally: limpia temporizador y oyente.
   try {
+    // Gana la llamada o el plazo.
     return await Promise.race([
       pending,
       new Promise<never>((_, reject) => {
+        // Al vencer el plazo, cancela y rechaza con crag-timeout.
         timer = setTimeout(() => {
+          // Cancela la llamada.
           controller.abort();
+          // Error de plazo.
           reject(new Error("crag-timeout"));
         }, timeoutMs);
       }),
     ]);
   } finally {
+    // Si hubo temporizador.
     if (timer !== undefined) {
+      // Lo cancela.
       clearTimeout(timer);
     }
+    // Retira el oyente del padre.
     parent.removeEventListener("abort", onAbort);
   }
 }
 
+// ¿Mismo ámbito? Audiencia, versión del corpus y perfil de índice.
 function sameScope(left: CragScope, right: CragScope): boolean {
+  // Compara los tres campos.
   return (
     left.audience === right.audience &&
     left.corpusVersion === right.corpusVersion &&
@@ -103,60 +144,95 @@ function sameScope(left: CragScope, right: CragScope): boolean {
   );
 }
 
+// Crea los puertos reales que usa el grafo CRAG.
 export function createRealCragPorts(input: {
+  // Señal de cancelación de la petición.
   signal: AbortSignal;
+  // Ámbito fijo: audiencia, corpus y perfil.
   scope: CragScope;
+  // Ejecutor de embeddings.
   embedder: EmbeddingRunner;
+  // Índice vectorial.
   index: VectorIndex;
+  // Base de datos D1.
   database: SqlDatabase;
+  // Modelo evaluador.
   evaluator: LanguageModel;
+  // Modelo que redacta la respuesta.
   generator: LanguageModel;
+  // Historial de la conversación.
   messages: readonly { role: "user" | "assistant"; content: string }[];
+  // Modelo de embeddings.
   embeddingModel: string;
+  // Dimensiones del vector.
   dimensions: number;
+  // Sesión de gasto autorizada; sin ella no se llama al proveedor.
   allowance?: AllowanceLedger;
   /** Tarifa del coste mostrado de la respuesta final; sin valor, la de Claude Haiku 5.5. */
   costPricing?: CostPricing | null;
 }): CragPorts {
+  // Reserva abierta por tipo de operación.
   const open = new Map<string, string>();
+  // Reserva gasto para una operación antes de hacerla.
   const reserveKind = (
     kind: "retrieval" | "evaluation" | "reformulation" | "generation",
   ): { ok: true } | { ok: false; reason: string } => {
+    // Sin sesión de gasto, no se reserva.
     if (input.allowance === undefined) {
+      // Motivo visible.
       return {
         ok: false,
         reason: "No hay una sesión de gasto autorizada. El chat real no llama al proveedor.",
       };
     }
+    // Cotas de esa operación.
     const bounds = OPERATION_BOUNDS[kind];
+    // Pide la reserva.
     const reserved = input.allowance.reserve({ kind, ...bounds });
+    // Rechazada.
     if (!reserved.ok) {
+      // Se devuelve el motivo.
       return reserved;
     }
+    // Guarda su id.
     open.set(kind, reserved.id);
+    // Reserva hecha.
     return { ok: true };
   };
+  // Cierra la reserva de una operación con el importe real (null si se desconoce).
   const settle = (kind: string, actualUsd: number | null) => {
+    // Id de la reserva.
     const id = open.get(kind);
+    // Si existe.
     if (id !== undefined) {
+      // La liquida.
       input.allowance?.settle(id, actualUsd);
+      // La quita de las abiertas.
       open.delete(kind);
     }
   };
+  // Puertos del grafo.
   return {
     measured: true,
     now: Date.now,
     signal: input.signal,
     reserve: reserveKind,
     async retrieve({ query, scope, limit, remainingMs }) {
+      // Otro ámbito: rechazado.
       if (!sameScope(scope, input.scope)) {
+        // Motivo.
         return { ok: false, reason: "La búsqueda cambió de ámbito." };
       }
+      // Cancelada: no busca.
       if (input.signal.aborted) {
+        // AbortError.
         throw new DOMException("The operation was aborted.", "AbortError");
       }
+      // Vector de la consulta.
       let vector: number[] | undefined;
+      // try/catch: la reserva se cierra pase lo que pase.
       try {
+        // Embedding de la consulta con plazo.
         const rows = await withDeadline(
           input.signal,
           remainingMs,
@@ -171,15 +247,22 @@ export function createRealCragPorts(input: {
               timeoutMs,
             ),
         );
+        // Primer vector.
         vector = rows[0];
+        // Cierra la reserva de búsqueda.
         settle("retrieval", null);
       } catch (error) {
+        // Cierra también si falla.
         settle("retrieval", null);
+        // Propaga el error.
         throw error;
       }
+      // Sin vector.
       if (vector === undefined) {
+        // Fallo.
         return { ok: false, reason: "El embedding no devolvió un vector." };
       }
+      // Busca los vecinos en Vectorize.
       const hits = await queryVectorize(
         input.index,
         {
@@ -191,27 +274,39 @@ export function createRealCragPorts(input: {
         },
         input.signal,
       );
+      // Fragmentos completos.
       const chunks: CragChunk[] = [];
+      // Cada resultado.
       for (const hit of hits) {
+        // Lee su texto de D1.
         const record = await readChunk(input.database, scope.corpusVersion, hit.chunkId);
+        // No existe: se salta.
         if (record === null) {
+          // Siguiente.
           continue;
         }
+        // Añade el fragmento con perfil y puntuación.
         chunks.push({ ...record, profileId: scope.profileId, score: hit.score });
       }
+      // Fragmentos recuperados.
       return { ok: true, providerCall: true, chunks };
     },
     async rankAndAssess({ question, query, chunks, remainingMs }) {
+      // Cancelada: no evalúa.
       if (input.signal.aborted) {
+        // AbortError.
         throw new DOMException("The operation was aborted.", "AbortError");
       }
+      // Fragmentos empaquetados como texto: id, puntuación y contenido.
       const packed = chunks
         .map(
           (chunk) =>
             `id: ${chunk.chunkId}\npuntuación: ${chunk.score === null ? "desconocida" : String(chunk.score)}\ntexto:\n${chunk.text}`,
         )
         .join("\n\n");
+      // try/catch: cierra la reserva y registra el error sin datos privados.
       try {
+        // El evaluador devuelve un objeto con el esquema; ranking debe tener tantos elementos como fragmentos.
         const result = await withDeadline(
           input.signal,
           remainingMs,
@@ -230,24 +325,33 @@ export function createRealCragPorts(input: {
               abortSignal: signal,
             }),
         );
+        // Cierra la reserva.
         settle("evaluation", null);
+        // Objeto sin validar todavía; el núcleo lo comprueba.
         return { ok: true, providerCall: true, raw: result.object };
       } catch (error) {
+        // Cierra la reserva.
         settle("evaluation", null);
+        // Registra nombre y mensaje recortado del error.
         console.warn(
           "CRAG evaluator failure",
           error instanceof Error
             ? { name: error.name, message: error.message.slice(0, 500) }
             : { name: "unknown" },
         );
+        // Propaga.
         throw error;
       }
     },
     async reformulate({ question, query, gaps, remainingMs }) {
+      // Cancelada: no reformula.
       if (input.signal.aborted) {
+        // AbortError.
         throw new DOMException("The operation was aborted.", "AbortError");
       }
+      // try/catch: cierra la reserva.
       try {
+        // El evaluador propone otra consulta.
         const result = await withDeadline(
           input.signal,
           remainingMs,
@@ -264,19 +368,28 @@ export function createRealCragPorts(input: {
               abortSignal: signal,
             }),
         );
+        // Cierra la reserva.
         settle("reformulation", null);
+        // Objeto con la nueva consulta.
         return { ok: true, providerCall: true, raw: result.object };
       } catch (error) {
+        // Cierra la reserva.
         settle("reformulation", null);
+        // Propaga.
         throw error;
       }
     },
     async generate({ question, evidence, remainingMs }) {
+      // Cancelada: no genera.
       if (input.signal.aborted) {
+        // AbortError.
         throw new DOMException("The operation was aborted.", "AbortError");
       }
+      // Resultado de generateText.
       let result: Awaited<ReturnType<typeof generateText>>;
+      // try/catch: cierra la reserva.
       try {
+        // Genera la respuesta con la evidencia en el sistema y la pregunta original.
         result = await withDeadline(
           input.signal,
           remainingMs,
@@ -295,18 +408,28 @@ export function createRealCragPorts(input: {
               timeout: { totalMs: timeoutMs },
             }),
         );
+        // Cierra la reserva.
         settle("generation", null);
       } catch (error) {
+        // Cierra la reserva.
         settle("generation", null);
+        // Propaga.
         throw error;
       }
+      // Negativa del modelo: fallo.
       if (refusedByModel(result.finishReason, result.rawFinishReason)) {
+        // Error genérico.
         throw new Error("provider-failed");
       }
+      // Consumo total.
       const usage = result.totalUsage;
+      // Tokens de entrada o null.
       const inputTokens = typeof usage.inputTokens === "number" ? usage.inputTokens : null;
+      // Tokens de salida o null.
       const outputTokens = typeof usage.outputTokens === "number" ? usage.outputTokens : null;
+      // Total o null.
       const totalTokens = typeof usage.totalTokens === "number" ? usage.totalTokens : null;
+      // Texto, consumo y coste estimado.
       return {
         ok: true,
         providerCall: true,
