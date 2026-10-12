@@ -50,6 +50,7 @@ export const CLAIM_CHECK_METHOD =
 // Palabras vacías en español e inglés, sin tildes, que no cuentan como contenido.
 const STOPWORDS = new Set(
   [
+    // Conectores y verbos frecuentes en español.
     "para",
     "como",
     "este",
@@ -82,6 +83,7 @@ const STOPWORDS = new Set(
     "solo",
     "también",
     "tambien",
+    // Palabras frecuentes en inglés (las páginas técnicas suelen estar en inglés).
     "with",
     "that",
     "this",
@@ -95,6 +97,7 @@ const STOPWORDS = new Set(
     "then",
     "they",
     "them",
+    // Se quitan las tildes para comparar igual con o sin ellas.
   ].map((word) => word.normalize("NFD").replace(/[\u0300-\u036f]/g, "")),
 );
 
@@ -183,6 +186,7 @@ function wordTokens(text: string): string[] {
 
 /** No se puede empezar un tramo justo después de una negación o un cuantificador. */
 const SCOPE_TOKENS = new Set([
+  // Negaciones.
   "no",
   "nunca",
   "jamas",
@@ -192,6 +196,7 @@ const SCOPE_TOKENS = new Set([
   "ninguno",
   "ningunos",
   "ningunas",
+  // Restricciones y cuantificadores que cambian el sentido.
   "imposible",
   "sin",
   "solo",

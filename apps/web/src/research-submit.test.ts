@@ -318,11 +318,15 @@ describe("envío multimodal protegido", () => {
     // Rechaza.
     await expect(
       consumeVerificationToken({
+        // Protección activa con sesión y clave pública.
         config: { enabled: true, siteKey: "site", sessionId: "session-1" },
+        // No hay token y el servidor no puede emitir otro…
         readToken: () => null,
         fetchSession: async () =>
           Response.json({ enabled: true, siteKey: "site", sessionId: "session-1" }),
+        // …y esperar tampoco da un token.
         waitForToken: async () => undefined,
+        // Funciones del widget que la prueba no necesita.
         resetWidget() {},
         clearToken() {},
         onRenewed() {},

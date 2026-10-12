@@ -151,21 +151,26 @@ export class D1CheckpointSaver extends BaseCheckpointSaver {
     const requested = checkpointId(config);
     // Con id, ese checkpoint; sin id, el más reciente.
     const row = requested
-      ? await this.database
+      ? // Con id: ese checkpoint exacto del hilo y del espacio de nombres.
+        await this.database
           .prepare(
             `SELECT checkpoint_id, parent_checkpoint_id, type, checkpoint, metadata
              FROM research_checkpoints
              WHERE thread_id = ? AND checkpoint_ns = ? AND checkpoint_id = ?`,
           )
+          // Valores: hilo, espacio de nombres e id.
           .bind(threadId, checkpointNs, requested)
+          // first() devuelve la primera fila o null.
           .first<CheckpointRow>()
-      : await this.database
+      : // Sin id: el último (los ids de LangGraph se ordenan en el tiempo).
+        await this.database
           .prepare(
             `SELECT checkpoint_id, parent_checkpoint_id, type, checkpoint, metadata
              FROM research_checkpoints
              WHERE thread_id = ? AND checkpoint_ns = ?
              ORDER BY checkpoint_id DESC LIMIT 1`,
           )
+          // Valores: hilo y espacio de nombres.
           .bind(threadId, checkpointNs)
           .first<CheckpointRow>();
     // No existe.
@@ -261,6 +266,7 @@ export class D1CheckpointSaver extends BaseCheckpointSaver {
     }
     // INSERT con ON CONFLICT: idempotente.
     await this.database
+      // Upsert del checkpoint: repetir el paso no duplica la fila.
       .prepare(
         `INSERT INTO research_checkpoints
            (thread_id, checkpoint_ns, checkpoint_id, parent_checkpoint_id, type, checkpoint, metadata)
@@ -271,6 +277,7 @@ export class D1CheckpointSaver extends BaseCheckpointSaver {
            checkpoint = excluded.checkpoint,
            metadata = excluded.metadata`,
       )
+      // Valores: hilo, espacio, id, padre (o null), tipo y contenido serializado.
       .bind(
         threadId,
         checkpointNs,
@@ -338,6 +345,7 @@ export class D1CheckpointSaver extends BaseCheckpointSaver {
       const [type, bytes] = await this.serde.dumpsTyped(value);
       // Guarda o actualiza.
       await this.database
+        // Upsert de cada escritura pendiente de la tarea.
         .prepare(
           `INSERT INTO research_checkpoint_writes
              (thread_id, checkpoint_ns, checkpoint_id, task_id, idx, channel, type, value)
@@ -347,6 +355,7 @@ export class D1CheckpointSaver extends BaseCheckpointSaver {
              type = excluded.type,
              value = excluded.value`,
         )
+        // Valores: hilo, espacio, checkpoint, tarea, posición, canal, tipo y valor.
         .bind(threadId, checkpointNs, checkpointId, taskId, idx, channel, type, encode(type, bytes))
         .run();
     }
@@ -403,6 +412,7 @@ export class D1CheckpointSaver extends BaseCheckpointSaver {
     );
     // Tupla con configuración, checkpoint, metadatos y escrituras.
     const tuple: CheckpointTuple = {
+      // Configuración que identifica este checkpoint.
       config: {
         configurable: {
           thread_id: threadId,
@@ -410,6 +420,7 @@ export class D1CheckpointSaver extends BaseCheckpointSaver {
           checkpoint_id: row.checkpoint_id,
         },
       },
+      // Checkpoint, metadatos y escrituras pendientes ya deserializados.
       checkpoint,
       metadata,
       pendingWrites,

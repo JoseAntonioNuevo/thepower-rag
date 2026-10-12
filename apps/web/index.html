@@ -1,16 +1,28 @@
 <!doctype html>
+<!--
+  GUÍA DE LECTURA · apps/web/index.html
+  Página única de la aplicación. Vite la usa como punto de entrada: en desarrollo sirve este
+  archivo y, al compilar, sustituye el script por el bundle de React con su hash. El Worker la
+  devuelve para cualquier ruta que no sea /api/* (not_found_handling: single-page-application).
+-->
 <html lang="es">
   <head>
+    <!-- UTF-8 para tildes y eñes. -->
     <meta charset="UTF-8" />
+    <!-- Ancho del dispositivo en móvil, sin zoom inicial. -->
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <!-- Título de la pestaña. -->
     <title>The Power RAG y CRAG</title>
+    <!-- Icono: un cuadrado azul en SVG dentro de la URL, sin pedir otro archivo. -->
     <link
       rel="icon"
       href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Crect width='16' height='16' fill='%231d4e89'/%3E%3C/svg%3E"
     />
   </head>
   <body>
+    <!-- React monta toda la interfaz dentro de este nodo (ver src/main.tsx). -->
     <div id="root"></div>
+    <!-- Módulo ES que arranca React; Vite lo transforma y lo empaqueta. -->
     <script type="module" src="/src/main.tsx"></script>
   </body>
 </html>

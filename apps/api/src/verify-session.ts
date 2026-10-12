@@ -78,15 +78,19 @@ export async function runVerificationSession(input: {
       input.ledger.settle(reserved.id, null);
       // Stream fijo.
       return {
+        // Stream simulado: inicio, texto fijo y fin, como un proveedor.
         stream: simulateReadableStream({
           chunks: [
             { type: "text-start", id: "text-1" },
             { type: "text-delta", id: "text-1", delta: "Respuesta de verificación local." },
             { type: "text-end", id: "text-1" },
+            // Fin con consumo pequeño de tokens.
             {
+              // Motivo de fin normal.
               type: "finish",
               finishReason: { unified: "stop", raw: undefined },
               logprobs: undefined,
+              // Consumo: 4 tokens de entrada y 2 de salida.
               usage: {
                 inputTokens: { total: 4, noCache: 4, cacheRead: undefined, cacheWrite: undefined },
                 outputTokens: { total: 2, text: 2, reasoning: undefined },
@@ -101,9 +105,11 @@ export async function runVerificationSession(input: {
   const chunk = fixtureChunks().find((item) => item.chunkId.includes("s05-langgraph"));
   // Evidencia de CRAG.
   const evidence: CragChunk[] =
+    // Sin el fragmento de S5 no hay evidencia.
     chunk === undefined
       ? []
       : [
+          // Fragmento de S5 con el perfil de la verificación y puntuación fija.
           {
             documentId: chunk.documentId,
             chunkId: chunk.chunkId,
@@ -142,23 +148,30 @@ export async function runVerificationSession(input: {
       // Reservada.
       return { ok: true };
     },
+    // Búsqueda: siempre devuelve la evidencia de S5.
     retrieve: async () => ({ ok: true, providerCall: true, chunks: evidence }),
+    // Evaluación: suficiente con todos los fragmentos.
     rankAndAssess: async ({ chunks }) => ({
+      // Llamada de pago simulada.
       ok: true,
       providerCall: true,
       raw: {
+        // Todos los fragmentos con puntuación 0,8.
         ranking: chunks.map((item) => ({
           chunkId: item.chunkId,
           score: 0.8,
           reason: "cubre la pregunta en la verificación",
         })),
+        // Suficiente y todos útiles.
         status: "sufficient",
         reason: "basta una fuente del curso",
         gaps: [],
         usefulIds: chunks.map((item) => item.chunkId),
       },
     }),
+    // Reformular no hace falta en este recorrido.
     reformulate: async () => ({ ok: false, reason: "no hace falta", providerCall: false }),
+    // Generación con una cita al primer fragmento aceptado.
     generate: async ({ evidence: accepted }) => ({
       ok: true,
       providerCall: true,
@@ -169,16 +182,19 @@ export async function runVerificationSession(input: {
   };
   // Entorno real con valores de prueba.
   const env = {
+    // Generación con clave de prueba.
     APP_MODE: "real",
     ANTHROPIC_API_KEY: "local-test-key",
     MODEL_ID: "example/generator",
     EVALUATOR_MODEL_ID: "example/evaluator",
+    // RAG real con el corpus de la demo y el perfil de la verificación.
     EMBEDDING_MODEL: "@cf/baai/bge-m3",
     EMBEDDING_DIMENSIONS: "32",
     CORPUS_VERSION: fixtureCorpusVersion(),
     INDEX_PROFILE: input.profileId,
     VECTOR_METRIC: "cosine",
     MIN_RETRIEVAL_SCORE: "0.33",
+    // Bindings vacíos: los datos los inyecta la verificación.
     AI: {},
     VECTORIZE: {},
     DB: {},
@@ -203,6 +219,7 @@ export async function runVerificationSession(input: {
       // Vector de la demo.
       return fixtureEmbed(text);
     },
+    // Perfil listo y coherente con las variables.
     profile: {
       id: input.profileId,
       corpusVersion: fixtureCorpusVersion(),
@@ -213,6 +230,7 @@ export async function runVerificationSession(input: {
       status: "ready",
       providerRevision: null,
     },
+    // Puertos CRAG emulados.
     cragPorts: ports,
   });
   // Resultado de cada etapa.

@@ -45,18 +45,23 @@ const planSchema = z.object({
   // La explicación se recorta después de generarla; las subpreguntas y los argumentos de
   // herramienta o buscador mantienen sus límites estrictos en el esquema.
   rationale: z.string(),
+  // Pregunta de vuelta al alumno cuando la ruta es «clarify»; null en otro caso.
   clarification: z.string().max(RESEARCH_LIMITS.maxReasonChars).nullable(),
+  // De 1 a 3 subpreguntas, cada una con id q1..q3, texto, tipo y si necesita la web.
   subquestions: z
     .array(
       z.object({
         id: sid,
         text: z.string().max(RESEARCH_LIMITS.maxSubquestionChars),
+        // course: dato del curso; session: ficha de una sesión; technical: tema técnico externo.
         kind: z.enum(["course", "session", "technical"]),
         external: z.boolean(),
+        // Consulta para el buscador web, o null si no busca fuera.
         query: z.string().max(RESEARCH_LIMITS.maxQueryChars).nullable(),
       }),
     )
     .max(RESEARCH_LIMITS.maxSubquestions),
+  // Herramienta get_course_session: qué sesión y qué grupo consultar, o null.
   tool: z
     .object({ sessionId: z.string().max(8), audience: z.enum(["program", "L/X", "M/J"]) })
     .nullable(),
@@ -64,17 +69,22 @@ const planSchema = z.object({
 
 // Esquema de la evaluación: decisión por fuente, cobertura por subpregunta y contradicciones.
 const assessSchema = z.object({
+  // Una decisión por fuente mostrada: aceptar o rechazar, para qué subpreguntas y con qué
+  // extractos.
   items: z
     .array(
       z.object({
         sourceId: z.string().max(128),
         decision: z.enum(["accept", "reject"]),
         subquestionIds: z.array(sid).max(RESEARCH_LIMITS.maxSubquestions),
+        // El modelo solo devuelve índices de extractos; el servidor copia el texto literal.
         excerptIds: z.array(z.number().int().min(0)).max(RESEARCH_LIMITS.maxExcerptsPerSource),
         reason: z.string(),
       }),
     )
     .max(RESEARCH_LIMITS.maxEvidenceItems),
+  // Cobertura de cada subpregunta: cubierta, parcial o sin cubrir, la laguna y si merece
+  // seguimiento.
   coverage: z
     .array(
       z.object({
@@ -85,6 +95,7 @@ const assessSchema = z.object({
       }),
     )
     .max(RESEARCH_LIMITS.maxSubquestions),
+  // Contradicciones explícitas entre fuentes, como mucho 3.
   contradictions: z.array(z.string().max(RESEARCH_LIMITS.maxReasonChars)).max(3),
 });
 
@@ -123,7 +134,9 @@ const excerptReference = z.object({
 
 // Esquema del informe: referencias de respuesta, hallazgos, comprobaciones y pendientes.
 const synthesisSchema = z.object({
+  // Respuesta directa: hasta 2 referencias a extractos.
   answerRefs: z.array(excerptReference).max(2),
+  // Hallazgos: cada uno apunta a un extracto de una subpregunta.
   findings: z
     .array(
       z.object({
@@ -132,6 +145,7 @@ const synthesisSchema = z.object({
       }),
     )
     .max(RESEARCH_LIMITS.maxFindings),
+  // Comprobaciones adicionales y lo que quedó sin resolver.
   checks: z.array(excerptReference).max(RESEARCH_LIMITS.maxChecks),
   unresolved: z
     .array(z.string().max(RESEARCH_LIMITS.maxReasonChars))
@@ -223,6 +237,7 @@ function validationPaths(error: unknown): string {
   let current = error;
   // Nombres de campo que se pueden mostrar.
   const allowed = new Set([
+    // Campos del plan.
     "rationale",
     "clarification",
     "subquestions",
@@ -235,6 +250,7 @@ function validationPaths(error: unknown): string {
     "sessionId",
     "audience",
     "route",
+    // Campos de la evaluación.
     "items",
     "sourceId",
     "decision",
@@ -246,6 +262,7 @@ function validationPaths(error: unknown): string {
     "gap",
     "followUp",
     "contradictions",
+    // Campos del informe.
     "answerRefs",
     "findings",
     "reference",
@@ -317,15 +334,19 @@ export function createResearchModelPort(input: {
       try {
         // Plan con esquema, sin reintentos.
         const result = await generateObject({
+          // Modelo planificador, esquema Zod y nombre del esquema que ve el proveedor.
           model: input.planner,
           schema: planSchema,
           schemaName: "research-plan",
+          // Instrucciones del plan y la pregunta con el grupo elegido.
           system: PLAN_PROMPT,
           prompt: `Grupo seleccionado: ${audience}\n\nPregunta original:\n${question}`,
+          // Tope de salida: el menor entre el del plan y el que permite la reserva del trabajo.
           maxOutputTokens: Math.min(
             RESEARCH_LIMITS.maxOutputTokens.plan,
             input.maxOutputTokens ?? Infinity,
           ),
+          // Sin reintentos (un reintento sería otra llamada de pago) y con la señal de cancelación.
           maxRetries: 0,
           abortSignal: context.signal,
         });
@@ -352,11 +373,16 @@ export function createResearchModelPort(input: {
       try {
         // Evaluación limitada al catálogo.
         const result = await generateObject({
+          // El esquema se limita al catálogo mostrado: no se pueden citar fuentes ni índices que no
+          // existen.
           model: input.planner,
           schema: boundedAssessmentSchema(catalog),
           schemaName: "research-evidence",
+          // El prompt manda la pregunta, la ronda, las subpreguntas, la cobertura previa y los
+          // DATOS con índices.
           system: ASSESS_PROMPT,
           prompt: `Pregunta original:\n${question}\n\nRonda: ${String(round)}\n\nSubpreguntas:\n${JSON.stringify(subquestions)}\n\nCobertura previa:\n${JSON.stringify(priorCoverage)}\n\nDATOS (usa únicamente los números excerptIndex mostrados):\n${JSON.stringify(catalog.map((source) => ({ ...source, excerpts: source.excerpts.map((text, excerptIndex) => ({ excerptIndex, text })) })))}`,
+          // Tope de salida y sin reintentos.
           maxOutputTokens: Math.min(
             RESEARCH_LIMITS.maxOutputTokens.assess,
             input.maxOutputTokens ?? Infinity,
@@ -370,13 +396,16 @@ export function createResearchModelPort(input: {
         try {
           // Evaluación con explicaciones recortadas y extractos resueltos a texto.
           return {
+            // Resultado correcto con el consumo de tokens.
             ok: true,
             value: {
               ...result.object,
+              // Las lagunas se recortan al tamaño permitido.
               coverage: result.object.coverage.map((entry) => ({
                 ...entry,
                 gap: entry.gap === null ? null : boundedExplanation(entry.gap),
               })),
+              // Los índices de extractos se convierten en el texto exacto de la fuente.
               items: result.object.items.map(({ excerptIds, ...item }) => ({
                 ...item,
                 reason: boundedExplanation(item.reason),
@@ -407,11 +436,14 @@ export function createResearchModelPort(input: {
       try {
         // Nuevas consultas para cubrir lagunas.
         const result = await generateObject({
+          // Esquema del seguimiento: nuevas consultas por subpregunta.
           model: input.planner,
           schema: followUpSchema,
           schemaName: "research-follow-up",
           system: FOLLOW_UP_PROMPT,
+          // Pregunta original, lagunas y consultas ya hechas (para no repetirlas).
           prompt: `Pregunta original:\n${question}\n\nLagunas:\n${JSON.stringify(gaps)}\n\nConsultas anteriores:\n${previousQueries.join("\n")}`,
+          // Tope de salida y sin reintentos.
           maxOutputTokens: Math.min(
             RESEARCH_LIMITS.maxOutputTokens.followUp,
             input.maxOutputTokens ?? Infinity,
@@ -435,11 +467,14 @@ export function createResearchModelPort(input: {
       try {
         // Informe con referencias a extractos admitidos.
         const result = await generateObject({
+          // El generador redacta el informe solo con referencias a extractos admitidos.
           model: input.generator,
           schema: synthesisSchema,
           schemaName: "research-report",
           system: SYNTHESIS_PROMPT,
+          // DATOS: cada extracto admitido con su excerptIndex explícito.
           prompt: `Pregunta original:\n${question}\n\nSubpreguntas:\n${JSON.stringify(subquestions)}\n\nCobertura:\n${JSON.stringify(coverage)}\n\nContradicciones:\n${JSON.stringify(contradictions)}\n\nDATOS: extractos admitidos con excerptIndex explícito:\n${JSON.stringify(evidence.map((item) => ({ sourceId: item.sourceId, subquestionIds: item.subquestionIds, excerpts: item.excerpts.map((text, excerptIndex) => ({ excerptIndex, text })) })))}`,
+          // Tope de salida y sin reintentos.
           maxOutputTokens: Math.min(
             RESEARCH_LIMITS.maxOutputTokens.synthesis,
             input.maxOutputTokens ?? Infinity,
@@ -455,16 +490,20 @@ export function createResearchModelPort(input: {
           const answers = result.object.answerRefs.map((ref) => resolveExcerpt(ref, evidence));
           // Informe con textos y fuentes resueltos.
           return {
+            // El informe se arma con el texto literal de los extractos referenciados.
             ok: true,
             value: {
+              // Respuesta: textos unidos y fuentes sin repetir.
               answer: {
                 text: answers.map((item) => item.text).join(";\n"),
                 sourceIds: [...new Set(answers.flatMap((item) => item.sourceIds))],
               },
+              // Cada hallazgo con su subpregunta y su extracto resuelto.
               findings: result.object.findings.map((item) => ({
                 subquestionId: item.subquestionId,
                 ...resolveExcerpt(item.reference, evidence),
               })),
+              // Comprobaciones y pendientes.
               checks: result.object.checks.map((ref) => resolveExcerpt(ref, evidence)),
               unresolved: result.object.unresolved,
             },
@@ -618,17 +657,20 @@ export function createRealResearchPorts(input: RealResearchInput): ResearchPorts
         outputUsdPerMillion: input.settings.outputUsdPerMillion,
       },
     }),
+    // Curso: Vectorize + D1 con los ajustes de recuperación del RAG.
     course: createVectorCoursePort({
       embedder: input.embedder,
       index: input.index,
       database: input.database,
       retrieval: input.retrieval,
     }),
+    // Herramienta de sesiones: solo lectura del corpus de esta versión y grupo.
     tool: createCourseSessionTool({
       corpusVersion: input.corpusVersion,
       audience: input.audience,
       read: (corpusVersion, chunkId) => readChunk(input.database, corpusVersion, chunkId),
     }),
+    // Buscador web: Tavily o Firecrawl, según RESEARCH_SEARCH_PROVIDER.
     search:
       input.settings.searchProvider === "tavily"
         ? createTavilySearch({ apiKey: input.settings.tavilyApiKey ?? "", fetch: input.fetch })
@@ -637,6 +679,7 @@ export function createRealResearchPorts(input: RealResearchInput): ResearchPorts
             usdPerCredit,
             fetch: input.fetch,
           }),
+    // Lector de páginas del mismo proveedor, restringido a los dominios permitidos.
     reader:
       input.settings.searchProvider === "tavily"
         ? createTavilyReader({

@@ -32,35 +32,43 @@ describe("historial", () => {
   it("acepta un seguimiento después del máximo de fuentes y del resumen de CRAG", () => {
     // Resumen de CRAG de prueba con todos los campos obligatorios.
     const summary: CragSummary = {
+      // Identidad y modo de la ejecución.
       runId: "run-1",
       fixture: true,
       scenarioId: "partial-s5-s6",
       measured: false,
       partial: true,
+      // Alcance.
       audience: "program",
       corpusVersion: "c-test",
       profileId: "p-test",
+      // Pregunta, consulta y contadores.
       originalQuestion: "estado y observabilidad",
       currentQuery: "observabilidad",
       retrievalCount: 2,
       reformulationCount: 1,
       attemptsRemaining: 1,
       rewritesRemaining: 1,
+      // Decisión y final.
       evidenceStatus: "sufficient",
       terminal: "answer",
       reason: "Guion de prueba.",
+      // Un fragmento conservado.
       retained: [{ chunkId: "s5", reason: "Útil.", score: 0.8 }],
+      // El mismo id descartado tres veces, una por intento.
       discarded: [
         { chunkId: "s16", reason: "Rechazado.", attempt: 1 },
         { chunkId: "s16", reason: "Rechazado otra vez.", attempt: 2 },
         { chunkId: "s16", reason: "Rechazado al final.", attempt: 3 },
       ],
+      // Llamadas por paso, sin medir.
       calls: {
         retrieval: { executions: 2, providerCalls: null, durationMs: null },
         evaluation: { executions: 2, providerCalls: null, durationMs: null },
         reformulation: { executions: 1, providerCalls: null, durationMs: null },
         generation: { executions: 1, providerCalls: null, durationMs: null },
       },
+      // Consumo y coste desconocidos.
       usage: null,
       cost: null,
     };
@@ -78,9 +86,11 @@ describe("historial", () => {
     }));
     // Historial con la respuesta de CRAG y una nueva pregunta.
     const parsed = chatRequestSchema.safeParse({
+      // Petición de CRAG.
       mode: "crag",
       audience: "program",
       messages: [
+        // Pregunta, respuesta con el resumen y las fuentes, y nueva pregunta.
         { id: "u1", role: "user", parts: [{ type: "text", text: "estado y observabilidad" }] },
         {
           id: "a1",
@@ -98,6 +108,7 @@ describe("historial", () => {
     expect(parsed.success).toBe(true);
     // Una parte data-step no está en el contrato del historial: debe rechazarse.
     const rejected = chatRequestSchema.safeParse({
+      // Historial con una parte data-step de un asistente.
       mode: "crag",
       messages: [
         {
@@ -105,6 +116,7 @@ describe("historial", () => {
           role: "assistant",
           parts: [
             { type: "text", text: "hola" },
+            // Paso del grafo: válido como evento del stream, pero no en el historial.
             {
               type: "data-step",
               data: {

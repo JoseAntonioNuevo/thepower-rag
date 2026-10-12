@@ -69,8 +69,10 @@ export function calendarOverviewOutcome(input: {
     chunk.text.trim().length > 0;
   // Responder con la ficha si es válida; si no, rechazar sin llamar al modelo.
   return {
+    // Responder con la ficha o rechazar sin evidencia.
     decision: valid ? "answer" : "refuse",
     evidence: valid ? [chunk] : [],
+    // Traza: deja claro que no hubo embeddings ni coseno.
     trace: {
       query: input.question,
       queryRewrite: "pending",
@@ -78,8 +80,10 @@ export function calendarOverviewOutcome(input: {
       embedding: "No ejecutado: búsqueda exacta del calendario por grupo",
       scoreMeaning:
         "Selección por metadatos de grupo, versión y documento. No se ha calculado un coseno ni una probabilidad.",
+      // La ficha aparece como recuperada sin puntuación.
       retrieved: valid ? [{ chunkId: chunk.chunkId, score: null, selected: true }] : [],
       decision: valid ? "answer" : "refuse",
+      // Solo se llama al modelo si la ficha es válida.
       generation: valid ? "called" : "skipped",
       status: valid
         ? "Recuperada la ficha de días y horario del calendario del grupo seleccionado."

@@ -4,19 +4,23 @@
 // Nunca llama a la red: solo mira nombres, valores y bindings.
 // Nombres de variables, límites y reglas compartidas del contrato.
 import {
+  // Variables de CRAG, proveedor por defecto, límites de medios y credencial de cada proveedor.
   CRAG_VARIABLES,
   DEFAULT_LLM_PROVIDER,
   MEDIA_LIMITS,
   PROVIDER_CREDENTIAL,
+  // Bindings y variables del RAG, autorización y variables de la investigación.
   RAG_BINDING_NAMES,
   RAG_SETTING_VARIABLES,
   RESEARCH_SPEND_TOKEN,
   RESEARCH_VARIABLES,
+  // Reglas: variables de generación, valor configurado, proveedor, razonamiento y visión.
   generationVariables,
   isConfiguredValue,
   llmProvider,
   reasoningEffort,
   visionModelAccepted,
+  // Tipos del estado de capacidad, proveedor y razonamiento.
   type CapabilityStatus,
   type LlmProvider,
   type ReasoningEffort,
@@ -318,17 +322,22 @@ export function researchSettings(
   // Ajustes completos.
   return {
     ok: true,
+    // Buscador elegido y, si es Tavily, su clave y precio por crédito.
     settings: {
       searchProvider: provider === "tavily" ? "tavily" : "firecrawl",
       ...(provider === "tavily"
         ? {
             tavilyApiKey: env.TAVILY_API_KEY?.trim() ?? "",
+            // firecrawlUsdPerCredit ya contiene el precio del crédito del buscador elegido (Tavily
+            // aquí).
             tavilyUsdPerCredit: firecrawlUsdPerCredit,
           }
         : {}),
+      // Modelo del planificador, clave de Firecrawl y dominios permitidos.
       plannerModelId: env.RESEARCH_MODEL_ID?.trim() ?? "",
       firecrawlApiKey: env.FIRECRAWL_API_KEY?.trim() ?? "",
       allowedDomains: domains.domains,
+      // Presupuesto y tarifas.
       budgetUsd,
       inputUsdPerMillion,
       outputUsdPerMillion,
@@ -395,13 +404,16 @@ export function mediaReadiness(env: WorkerEnv): MediaReadiness {
   const ai = env.AI != null;
   // Estado real.
   return {
+    // Almacenamiento de medios (R2 y D1).
     storage,
+    // Visión: proveedor válido, modelo que acepta imágenes y clave presente.
     vision:
       provider !== null &&
       visionModelAccepted(provider, visionId) &&
       isConfiguredValue(text(env, PROVIDER_CREDENTIAL[provider] as keyof WorkerEnv))
         ? "configured"
         : "missing",
+    // Transcripción y voz: binding AI y modelo (el configurado o el de por defecto).
     transcription:
       ai && (env.RESEARCH_STT_MODEL_ID?.trim() || MEDIA_LIMITS.sttModelId).length > 0
         ? "configured"
@@ -410,6 +422,7 @@ export function mediaReadiness(env: WorkerEnv): MediaReadiness {
       ai && (env.RESEARCH_TTS_MODEL_ID?.trim() || MEDIA_LIMITS.ttsModelId).length > 0
         ? "configured"
         : "missing",
+    // Configurado no significa comprobado: no se llama a ningún proveedor.
     note: "Configurar no ejecuta visión, transcripción ni voz.",
   };
 }
@@ -626,6 +639,7 @@ export function generationSettings(env: WorkerEnv): GenerationSettings | null {
   const credential = text(env, PROVIDER_CREDENTIAL[provider] as keyof WorkerEnv)?.trim() ?? "";
   // Ajustes de generación.
   return {
+    // Proveedor y clave. En «compatible» la clave es opcional.
     provider,
     apiKey:
       provider === "compatible"
@@ -633,10 +647,13 @@ export function generationSettings(env: WorkerEnv): GenerationSettings | null {
           ? (env.COMPAT_API_KEY?.trim() ?? "")
           : ""
         : credential,
+    // Modelo generativo.
     modelId: text(env, "MODEL_ID")?.trim() ?? "",
+    // Espacio de trabajo de Anthropic, solo si está configurado.
     ...(provider === "anthropic" && isConfiguredValue(text(env, "ANTHROPIC_WORKSPACE_ID"))
       ? { workspaceId: text(env, "ANTHROPIC_WORKSPACE_ID")?.trim() }
       : {}),
+    // En «compatible», la URL base del servidor.
     ...(provider === "compatible" ? { baseURL: credential } : {}),
     // Solo un LLM_REASONING_EFFORT escrito fija el nivel; sin él decide cada proveedor.
     ...(isConfiguredValue(env.LLM_REASONING_EFFORT) && reasoning !== "invalid"
@@ -691,10 +708,12 @@ export function assessWorker(env: WorkerEnv): Assessment {
   if (requested !== undefined && requested !== "demo" && requested !== "real") {
     // Todo bloqueado.
     return {
+      // Valor desconocido: no se adivina el modo, se bloquean todas las etapas.
       execution: "misconfigured",
       message: "APP_MODE debe ser demo o real.",
       generation: null,
       retrieval: null,
+      // Cada etapa dice qué falta: APP_MODE.
       capabilities: {
         "sin-rag": { status: "blocked", missing: ["APP_MODE"] },
         rag: { status: "blocked", missing: ["APP_MODE"] },
@@ -727,10 +746,12 @@ export function assessWorker(env: WorkerEnv): Assessment {
   if (requested === undefined || requested === "demo") {
     // Diagnóstico de la demo.
     return {
+      // Demo: nada que configurar; todo funciona sin red ni claves.
       execution: "demo",
       message: null,
       generation: null,
       retrieval: null,
+      // Estados «offline-*»: la interfaz los muestra como demostración, no como servicio real.
       capabilities: {
         "sin-rag": { status: "offline-demo", missing: [] },
         rag: { status: "offline-fixture", missing: [] },
@@ -742,13 +763,17 @@ export function assessWorker(env: WorkerEnv): Assessment {
 
   // Diagnóstico del modo real por etapa.
   return {
+    // Modo real: cada etapa se habilita por separado según lo que esté configurado.
     execution: "real",
+    // Mensaje global si falta lo mínimo (generación). No se cae a la demo.
     message:
       generation === null
         ? "El modo real necesita la configuración de generación. No hay demostración de sustitución."
         : null,
+    // Ajustes resueltos de generación y recuperación (o null).
     generation,
     retrieval,
+    // Sin RAG necesita generación; RAG, la recuperación completa; CRAG, además el evaluador.
     capabilities: {
       "sin-rag": { status: generation ? "ready" : "blocked", missing: generationGaps },
       rag: { status: retrieval ? "ready" : "blocked", missing: ragMissing },
@@ -757,6 +782,7 @@ export function assessWorker(env: WorkerEnv): Assessment {
           retrieval !== null && absent(env, CRAG_VARIABLES).length === 0 ? "ready" : "blocked",
         missing: [...new Set([...ragMissing, ...absent(env, CRAG_VARIABLES)])],
       },
+      // La investigación tiene su propio diagnóstico.
       research: researchCapability(env, ragMissing),
     },
   };

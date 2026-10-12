@@ -15,20 +15,25 @@ export const OUTCOME_LABEL: Record<ResearchSummary["outcome"], string> = {
 
 // Texto de cada motivo de parada.
 export const STOP_LABEL: Record<ResearchSummary["stop"], string> = {
+  // Paradas normales.
   "all-covered": "Todas las subpreguntas tienen evidencia",
   "course-answer": "Respuesta con el material del curso, sin búsqueda externa",
   clarify: "Falta información para empezar",
+  // Topes del laboratorio.
   "max-rounds": "Máximo de rondas alcanzado",
   "search-budget": "Sin búsquedas externas disponibles",
   "page-budget": "Sin lecturas de páginas disponibles",
   deadline: "Plazo total agotado",
+  // Falta de progreso o de lagunas concretas.
   "no-progress": "La ronda de seguimiento no añadió evidencia",
   "repeated-queries": "Las consultas de seguimiento repetían búsquedas",
   "no-specific-gap": "No queda una laguna con búsqueda concreta",
+  // Fallos y cancelación.
   "provider-failure": "Fallo operativo de búsqueda o lectura",
   "model-failure": "Fallo de una llamada de modelo",
   "invalid-output": "Salida del modelo no válida",
   aborted: "Petición detenida",
+  // Nada sostenido o contradicción.
   "nothing-supported": "Ninguna afirmación superó la comprobación",
   "unresolved-contradiction": "Contradicción sin resolver",
 };

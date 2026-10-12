@@ -76,6 +76,7 @@ describe("reconciliación de cobertura", () => {
   it("acepta una bajada a parcial cuando el evaluador la propone con apoyo", () => {
     // Propuesta parcial con laguna concreta.
     const result = reconcileCoverage(
+      // Propuesta del evaluador: q1 baja a parcial, con laguna y apoyo en web-a.
       [
         {
           subquestionId: "q1",
@@ -85,6 +86,7 @@ describe("reconciliación de cobertura", () => {
           sourceIds: ["web-a"],
         },
       ],
+      // Cobertura previa, evidencia aceptada, subpreguntas y fuentes mostradas.
       [previous],
       [accepted("web-a")],
       [sub],
@@ -100,6 +102,7 @@ describe("reconciliación de cobertura", () => {
   it("deja sin cubrir la subpregunta si la evidencia anterior se rechazó", () => {
     // Ninguna evidencia aceptada.
     const result = reconcileCoverage(
+      // Propuesta: q1 sin cubrir y sin fuentes.
       [
         {
           subquestionId: "q1",
@@ -109,6 +112,7 @@ describe("reconciliación de cobertura", () => {
           sourceIds: [],
         },
       ],
+      // Cobertura previa, sin evidencia aceptada, subpreguntas y fuentes mostradas.
       [previous],
       [],
       [sub],

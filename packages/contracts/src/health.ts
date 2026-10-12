@@ -32,10 +32,13 @@ export const healthResponseSchema = z.object({
   }),
   // Corpus consultado y su perfil de índice.
   corpus: z.object({
+    // Versión preparada, de contenido y perfil (null si no se conocen).
     version: z.string().nullable(),
     contentVersion: z.string().nullable(),
     profileId: z.string().nullable(),
+    // Familia del índice: léxico de prueba, BGE-M3 real o desconocida.
     profileFamily: z.enum(["fixture", "workers-ai", "unknown"]),
+    // Cobertura del corpus por apartado y si el índice remoto se verificó.
     coverage: z.object({
       curriculum: z.enum(["complete", "partial", "unknown"]),
       calendarLx: z.enum(["complete", "partial", "unknown"]),
@@ -43,6 +46,7 @@ export const healthResponseSchema = z.object({
       exerciseDetail: z.enum(["complete", "partial", "unknown"]),
       remote: z.enum(["not-verified", "index-verified"]),
     }),
+    // Modelo de embeddings, dimensión y revisión remota (siempre null por ahora).
     embedding: z.string(),
     dimensions: z.number().int().positive().nullable(),
     remoteRevision: z.null(),

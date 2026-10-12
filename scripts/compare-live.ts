@@ -97,16 +97,21 @@ for (const mode of ["rag", "crag"])
     const finish = events.findLast((e) => e.type === "finish")?.messageMetadata;
     // Resultado con latencia, fuentes y traza; la nota manual queda pendiente.
     const result = {
+      // Pregunta, modo y fecha.
       ...q,
       mode,
       at: new Date().toISOString(),
+      // Código HTTP y latencia.
       status: response.status,
       latencyMs: Date.now() - start,
+      // Texto, metadatos y resumen de CRAG.
       answer,
       metadata: finish ?? null,
       crag: summary ?? null,
+      // Fuentes citadas y traza.
       sources: events.filter((e) => e.type === "data-source").map((e) => e.data),
       trace: events.find((e) => e.type === "data-trace")?.data ?? null,
+      // La nota la pone una persona después; null hasta entonces.
       manualGrade: null,
       error: response.ok ? null : raw,
     };
@@ -143,20 +148,24 @@ function csv(value: unknown): string {
 
 // Escribe el CSV.
 writeFileSync(
+  // Cabecera del CSV.
   path.join(resultDir, "resultados.csv"),
   "mode,id,audience,status,latencyMs,answer,completion,generationCostUsd\n" +
     results
       .map((r) =>
+        // Una fila por respuesta con modo, id, grupo, estado y latencia.
         [
           r.mode,
           r.id,
           r.audience,
           r.status,
+          // Respuesta, cómo terminó y coste de la generación final.
           r.latencyMs,
           r.answer,
           (r.metadata as { completion?: string } | null)?.completion,
           (r.metadata as { cost?: { amount: number } } | null)?.cost?.amount,
         ]
+          // Cada celda se escapa para el CSV.
           .map(csv)
           .join(","),
       )

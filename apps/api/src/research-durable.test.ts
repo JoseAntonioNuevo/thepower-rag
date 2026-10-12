@@ -25,17 +25,21 @@ import { runResearchTick } from "./research-runner";
 import { openResearchSqlite } from "./research-sqlite";
 // Operaciones del almacén.
 import {
+  // Admitir, operaciones, cancelación y reclamación de trabajos.
   admitJob,
   beginOperation,
   cancelJob,
   claimJob,
   completeOperation,
+  // Conversaciones, cierre y lectura de trabajos.
   createConversation,
   finishJob,
   getJob,
+  // Retención de llamadas enviadas y listados.
   holdDispatched,
   listMessages,
   listOperations,
+  // Marcar enviada, memoria, recuperación, limpieza, cuenta y reanudación.
   markDispatched,
   memoryTurns,
   promoteDispatched,
@@ -55,15 +59,19 @@ import { fixtureCorpusVersion } from "./fixture";
 function prices(hold = 100): PriceSnapshot {
   // Instantánea v3.
   return {
+    // Versión actual de la instantánea y buscador.
     version: RESEARCH_PRICE_VERSION,
     searchProvider: "firecrawl",
+    // Presupuesto de 1 USD y tope por trabajo de 0,25 USD, en micro-USD.
     budgetMicros: 1_000_000,
     jobLimitMicros: 250_000,
+    // Precio de cada tipo de llamada y reserva inicial configurable.
     modelCallMicros: 10,
     searchMicros: 10,
     readMicros: 10,
     courseMicros: 10,
     holdMicros: hold,
+    // Precios de visión, transcripción por minuto, voz por carácter y tope de la voz.
     visionCallMicros: 10,
     sttMicrosPerMinute: 510,
     ttsMicrosPerChar: 30,
@@ -117,14 +125,17 @@ async function submit(
   const now = input.now ?? 5_000;
   // Admite.
   return admitJob(database, {
+    // Dueño, conversación, clave y huella (derivada de la pregunta si no se da).
     ownerId: input.ownerId,
     conversationId: input.conversationId,
     idempotencyKey: input.key,
     fingerprint: input.fingerprint ?? `fp:${input.question}`,
+    // Pregunta, sin memoria y guion suficiente por defecto.
     originalQuestion: input.question,
     contextualized: null,
     scenarioId: input.scenarioId ?? "sufficient-first-round",
     corpusVersion: fixtureCorpusVersion(),
+    // Tarifas con la reserva pedida, fecha y plazos.
     prices: prices(input.hold ?? 100),
     now,
     deadlineMs: RESEARCH_LIMITS.deadlineMs,
@@ -303,6 +314,7 @@ describe("investigación durable", () => {
     const right = await conversation(database, "owner-a", "M/J");
     // Dos envíos a la vez.
     const [one, two] = await Promise.all([
+      // Dos envíos simultáneos del mismo dueño en conversaciones distintas.
       submit(database, {
         ownerId: "owner-a",
         conversationId: left.id,
@@ -310,6 +322,7 @@ describe("investigación durable", () => {
         question: "una",
         hold: 100,
       }),
+      // El segundo, en la otra conversación.
       submit(database, {
         ownerId: "owner-a",
         conversationId: right.id,
@@ -407,6 +420,7 @@ describe("investigación durable", () => {
     expect(await markDispatched(database, operation.id, operation.fence)).toBe(true);
     // Completada.
     expect(
+      // Cierra la operación con su resultado JSON y sin coste (kind: none).
       await completeOperation(database, {
         operationId: operation.id,
         fence: operation.fence,
@@ -415,6 +429,7 @@ describe("investigación durable", () => {
           value: { route: "course" },
           consumption: { kind: "none" },
         }),
+        // Consumo y reserva de la operación.
         consumption: { kind: "none" },
         reservation: 10,
       }),
@@ -755,14 +770,17 @@ describe("investigación durable", () => {
   it("la investigación real sigue bloqueada sin la capacidad durable", () => {
     // Entorno real sin D1 ni Workflow.
     const blocked = assessWorker({
+      // Modo real con generación, investigación y precios, pero sin D1 ni Workflow.
       APP_MODE: "real",
       ANTHROPIC_API_KEY: "local-test-key",
       MODEL_ID: "example/generator",
       RESEARCH_MODEL_ID: "example/research",
+      // Clave del buscador, autorización de gasto y presupuesto.
       FIRECRAWL_API_KEY: "local-firecrawl",
       RESEARCH_SPEND_AUTHORIZATION: "s12-research-phase1",
       RESEARCH_BUDGET_USD: "1",
       RESEARCH_JOB_LIMIT_USD: "0.25",
+      // Tarifas y precio del crédito.
       RESEARCH_INPUT_USD_PER_MILLION: "0.2",
       RESEARCH_OUTPUT_USD_PER_MILLION: "1",
       FIRECRAWL_USD_PER_CREDIT: "0.01",
@@ -777,13 +795,16 @@ describe("investigación durable", () => {
     expect(blocked.capabilities.research.missing).not.toContain("RESEARCH_DURABLE_ACCOUNTING");
     // Entorno con Turnstile.
     const turnstileEnv = {
+      // Mismo entorno con origen público y secreto de Turnstile.
       APP_MODE: "real",
       PUBLIC_ORIGIN: "https://example.test",
       TURNSTILE_SECRET_KEY: "local-turnstile-secret-value",
       ANTHROPIC_API_KEY: "local-test-key",
+      // Generación, investigación y buscador.
       MODEL_ID: "example/generator",
       RESEARCH_MODEL_ID: "example/research",
       FIRECRAWL_API_KEY: "local-firecrawl",
+      // Autorización, presupuesto y tarifas.
       RESEARCH_SPEND_AUTHORIZATION: "s12-research-phase1",
       RESEARCH_BUDGET_USD: "1",
       RESEARCH_JOB_LIMIT_USD: "0.25",

@@ -65,12 +65,17 @@ it("contexto parcial, duplicado, alterado o fuera de ámbito se bloquea", async 
   const selected = rows.filter((r) => r.audience === "program");
   // Cada caso inválido.
   for (const bad of [
+    // Falta un fragmento.
     selected.slice(1),
+    // Un fragmento duplicado.
     [...selected, selected[0]!],
+    // Un texto alterado.
     [...selected.slice(1), { ...selected[0]!, text: "altered" }],
+    // Fragmentos de otros grupos.
     rows,
   ])
     await expect(
+      // Cada caso debe rechazarse: no se trunca ni se completa el contexto.
       readCourseContext(
         database(bad),
         prepared.preparationId,
@@ -94,6 +99,7 @@ it("el modelo recibe el curso completo y el historial, y se muestran solo fuente
       prompt = JSON.stringify(options);
       // Stream de respuesta.
       return {
+        // Stream simulado con una respuesta que cita el primer fragmento.
         stream: simulateReadableStream({
           chunks: [
             { type: "text-start", id: "a" },
@@ -103,6 +109,7 @@ it("el modelo recibe el curso completo y el historial, y se muestran solo fuente
               delta: `La siguiente es S5, LangGraph [cite:${first.chunkId}]`,
             },
             { type: "text-end", id: "a" },
+            // Fin con consumo.
             {
               type: "finish",
               finishReason: { unified: "stop", raw: undefined },
@@ -139,16 +146,19 @@ it("el modelo recibe el curso completo y el historial, y se muestran solo fuente
   });
   // Entorno real con contexto completo.
   const env: WorkerEnv = {
+    // Modo real con contexto completo y modelo de prueba.
     APP_MODE: "real",
     RAG_CONTEXT_MODE: "complete",
     ANTHROPIC_API_KEY: "synthetic-key",
     MODEL_ID: "example/model",
+    // Ajustes del índice: el modo completo no lo usa, pero la capacidad los exige.
     EMBEDDING_MODEL: "@cf/baai/bge-m3",
     EMBEDDING_DIMENSIONS: "1024",
     CORPUS_VERSION: prepared.preparationId,
     INDEX_PROFILE: profile.id,
     VECTOR_METRIC: "cosine",
     MIN_RETRIEVAL_SCORE: ".5",
+    // Bindings: embeddings y D1 con los fragmentos del programa.
     AI: { run: embed },
     VECTORIZE: {},
     DB: database(selected),

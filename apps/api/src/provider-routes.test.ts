@@ -36,21 +36,25 @@ interface Captured {
 /** Fichas del catálogo de OpenRouter con la forma real de /api/v1/models. */
 const CATALOG = {
   data: [
+    // Razonamiento opcional con niveles altos y bajos: se puede apagar.
     {
       id: "anthropic/claude-haiku-5.5",
       supported_parameters: ["max_tokens", "reasoning"],
       reasoning: { mandatory: false, supported_efforts: ["max", "xhigh", "high", "medium", "low"] },
     },
+    // Razonamiento obligatorio: se pide el nivel más bajo.
     {
       id: "z-ai/glm-5.3",
       supported_parameters: ["max_tokens", "reasoning", "temperature"],
       reasoning: { mandatory: true, supported_efforts: ["max", "high", "low"] },
     },
+    // Solo niveles altos: se omite para no subir el razonamiento.
     {
       id: "deepseek/deepseek-v4-flash",
       supported_parameters: ["max_tokens", "reasoning"],
       reasoning: { mandatory: false, supported_efforts: ["xhigh", "high"] },
     },
+    // Sin razonamiento: no se envía nada.
     { id: "meta-llama/llama-4-maverick", supported_parameters: ["max_tokens", "temperature"] },
   ],
 };

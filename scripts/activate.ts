@@ -216,24 +216,30 @@ if (!ACTIVATION_COMMANDS.includes(command)) {
           }
           // Arranca el puente.
           const owned = await startOwnedBridge({
+            // Cuenta, puertos y ficha aleatoria de 24 bytes.
             accountId: parsed.auth.accountId ?? COURSE_DESTINATION.accountId,
             port,
             inspectorPort: port + 1,
             token: randomBytes(24).toString("hex"),
+            // Raíz, papel, si usa recursos remotos y carpeta de estado.
             projectRoot: root,
             role,
             remote,
             persistDir: path.join(sessionDir, "wrangler-state"),
+            // Índice y base (la base se lee después).
             indexName,
             databaseId: undefined,
+            // Modelos: emulados sin red o los autorizados.
             modelId: offline ? "local-emulated-generator" : (parsed.auth.modelId ?? undefined),
             evaluatorModelId: offline
               ? "local-emulated-evaluator"
               : (parsed.auth.modelId ?? undefined),
+            // Perfil, corpus, dimensión y umbral.
             profileId: profile?.id,
             corpusVersion: corpus.preparationId,
             dimensions: dimensions ?? undefined,
             minScore,
+            // Clave del proveedor, ejecutor de Wrangler y si es offline.
             apiKey,
             runner,
             offline,
@@ -262,14 +268,17 @@ if (!ACTIVATION_COMMANDS.includes(command)) {
               : { generative: 4, embedding: 128 };
           // Sesión de gasto.
           ledger = await openExecutionSession({
+            // Archivo de la sesión, cuenta, perfil y procedencia.
             file: sessionFile,
             accountId: parsed.auth.accountId ?? "",
             profileId: sessionProfile,
             provenance: sessionProvenance,
+            // Si los precios son sintéticos, tope de gasto y límites de llamadas.
             pricesSynthetic,
             maxSpendUsd: parsed.auth.maxSpendUsd ?? 0,
             maxGenerativeCalls: limits.generative,
             maxEmbeddingCalls: limits.embedding,
+            // Precios: sintéticos en offline; en real, los verificados o desconocidos.
             prices: offline
               ? {
                   embeddingUsdPerMillionInput: 0.0118,
@@ -293,20 +302,24 @@ if (!ACTIVATION_COMMANDS.includes(command)) {
               },
             },
             cwd: root,
+            // Carpeta de migraciones, corpus y plano de datos.
             migrationsDir: path.join(root, "apps/api/migrations"),
             corpusPath,
             corpus,
             plane,
+            // Sesión de gasto y rutas de recibos.
             allowance: ledger,
             paths: {
               receiptDir: sessionDir,
               cacheDir: path.join(sessionDir, "cache"),
               now: new Date().toISOString(),
             },
+            // Solo «verify» usa el verificador HTTP contra el puente.
             verifySession:
               role === "verify"
                 ? createHttpVerifier({ origin: owned.origin, token: owned.token })
                 : undefined,
+            // Precios y límites que se guardan con la sesión.
             sessionPrices: offline
               ? {
                   embeddingUsdPerMillionInput: 0.0118,
@@ -317,7 +330,8 @@ if (!ACTIVATION_COMMANDS.includes(command)) {
             sessionLimits: limits,
           });
         })()
-      : execute || read
+      : // Sin plano: ejecutor de Wrangler para identidad, inventario y migraciones (no en offline).
+        execute || read
         ? offline
           ? undefined
           : createCourseExecutor({

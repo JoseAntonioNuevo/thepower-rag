@@ -131,10 +131,12 @@ export default { async fetch(request, env, ctx) {
     const child = spawn(
       process.execPath,
       [
+        // wrangler dev con la configuración de la prueba.
         wrangler,
         "dev",
         "--config",
         configPath,
+        // Solo en 127.0.0.1, con sus puertos.
         "--ip",
         "127.0.0.1",
         "--port",
@@ -143,6 +145,7 @@ export default { async fetch(request, env, ctx) {
         String(inspector),
         "--inspector-ip",
         "127.0.0.1",
+        // Todo local, HTTP, sin sesión interactiva y solo errores.
         "--local",
         "--local-protocol",
         "http",
@@ -150,6 +153,7 @@ export default { async fetch(request, env, ctx) {
         "--log-level",
         "error",
       ],
+      // Proceso propio (detached) para poder parar su grupo.
       { cwd: root, env, detached: true, stdio: ["ignore", "pipe", "pipe"] },
     );
     // Registros.
@@ -225,12 +229,15 @@ export default { async fetch(request, env, ctx) {
       });
       // Investigación con la herramienta.
       const response = await fetch(`${base}/api/chat`, {
+        // POST al chat con el mismo origen.
         method: "POST",
         headers: { "content-type": "application/json", origin: base },
         body: JSON.stringify({
+          // Investigación del guion «course-tool» en el grupo M/J.
           mode: "research",
           audience: "M/J",
           researchScenario: "course-tool",
+          // Un mensaje del usuario con la pregunta.
           messages: [
             {
               id: "user-1",

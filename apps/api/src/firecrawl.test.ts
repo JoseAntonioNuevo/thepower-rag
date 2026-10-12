@@ -62,6 +62,7 @@ describe("adaptador Firecrawl con red simulada", () => {
         authorization = new Headers(init?.headers).get("authorization") ?? "";
         // Un resultado y 2 créditos.
         return jsonResponse({
+          // Respuesta de búsqueda válida con un resultado web.
           success: true,
           data: {
             web: [
@@ -72,6 +73,7 @@ describe("adaptador Firecrawl con red simulada", () => {
               },
             ],
           },
+          // Créditos que se convierten en consumo.
           creditsUsed: 2,
         });
       },
@@ -285,16 +287,19 @@ describe("adaptador Firecrawl con red simulada", () => {
         body = JSON.parse(requestText(init?.body));
         // Página que redirige a un dominio ajeno.
         return jsonResponse({
+          // Lectura válida pero cuya URL final es de un dominio no permitido.
           success: true,
           data: {
             markdown: "Texto de la página.",
             metadata: {
               title: "Fuera",
+              // url: destino final; sourceURL: lo que se pidió.
               url: "https://evil.example/secret",
               sourceURL: "https://docs.langchain.com/langgraph",
               statusCode: 200,
             },
           },
+          // Créditos.
           creditsUsed: 2,
         });
       },

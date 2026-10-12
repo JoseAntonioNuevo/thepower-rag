@@ -7,17 +7,21 @@ import { RESEARCH_LIMITS, type ResearchNode, type ResearchStep } from "@thepower
 import { normalizeQuery } from "@thepower-rag/core";
 // Reglas puras: URL permitidas, alcance, duplicados, instrucciones embebidas y topes.
 import {
+  // URL permitidas, alcance del curso, deduplicación e instrucciones embebidas.
   checkUrl,
   courseInScope,
   dedupeEvidence,
   flagEmbeddedInstructions,
+  // Texto plano, URL canónica y topes restantes.
   flatten,
   normalizeUrl,
   pagesLeft,
   remainingMs,
   searchesLeft,
+  // Validación de la herramienta e id de una fuente web.
   validateSessionArgs,
   webSourceId,
+  // Tipos de evidencia y de puertos.
   type CourseEvidence,
   type EvidenceItem,
   type ResearchPorts,
@@ -139,10 +143,12 @@ export async function courseNode(
     counters.courseQueries += 1;
     // Búsqueda en el curso con plazo.
     const result = await guardedCall(
+      // Puertos, inicio del trabajo y plazo de esta llamada.
       deps.ports,
       state.startedAt,
       RESEARCH_LIMITS.timeouts.courseMs,
       (context) =>
+        // Consulta al curso: texto, grupo, versión del corpus y número máximo de fragmentos.
         deps.ports.course.retrieve(
           {
             query: pending.query,
@@ -254,13 +260,17 @@ export async function toolNode(
     t.log(`get_course_session rechazada: ${args.reason}`);
     // Llamada rechazada sin ejecutar.
     return {
+      // Solo cuenta la llamada; no se ejecuta.
       counters,
+      // Registro de la llamada rechazada para la traza.
       toolCalls: [
         ...state.toolCalls,
         {
           round: state.round,
           name: "get_course_session",
+          // Argumentos recortados y grupo del estado (el modelo no puede pedir otro grupo).
           args: { sessionId: requested.sessionId.slice(0, 8), audience: state.audience },
+          // Estado «rejected», motivo y sin fuentes.
           status: "rejected",
           detail: args.reason,
           sourceIds: [],
@@ -324,19 +334,25 @@ export async function toolNode(
   );
   // Registro y candidato si es válida.
   return {
+    // Contadores y consumo.
     counters,
     ledger,
+    // Registro de la llamada con su resultado.
     toolCalls: [
       ...state.toolCalls,
       {
         round: state.round,
         name: "get_course_session",
+        // Argumentos ya validados.
         args: args.value,
+        // ok si devolvió datos documentados; rejected si la sesión no los tiene.
         status: valid ? "ok" : "rejected",
         detail: valid ? "Datos documentados del curso." : "Sin datos documentados para esa sesión.",
+        // Fuentes del corpus que respaldan la ficha (como mucho 4).
         sourceIds: valid ? evidence.backingSourceIds.slice(0, 4) : [],
       },
     ],
+    // Solo una ficha válida pasa a candidata para el evaluador.
     candidates: valid ? [...state.candidates, evidence] : state.candidates,
     trace: t.trace,
   };
@@ -415,10 +431,12 @@ export async function searchNode(
     counters.searchCalls += 1;
     // Búsqueda con plazo y dominios permitidos.
     const result = await guardedCall(
+      // Puertos, inicio y plazo de la búsqueda.
       deps.ports,
       state.startedAt,
       RESEARCH_LIMITS.timeouts.searchMs,
       (context) =>
+        // Búsqueda: consulta, dominios permitidos y número máximo de resultados.
         deps.ports.search.search(
           {
             query: pending.query,
@@ -612,9 +630,11 @@ export async function readNode(
     counters.pagesRead += 1;
     // Registro base.
     const base: ReadLog = {
+      // Registro de la lectura: empieza como error y se completa si va bien.
       round: state.round,
       subquestionId: page.subquestionId,
       url: page.url,
+      // URL final, fuente, estado, detalle, caracteres, hash e instrucciones incrustadas.
       finalUrl: null,
       sourceId: null,
       status: "error",
@@ -707,6 +727,7 @@ export async function readNode(
     const flagged = flagEmbeddedInstructions(text);
     // Evidencia web.
     const evidence: WebEvidence = {
+      // Evidencia web: id, URL pedida y canónica, dominio y título recortado.
       kind: "web",
       sourceId,
       requestedUrl: page.url,
@@ -716,7 +737,9 @@ export async function readNode(
         0,
         RESEARCH_LIMITS.maxTitleChars,
       ),
+      // Texto acotado de la página.
       text,
+      // Fechas, hash del contenido y si es una página de la demo.
       retrievedAt: snapshot.retrievedAt,
       publishedAt: snapshot.publishedAt,
       contentHash: snapshot.contentHash,
@@ -726,13 +749,17 @@ export async function readNode(
     candidates.push(evidence);
     // Registro correcto.
     pagesRead.push({
+      // Lectura correcta: URL final, fuente y estado «ok».
       ...base,
       finalUrl: evidence.url,
       sourceId,
       status: "ok",
+      // El detalle avisa si había texto con apariencia de órdenes: se trata como dato, no se
+      // obedece.
       detail: flagged
         ? "Leída. Contiene texto con apariencia de instrucciones: se trata como dato."
         : "Leída y acotada.",
+      // Tamaño, hash y marca de instrucciones.
       chars: text.length,
       contentHash: snapshot.contentHash,
       instructionsFlagged: flagged,

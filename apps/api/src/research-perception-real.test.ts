@@ -44,12 +44,14 @@ const imageBytes = async () => readFixtureBytes("dimension-mismatch.png");
 function usage(input: number | undefined, output: number | undefined) {
   // Tokens de entrada y salida.
   return {
+    // Formato de consumo del AI SDK: tokens de entrada (con y sin caché)…
     inputTokens: {
       total: input,
       noCache: input,
       cacheRead: undefined,
       cacheWrite: undefined,
     },
+    // …y de salida (texto y razonamiento).
     outputTokens: {
       total: output,
       text: output,
@@ -134,6 +136,7 @@ describe("adaptadores reales de medios con dobles", () => {
         calls += 1;
         // Respuesta con consumo.
         return {
+          // Respuesta simulada del modelo de visión: JSON con el texto leído.
           content: [
             {
               type: "text",
@@ -144,6 +147,7 @@ describe("adaptadores reales de medios con dobles", () => {
               }),
             },
           ],
+          // Fin normal y consumo de 1000 tokens de entrada y 100 de salida.
           finishReason: { unified: "stop", raw: undefined },
           usage: usage(1000, 100),
           warnings: [],
@@ -237,6 +241,7 @@ describe("adaptadores reales de medios con dobles", () => {
     const bytes = await imageBytes();
     // Modelo con salida sin contar.
     const partial = new MockLanguageModelV4({
+      // Responde bien, pero sin contar los tokens de salida.
       doGenerate: async () => ({
         content: [
           {
@@ -248,6 +253,7 @@ describe("adaptadores reales de medios con dobles", () => {
             }),
           },
         ],
+        // Consumo incompleto: salida desconocida.
         finishReason: { unified: "stop", raw: undefined },
         usage: usage(1000, undefined),
         warnings: [],
@@ -255,6 +261,7 @@ describe("adaptadores reales de medios con dobles", () => {
     });
     // Modelo sin consumo.
     const missing = new MockLanguageModelV4({
+      // Responde bien, pero sin ningún dato de consumo.
       doGenerate: async () => ({
         content: [
           {
@@ -266,6 +273,7 @@ describe("adaptadores reales de medios con dobles", () => {
             }),
           },
         ],
+        // Consumo totalmente desconocido.
         finishReason: { unified: "stop", raw: undefined },
         usage: usage(undefined, undefined),
         warnings: [],
@@ -501,6 +509,7 @@ describe("adaptadores reales de medios con dobles", () => {
   it("muestra la estimación en el resumen y sigue leyendo un resultado antiguo", () => {
     // Estado inicial.
     const state = initialResearchState(
+      // Petición mínima: ids, pregunta, observaciones, grupo, corpus y sin guion.
       {
         runId: "run",
         threadId: null,
@@ -510,6 +519,7 @@ describe("adaptadores reales de medios con dobles", () => {
         corpusVersion: "fixture",
         scenarioId: null,
       },
+      // Inicio en el instante 0.
       0,
     );
     // Parada.
@@ -545,8 +555,10 @@ describe("adaptadores reales de medios con dobles", () => {
     expect(summary.accounting.totalComplete).toBe(false);
     // Resumen antiguo sin estimación.
     const legacy = researchSummarySchema.parse({
+      // Mismo resumen con la contabilidad de un formato anterior (sin estimación).
       ...summary,
       accounting: {
+        // Medido, con USD informado por el proveedor y total completo.
         measured: true,
         estimatedMaxUsd: 1.25,
         providerReportedUsd: 0.02,

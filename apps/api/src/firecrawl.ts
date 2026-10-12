@@ -34,7 +34,9 @@ type FetchLike = (input: string, init: RequestInit) => Promise<Response>;
 
 // Forma esperada de la respuesta de búsqueda: resultados web y créditos usados.
 const searchSchema = z.object({
+  // success debe ser true.
   success: z.literal(true),
+  // Resultados web: URL, título y descripción opcionales, como mucho 100.
   data: z.object({
     web: z
       .array(
@@ -47,6 +49,7 @@ const searchSchema = z.object({
       .max(100)
       .optional(),
   }),
+  // Créditos usados, si el proveedor los informa.
   creditsUsed: z.number().finite().nonnegative().optional(),
 });
 
@@ -58,20 +61,25 @@ const text = z
 
 // Forma esperada de la lectura: markdown, metadatos y créditos.
 const scrapeSchema = z.object({
+  // success debe ser true.
   success: z.literal(true),
+  // Texto en Markdown y metadatos de la página.
   data: z.object({
     markdown: z.string(),
     metadata: z
       .object({
+        // Título, URL final, URL de origen, código HTTP y fecha de publicación.
         title: text,
         url: z.string().max(4_000).optional().nullable(),
         sourceURL: z.string().max(4_000).optional().nullable(),
         statusCode: z.number().int().optional().nullable(),
         publishedTime: z.string().optional().nullable(),
       })
+      // passthrough deja pasar otros metadatos sin fallar.
       .passthrough()
       .optional(),
   }),
+  // Créditos usados.
   creditsUsed: z.number().finite().nonnegative().optional(),
 });
 
@@ -259,12 +267,15 @@ export function createFirecrawlSearch(input: {
         FIRECRAWL_SEARCH_URL,
         input.apiKey,
         {
+          // Consulta recortada, número de resultados y dominios permitidos.
           query: query.slice(0, RESEARCH_LIMITS.maxQueryChars),
           limit: bounded,
           includeDomains: [...allowedDomains],
+          // Plazo del proveedor e ignorar URL inválidas.
           timeout: providerTimeout(context),
           ignoreInvalidURLs: true,
         },
+        // Señal y tope de bytes.
         context,
         RESEARCH_LIMITS.maxSearchResponseBytes,
       );
@@ -378,17 +389,20 @@ export function createFirecrawlReader(input: {
       const published = metadata?.publishedTime?.trim() ?? "";
       // Página leída con título, texto, fechas y hash del contenido.
       return {
+        // Página leída: URL pedida y final, título y texto.
         ok: true,
         value: {
           requestedUrl: url,
           finalUrl,
           title: firstText(metadata?.title).slice(0, RESEARCH_LIMITS.maxTitleChars),
           text: extracted,
+          // Fecha de lectura y de publicación solo si es una fecha válida y corta.
           retrievedAt: new Date(now()).toISOString(),
           publishedAt:
             published.length > 0 && published.length <= 64 && !Number.isNaN(Date.parse(published))
               ? published
               : null,
+          // Hash del texto y créditos consumidos.
           contentHash: `sha256:${await sha256Hex(extracted)}`,
         },
         consumption,

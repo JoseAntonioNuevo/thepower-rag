@@ -28,16 +28,20 @@ import { runResearchGraph } from "./research-graph";
 import { parsePriceSnapshot, type PriceSnapshot } from "./research-money";
 // Operaciones del almacén del trabajo.
 import {
+  // Eventos, reclamación, cierre y lectura del trabajo.
   appendEvent,
   claimJob,
   finishJob,
   getJob,
+  // Operaciones, atención y caída simulada.
   listOperations,
   markAttention,
   markCrashConsumed,
+  // Recuperación, respuesta del asistente y liberación de reservas.
   promoteDispatched,
   recordAssistantMessage,
   releaseReservedOperations,
+  // Borrador del resultado y progreso.
   saveResultDraft,
   setProgress,
   type JobRow,
@@ -143,9 +147,11 @@ function scenarioOf(job: JobRow): ResearchScenarioId | null {
  * no reimplementa la investigación.
  */
 export async function runResearchTick(
+  // Base de datos, trabajo y dueño.
   database: ResearchDatabase,
   jobId: string,
   ownerId: string,
+  // Fábrica de puertos: por defecto, los de la demo con el guion del trabajo.
   createPorts: (signal: AbortSignal, job: JobRow, prices: PriceSnapshot) => ResearchPorts = (
     signal,
     job,
@@ -156,6 +162,7 @@ export async function runResearchTick(
       audience: job.audience,
       corpusVersion: job.corpus_version,
     }),
+  // Contexto de medios: por defecto, demo sin R2, sin AI y sin visión.
   mediaContext: Omit<MultimodalContext, "signal"> = {
     mode: "demo",
     bucket: null,

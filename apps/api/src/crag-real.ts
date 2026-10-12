@@ -29,6 +29,7 @@ import { embedWithWorkersAi, type EmbeddingRunner } from "./vectors";
 
 // Esquema del evaluador: ranking de fragmentos, estado, motivo, lagunas e ids útiles.
 const evidenceSchema = z.object({
+  // Un elemento por fragmento recibido, con su puntuación y motivo.
   ranking: z
     .array(
       z.object({
@@ -38,8 +39,10 @@ const evidenceSchema = z.object({
       }),
     )
     .max(CRAG_BOUNDS.maxCandidates),
+  // Decisión: suficiente, parcial o insuficiente, con su motivo.
   status: z.enum(["sufficient", "partial", "insufficient"]),
   reason: z.string().min(1).max(CRAG_BOUNDS.maxReasonChars),
+  // Lagunas concretas y fragmentos útiles (como mucho maxRetained).
   gaps: z.array(z.string().min(1).max(CRAG_BOUNDS.maxGapChars)).max(CRAG_BOUNDS.maxGaps),
   usefulIds: z.array(z.string().min(1).max(CRAG_BOUNDS.maxIdChars)).max(CRAG_BOUNDS.maxRetained),
 });
@@ -234,10 +237,12 @@ export function createRealCragPorts(input: {
       try {
         // Embedding de la consulta con plazo.
         const rows = await withDeadline(
+          // Señal de cancelación, tiempo restante del turno y plazo propio del embedding.
           input.signal,
           remainingMs,
           LIMITS.embeddingTimeoutMs,
           (signal, timeoutMs) =>
+            // Embebe solo la consulta con BGE-M3 y valida la dimensión.
             embedWithWorkersAi(
               input.embedder,
               input.embeddingModel,
@@ -308,18 +313,23 @@ export function createRealCragPorts(input: {
       try {
         // El evaluador devuelve un objeto con el esquema; ranking debe tener tantos elementos como fragmentos.
         const result = await withDeadline(
+          // Señal, tiempo restante y plazo propio de la evaluación.
           input.signal,
           remainingMs,
           LIMITS.generationTimeoutMs,
           (signal) =>
             generateObject({
+              // Modelo evaluador con el esquema y un ranking de exactamente tantos elementos como
+              // fragmentos.
               model: input.evaluator,
               schema: evidenceSchema.extend({
                 ranking: evidenceSchema.shape.ranking.length(chunks.length),
               }),
+              // Instrucciones y prompt con la pregunta, la consulta y los fragmentos empaquetados.
               schemaName: "crag-evidence",
               system: EVALUATOR_PROMPT,
               prompt: `Pregunta original:\n${question}\n\nConsulta de búsqueda:\n${query}\n\nFragmentos:\n${packed}`,
+              // Tope de salida, reintentos en 0 y señal.
               maxOutputTokens: 1600,
               maxRetries: LIMITS.maxRetries,
               abortSignal: signal,
@@ -353,16 +363,20 @@ export function createRealCragPorts(input: {
       try {
         // El evaluador propone otra consulta.
         const result = await withDeadline(
+          // Señal, tiempo restante y plazo propio.
           input.signal,
           remainingMs,
           LIMITS.generationTimeoutMs,
           (signal) =>
             generateObject({
+              // Reformulación con su esquema: una consulta nueva.
               model: input.evaluator,
               schema: rewriteSchema,
               schemaName: "crag-query",
               system: REWRITE_PROMPT,
+              // Pregunta original, consulta anterior y lagunas nombradas.
               prompt: `Pregunta original:\n${question}\n\nConsulta anterior:\n${query}\n\nLagunas:\n${gaps.join("\n") || "sin laguna nombrada"}`,
+              // Tope de salida, sin reintentos y con señal.
               maxOutputTokens: 800,
               maxRetries: LIMITS.maxRetries,
               abortSignal: signal,
@@ -391,17 +405,21 @@ export function createRealCragPorts(input: {
       try {
         // Genera la respuesta con la evidencia en el sistema y la pregunta original.
         result = await withDeadline(
+          // Señal, tiempo restante y plazo propio de la generación.
           input.signal,
           remainingMs,
           LIMITS.generationTimeoutMs,
           (signal, timeoutMs) =>
             generateText({
+              // Generador con la evidencia en las instrucciones.
               model: input.generator,
               system: cragSystem(evidence),
+              // Historial sin el último mensaje, que se sustituye por la pregunta original.
               messages: [
                 ...input.messages.slice(0, -1),
                 { role: "user" as const, content: question },
               ],
+              // Tope de salida del curso, sin reintentos, señal y plazo total.
               maxOutputTokens: LIMITS.maxOutputTokens,
               maxRetries: LIMITS.maxRetries,
               abortSignal: signal,
@@ -431,13 +449,16 @@ export function createRealCragPorts(input: {
       const totalTokens = typeof usage.totalTokens === "number" ? usage.totalTokens : null;
       // Texto, consumo y coste estimado.
       return {
+        // providerCall: true, hubo una llamada de pago.
         ok: true,
         providerCall: true,
         text: result.text,
+        // Tokens si el proveedor los dio; null si no hay ninguno.
         usage:
           inputTokens === null && outputTokens === null && totalTokens === null
             ? null
             : { inputTokens, outputTokens, totalTokens },
+        // Coste estimado con las tarifas configuradas.
         cost: providerCost(usage, input.costPricing),
       };
     },

@@ -567,14 +567,17 @@ export function sourceFor(entry: AcceptedEvidence): ResearchSource {
   }
   // Fuente web.
   return {
+    // Fuente web: id, URL, dominio y título recortado.
     kind: "web",
     sourceId: item.sourceId,
     url: item.url,
     domain: item.domain,
     title: item.title.slice(0, RESEARCH_LIMITS.maxTitleChars),
+    // Fechas y hash del contenido.
     retrievedAt: item.retrievedAt,
     publishedAt: item.publishedAt,
     contentHash: item.contentHash,
+    // Extractos citables, subpreguntas que apoya y si es de la demo.
     excerpts,
     subquestionIds,
     fixture: item.fixture,

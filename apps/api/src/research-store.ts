@@ -1,6 +1,8 @@
 // GUÍA DE LECTURA · apps/api/src/research-store.ts
-// Almacén SQL de la investigación durable (D1): conversaciones, mensajes, trabajos, operaciones de pago
-// y cuenta de gasto. Las escrituras que deben ir juntas usan database.batch, que en D1 es atómico, y
+// Almacén SQL de la investigación durable (D1): conversaciones, mensajes, trabajos, operaciones de
+// pago
+// y cuenta de gasto. Las escrituras que deben ir juntas usan database.batch, que en D1 es atómico,
+// y
 // cada cambio de una operación exige la ficha (fence) del arrendamiento vigente.
 // Tipos de audiencia, resultado y escenario.
 import type { Audience, ResearchOutcome, ResearchScenarioId } from "@thepower-rag/contracts";
@@ -177,7 +179,8 @@ export interface JobMediaBinding {
   audio: { id: string; hash: string; durationMs: number } | null;
 }
 
-// Condición SQL: los medios existen, son del propietario y de la conversación, y no están en otro trabajo.
+// Condición SQL: los medios existen, son del propietario y de la conversación, y no están en otro
+// trabajo.
 const ASSET_GUARD = `
            AND (? IS NULL OR EXISTS (
              SELECT 1 FROM research_media_assets
@@ -203,6 +206,8 @@ function assetGuardBinds(
   const audio = media?.audio ?? null;
   // Dos bloques de 7 valores: imagen y audio.
   return [
+    // Bloque de la imagen, en el orden de los ? de ASSET_GUARD: id (para «IS NULL»), id, dueño,
+    // conversación, papel, hash y trabajo.
     image?.id ?? null,
     image?.id ?? "",
     ownerId,
@@ -210,6 +215,7 @@ function assetGuardBinds(
     "image",
     image?.hash ?? "",
     jobId,
+    // Bloque del audio, con el mismo orden de siete valores.
     audio?.id ?? null,
     audio?.id ?? "",
     ownerId,
@@ -286,17 +292,23 @@ export async function listMessages(
   conversationId: string,
 ): Promise<MessageRow[]> {
   // SELECT con JOIN para comprobar el propietario.
-  return database
-    .prepare(
-      `SELECT messages.id, messages.conversation_id, messages.ordinal, messages.role, messages.text,
+  return (
+    database
+      // El JOIN con research_conversations hace que solo el dueño lea los mensajes: otro owner_id no
+      // devuelve filas.
+      .prepare(
+        `SELECT messages.id, messages.conversation_id, messages.ordinal, messages.role, messages.text,
               messages.job_id, messages.client_key, messages.created_at
        FROM research_messages AS messages
        JOIN research_conversations AS conversations ON conversations.id = messages.conversation_id
        WHERE messages.conversation_id = ? AND conversations.owner_id = ?
        ORDER BY messages.ordinal`,
-    )
-    .bind(conversationId, ownerId)
-    .all<MessageRow>();
+      )
+      // Los ? se rellenan en orden: conversación y propietario.
+      .bind(conversationId, ownerId)
+      // all<MessageRow>() devuelve todas las filas tipadas como MessageRow.
+      .all<MessageRow>()
+  );
 }
 
 // Mensajes como turnos de memoria.
@@ -421,6 +433,8 @@ export async function admitJob(
     await database.batch([
       // 1) Envío, solo si no existe y no hay otro trabajo activo.
       database
+        // INSERT … SELECT … WHERE: la fila solo se inserta si se cumplen todas las condiciones, en
+        // una sola sentencia.
         .prepare(
           `INSERT INTO research_submissions (owner_id, conversation_id, idempotency_key, fingerprint, job_id)
            SELECT ?, ?, ?, ?, ?
@@ -434,20 +448,27 @@ export async function admitJob(
            )
            ${ASSET_GUARD}`,
         )
+        // Valores de la fila y de los NOT EXISTS, en el orden de los ?.
         .bind(
+          // Columnas de la fila nueva: dueño, conversación, clave, huella y trabajo.
           input.ownerId,
           input.conversationId,
           input.idempotencyKey,
           input.fingerprint,
           jobId,
+          // Primer NOT EXISTS: que este envío no exista ya.
           input.ownerId,
           input.conversationId,
           input.idempotencyKey,
+          // Segundo NOT EXISTS: que la conversación no tenga otro trabajo vivo.
           input.conversationId,
+          // Condiciones de ASSET_GUARD: los adjuntos son de este dueño y no están usados.
           ...assetGuardBinds(input.media ?? null, input.ownerId, input.conversationId, jobId),
         ),
       // 2) Trabajo con su reserva, solo si se registró el envío.
       database
+        // Inserta el trabajo «queued» con su reserva; los triggers suman la reserva a la cuenta y
+        // abortan si no cabe.
         .prepare(
           `INSERT INTO research_jobs (
              id, conversation_id, owner_id, run_id, audience, execution_status, report_outcome,
@@ -466,24 +487,30 @@ export async function admitJob(
            )
            ${ASSET_GUARD}`,
         )
+        // Valores en el orden de los ? del SELECT y del WHERE EXISTS.
         .bind(
+          // Identidad y contexto del trabajo.
           jobId,
           input.conversationId,
           input.ownerId,
           runId,
           conversation.audience,
+          // Petición: clave, huella, preguntas, guion y versión del corpus.
           input.idempotencyKey,
           input.fingerprint,
           input.originalQuestion,
           input.contextualized,
           input.scenarioId,
           input.corpusVersion,
+          // Plazos y fecha de creación.
           deadlineAt,
           queueDeadlineAt,
           input.now,
+          // Dinero: reserva inicial, tope del trabajo y tarifas congeladas en JSON.
           input.prices.holdMicros,
           input.prices.jobLimitMicros,
           JSON.stringify(input.prices),
+          // WHERE EXISTS: el envío del paso 1 tiene que haberse registrado con esta misma huella.
           input.ownerId,
           input.conversationId,
           input.idempotencyKey,
@@ -493,12 +520,16 @@ export async function admitJob(
         ),
       // 3) Mensaje del usuario.
       database
+        // El ordinal es el siguiente libre de la conversación (MAX + 1), calculado dentro de la
+        // sentencia.
         .prepare(
           `INSERT INTO research_messages (id, conversation_id, ordinal, role, text, job_id, client_key, created_at)
            SELECT ?, ?, COALESCE((SELECT MAX(ordinal) FROM research_messages WHERE conversation_id = ?), 0) + 1,
                   'user', ?, ?, ?, ?
            WHERE EXISTS (SELECT 1 FROM research_jobs WHERE id = ?)`,
         )
+        // id nuevo, conversación (dos veces: fila y subconsulta), texto, trabajo, clave, fecha y
+        // trabajo del EXISTS.
         .bind(
           crypto.randomUUID(),
           input.conversationId,
@@ -517,6 +548,8 @@ export async function admitJob(
       ...(input.media
         ? [
             database
+              // Guarda si se pidió voz y qué imagen y audio usa el trabajo, con sus huellas
+              // congeladas.
               .prepare(
                 `INSERT INTO research_job_inputs (
                    job_id, voice, image_asset_id, audio_asset_id, image_hash, audio_hash, audio_duration_ms
@@ -524,6 +557,7 @@ export async function admitJob(
                  SELECT ?, ?, ?, ?, ?, ?, ?
                  WHERE EXISTS (SELECT 1 FROM research_jobs WHERE id = ?)`,
               )
+              // Valores de la fila y el id del trabajo del EXISTS.
               .bind(
                 jobId,
                 input.media.voice ? 1 : 0,
@@ -535,11 +569,15 @@ export async function admitJob(
                 jobId,
               ),
             database
+              // Vincula la imagen al trabajo solo si es del mismo dueño y conversación, con el
+              // mismo hash y libre.
               .prepare(
                 `UPDATE research_media_assets SET job_id = ?
                  WHERE ? IS NOT NULL AND id = ? AND owner_id = ? AND conversation_id = ?
                    AND content_hash = ? AND (job_id IS NULL OR job_id = ?)`,
               )
+              // El segundo valor hace que la sentencia no toque nada cuando no hay imagen («? IS
+              // NOT NULL»).
               .bind(
                 jobId,
                 input.media.image?.id ?? null,
@@ -550,11 +588,13 @@ export async function admitJob(
                 jobId,
               ),
             database
+              // Lo mismo para el audio.
               .prepare(
                 `UPDATE research_media_assets SET job_id = ?
                  WHERE ? IS NOT NULL AND id = ? AND owner_id = ? AND conversation_id = ?
                    AND content_hash = ? AND (job_id IS NULL OR job_id = ?)`,
               )
+              // Mismo orden de valores que la imagen.
               .bind(
                 jobId,
                 input.media.audio?.id ?? null,
@@ -687,6 +727,8 @@ export async function claimJob(
   }
   // UPDATE condicional: sube la ficha y fija ejecutor y fin del arrendamiento.
   const claimed = await database
+    // Solo reclama si no está cancelado, sigue vivo, el arrendamiento caducó (o es suyo) y no pasó
+    // el plazo.
     .prepare(
       `UPDATE research_jobs
        SET lease_token = lease_token + 1,
@@ -699,7 +741,9 @@ export async function claimJob(
          AND (lease_until IS NULL OR lease_until < ? OR executor_id = ?)
          AND (execution_status = 'running' OR ? <= deadline_at)`,
     )
+    // Orden: fin del arrendamiento, ejecutor, inicio, trabajo, dueño, ahora, ejecutor y ahora.
     .bind(now + leaseMs, executorId, now, jobId, ownerId, now, executorId, now)
+    // run() ejecuta sin devolver filas; «changes» dice cuántas filas cambió.
     .run();
   // Otro ejecutor lo tiene.
   if (claimed.changes < 1) {
@@ -753,6 +797,8 @@ export async function cancelJob(
       .bind(jobId, jobId, ownerId),
     // Trabajo cancelado y ficha nueva.
     database
+      // Cancela, sube la ficha (un ejecutor viejo ya no podrá escribir) y marca el informe como
+      // abortado si no tenía.
       .prepare(
         `UPDATE research_jobs
          SET cancel_requested = 1,
@@ -763,6 +809,7 @@ export async function cancelJob(
          WHERE id = ? AND owner_id = ?
            AND execution_status IN ('queued', 'running', 'attention')`,
       )
+      // Valores: fecha de fin, trabajo y dueño.
       .bind(now, jobId, ownerId),
   ]);
   // Trabajo actualizado.
@@ -881,6 +928,8 @@ export async function finishJob(
   }
   // UPDATE con la ficha vigente.
   const result = await database
+    // Solo cierra si la ficha coincide: un ejecutor que perdió el arrendamiento no puede escribir
+    // el resultado.
     .prepare(
       `UPDATE research_jobs
        SET execution_status = ?,
@@ -890,6 +939,7 @@ export async function finishJob(
        WHERE id = ? AND owner_id = ? AND lease_token = ? AND cancel_requested = 0
          AND execution_status = 'running'`,
     )
+    // Valores: estado final, resultado del informe, JSON, fecha, trabajo, dueño y ficha.
     .bind(
       input.execution,
       input.outcome,
@@ -967,17 +1017,22 @@ export async function listEvents(
   after: number,
 ): Promise<{ seq: number; kind: string; text: string }[]> {
   // SELECT con JOIN para comprobar el propietario.
-  return database
-    .prepare(
-      `SELECT events.seq, events.kind, events.text
+  return (
+    database
+      // Eventos posteriores a «after», como mucho 40 por llamada, y solo del dueño (JOIN con
+      // research_jobs).
+      .prepare(
+        `SELECT events.seq, events.kind, events.text
        FROM research_events AS events
        JOIN research_jobs AS jobs ON jobs.id = events.job_id
        WHERE events.job_id = ? AND jobs.owner_id = ? AND events.seq > ?
        ORDER BY events.seq
        LIMIT 40`,
-    )
-    .bind(jobId, ownerId, after)
-    .all<{ seq: number; kind: string; text: string }>();
+      )
+      // Valores: trabajo, dueño y último evento ya visto.
+      .bind(jobId, ownerId, after)
+      .all<{ seq: number; kind: string; text: string }>()
+  );
 }
 
 // Operaciones de un trabajo en orden.
@@ -1050,6 +1105,8 @@ export async function beginOperation(
   const id = crypto.randomUUID();
   // INSERT condicional: trabajo vigente y reserva dentro de lo que queda.
   await database
+    // Reserva la operación solo si no existe (misma huella), el trabajo sigue vivo con esta ficha y
+    // la reserva cabe en lo que le queda al trabajo.
     .prepare(
       `INSERT INTO research_operations (
          id, job_id, ordinal, kind, fingerprint, state, reservation_micros, consumed_micros,
@@ -1071,7 +1128,10 @@ export async function beginOperation(
          WHERE job_id = ? AND state IN ('reserved', 'dispatched')
        ), 0)`,
     )
+    // Valores en el orden de los ?.
     .bind(
+      // Fila: id, trabajo (dos veces por la subconsulta del ordinal), tipo, huella, reserva y
+      // ficha.
       id,
       input.jobId,
       input.jobId,
@@ -1079,10 +1139,13 @@ export async function beginOperation(
       input.fingerprint,
       input.reservation,
       input.fence,
+      // NOT EXISTS: trabajo y huella.
       input.jobId,
       input.fingerprint,
+      // EXISTS: trabajo y ficha vigentes.
       input.jobId,
       input.fence,
+      // Comparación: la reserva pedida contra lo que queda del trabajo.
       input.reservation,
       input.jobId,
       input.jobId,
@@ -1112,6 +1175,8 @@ export async function releaseReservedOperations(
 ): Promise<number> {
   // UPDATE con la ficha vigente.
   const result = await database
+    // Libera las reservas que nunca se enviaron, solo con la ficha vigente y el trabajo vivo. El
+    // trigger devuelve el dinero.
     .prepare(
       `UPDATE research_operations SET state = 'released'
        WHERE job_id = ? AND state = 'reserved' AND fence = ?
@@ -1123,6 +1188,7 @@ export async function releaseReservedOperations(
              AND research_jobs.lease_token = research_operations.fence
          )`,
     )
+    // Valores: trabajo y ficha.
     .bind(jobId, fence)
     .run();
   // Cuántas se liberaron.
@@ -1156,6 +1222,8 @@ export async function markDispatched(
 ): Promise<boolean> {
   // UPDATE con la ficha vigente.
   const result = await database
+    // Marca la operación como enviada justo antes de llamar al proveedor. Desde aquí un fallo ya no
+    // se puede liberar.
     .prepare(
       `UPDATE research_operations SET state = 'dispatched'
        WHERE id = ? AND state = 'reserved' AND fence = ?
@@ -1167,6 +1235,7 @@ export async function markDispatched(
              AND research_jobs.lease_token = research_operations.fence
          )`,
     )
+    // Valores: operación y ficha.
     .bind(operationId, fence)
     .run();
   // Si cambió.
@@ -1224,6 +1293,8 @@ export async function completeOperation(
   const settlement = settlementOf(input.consumption, input.reservation);
   // UPDATE con la ficha vigente.
   const result = await database
+    // Cierra la operación con su resultado y su coste. El trigger research_op_complete mueve el
+    // dinero.
     .prepare(
       `UPDATE research_operations
        SET state = 'completed', result_json = ?, consumed_micros = ?, unknown_hold_micros = ?
@@ -1236,6 +1307,7 @@ export async function completeOperation(
              AND research_jobs.lease_token = research_operations.fence
          )`,
     )
+    // Valores: resultado JSON, consumido, retenido como desconocido, operación y ficha.
     .bind(
       input.resultJson,
       settlement.consumed,
@@ -1266,6 +1338,8 @@ export async function rememberAdmittedTurn(
 ): Promise<void> {
   // UPDATE del mensaje del usuario.
   await database
+    // Actualiza el texto de la pregunta del alumno (por ejemplo, con la transcripción) solo si la
+    // conversación es suya.
     .prepare(
       `UPDATE research_messages
        SET text = ?
@@ -1276,6 +1350,7 @@ export async function rememberAdmittedTurn(
              AND research_conversations.owner_id = ?
          )`,
     )
+    // Valores: texto recortado a 1200 caracteres, conversación, trabajo, clave y dueño.
     .bind(
       input.text.slice(0, 1_200),
       input.conversationId,
@@ -1293,6 +1368,8 @@ export async function recordAssistantMessage(
 ): Promise<void> {
   // INSERT condicional.
   await database
+    // Añade la respuesta del asistente una sola vez: la clave «job:<id>» impide duplicarla si el
+    // paso se repite.
     .prepare(
       `INSERT INTO research_messages (id, conversation_id, ordinal, role, text, job_id, client_key, created_at)
        SELECT ?, ?, COALESCE((SELECT MAX(ordinal) FROM research_messages WHERE conversation_id = ?), 0) + 1,
@@ -1304,6 +1381,8 @@ export async function recordAssistantMessage(
          SELECT 1 FROM research_messages WHERE conversation_id = ? AND client_key = ?
        )`,
     )
+    // Valores: id, conversación, texto (máximo 4000), trabajo, clave, fecha y los de las
+    // condiciones.
     .bind(
       crypto.randomUUID(),
       input.conversationId,
@@ -1329,6 +1408,8 @@ export async function purgeCheckpoints(
   const before = await readAccount(database);
   // Trabajos terminados, antiguos y sin cargos desconocidos.
   const rows = await database
+    // Candidatos a borrar: terminados antes de la fecha, sin dinero desconocido ni operaciones en
+    // duda.
     .prepare(
       `SELECT id FROM research_jobs
        WHERE finished_at IS NOT NULL AND finished_at < ?
@@ -1339,6 +1420,7 @@ export async function purgeCheckpoints(
            WHERE research_operations.job_id = research_jobs.id AND state = 'unknown'
          )`,
     )
+    // Valor: fecha límite.
     .bind(olderThan)
     .all<{ id: string }>();
   // Cada trabajo.
@@ -1440,18 +1522,22 @@ export async function listOrphanMedia(
   olderThan: number,
 ): Promise<{ id: string; object_key: string }[]> {
   // SELECT.
-  return database
-    .prepare(
-      `SELECT id, object_key FROM research_media_assets
+  return (
+    database
+      // Medios huérfanos: sin trabajo, antiguos y que ninguna entrada de trabajo menciona.
+      .prepare(
+        `SELECT id, object_key FROM research_media_assets
        WHERE job_id IS NULL AND created_at < ?
          AND NOT EXISTS (
            SELECT 1 FROM research_job_inputs
            WHERE research_job_inputs.image_asset_id = research_media_assets.id
               OR research_job_inputs.audio_asset_id = research_media_assets.id
          )`,
-    )
-    .bind(olderThan)
-    .all<{ id: string; object_key: string }>();
+      )
+      // Valor: fecha límite.
+      .bind(olderThan)
+      .all<{ id: string; object_key: string }>()
+  );
 }
 
 // Borra un medio solo si no está ligado a un trabajo.

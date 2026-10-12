@@ -129,8 +129,11 @@ export function journalPorts(
   };
   // Mismos puertos, pero cada llamada pasa por el diario.
   return {
+    // Mismos puertos y fixture del puerto interno.
     ...inner,
+    // Reserva máxima del trabajo, en USD.
     estimatedMaxUsd: prices.holdMicros / 1_000_000,
+    // Modelo: plan, evaluación, seguimiento y síntesis, cada uno con su tipo de operación.
     model: {
       plan: (input, context) => call("plan", input, () => inner.model.plan(input, context)),
       assess: (input, context) => call("assess", input, () => inner.model.assess(input, context)),
@@ -139,6 +142,7 @@ export function journalPorts(
       synthesize: (input, context) =>
         call("synthesize", input, () => inner.model.synthesize(input, context)),
     },
+    // Curso, herramienta, búsqueda y lectura con el mismo patrón.
     course: {
       retrieve: (input, context) =>
         call("course", input, () => inner.course.retrieve(input, context)),

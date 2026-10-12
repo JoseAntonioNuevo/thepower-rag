@@ -229,6 +229,7 @@ export function ResearchTrace({ summary }: { summary: ResearchSummary }) {
                     {item.external ? " · fuentes externas" : " · sin búsqueda externa"}: {item.text}
                     {/* Cobertura, si la hay. */}
                     {coverage === undefined ? null : (
+                      // Estado de cobertura, causa de la laguna y su texto si lo hay.
                       <>
                         {" "}
                         — {COVERAGE_LABEL[coverage.status]} ({CAUSE_LABEL[coverage.cause]})
@@ -401,6 +402,7 @@ export function ResearchTrace({ summary }: { summary: ResearchSummary }) {
           <li>
             Reserva estimada: {money(a.estimatedMaxUsd, a.measured)}. USD informado por proveedores:{" "}
             {money(a.providerReportedUsd, a.measured)}.
+            {/* Estimación con tarifas publicadas, solo si existe. */}
             {a.estimatedUsd != null || a.estimateProvenance ? (
               <>
                 {" "}
@@ -410,6 +412,7 @@ export function ResearchTrace({ summary }: { summary: ResearchSummary }) {
                 proveedor.
               </>
             ) : null}{" "}
+            {/* Créditos: no se suman a los USD. */}
             Créditos informados:{" "}
             {a.measured
               ? a.providerReportedCredits === null

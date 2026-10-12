@@ -68,10 +68,13 @@ function completionFor(terminal: RunMetadata["completion"]): RunMetadata["comple
 function inertPorts(signal: AbortSignal): CragPorts {
   // Puertos inertes.
   return {
+    // No mide llamadas de pago: no habrá ninguna.
     measured: false,
     now: () => Date.now(),
     signal,
+    // Reserva siempre posible (nada se gastará).
     reserve: () => ({ ok: true }),
+    // Cada paso falla con un motivo: la aclaración nunca debería llamarlos.
     retrieve: () => Promise.resolve({ ok: false, reason: "La aclaración no busca." }),
     rankAndAssess: () =>
       Promise.resolve({ ok: false, reason: "La aclaración no evalúa.", providerCall: false }),
@@ -193,19 +196,23 @@ export async function cragHttpResponse(input: {
             database: input.env.DB as SqlDatabase,
             // Mismo proveedor y clave para los dos papeles; solo cambia el modelo.
             evaluator: createEvaluatorModel(
+              // Evaluador: ajustes de generación con el modelo del evaluador.
               {
                 ...(input.assessment.generation ?? { apiKey: "", modelId: "" }),
                 evaluatorModelId: input.env.EVALUATOR_MODEL_ID?.trim() ?? "",
               },
               input.deps.onProviderCall,
             ),
+            // Generador: los mismos ajustes de generación.
             generator: createGenerationModel(
               input.assessment.generation ?? { apiKey: "", modelId: "" },
               input.deps.onProviderCall,
             ),
+            // Tarifas para el coste estimado.
             costPricing: input.assessment.generation
               ? generationPricing(input.assessment.generation)
               : null,
+            // Historial, modelo y dimensión de embeddings y sesión de gasto.
             messages: input.history,
             embeddingModel: retrieval?.embeddingModel ?? "",
             dimensions: retrieval?.dimensions ?? 0,
@@ -291,14 +298,17 @@ export async function cragHttpResponse(input: {
       );
       // Final con consumo y coste.
       writer.write({
+        // Evento final del stream con los metadatos del turno.
         type: "finish",
         messageMetadata: {
           ...metadata,
+          // Origen: demo, proveedor si hubo generación de pago, o canalización si no.
           origin: demo
             ? "offline-fixture"
             : summary.calls.generation.providerCalls
               ? "provider"
               : "pipeline",
+          // Cómo terminó, consumo y coste.
           completion,
           usage: summary.usage,
           cost: summary.cost,

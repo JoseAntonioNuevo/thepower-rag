@@ -126,8 +126,10 @@ async function classroomJob(
   const now = Date.now();
   // Filas de los medios.
   const rows = [
+    // Fila de imagen solo si se pasó una imagen válida.
     ...(image && imageFacts?.ok && imageFacts.facts.role === "image"
       ? [
+          // Id, papel, clave de R2, hash, tipo, bytes y dimensiones.
           {
             id: imageId,
             role: "image" as const,
@@ -141,8 +143,10 @@ async function classroomJob(
           },
         ]
       : []),
+    // Fila de audio solo si se pasó un WAV válido.
     ...(audio && audioFacts?.ok && audioFacts.facts.role === "audio"
       ? [
+          // Id, papel, clave, hash, tipo, bytes y duración.
           {
             id: audioId,
             role: "audio" as const,
@@ -161,6 +165,7 @@ async function classroomJob(
   for (const asset of rows) {
     // Su fila.
     await insertAsset(database, {
+      // Datos comunes del archivo.
       id: asset.id,
       owner_id: ownerId,
       conversation_id: conversationId,
@@ -172,9 +177,11 @@ async function classroomJob(
       width: asset.width,
       height: asset.height,
       duration_ms: asset.duration,
+      // Formato de audio de la prueba: 16 kHz, mono, 16 bits.
       sample_rate: asset.role === "audio" ? 16_000 : null,
       channels: asset.role === "audio" ? 1 : null,
       bit_depth: asset.role === "audio" ? 16 : null,
+      // Admitido y sin trabajo.
       status: "admitted",
       extracted_text: null,
       detail: null,
@@ -196,18 +203,23 @@ async function classroomJob(
   if (hold === null) throw new Error("reserva");
   // Admite el trabajo.
   const admitted = await admitJob(database, {
+    // Dueño, conversación, clave y huella fijas de la revisión.
     ownerId,
     conversationId,
     idempotencyKey: "review-job",
     fingerprint: "review-fingerprint",
+    // Pregunta opcional del caso.
     originalQuestion: input.question ?? "",
     contextualized: null,
     scenarioId: null,
     corpusVersion: fixtureCorpusVersion(),
+    // Reserva calculada para los medios del caso.
     prices: { ...prices, holdMicros: hold },
     now,
+    // Plazo configurable para probar la falta de tiempo.
     deadlineMs: input.deadlineMs ?? 120_000,
     queueMs: 60_000,
+    // Voz, imagen y audio según el caso.
     media: {
       voice: input.voice === true,
       image: image ? { id: imageId, hash: imageHash } : null,
@@ -279,6 +291,7 @@ describe("correcciones de la revisión de la fase 3", () => {
     expect(body.summary.media?.speech?.detail ?? "").toContain("no es");
     // Repetir el envío.
     const repeated = await admitJob(database, {
+      // Mismo envío que el original: debe devolver el mismo trabajo sin crear otro.
       ownerId: job.ownerId,
       conversationId: job.conversationId,
       idempotencyKey: "review-job",
@@ -287,10 +300,12 @@ describe("correcciones de la revisión de la fase 3", () => {
       contextualized: null,
       scenarioId: null,
       corpusVersion: fixtureCorpusVersion(),
+      // Misma reserva que el trabajo ya admitido.
       prices: { ...prices!, holdMicros: job.admitted.reserved_micros },
       now: Date.now(),
       deadlineMs: 120_000,
       queueMs: 60_000,
+      // Mismos archivos con sus hashes recalculados.
       media: {
         voice: true,
         image: {
@@ -548,6 +563,8 @@ describe("correcciones de la revisión de la fase 3", () => {
         };
       },
       {
+        // Contexto de medios de la demo: sin AI ni visión reales, con los modelos de Workers AI por
+        // defecto.
         mode: "demo",
         bucket: job.bucket,
         ai: null,
@@ -633,6 +650,7 @@ describe("correcciones de la revisión de la fase 3", () => {
     expect(operations.some((operation) => operation.kind === "speech")).toBe(false);
     // Repetir el envío.
     const repeated = await admitJob(database, {
+      // Mismo envío pero sin voz: la huella cambia.
       ownerId: job.ownerId,
       conversationId: job.conversationId,
       idempotencyKey: "review-job",
@@ -645,6 +663,7 @@ describe("correcciones de la revisión de la fase 3", () => {
       now: Date.now(),
       deadlineMs: 120_000,
       queueMs: 60_000,
+      // Voz desactivada y los mismos archivos.
       media: {
         voice: false,
         image: {
@@ -767,6 +786,7 @@ describe("correcciones de la revisión de la fase 3", () => {
         resumed += 1;
         // Puertos.
         return createFixtureResearchPorts({
+          // Puertos de demo para la reanudación.
           signal: new AbortController().signal,
           scenarioId: null,
           audience: "M/J",
@@ -774,6 +794,7 @@ describe("correcciones de la revisión de la fase 3", () => {
         });
       },
       {
+        // Contexto en modo real con un binding AI simulado.
         mode: "real",
         bucket: job.bucket,
         ai: {
@@ -814,6 +835,7 @@ describe("correcciones de la revisión de la fase 3", () => {
     const hold = holdForJob(prices!, { image: false, audioDurationMs: null, voice: true });
     // Trabajo con voz.
     const admitted = await admitJob(database, {
+      // Trabajo con voz y guion suficiente, para probar el plazo de la voz.
       ownerId: "review-owner",
       conversationId,
       idempotencyKey: "speech-deadline",
@@ -822,10 +844,12 @@ describe("correcciones de la revisión de la fase 3", () => {
       contextualized: null,
       scenarioId: "sufficient-first-round",
       corpusVersion: fixtureCorpusVersion(),
+      // Reserva que incluye la voz.
       prices: { ...prices!, holdMicros: hold ?? 1 },
       now: Date.now(),
       deadlineMs: 120_000,
       queueMs: 60_000,
+      // Solo voz.
       media: { voice: true, image: null, audio: null },
     });
     // Rechazado: error.

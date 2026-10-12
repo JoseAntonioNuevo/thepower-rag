@@ -190,6 +190,7 @@ describe("HTTP de investigación", () => {
     const errored = await createApp({
       researchPorts: {
         ...ports,
+        // Herramienta de sesiones que siempre devuelve un fallo del proveedor.
         tool: {
           getCourseSession: () =>
             Promise.resolve({
@@ -200,6 +201,7 @@ describe("HTTP de investigación", () => {
             }),
         },
       },
+      // Petición de investigación del guion «course-tool».
     }).request(
       "http://localhost/api/chat",
       {
@@ -250,10 +252,12 @@ describe("HTTP de investigación", () => {
     const response = await post(
       { mode: "research", messages: [userMessage(DEMO_RESEARCH_QUESTION)] },
       {
+        // Modo real con generación, investigación y precios.
         APP_MODE: "real",
         ANTHROPIC_API_KEY: "local-test-key",
         MODEL_ID: "example/generator",
         RESEARCH_MODEL_ID: "example/research",
+        // Buscador, autorización, presupuesto y tarifas.
         FIRECRAWL_API_KEY: "local-firecrawl",
         RESEARCH_SPEND_AUTHORIZATION: "s12-research-phase1",
         RESEARCH_BUDGET_USD: "1",
@@ -327,6 +331,7 @@ describe("HTTP de investigación", () => {
     };
     // Petición desde un dominio ajeno.
     const foreign = await createApp().request(
+      // URL y Origin de otro dominio.
       "https://evil.example/api/chat",
       {
         method: "POST",
@@ -334,6 +339,7 @@ describe("HTTP de investigación", () => {
           "content-type": "application/json",
           origin: "https://evil.example",
         },
+        // Petición de investigación normal.
         body: JSON.stringify({
           mode: "research",
           messages: [userMessage(DEMO_RESEARCH_QUESTION)],
@@ -343,6 +349,7 @@ describe("HTTP de investigación", () => {
     );
     // URL publicada pero Origin ajeno.
     const mismatched = await createApp().request(
+      // Dominio publicado, pero con un Origin ajeno y una IP de cliente.
       "https://rag-thepower.josenuevo.dev/api/chat",
       {
         method: "POST",
@@ -351,6 +358,7 @@ describe("HTTP de investigación", () => {
           origin: "https://evil.example",
           "cf-connecting-ip": "203.0.113.8",
         },
+        // Petición de investigación normal.
         body: JSON.stringify({
           mode: "research",
           messages: [userMessage(DEMO_RESEARCH_QUESTION)],

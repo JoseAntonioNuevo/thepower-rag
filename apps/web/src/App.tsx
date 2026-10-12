@@ -6,10 +6,13 @@
 import { useChat } from "@ai-sdk/react";
 // Escenarios de demo, esquema de salud y tipos del contrato.
 import {
+  // Guiones de CRAG y de investigación y la pregunta de demo.
   DEMO_CRAG_SCENARIOS,
   DEMO_RESEARCH_QUESTION,
   DEMO_RESEARCH_SCENARIOS,
+  // Esquema para validar /api/health.
   healthResponseSchema,
+  // Tipos de grupo, modo, pasos y guiones.
   type Audience,
   type ChatMode,
   type CragStep,
@@ -624,15 +627,18 @@ function ChatPane({
             audience,
             // La investigación de la fase 1 no tiene memoria: solo envía la última pregunta.
             messages: (mode === "research" ? messages.slice(-1) : messages).map((message) => ({
+              // Solo texto: las tarjetas y trazas no se reenvían al servidor.
               id: message.id,
               role: message.role,
               parts: [{ type: "text", text: partText(message) }],
             })),
+            // Guiones de demo, solo si se eligieron.
             ...(selectedScenario === null ? {} : { demoScenario: selectedScenario }),
             ...(selectedResearch === null ? {} : { researchScenario: selectedResearch }),
           },
         }),
       }),
+    // useMemo recrea el transporte solo si cambia el modo, el grupo o un guion.
     [mode, audience, selectedScenario, selectedResearch],
   );
   // useChat: mensajes, envío, estado, parada y errores.
@@ -1020,10 +1026,12 @@ function ChatPane({
             />
             {/* Detener o enviar. */}
             {busy ? (
+              // Mientras responde: botón para cortar el stream.
               <button className="send" type="button" onClick={() => void stop()}>
                 Detener
               </button>
             ) : (
+              // En reposo: enviar, desactivado sin verificación o sin texto.
               <button
                 className="send"
                 type="submit"
@@ -1087,7 +1095,9 @@ function ChatPane({
                     <ul className="citations">
                       {/* Una tarjeta por fuente. */}
                       {sources.map((source, index) =>
+                        // Solo las partes de tipo data-source son fuentes citables.
                         source.type === "data-source" ? (
+                          // La clave es el id del fragmento: estable entre renders.
                           <CitationCard
                             key={source.data.chunkId}
                             index={index}
@@ -1163,17 +1173,18 @@ function ChatPane({
                             </li>
                             {/* Consumo sin totales inventados. */}
                             <li>
+                              {/* Llamadas de pago: medidas una a una, nunca un total inventado. */}
                               Llamadas de pago:{" "}
                               {crag.measured
                                 ? "contadas por separado, sin total inventado"
                                 : "no medidas"}
-                              . Uso:{" "}
+                              . Uso: {/* Uso de tokens: desconocido, no medido o parcial. */}
                               {crag.usage === null
                                 ? crag.measured
                                   ? "desconocido"
                                   : "no medido"
                                 : "parcial"}
-                              . Coste:{" "}
+                              . Coste: {/* Coste: importe o por qué no se conoce. */}
                               {crag.cost === null
                                 ? crag.measured
                                   ? "desconocido"
@@ -1250,7 +1261,8 @@ function ChatPane({
                   <p>
                     {/* Sin traza. */}
                     {mode === "sin-rag"
-                      ? "Sin RAG no recupera ni puntúa documentos."
+                      ? // Mensaje según el modo.
+                        "Sin RAG no recupera ni puntúa documentos."
                       : "La traza aparece con la respuesta."}
                   </p>
                 )}
@@ -1380,6 +1392,7 @@ export function App() {
       </div>
       {/* Investigación durable o chat, con clave para reiniciar al cambiar. */}
       {health?.durableResearch && mode === "research" ? (
+        // Con investigación durable configurada: la mesa de investigación.
         <ResearchDesk
           key={audience}
           audience={audience}
@@ -1387,6 +1400,7 @@ export function App() {
           onBusy={onBusy}
         />
       ) : (
+        // En el resto de modos: el chat.
         <ChatPane
           key={conversationKey(mode, audience, epoch)}
           mode={mode}

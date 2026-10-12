@@ -108,6 +108,7 @@ export function createMemoryBindings(input?: {
       const existing = tables.index_profiles.find((row) => row.id === values[0]);
       // Inserta o actualiza conservando el estado del activo.
       replace(tables.index_profiles, ["id"], {
+        // Mismo orden de valores que el INSERT de ingest-run.ts.
         id: values[0],
         corpus_version: values[1],
         embedding_model: values[2],
@@ -117,8 +118,10 @@ export function createMemoryBindings(input?: {
         chunk_overlap: values[6],
         provider_revision: values[7],
         family: values[8],
+        // Un perfil activo conserva su estado; si no, «partial».
         status: existing?.active === 1 ? existing.status : "partial",
         expected_vectors: values[9],
+        // Campos que la ingesta no envía: se conservan los anteriores.
         visible_vectors: existing?.visible_vectors ?? null,
         mutation_id: existing?.mutation_id ?? null,
         last_error: existing?.last_error ?? null,

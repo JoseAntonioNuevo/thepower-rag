@@ -40,26 +40,32 @@ function factualText(report: string): string {
   // Sin secciones conocidas se usa el texto tal cual.
   if (!rendered) return report;
   // Solo respuesta, hallazgos y comprobaciones; sin títulos, viñetas, citas ni negritas.
-  return sections
-    .filter((section) =>
-      /^\*\*(Respuesta directa\.|Hallazgos con evidencia|Comprobaciones y opciones)\*\*/.test(
-        section,
-      ),
-    )
-    .flatMap((section) => section.split("\n"))
-    .map((line) =>
-      line
-        .replace(
-          /^\*\*(Respuesta directa\.|Hallazgos con evidencia|Comprobaciones y opciones)\*\*\s*/,
-          "",
-        )
-        .replace(/^-\s+(?:q[1-3]\s*·\s*)?/, "")
-        .replace(/\[cite:[^\]\n]+\]/g, "")
-        .replace(/[*`]/g, "")
-        .trim(),
-    )
-    .filter(Boolean)
-    .join(";\n");
+  return (
+    sections
+      // Se queda con las tres secciones que se pueden leer en voz alta.
+      .filter((section) =>
+        /^\*\*(Respuesta directa\.|Hallazgos con evidencia|Comprobaciones y opciones)\*\*/.test(
+          section,
+        ),
+      )
+      // Cada línea por separado.
+      .flatMap((section) => section.split("\n"))
+      .map((line) =>
+        // Quita el título de la sección, las viñetas con id de subpregunta, las citas y el formato.
+        line
+          .replace(
+            /^\*\*(Respuesta directa\.|Hallazgos con evidencia|Comprobaciones y opciones)\*\*\s*/,
+            "",
+          )
+          .replace(/^-\s+(?:q[1-3]\s*·\s*)?/, "")
+          .replace(/\[cite:[^\]\n]+\]/g, "")
+          .replace(/[*`]/g, "")
+          .trim(),
+      )
+      // Descarta líneas vacías y une con «;» para marcar pausas.
+      .filter(Boolean)
+      .join(";\n")
+  );
 }
 
 /**

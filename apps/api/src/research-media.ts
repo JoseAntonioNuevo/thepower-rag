@@ -97,23 +97,28 @@ export async function insertAsset(database: ResearchDatabase, row: AssetRow): Pr
        ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)`,
     )
     .bind(
+      // Identidad, dueño, conversación y papel.
       row.id,
       row.owner_id,
       row.conversation_id,
       row.role,
+      // Clave de R2, hash, tipo y tamaño.
       row.object_key,
       row.content_hash,
       row.mime,
       row.byte_size,
+      // Datos de imagen o de audio (null si no aplican).
       row.width,
       row.height,
       row.duration_ms,
       row.sample_rate,
       row.channels,
       row.bit_depth,
+      // Estado, texto extraído y detalle.
       row.status,
       row.extracted_text,
       row.detail,
+      // Trabajo, clave de idempotencia y fecha.
       row.job_id,
       row.idempotency_key,
       row.created_at,

@@ -1,9 +1,15 @@
+// TypeScript de la interfaz React.
 {
+  // Hereda las reglas comunes.
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    // Añade los tipos del navegador (document, window, fetch…).
     "lib": ["ES2023", "DOM", "DOM.Iterable"],
+    // JSX de React 19 sin importar React en cada archivo.
     "jsx": "react-jsx",
+    // Tipos de Vite: import.meta.env e imports de CSS.
     "types": ["vite/client"]
   },
+  // Código de la web y su configuración de Vite.
   "include": ["src", "vite.config.ts"]
 }

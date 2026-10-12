@@ -12,13 +12,16 @@ import type { PreparedCorpus } from "./prepare";
 
 // Corpus mínimo con un documento y un fragmento.
 const corpus = {
+  // Ids y fecha del corpus preparado.
   contentVersion: "cc037ef0bb1f7",
   preparationId: "c3a59a406888b",
   version: "test",
   verifiedDate: "2026-10-03",
+  // Embedding léxico de prueba de 128 dimensiones.
   embeddingModel: "fixture-token-hash-v1",
   dimensions: 128,
   remoteRevision: null,
+  // Cobertura parcial y sin verificación remota.
   coverage: {
     curriculum: "partial",
     calendarLx: "partial",
@@ -27,6 +30,7 @@ const corpus = {
     remote: "not-verified",
     sessions: [],
   },
+  // Perfil del índice de prueba.
   indexProfile: {
     id: "p9e8e8e03627e",
     family: "fixture",
@@ -38,6 +42,7 @@ const corpus = {
     providerRevision: null,
     preparationId: "c3a59a406888b",
   },
+  // Un documento (S5) con un fragmento.
   documents: [
     {
       id: "s05-langgraph",

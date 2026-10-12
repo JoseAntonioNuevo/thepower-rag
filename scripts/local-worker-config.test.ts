@@ -178,6 +178,7 @@ describe("preflight", () => {
   it("distingue un binding declarado de uno configurado sin llamarlo verificado", () => {
     // Configuración con un índice de marcador.
     const file = JSON.stringify({
+      // Variables del RAG real completas.
       vars: {
         APP_MODE: "real",
         ANTHROPIC_API_KEY: "local-test-key",
@@ -189,8 +190,10 @@ describe("preflight", () => {
         VECTOR_METRIC: "cosine",
         MIN_RETRIEVAL_SCORE: "0.2",
       },
+      // Bindings declarados; Vectorize con un nombre de marcador (replace).
       ai: { binding: "AI" },
       vectorize: [{ binding: "VECTORIZE", index_name: "REPLACE_WITH_REAL_INDEX" }],
+      // D1 y R2 con nombres reales.
       d1_databases: [
         { binding: "DB", database_name: "thepower-ai-course-rag-d1", database_id: "abc" },
       ],
@@ -258,6 +261,7 @@ it("CRAG configurado no se declara conectado ni verificado sin una comprobación
   // Configuración completa.
   const result = report(
     JSON.stringify({
+      // Variables de CRAG real completas.
       vars: {
         APP_MODE: "real",
         ANTHROPIC_API_KEY: "local-test-key",
@@ -270,6 +274,7 @@ it("CRAG configurado no se declara conectado ni verificado sin una comprobación
         VECTOR_METRIC: "cosine",
         MIN_RETRIEVAL_SCORE: "0.5",
       },
+      // Los cuatro bindings con nombres reales.
       ai: { binding: "AI" },
       vectorize: [{ binding: "VECTORIZE", index_name: "thepower-ai-course-rag-0123456789ab" }],
       d1_databases: [
@@ -281,6 +286,7 @@ it("CRAG configurado no se declara conectado ni verificado sin una comprobación
       ],
       r2_buckets: [{ binding: "CORPUS", bucket_name: "thepower-ai-course-rag-corpus" }],
     }),
+    // Sin .dev.vars, sin entorno del proceso y capacidad «crag».
     null,
     {},
     "crag",

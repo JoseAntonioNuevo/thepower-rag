@@ -246,9 +246,11 @@ describe("bytes de medios", () => {
     const sof = [0xff, 0xc0, 0x00, 0x0b, 0x08, 0x00, 0x08, 0x00, 0x08, 0x01, 0x01, 0x11, 0x00];
     // JPEG con escaneo vacío.
     const emptyScan = new Uint8Array([
+      // Inicio de imagen JPEG (SOI) y la cabecera SOF.
       0xff,
       0xd8,
       ...sof,
+      // Marcador SOS (inicio de escaneo) con su cabecera…
       0xff,
       0xda,
       0x00,
@@ -259,6 +261,7 @@ describe("bytes de medios", () => {
       0x00,
       0x3f,
       0x00,
+      // …y fin de imagen (EOI) sin datos de escaneo.
       0xff,
       0xd9,
     ]);

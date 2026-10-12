@@ -1,7 +1,11 @@
+// TypeScript de los contratos compartidos (Zod). El navegador también los importa.
 {
+  // Hereda las reglas comunes.
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    // DOM para tipos como Response o TextEncoder disponibles en navegador y Workers.
     "lib": ["ES2023", "DOM"],
+    // Sin tipos globales de Node ni de Workers: el paquete no depende de un runtime.
     "types": []
   },
   "include": ["src"]

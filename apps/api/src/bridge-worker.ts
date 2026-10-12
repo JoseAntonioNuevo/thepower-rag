@@ -6,14 +6,18 @@
 import rawCorpus from "../../../corpus/prepared/corpus.json";
 // Núcleo: emulador local de embeddings, manifiesto, selección de perfil, nombres y sesión de gasto.
 import {
+  // Embedding emulado local y su dimensión.
   LOCAL_EMULATED_DIMENSIONS,
+  // SQL de selección del perfil activo y hash FNV-1a.
   activeSelectionSql,
   fnv1a64,
   localEmulatedEmbed,
+  // Manifiesto semántico, calendario, sesión de gasto y nombre del índice.
   semanticManifest,
   isScheduleQuestion,
   createAllowanceLedger,
   vectorizeIndexName,
+  // Tipos del registro de adaptadores y del corpus preparado.
   type AdapterRecord,
   type PreparedCorpus,
 } from "@thepower-rag/core";
@@ -676,14 +680,19 @@ async function ingest(
   let vectorError: string | null = null;
   // Vectorize emulado o real con errores registrados.
   const vectorBinding = index
-    ? {
+    ? // Con índice local: delega en el emulador.
+      {
+        // Escribe un lote en el emulador.
         upsert: async (
           batch: { id: string; values: number[]; metadata: Record<string, string> }[],
         ) => index.upsert(batch),
+        // Lee de vuelta y describe el índice.
         getByIds: (ids: string[]) => index.getByIds(ids),
         describe: () => index.describe(),
       }
-    : {
+    : // Sin índice local: usa el binding remoto y guarda el texto del error para diagnosticar.
+      {
+        // Escribe en el binding remoto y anota el error si falla.
         upsert: async (
           batch: { id: string; values: number[]; metadata: Record<string, string> }[],
         ) => {
@@ -729,6 +738,7 @@ async function ingest(
         upserts += 1;
         // Escribe.
         return vectorBinding.upsert(
+          // Copia los valores a un array normal antes de enviarlos.
           batch.map((vector) => ({
             id: vector.id,
             values: [...vector.values],
@@ -736,9 +746,11 @@ async function ingest(
           })),
         );
       },
+      // Lectura de vuelta y descripción del índice.
       getByIds: (ids) => vectorBinding.getByIds(ids),
       describe: () => vectorBinding.describe(),
     },
+    // Índices de metadatos: del emulador o de la variable que leyó Wrangler.
     listMetadataIndexes: async () =>
       index === null
         ? JSON.parse(env.BRIDGE_METADATA_INDEXES ?? "[]")
@@ -773,14 +785,18 @@ async function ingest(
   const failed = result.journal.find((item) => item.outcome === "failed");
   // Resultado.
   return json({
+    // ok si quedó lista o pendiente de visibilidad (no es un fallo).
     ok: result.phase === "ready" || result.phase === "pending-visibility",
     phase: result.phase,
+    // Perfil, número de escrituras y de lecturas de vuelta.
     profileId: manifest.profileId,
     upserts,
     polls,
+    // Primer error y diagnóstico del binding.
     error: failed?.error ?? null,
     diagnostic: vectorError,
     key: failed?.key ?? null,
+    // Qué adaptador se usó de verdad: Vectorize remoto o el emulado.
     adapter: remote
       ? { id: "vectorize-binding", remote: true, binding: "VECTORIZE" }
       : { id: "local-emulated-vectorize", remote: false, binding: null },
@@ -837,12 +853,15 @@ async function offlineChat(request: Request, env: BridgeEnv): Promise<Response> 
   const index = await localIndex(env);
   // App con modelo y puertos CRAG emulados.
   const app = createApp({
+    // Modelo emulado que solo responde si hay reserva.
     languageModel: localEmulatedLanguageModel({
       note,
       reservationOk: () => reservationOk,
     }),
+    // Puertos CRAG emulados sobre el índice local.
     cragPorts: localEmulatedCragPorts({
       signal: request.signal,
+      // Alcance fijo del puente: programa, corpus y perfil del manifiesto.
       scope: {
         runId: "bridge",
         audience: "program",
@@ -850,10 +869,12 @@ async function offlineChat(request: Request, env: BridgeEnv): Promise<Response> 
         profileId: manifest.profileId,
         embeddingLabel: "local-emulated-token-hash-v1",
       },
+      // Embeddings, índice, D1 y dimensión del emulador.
       embedder,
       index,
       database: env.DB as never,
       dimensions: LOCAL_EMULATED_DIMENSIONS,
+      // Reserva y registro de adaptadores.
       reservationOk: () => reservationOk,
       note,
     }),

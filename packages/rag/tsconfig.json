@@ -1,6 +1,9 @@
+// TypeScript del núcleo RAG: lógica pura, sin APIs de Cloudflare, Node ni navegador.
 {
+  // Hereda las reglas comunes.
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    // Sin tipos globales: si el código usara un binding o fs, no compilaría.
     "types": []
   },
   "include": ["src"]

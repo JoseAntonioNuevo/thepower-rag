@@ -1,7 +1,11 @@
+// TypeScript de la raíz: comprueba la configuración de Vite+ y los scripts de Bun, que usan Node.
 {
+  // Hereda las reglas comunes.
   "extends": "./tsconfig.base.json",
   "compilerOptions": {
+    // Tipos de Node (fs, path, child_process…) para los scripts.
     "types": ["node"]
   },
+  // Solo estos archivos. Cada app y paquete tiene su propio tsconfig.
   "include": ["vite.config.ts", "scripts/**/*.ts"]
 }

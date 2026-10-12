@@ -10,6 +10,7 @@ export const FIXTURE_MIN_SCORE = 0.33;
 
 // Palabras frecuentes que no aportan significado y se ignoran.
 const FIXTURE_STOPWORDS = new Set([
+  // Artículos, preposiciones y pronombres.
   "para",
   "como",
   "con",
@@ -23,6 +24,7 @@ const FIXTURE_STOPWORDS = new Set([
   "sobre",
   "esta",
   "este",
+  // Palabras que aparecen en casi todas las fichas del curso y no distinguen nada.
   "alumno",
   "contenido",
   "documentado",

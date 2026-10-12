@@ -11,14 +11,17 @@ import { retrieveBasic, type IndexedChunk } from "./pipeline";
 function chunk(audience: "L/X" | "M/J", version = "course-v1"): IndexedChunk {
   // Fragmento con el id, documento y texto esperados.
   return {
+    // Id de la ficha de calendario del grupo y su documento.
     chunkId: calendarOverviewId(audience, version)!,
     documentId: audience === "L/X" ? "calendario-lx" : "calendario-mj",
     title: "Calendario",
     section: "Calendario",
+    // Texto de cada calendario: L/X con festivos, M/J sin ellos.
     text:
       audience === "L/X"
         ? "Clases lunes y miércoles, 18:30-20:00; no hay clase el 12 de octubre ni el 2 de noviembre."
         : "Clases martes y jueves, 18:30-20:00.",
+    // Grupo, versión y vector vacío (el atajo no usa embeddings).
     audience,
     corpusVersion: version,
     vector: [],
@@ -101,12 +104,17 @@ it("sin grupo pide aclaración sin buscar; un calendario ausente se rechaza", ()
 it("rechaza otro grupo, otra versión, documento falso o texto vacío", () => {
   // Cada caso inválido.
   for (const bad of [
+    // Otro grupo.
     chunk("M/J"),
+    // Otra versión.
     chunk("L/X", "other-v"),
+    // Documento que no es un calendario.
     { ...chunk("L/X"), documentId: "unknown" },
+    // Texto vacío.
     { ...chunk("L/X"), text: "" },
   ])
     expect(
+      // Cada caso debe terminar en rechazo.
       calendarOverviewOutcome({
         question: "que dias hay clase?",
         audience: "L/X",

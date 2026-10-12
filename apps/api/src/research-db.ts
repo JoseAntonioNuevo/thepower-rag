@@ -142,6 +142,12 @@ export function schemaStatements(sql: string): string[] {
   for (const line of sql.split("\n")) {
     // Línea sin espacios.
     const trimmed = line.trim();
+    // Las líneas de comentario SQL (`--`) solo documentan el esquema. Se saltan para que
+    // no acaben como sentencia suelta ni cambien el texto que se envía a D1.
+    if (trimmed.startsWith("--")) {
+      // Siguiente línea.
+      continue;
+    }
     // Empieza un trigger.
     if (trimmed.startsWith("CREATE TRIGGER")) {
       // Se marca.

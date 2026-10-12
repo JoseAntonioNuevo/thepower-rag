@@ -146,14 +146,17 @@ describe("RAG básico", () => {
   it("no marca una versión lista sin lectura de vuelta", () => {
     // Fabrica una anotación del diario.
     const item = (
+      // Parámetros: almacén, clave y resultado.
       store: "r2" | "d1" | "vectorize",
       key: string,
       outcome: "succeeded" | "pending" | "failed",
     ) => ({
+      // Misma versión y perfil para todas.
       store,
       versionId: "v2",
       profileId: "p2",
       key,
+      // ok y error se derivan del resultado; solo Vectorize lleva mutación.
       outcome,
       ok: outcome === "succeeded",
       error: outcome === "failed" ? "r2-write-failed" : null,
@@ -184,7 +187,9 @@ describe("RAG básico", () => {
     // Anotaciones de otra versión no cuentan: planificada.
     expect(
       ingestionPhase({
+        // Base de la fase.
         ...base,
+        // Una anotación correcta, pero de la versión v1.
         journal: [
           {
             store: "r2",

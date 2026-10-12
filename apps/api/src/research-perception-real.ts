@@ -48,8 +48,10 @@ export async function visionImage(
   try {
     // Una llamada con la imagen como parte de archivo.
     const result = await generateText({
+      // Modelo de visión del proveedor elegido e instrucciones.
       model,
       system: VISION_SYSTEM,
+      // Un mensaje con el texto de la petición y la imagen como archivo.
       messages: [
         {
           role: "user",
@@ -59,6 +61,7 @@ export async function visionImage(
           ],
         },
       ],
+      // Tope de salida, sin reintentos y con señal de cancelación.
       maxOutputTokens: MEDIA_LIMITS.visionOutputTokens,
       maxRetries: 0,
       abortSignal: signal,

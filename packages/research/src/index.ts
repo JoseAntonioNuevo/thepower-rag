@@ -66,27 +66,34 @@ export {
 export type { UrlVerdict } from "./url-policy";
 // Puertos (interfaces) de la investigación.
 export type {
+  // Contexto de llamada, cancelación y consumo.
   CallContext,
   CancelLike,
   Consumption,
+  // Evidencia y puertos del curso y de la herramienta.
   CourseEvidence,
   CourseEvidencePort,
   CourseSessionToolPort,
+  // Evidencia común y subpregunta del modelo.
   EvidenceItem,
   ModelSubquestion,
+  // Lectura de páginas y sus fallos y resultados.
   PageReadPort,
   PageSnapshot,
   PortFailure,
   PortResult,
+  // Ejecutor, modelo, observaciones, puertos, petición y resultado.
   ResearchExecutor,
   ResearchModelPort,
   ResearchObservation,
   ResearchPorts,
   ResearchRequest,
   ResearchResult,
+  // Búsqueda web y argumentos de la herramienta.
   SearchHit,
   SearchPort,
   SessionToolArgs,
+  // Evidencia mostrada, observación de texto y evidencias de herramienta y web.
   ShownEvidence,
   TextObservation,
   ToolEvidence,

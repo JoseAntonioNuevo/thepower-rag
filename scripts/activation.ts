@@ -228,17 +228,21 @@ export function parseActivation(
   const modelId = text("modelId");
   // Autorización normalizada (los marcadores cuentan como ausentes).
   return {
+    // Forma válida.
     ok: true,
     auth: {
+      // Identidad de la cuenta: nombre, id y correo (null si es un marcador).
       accountId: accountId !== null && isConfiguredValue(accountId) ? accountId.trim() : null,
       accountName:
         accountName !== null && isConfiguredValue(accountName) ? accountName.trim() : null,
       loginEmail: loginEmail !== null && isConfiguredValue(loginEmail) ? loginEmail.trim() : null,
+      // Permisos: solo cuentan si son exactamente true.
       allowCreateD1: record.allowCreateD1 === true,
       allowCreateR2: record.allowCreateR2 === true,
       allowCreateVectorize: record.allowCreateVectorize === true,
       allowWorkersAi: record.allowWorkersAi === true,
       allowOpenRouter: record.allowOpenRouter === true,
+      // Modelo autorizado, tope de gasto, cambio de plan y dimensión observada.
       modelId: modelId !== null && isConfiguredValue(modelId) ? modelId.trim() : null,
       maxSpendUsd,
       allowPlanChange,
@@ -348,16 +352,21 @@ export function planLines(profileId: string | null): string[] {
       : vectorizeIndexName(profileId);
   // Líneas.
   return [
+    // Destino documentado (no se lee la cuenta: el plan no llama a la red).
     "plan de activación",
     "destino documentado: Joseantonionuevo@gmail.com's Account",
     "id de cuenta documentado: 9c1493e94ba21f2c6872a9dd17ba19f7",
+    // Recursos previstos y sus bindings.
     `D1: ${COURSE_D1_NAME}`,
     `R2 privado: ${COURSE_R2_NAME}`,
     `Vectorize: ${index}`,
     "bindings previstos: AI, VECTORIZE, DB, CORPUS",
+    // Reglas del índice: métrica, dimensión medida y metadatos.
     "métrica pedida: cosine. La dimensión sale de una sonda de @cf/baai/bge-m3, no de 768 ni de 128.",
     "índices de metadatos previos a la inserción: corpusVersion, audience, profileId.",
+    // Pasos de la ingesta en orden.
     ...INGEST_ORDER.map((step) => `- ${step}`),
+    // Qué hace cada modo y qué no demuestra.
     "status --read solo consulta la cuenta y los nombres del curso.",
     "provision, migrate, ingest, probe-embeddings, resume, select-active y verify exigen --execute y su permiso.",
     "un tope guardado en JSON no demuestra que el gasto esté controlado.",

@@ -279,14 +279,17 @@ export function priceSnapshot(input: PriceInput): PriceSnapshot | null {
     credit !== null && credit > 0 ? credit * creditCount : decimalToMicros(input.readUsd);
   // Algún valor ausente o no positivo.
   if (
+    // Presupuesto y tope por trabajo.
     budgetMicros === null ||
     budgetMicros <= 0 ||
     jobLimitMicros === null ||
     jobLimitMicros <= 0 ||
+    // Tarifas del modelo.
     inputRate === null ||
     inputRate <= 0 ||
     outputRate === null ||
     outputRate <= 0 ||
+    // Precio de búsqueda y de lectura.
     searchMicros === null ||
     searchMicros <= 0 ||
     readMicros === null ||
@@ -331,15 +334,19 @@ export function priceSnapshot(input: PriceInput): PriceSnapshot | null {
   }
   // Instantánea v3.
   return {
+    // Versión y buscador elegido.
     version: RESEARCH_PRICE_VERSION,
     searchProvider,
+    // Presupuesto, tope y precio de cada tipo de llamada.
     budgetMicros,
     jobLimitMicros,
     modelCallMicros,
     searchMicros,
     readMicros,
+    // Embedding del curso y reserva inicial del texto.
     courseMicros: COURSE_EMBED_MICROS,
     holdMicros: textHold,
+    // Precios de visión, transcripción, voz y tope de la voz.
     visionCallMicros,
     sttMicrosPerMinute: sttRate,
     ttsMicrosPerChar,

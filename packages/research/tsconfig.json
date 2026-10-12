@@ -1,7 +1,11 @@
+// TypeScript de la lógica pura de la investigación (S12).
 {
+  // Hereda las reglas comunes.
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    // DOM para URL y TextEncoder, comunes a navegador y Workers.
     "lib": ["ES2023", "DOM"],
+    // Sin tipos globales de Node ni de Workers.
     "types": []
   },
   "include": ["src"]

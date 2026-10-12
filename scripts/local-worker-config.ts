@@ -274,12 +274,16 @@ export function loadLocalWorkerConfig(
   const relativeConfig = path.relative(root, configPath);
   // Configuración con capacidades (o error si el entorno no existe).
   return {
+    // Entorno pedido y si existe en el archivo.
     environmentName: environment,
     environmentFound: inspected.found,
+    // De dónde sale la configuración (archivo, entorno y .dev.vars).
     source: `${relativeConfig}${environment === null ? "" : ` env.${environment}`}${devVarsText === null ? "" : ` + ${devName}`}`,
     devVarsFile: devVarsText === null ? null : devName,
+    // Variables efectivas y bindings clasificados.
     vars,
     bindings: inspected.bindings,
+    // Diagnóstico con las mismas reglas que el Worker, o todo bloqueado si el entorno no existe.
     assessment: inspected.found
       ? assessWorker(vars as WorkerEnv)
       : {
@@ -388,10 +392,12 @@ export function formatPreflight(
   );
   // Variables por grupo.
   const groups: [string, readonly string[]][] = [
+    // Generación: las variables que exige el proveedor elegido.
     [
       "generación",
       provider === null ? ["LLM_PROVIDER", "MODEL_ID"] : generationVariables(provider),
     ],
+    // RAG: modelo de embeddings, dimensión, versión, perfil, métrica y umbral.
     [
       "rag",
       [
@@ -403,6 +409,7 @@ export function formatPreflight(
         "MIN_RETRIEVAL_SCORE",
       ],
     ],
+    // CRAG: además, el evaluador.
     ["crag", ["EVALUATOR_MODEL_ID"]],
   ];
   // Cada grupo.

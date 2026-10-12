@@ -35,18 +35,23 @@ const root = path.resolve(import.meta.dirname, "..");
 function auth(overrides: Partial<ActivationAuth> = {}): ActivationAuth {
   // Cuenta del curso con permisos de datos y tope de 5 USD.
   return {
+    // Cuenta, nombre y correo del destino del curso.
     accountId: COURSE_DESTINATION.accountId,
     accountName: COURSE_DESTINATION.accountName,
     loginEmail: COURSE_DESTINATION.loginEmail,
+    // No se crean recursos en estas pruebas.
     allowCreateD1: false,
     allowCreateR2: false,
     allowCreateVectorize: false,
+    // Sí se permiten embeddings y modelo, con un tope de 5 USD.
     allowWorkersAi: true,
     allowOpenRouter: true,
     modelId: "example/generator",
     maxSpendUsd: 5,
+    // Sin cambios de plan y con la dimensión ya observada.
     allowPlanChange: false,
     observedDimensions: 32,
+    // Cada prueba puede cambiar lo que necesite.
     ...overrides,
   };
 }
@@ -55,13 +60,16 @@ function auth(overrides: Partial<ActivationAuth> = {}): ActivationAuth {
 function corpus(): PreparedCorpus {
   // Corpus.
   return {
+    // Ids y fecha del corpus preparado.
     contentVersion: "cc037ef0bb1f7",
     preparationId: "c3a59a406888b",
     version: "test",
     verifiedDate: "2026-10-03",
+    // Perfil léxico de prueba de 128 dimensiones.
     embeddingModel: "fixture-token-hash-v1",
     dimensions: 128,
     remoteRevision: null,
+    // Cobertura parcial y sin verificación remota.
     coverage: {
       curriculum: "partial",
       calendarLx: "partial",
@@ -70,6 +78,7 @@ function corpus(): PreparedCorpus {
       remote: "not-verified",
       sessions: [],
     },
+    // Perfil del índice de prueba.
     indexProfile: {
       id: "p9e8e8e03627e",
       family: "fixture",
@@ -81,6 +90,7 @@ function corpus(): PreparedCorpus {
       providerRevision: null,
       preparationId: "c3a59a406888b",
     },
+    // Un único documento (S5) con un fragmento.
     documents: [
       {
         id: "s05-langgraph",
@@ -94,6 +104,7 @@ function corpus(): PreparedCorpus {
         curriculum: "present",
         exerciseDetail: "summary",
         body: "LangGraph modela el estado.",
+        // Su fragmento con el id de vector.
         chunks: [
           {
             chunkId: "c3a59a406888b:s05-langgraph:00",
@@ -420,15 +431,18 @@ describe("puente y comandos", () => {
     // Sin tiempo: error y proceso parado.
     await expect(
       startLoopbackBridge(spec, {
+        // Plazo cero: el puente no llega a estar listo.
         timeoutMs: 0,
         now: () => 10,
         sleep: async () => undefined,
+        // Proceso simulado que no termina por sí solo.
         spawn: () => ({
           pid: 7,
           kill: () => killed.push(7),
           hasExited: () => false,
           waitForExit: async () => 0,
         }),
+        // El puente responde 503 (aún no listo).
         fetch: async () => ({ status: 503 }),
       }),
     ).rejects.toThrow(/no estuvo listo/);
@@ -448,15 +462,18 @@ describe("puente y comandos", () => {
     let remoteCalls = 0;
     // Embed con reserva.
     const response = await handleBridgeRequest(
+      // Petición POST al puente con la ficha local.
       new Request("http://127.0.0.1/bridge", {
         method: "POST",
         headers: { "x-thepower-bridge": "testigo-local-de-prueba" },
+        // Operación embed con su reserva y dos textos.
         body: JSON.stringify({
           op: "embed",
           reservationId: "r1",
           texts: ["uno", "dos"],
         }),
       }),
+      // Entorno del puente: ficha, modo remoto y papel «probe».
       {
         BRIDGE_TOKEN: "testigo-local-de-prueba",
         BRIDGE_REMOTE: "true",

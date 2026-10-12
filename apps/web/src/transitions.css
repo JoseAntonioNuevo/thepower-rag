@@ -1,7 +1,18 @@
-/* transitions.dev catalog for the chat. Selectors stay as published. */
+/*
+ * GUÍA DE LECTURA · apps/web/src/transitions.css
+ * Catálogo de movimiento de transitions.dev para el chat. Los selectores (clases t-*) se conservan
+ * tal y como se publican para poder actualizar el catálogo sin reescribir componentes.
+ * Qué contiene: tokens de movimiento (:root) y, por cada efecto, sus clases y fotogramas: cambio de
+ * texto, «pensando», streaming, matriz de puntos, error con sacudida, aparición escalonada, panel
+ * deslizante, pestañas, acordeón, esqueleto, interruptor y brillo.
+ * Cómo se usa: los componentes de chat-motion-view.tsx ponen y quitan clases como is-exit, is-in,
+ * is-revealed o data-open="true"; el CSS hace la animación. Cada efecto respeta
+ * prefers-reduced-motion. Regla del proyecto: no inventar duraciones ni curvas sueltas, usar estos tokens.
+ */
 
 :root {
-  /* Motion tokens: shared scale for buttons, chips and cards outside the catalog snippets. */
+  /* Tokens de movimiento: escala común para botones, chips y tarjetas fuera de los fragmentos del catálogo. */
+  /* Escala de duraciones: de escalonado (40 ms) a muy lenta (500 ms). */
   --duration-stagger: 40ms;
   --duration-micro: 80ms;
   --duration-quick: 150ms;
@@ -9,24 +20,29 @@
   --duration-medium: 350ms;
   --duration-slow: 400ms;
   --duration-very-slow: 500ms;
+  /* Curvas de aceleración: smooth-out frena al final; bounce rebota un poco. */
   --ease-smooth-out: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-in-out: ease-in-out;
   --ease-out: ease-out;
   --ease-linear: linear;
   --ease-bounce: cubic-bezier(0.34, 1.36, 0.64, 1);
+  /* Distancia mínima (4 px) y escala al pulsar (98 %). */
   --distance-micro: 4px;
   --scale-small: 0.98;
+  /* Interruptor: duración, recorrido del círculo, rebotes y curva. */
   --toggle-dur: 350ms;
   --toggle-travel: 14.66px;
   --toggle-ov1: 1px;
   --toggle-ov2: 0px;
   --toggle-track: 250ms;
   --toggle-ease: cubic-bezier(0.34, 1.35, 0.64, 1);
+  /* Brillo de texto (shimmer): duración, colores y ancho de la banda. */
   --shimmer-dur: 2000ms;
   --shimmer-base: #78716c;
   --shimmer-highlight: #1c1917;
   --shimmer-band: 400%;
   --shimmer-ease: linear;
+  /* «Pensando»: tiempos de cambio de frase, distancia, desenfoque y colores. */
   --think-hold: 2000ms;
   --think-swap: 150ms;
   --think-gap: 50ms;
@@ -36,53 +52,65 @@
   --think-base: #7c7c7c;
   --think-highlight: #0d0d0d;
   --think-ease: ease-in-out;
+  /* Streaming: retraso entre palabras, fundido y desenfoque. */
   --stream-gap: 60ms;
   --stream-fade: 350ms;
   --stream-blur: 1px;
   --stream-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  /* Matriz de puntos: ciclo y colores apagado/encendido. */
   --matrix-cycle: 1200ms;
   --matrix-base: #d9d9d9;
   --matrix-active: #85858f;
   --matrix-ease: ease-in-out;
+  /* Sacudida de error: distancias y duraciones. */
   --shake-distance: 6px;
   --shake-overshoot: 4px;
   --shake-dur-a: 80ms;
   --shake-dur-b: 60ms;
   --shake-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  /* Reversión del error: cuánto se mantiene y cuánto tarda en volver. */
   --revert-hold: 3000ms;
   --revert-dur: 280ms;
+  /* Aparición escalonada: duración, distancia, escalón y desenfoque. */
   --stagger-dur: 500ms;
   --stagger-distance: 12px;
   --stagger-stagger: 40ms;
   --stagger-blur: 3px;
   --stagger-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  /* Panel deslizante: apertura más lenta que el cierre, distancia y desenfoque. */
   --panel-open-dur: 400ms;
   --panel-close-dur: 350ms;
   --panel-translate-y: 100px;
   --panel-blur: 2px;
   --panel-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  /* Pestañas: duración, curva y colores (de la paleta de styles.css). */
   --tabs-dur: 250ms;
   --tabs-ease: cubic-bezier(0.22, 1, 0.36, 1);
   --tabs-text-muted: #57534e;
   --tabs-text-active: #1c1917;
   --tabs-bar-bg: #e7e2d8;
   --tabs-pill-bg: #fffcf7;
+  /* Acordeón: expandir, contraer y girar la flecha. */
   --acc-expand: 250ms;
   --acc-collapse: 250ms;
   --acc-chevron: 250ms;
   --acc-ease: cubic-bezier(0.22, 1, 0.36, 1);
+  /* Pulso del esqueleto: duración, repeticiones y opacidad mínima. */
   --pulse-dur: 1000ms;
   --pulse-count: 1;
   --pulse-min: 0.5;
+  /* Revelado del esqueleto. */
   --reveal-dur: 400ms;
   --reveal-blur: 2px;
   --reveal-ease: ease-in-out;
+  /* Cambio de texto. */
   --text-swap-dur: 150ms;
   --text-swap-translate-y: 4px;
   --text-swap-blur: 2px;
   --text-swap-ease: ease-in-out;
 }
 
+/* Cambio de texto (text swap): el texto viejo sube y se desenfoca, el nuevo entra desde abajo. Lo usa el estado de la conversación. */
 .t-text-swap {
   display: inline-block;
   transform: translateY(0);
@@ -95,12 +123,14 @@
   will-change: transform, filter, opacity;
 }
 
+/* Fase de salida: sube unos píxeles, se desenfoca y se vuelve transparente. */
 .t-text-swap.is-exit {
   transform: translateY(calc(var(--text-swap-translate-y) * -1));
   filter: blur(var(--text-swap-blur));
   opacity: 0;
 }
 
+/* Inicio de la entrada: el texto nuevo empieza abajo e invisible, sin transición, para luego animar a su sitio. */
 .t-text-swap.is-enter-start {
   transform: translateY(var(--text-swap-translate-y));
   filter: blur(var(--text-swap-blur));
@@ -108,22 +138,26 @@
   transition: none;
 }
 
+/* Accesibilidad: si el sistema pide menos movimiento (prefers-reduced-motion), se quita la animación y el contenido aparece directamente. */
 @media (prefers-reduced-motion: reduce) {
   .t-text-swap {
     transition: none !important;
   }
 }
 
+/* «Pensando» del asistente: un texto de estado con brillo que recorre las letras. */
 .t-think {
   position: relative;
   display: inline-block;
   text-align: center;
 }
+/* Copia invisible del texto más largo: reserva el ancho para que el diseño no salte al cambiar de frase. */
 .t-think-sizer {
   display: block;
   visibility: hidden;
   white-space: nowrap;
 }
+/* Texto visible del estado, superpuesto al medidor, con transición de cambio. */
 .t-think-text {
   position: absolute;
   top: 0;
@@ -141,6 +175,7 @@
     opacity var(--think-swap) var(--think-ease);
   will-change: transform, filter, opacity;
 }
+/* Capa de brillo: repite el texto (data-text) y pinta encima un degradado recortado a las letras. */
 .t-think-text::before {
   content: attr(data-text);
   position: absolute;
@@ -162,6 +197,7 @@
   -webkit-text-fill-color: transparent;
   animation: t-think-shimmer var(--think-shimmer) linear infinite;
 }
+/* Mueve la banda de brillo de derecha a izquierda. */
 @keyframes t-think-shimmer {
   0% {
     background-position: 100% 0;
@@ -170,11 +206,13 @@
     background-position: 0% 0;
   }
 }
+/* Salida de la frase de «pensando». */
 .t-think-text.is-exit {
   transform: translateY(calc(var(--think-distance) * -1));
   filter: blur(var(--think-blur));
   opacity: 0;
 }
+/* Entrada de la frase de «pensando», sin transición en el primer fotograma. */
 .t-think-text.is-enter-start {
   transition: none;
   transform: translateY(var(--think-distance));
@@ -182,6 +220,7 @@
   opacity: 0;
 }
 
+/* Accesibilidad: si el sistema pide menos movimiento (prefers-reduced-motion), se quita la animación y el contenido aparece directamente. */
 @media (prefers-reduced-motion: reduce) {
   .t-think-text {
     transition: none !important;
@@ -193,6 +232,7 @@
   }
 }
 
+/* Streaming de texto: cada palabra (.t-stream-w) empieza transparente y algo desenfocada. */
 .t-stream-w {
   opacity: 0;
   filter: blur(var(--stream-blur));
@@ -200,11 +240,13 @@
     opacity var(--stream-fade) var(--stream-ease),
     filter var(--stream-fade) var(--stream-ease);
 }
+/* Cuando la palabra llega (.is-in), aparece nítida. */
 .t-stream-w.is-in {
   opacity: 1;
   filter: blur(0);
 }
 
+/* Accesibilidad: si el sistema pide menos movimiento (prefers-reduced-motion), se quita la animación y el contenido aparece directamente. */
 @media (prefers-reduced-motion: reduce) {
   .t-stream-w {
     transition: none !important;
@@ -213,22 +255,26 @@
   }
 }
 
+/* Indicador de carga de matriz de puntos: rejilla de 4 columnas de puntos de 2 px. */
 .t-matrix {
   display: grid;
   grid-template-columns: repeat(4, 2px);
   grid-auto-rows: 2px;
   gap: 2px;
 }
+/* Cada punto late; --d (lo calcula chat-motion.ts) retrasa cada uno para formar el dibujo. */
 .t-matrix i {
   display: block;
   background: var(--matrix-base);
   animation: t-matrix-pulse var(--matrix-cycle) var(--matrix-ease) infinite;
   animation-delay: calc(var(--d, 0) * 1ms);
 }
+/* Los huecos del dibujo no se ven ni animan. */
 .t-matrix i.is-gap {
   visibility: hidden;
   animation: none;
 }
+/* Latido de cada punto: se enciende brevemente y vuelve al color base. */
 @keyframes t-matrix-pulse {
   0%,
   45%,
@@ -240,20 +286,24 @@
   }
 }
 
+/* Accesibilidad: si el sistema pide menos movimiento (prefers-reduced-motion), se quita la animación y el contenido aparece directamente. */
 @media (prefers-reduced-motion: reduce) {
   .t-matrix i {
     animation: none !important;
   }
 }
 
+/* Campo con error: transición del color del borde. */
 .t-input {
   transition: border-color 150ms ease-out;
   will-change: transform;
 }
+/* Al entrar en error, el borde cambia con la duración de reversión. */
 .t-input.is-error {
   transition: border-color var(--revert-dur, 280ms) ease-out;
 }
 
+/* Mensaje de error oculto por defecto. visibility se retrasa para que el fundido termine antes de ocultarlo. */
 .t-error-msg {
   opacity: 0;
   visibility: hidden;
@@ -261,6 +311,7 @@
     opacity var(--revert-dur, 280ms) ease-out,
     visibility 0s linear var(--revert-dur, 280ms);
 }
+/* Con error, el mensaje aparece al instante y se funde. */
 .t-input-wrap.is-error .t-error-msg {
   opacity: 1;
   visibility: visible;
@@ -269,9 +320,11 @@
     visibility 0s linear 0s;
 }
 
+/* Sacudida horizontal del campo cuando el error se repite. */
 .t-input.is-shaking {
   animation: t-input-shake calc(var(--shake-dur-a) * 2 + var(--shake-dur-b) * 2) linear;
 }
+/* Fotogramas de la sacudida: derecha, izquierda, rebote pequeño y reposo. */
 @keyframes t-input-shake {
   0% {
     transform: translateX(0);
@@ -294,6 +347,7 @@
   }
 }
 
+/* Accesibilidad: si el sistema pide menos movimiento (prefers-reduced-motion), se quita la animación y el contenido aparece directamente. */
 @media (prefers-reduced-motion: reduce) {
   .t-input {
     animation: none !important;
@@ -301,6 +355,7 @@
   }
 }
 
+/* Aparición escalonada de líneas (stagger): cada línea sube, se enfoca y aparece. */
 .t-stagger-line {
   display: block;
   opacity: 0;
@@ -312,19 +367,23 @@
     filter var(--stagger-dur) var(--stagger-ease);
   will-change: transform, opacity, filter;
 }
+/* La segunda línea espera un escalón. */
 .t-stagger-line--2 {
   transition-delay: var(--stagger-stagger);
 }
 
+/* La tercera línea espera dos escalones. */
 .t-stagger-line--3 {
   transition-delay: calc(var(--stagger-stagger) * 2);
 }
 
+/* Contenedor visible: las líneas llegan a su sitio. */
 .t-stagger.is-shown .t-stagger-line {
   opacity: 1;
   transform: translateY(0);
   filter: blur(0);
 }
+/* Al ocultar, todas se desvanecen a la vez y rápido, sin movimiento. */
 .t-stagger.is-hiding .t-stagger-line {
   opacity: 0;
   transform: translateY(0);
@@ -336,12 +395,14 @@
   transition-delay: 0s;
 }
 
+/* Accesibilidad: si el sistema pide menos movimiento (prefers-reduced-motion), se quita la animación y el contenido aparece directamente. */
 @media (prefers-reduced-motion: reduce) {
   .t-stagger-line {
     transition: none !important;
   }
 }
 
+/* Panel que se desliza (cerrado): desplazado, transparente, desenfocado y sin recibir clics. */
 .t-panel-slide {
   transform: translateY(var(--panel-translate-y));
   opacity: 0;
@@ -353,6 +414,7 @@
     filter var(--panel-close-dur) var(--panel-ease);
   will-change: transform, opacity, filter;
 }
+/* Panel abierto: en su sitio y nítido. La apertura dura algo más que el cierre (asimetría intencionada). */
 .t-panel-slide[data-open="true"] {
   transform: translateY(0);
   opacity: 1;
@@ -364,12 +426,14 @@
     filter var(--panel-open-dur) var(--panel-ease);
 }
 
+/* Accesibilidad: si el sistema pide menos movimiento (prefers-reduced-motion), se quita la animación y el contenido aparece directamente. */
 @media (prefers-reduced-motion: reduce) {
   .t-panel-slide {
     transition: none !important;
   }
 }
 
+/* Ajustes del catálogo para este proyecto. Fila del estado de la conversación: indicador de carga y texto. */
 .conversation-status {
   display: flex;
   align-items: center;
@@ -378,11 +442,13 @@
   margin: 4px 0 8px;
 }
 
+/* El texto de estado se alinea a la izquierda junto al indicador. */
 .conversation-status .t-think {
   text-align: left;
   flex: 0 0 auto;
 }
 
+/* Hueco fijo de 14 px para el indicador de matriz. */
 .status-loader {
   display: inline-grid;
   width: 14px;
@@ -390,33 +456,40 @@
   flex: 0 0 14px;
 }
 
+/* Cuando el estado no está «vivo» (terminado o error), se apaga el brillo. */
 .conversation-status .t-think[data-live="false"] .t-think-text::before {
   display: none;
 }
 
+/* En el chat y en el panel los deslizamientos son cortos (12 px) para no distraer. */
 .transcript .t-panel-slide,
 .panel .t-panel-slide,
 .panel.t-panel-slide {
   --panel-translate-y: 12px;
 }
 
+/* Campo de error del chat: borde rojo claro. */
 .conversation .t-input.error {
   border: 1px solid #fecaca;
 }
 
+/* Error activo: borde rojo intenso. */
 .conversation .t-input.error.is-error {
   border-color: #b91c1c;
 }
 
+/* Mensaje de error del chat sin margen. */
 .conversation .t-error-msg {
   margin: 0;
 }
 
+/* Texto en streaming: respeta los saltos de línea. */
 .t-stream {
   margin: 0;
   white-space: pre-wrap;
 }
 
+/* Control segmentado (pestañas): barra redondeada con una píldora que se desliza. */
 .t-tabs {
   position: relative;
   display: inline-flex;
@@ -427,6 +500,7 @@
   background: var(--tabs-bar-bg);
 }
 
+/* Píldora de la opción activa. React mide la opción y fija su ancho y su desplazamiento. */
 .t-tabs-pill {
   position: absolute;
   top: 3px;
@@ -444,17 +518,20 @@
   pointer-events: none;
 }
 
+/* Acordeón: la altura se anima con grid-template-rows de 0fr a 1fr (funciona con altura automática). */
 .t-acc-panel {
   display: grid;
   grid-template-rows: 0fr;
   transition: grid-template-rows var(--acc-collapse) var(--acc-ease);
 }
 
+/* Acordeón abierto: fila completa. */
 .t-acc[data-open="true"] .t-acc-panel {
   grid-template-rows: 1fr;
   transition: grid-template-rows var(--acc-expand) var(--acc-ease);
 }
 
+/* Contenido del acordeón cerrado: recortado, transparente y desenfocado. */
 .t-acc-panel-inner {
   overflow: hidden;
   opacity: 0;
@@ -464,6 +541,7 @@
     filter var(--acc-collapse) var(--acc-ease);
 }
 
+/* Contenido del acordeón abierto: visible y nítido. */
 .t-acc[data-open="true"] .t-acc-panel-inner {
   opacity: 1;
   filter: blur(0);
@@ -472,6 +550,7 @@
     filter var(--acc-expand) var(--acc-ease);
 }
 
+/* Flecha del acordeón: se voltea en vertical al abrir. */
 .t-acc-chevron {
   display: inline-flex;
   transform: scaleY(1);
@@ -479,14 +558,17 @@
   transition: transform var(--acc-chevron) var(--acc-ease);
 }
 
+/* El trazo de la flecha no cambia de grosor al voltearla. */
 .t-acc-chevron path {
   vector-effect: non-scaling-stroke;
 }
 
+/* Acordeón abierto: flecha hacia arriba. */
 .t-acc[data-open="true"] .t-acc-chevron {
   transform: scaleY(-1);
 }
 
+/* Accesibilidad: si el sistema pide menos movimiento (prefers-reduced-motion), se quita la animación y el contenido aparece directamente. */
 @media (prefers-reduced-motion: reduce) {
   .t-tabs-pill,
   .t-acc-panel,
@@ -496,16 +578,19 @@
   }
 }
 
+/* Esqueleto de carga que se revela: contenedor de referencia. */
 .t-skel {
   position: relative;
 }
 
+/* El esqueleto y el contenido real se superponen en el mismo sitio. */
 .t-skel-skeleton,
 .t-skel-content {
   position: absolute;
   inset: 0;
 }
 
+/* El esqueleto está delante y visible al principio. */
 .t-skel-skeleton {
   z-index: 1;
   opacity: 1;
@@ -515,6 +600,7 @@
     filter var(--reveal-dur) var(--reveal-ease);
 }
 
+/* El contenido real está encima, invisible y desenfocado hasta que llega. */
 .t-skel-content {
   z-index: 2;
   opacity: 0;
@@ -524,25 +610,30 @@
     filter var(--reveal-dur) var(--reveal-ease);
 }
 
+/* Al revelar: el esqueleto se desvanece… */
 .t-skel.is-revealed .t-skel-skeleton {
   opacity: 0;
   filter: blur(var(--reveal-blur));
 }
 
+/* …y el contenido aparece nítido. */
 .t-skel.is-revealed .t-skel-content {
   opacity: 1;
   filter: blur(0);
 }
 
+/* Al reiniciar, sin transición: vuelve al estado inicial de golpe. */
 .t-skel.is-resetting .t-skel-skeleton,
 .t-skel.is-resetting .t-skel-content {
   transition: none !important;
 }
 
+/* Pulso de los hijos del esqueleto mientras se espera (--pulse-count veces). */
 .t-skel-skeleton.is-pulsing > * {
   animation: t-skel-pulse var(--pulse-dur) ease-in-out var(--pulse-count);
 }
 
+/* El pulso baja la opacidad a la mitad y vuelve. */
 @keyframes t-skel-pulse {
   0%,
   100% {
@@ -553,6 +644,7 @@
   }
 }
 
+/* Accesibilidad: si el sistema pide menos movimiento (prefers-reduced-motion), se quita la animación y el contenido aparece directamente. */
 @media (prefers-reduced-motion: reduce) {
   .t-skel-skeleton,
   .t-skel-content {
@@ -564,22 +656,28 @@
   }
 }
 
+/* Interruptor (toggle): el fondo cambia de color con transición. */
 .t-toggle {
   transition: background var(--toggle-track) var(--toggle-ease);
 }
+/* El círculo se mueve con «translate». */
 .t-toggle-thumb {
   translate: 0 0;
   will-change: translate;
 }
+/* Encendido: el círculo recorre --toggle-travel. */
 .t-toggle[data-on="true"] .t-toggle-thumb {
   translate: var(--toggle-travel) 0;
 }
+/* Tras el primer render (.is-init), encender anima con un pequeño rebote. */
 .t-toggle.is-init[data-on="true"] .t-toggle-thumb {
   animation: t-toggle-on var(--toggle-dur) var(--toggle-ease) both;
 }
+/* Y apagar también. */
 .t-toggle.is-init[data-on="false"] .t-toggle-thumb {
   animation: t-toggle-off var(--toggle-dur) var(--toggle-ease) both;
 }
+/* Encender: pasa un poco del final y vuelve (efecto muelle). */
 @keyframes t-toggle-on {
   0% {
     translate: 0 0;
@@ -594,6 +692,7 @@
     translate: var(--toggle-travel) 0;
   }
 }
+/* Apagar: pasa un poco del inicio y vuelve. */
 @keyframes t-toggle-off {
   0% {
     translate: var(--toggle-travel) 0;
@@ -609,17 +708,20 @@
   }
 }
 
+/* Accesibilidad: si el sistema pide menos movimiento (prefers-reduced-motion), se quita la animación y el contenido aparece directamente. */
 @media (prefers-reduced-motion: reduce) {
   .t-toggle-thumb {
     animation: none !important;
   }
 }
 
+/* Texto con brillo (shimmer): color base gris. */
 .t-shimmer {
   position: relative;
   display: inline-block;
   color: var(--shimmer-base);
 }
+/* Capa de brillo que repite el texto y recorre las letras con un degradado. */
 .t-shimmer::before {
   content: attr(data-text);
   position: absolute;
@@ -641,6 +743,7 @@
   -webkit-text-fill-color: transparent;
   animation: t-shimmer var(--shimmer-dur) var(--shimmer-ease) infinite;
 }
+/* Recorrido del brillo de derecha a izquierda. */
 @keyframes t-shimmer {
   0% {
     background-position: 100% 0;
@@ -650,6 +753,7 @@
   }
 }
 
+/* Accesibilidad: si el sistema pide menos movimiento (prefers-reduced-motion), se quita la animación y el contenido aparece directamente. */
 @media (prefers-reduced-motion: reduce) {
   .t-shimmer::before {
     animation: none !important;

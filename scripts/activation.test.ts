@@ -39,18 +39,22 @@ const root = path.resolve(import.meta.dirname, "..");
 function auth(overrides: Partial<ActivationAuth> = {}): ActivationAuth {
   // Todo desactivado.
   return {
+    // Cuenta ficticia, sin correo.
     accountId: "cuenta-de-prueba",
     accountName: "Curso AI Engineer",
     loginEmail: null,
+    // Ningún permiso de creación ni de uso de servicios.
     allowCreateD1: false,
     allowCreateR2: false,
     allowCreateVectorize: false,
     allowWorkersAi: false,
     allowOpenRouter: false,
+    // Sin modelo, sin tope y sin dimensión observada.
     modelId: null,
     maxSpendUsd: null,
     allowPlanChange: false,
     observedDimensions: null,
+    // Cada prueba activa solo lo que necesita.
     ...overrides,
   };
 }
@@ -221,6 +225,7 @@ describe("lecturas de Wrangler", () => {
   it("elige la cuenta pedida y no la primera", () => {
     // Dos cuentas.
     const parsed = parseWhoami(
+      // Salida de whoami con dos cuentas: la del curso no es la primera.
       {
         loggedIn: true,
         email: "joseantonionuevo@gmail.com",
@@ -232,6 +237,7 @@ describe("lecturas de Wrangler", () => {
           },
         ],
       },
+      // Destino documentado contra el que se compara.
       COURSE_DESTINATION,
     );
     // La del curso.

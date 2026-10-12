@@ -77,22 +77,27 @@ export function researchSummary(
   const ledger = state.ledger;
   // Resumen completo campo a campo.
   const summary: ResearchSummary = {
+    // Identidad de la ejecución y si se puede medir.
     runId: state.runId,
     fixture: ports.fixture,
     scenarioId: state.scenarioId,
     measured: ports.measured,
+    // Grupo, corpus y pregunta original recortada.
     audience: state.audience,
     corpusVersion: state.corpusVersion,
     originalQuestion: (state.originalQuestion || state.question).slice(
       0,
       RESEARCH_LIMITS.maxQuestionChars,
     ),
+    // Conversación y trabajo.
     threadId: state.threadId,
     jobId: state.jobId,
+    // Pregunta con memoria, solo si es distinta de la original.
     contextualizedQuestion:
       state.originalQuestion && state.originalQuestion !== state.question
         ? state.question.slice(0, RESEARCH_LIMITS.maxQuestionChars)
         : null,
+    // Plan: ruta, explicación y subpreguntas.
     route: plan?.route ?? null,
     planRationale: plan?.rationale ?? null,
     subquestions: (plan?.subquestions ?? []).map((item) => ({
@@ -101,6 +106,7 @@ export function researchSummary(
       kind: item.kind,
       external: item.external,
     })),
+    // Rondas y registros de cada llamada al curso, herramienta y búsqueda.
     rounds: state.round,
     courseQueries: state.courseQueries.map((item) => ({
       ...item,
@@ -108,6 +114,7 @@ export function researchSummary(
     })),
     toolCalls: state.toolCalls,
     searches: state.searches.map((item) => ({ ...item, subquestionId: sid(item.subquestionId) })),
+    // Páginas descubiertas; un candidato que no se llegó a leer cuenta como fuera de tope.
     discovered: state.discovered.map((item) => ({
       round: item.round,
       url: item.url,
@@ -115,6 +122,7 @@ export function researchSummary(
       domain: item.domain,
       decision: item.decision === "candidate" ? "over-budget" : item.decision,
     })),
+    // Páginas leídas con su estado.
     pagesRead: state.pagesRead.map((item) => ({
       round: item.round,
       url: item.url,
@@ -126,6 +134,7 @@ export function researchSummary(
       contentHash: item.contentHash,
       instructionsFlagged: item.instructionsFlagged,
     })),
+    // Evidencia aceptada y rechazada.
     accepted: state.accepted.map((entry) => ({
       sourceId: entry.item.sourceId,
       kind: entry.item.kind,
@@ -133,6 +142,7 @@ export function researchSummary(
       reason: entry.reason,
     })),
     rejected: state.rejected,
+    // Cobertura por subpregunta con la causa de cada laguna.
     coverage: state.coverage.map((entry) => ({
       subquestionId: sid(entry.subquestionId),
       status: entry.status,
@@ -140,6 +150,7 @@ export function researchSummary(
       gap: entry.gap,
       sourceIds: entry.sourceIds,
     })),
+    // Contradicciones y seguimiento.
     contradictions: state.contradictions,
     followUp:
       state.followUp === null
@@ -151,9 +162,11 @@ export function researchSummary(
               query: item.query,
             })),
           },
+    // Parada, detalle y resultado.
     stop: state.stop ?? "invalid-output",
     stopDetail: state.stopDetail || "Sin detalle.",
     outcome: state.outcome ?? "error",
+    // Comprobación del informe: método, afirmaciones comprobadas y retiradas.
     claimCheck: {
       method: CLAIM_CHECK_METHOD.slice(0, RESEARCH_LIMITS.maxReasonChars),
       checked: state.claimChecked,
@@ -162,12 +175,14 @@ export function researchSummary(
         reason: item.reason.slice(0, RESEARCH_LIMITS.maxReasonChars),
       })),
     },
+    // Fuentes citadas y contadores con el tiempo transcurrido si se midió.
     citedSourceIds: state.citedSourceIds,
     counters: {
       ...state.counters,
       elapsedMs:
         ports.measured && Number.isFinite(elapsed) && elapsed >= 0 ? Math.round(elapsed) : null,
     },
+    // Límites del laboratorio.
     limits: {
       maxSubquestions: RESEARCH_LIMITS.maxSubquestions,
       maxRounds: RESEARCH_LIMITS.maxRounds,
@@ -175,6 +190,7 @@ export function researchSummary(
       maxPagesRead: RESEARCH_LIMITS.maxPagesRead,
       deadlineMs: RESEARCH_LIMITS.deadlineMs,
     },
+    // Contabilidad: reserva, USD informado, créditos y estimación.
     accounting: {
       measured: ports.measured,
       estimatedMaxUsd: ports.estimatedMaxUsd,
@@ -184,14 +200,17 @@ export function researchSummary(
       estimateProvenance: ledger.estimateProvenance ?? null,
       estimateComplete:
         (ledger.estimatedUsd ?? null) === null ? null : ledger.estimateIncomplete !== true,
+      // Llamadas con consumo desconocido y coste del informe final.
       unknownConsumptionCalls: ledger.unknownCalls,
       finalAnswerUsd: ledger.finalAnswerUsd,
+      // El total solo es completo si todo se midió y nada quedó desconocido ni sin precio.
       totalComplete:
         ports.measured &&
         ledger.unknownCalls === 0 &&
         ledger.unpricedCalls === 0 &&
         (ledger.estimatedUsd ?? null) === null &&
         ledger.estimateIncomplete !== true,
+      // Nota honesta que explica qué falta.
       note: accountingNote(
         ports.measured,
         ledger.unknownCalls,
@@ -199,6 +218,7 @@ export function researchSummary(
         (ledger.estimatedUsd ?? null) !== null || ledger.estimateIncomplete === true,
       ),
     },
+    // Traza visible.
     trace: state.trace,
   };
   // Valida el resumen con el esquema antes de devolverlo.

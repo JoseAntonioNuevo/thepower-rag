@@ -11,17 +11,22 @@ import {
 } from "@thepower-rag/contracts";
 // Reglas puras del núcleo: cotas, alcance, duplicados, retención y validación de salidas del modelo.
 import {
+  // Topes del grafo y comprobación de presupuesto.
   CRAG_BOUNDS,
   budgetOpen,
+  // Alcance (grupo, corpus, perfil), duplicados y evidencia para responder.
   chunkInScope,
   dedupeChunks,
   evidenceForAnswer,
+  // Calendario, plazo restante, retención y ruta tras evaluar.
   isScheduleQuestion,
   remainingBudgetMs,
   retainEvidence,
   routeAfterAssessment,
+  // Validadores estrictos de las salidas del modelo.
   validateRankingAndAssessment,
   validateReformulation,
+  // Tipos de la evaluación, fragmento, puertos, alcance y resultado ordenado.
   type CragAssessment,
   type CragChunk,
   type CragPorts,
@@ -124,22 +129,29 @@ interface GraphState {
 
 // Canales del estado para LangGraph (cada nodo sustituye los campos que devuelve).
 const CragGraphState = Annotation.Root({
+  // Pregunta del alumno (nunca se sustituye) y consulta de búsqueda actual.
   originalQuestion: Annotation<string>,
   currentQuery: Annotation<string>,
+  // Alcance del turno: grupo, corpus, perfil y id de ejecución.
   scope: Annotation<CragScope>,
+  // Contadores de búsquedas y reformulaciones, y consultas ya usadas.
   retrievalCount: Annotation<number>,
   reformulationCount: Annotation<number>,
   seenQueries: Annotation<string[]>,
+  // Candidatos de la pasada, conservados, descartados y mostrados al evaluador.
   candidates: Annotation<CragChunk[]>,
   retained: Annotation<CragChunk[]>,
   discarded: Annotation<Discarded[]>,
   shown: Annotation<CragChunk[]>,
+  // Orden validado y última decisión del evaluador.
   ranking: Annotation<RankedHit[]>,
   decision: Annotation<CragAssessment | null>,
+  // Final del recorrido, motivo, texto de la respuesta y evidencia usada.
   terminal: Annotation<Terminal>,
   terminalReason: Annotation<string>,
   answerText: Annotation<string>,
   evidence: Annotation<CragChunk[]>,
+  // Libro de llamadas, inicio del turno (para el plazo de 20 s) y guion de demo.
   ledger: Annotation<Ledger>,
   startedAt: Annotation<number>,
   fixture: Annotation<boolean>,
@@ -187,18 +199,22 @@ export interface CragTurnResult {
 function emptyLedger(measured: boolean): Ledger {
   // Libro inicial.
   return {
+    // Ejecuciones de cada paso (las cuenta el grafo).
     retrievalExecutions: 0,
     evaluationExecutions: 0,
     reformulationExecutions: 0,
     generationExecutions: 0,
+    // Llamadas de pago: 0 si se miden; null si no se pueden medir (demo).
     retrievalProviderCalls: measured ? 0 : null,
     evaluationProviderCalls: measured ? 0 : null,
     reformulationProviderCalls: measured ? 0 : null,
     generationProviderCalls: measured ? 0 : null,
+    // Duraciones desconocidas hasta medirlas.
     retrievalMs: null,
     evaluationMs: null,
     reformulationMs: null,
     generationMs: null,
+    // El consumo siempre es parcial: no hay un total inventado.
     partial: true,
     usage: null,
     cost: null,
@@ -279,12 +295,15 @@ function emitStep(
 ): CragStep {
   // Paso recortado y validado con el esquema.
   const built = cragStepSchema.parse({
+    // Id de ejecución, tipo de paso y contadores en ese momento.
     runId: state.scope.runId,
     kind: step.kind,
     retrieval: state.retrievalCount,
     reformulation: state.reformulationCount,
+    // Consulta y estado recortados a los límites del contrato.
     query: (step.query ?? state.currentQuery).slice(0, CRAG_BOUNDS.maxQueryChars),
     status: step.status.slice(0, CRAG_BOUNDS.maxReasonChars),
+    // Estado de la evidencia, ids conservados (como mucho maxRetained) y descartados.
     evidenceStatus: step.evidenceStatus,
     retainedIds: (step.retainedIds ?? state.retained.map((chunk) => chunk.chunkId)).slice(
       0,
@@ -445,22 +464,27 @@ export async function runCragTurn(input: CragTurnInput): Promise<CragTurnResult>
   const question = input.question.trim();
   // Estado inicial.
   const initial: GraphState = {
+    // La pregunta original y la consulta empiezan iguales; la primera consulta cuenta como vista.
     originalQuestion: question,
     currentQuery: question,
     scope: input.scope,
+    // Contadores a cero.
     retrievalCount: 0,
     reformulationCount: 0,
     seenQueries: [question],
+    // Sin candidatos, conservados, descartados ni decisión.
     candidates: [],
     retained: [],
     discarded: [],
     shown: [],
     ranking: [],
     decision: null,
+    // «pending»: aún sin final.
     terminal: "pending",
     terminalReason: "",
     answerText: "",
     evidence: [],
+    // Libro inicial, reloj para el plazo único y datos de la demo.
     ledger: emptyLedger(input.ports.measured),
     startedAt: input.ports.now(),
     fixture: input.fixture,
@@ -1233,55 +1257,68 @@ function summaryFrom(state: GraphState, fixture: boolean): CragSummary {
   const terminal = state.terminal === "pending" ? "error" : state.terminal;
   // Borrador del resumen.
   const draft = {
+    // Identidad de la ejecución y si es medible.
     runId: state.scope.runId,
     fixture,
     scenarioId: state.scenarioId,
     measured: state.ledger.retrievalProviderCalls !== null,
     partial: true,
+    // Alcance: grupo, corpus y perfil.
     audience: state.scope.audience,
     corpusVersion: state.scope.corpusVersion,
     profileId: state.scope.profileId,
+    // Pregunta y consulta recortadas.
     originalQuestion: state.originalQuestion.slice(0, 2_000),
     currentQuery: state.currentQuery.slice(0, CRAG_BOUNDS.maxQueryChars),
+    // Contadores y lo que queda, siempre dentro de los topes.
     retrievalCount: Math.min(CRAG_BOUNDS.maxRetrievals, state.retrievalCount),
     reformulationCount: Math.min(CRAG_BOUNDS.maxReformulations, state.reformulationCount),
     attemptsRemaining: Math.max(0, CRAG_BOUNDS.maxRetrievals - state.retrievalCount),
     rewritesRemaining: Math.max(0, CRAG_BOUNDS.maxReformulations - state.reformulationCount),
+    // Última decisión, final y motivo.
     evidenceStatus: state.decision?.status ?? null,
     terminal,
     reason: (state.terminalReason || "Recorrido terminado.").slice(0, CRAG_BOUNDS.maxReasonChars),
+    // Fragmentos conservados con su puntuación, en el orden validado.
     retained: state.retained.slice(0, CRAG_BOUNDS.maxRetained).map((chunk) => ({
       chunkId: chunk.chunkId,
       reason: `Puntuación ${chunk.score === null ? "desconocida" : chunk.score.toFixed(3)}. Conservado en el orden validado.`,
       score: chunk.score,
     })),
+    // Descartados con su motivo y en qué intento.
     discarded: state.discarded.slice(0, CRAG_BOUNDS.maxDiscarded).map((item) => ({
       chunkId: item.chunkId.slice(0, CRAG_BOUNDS.maxIdChars) || "sin-id",
       reason: item.reason.slice(0, CRAG_BOUNDS.maxReasonChars),
       attempt: Math.min(CRAG_BOUNDS.maxRetrievals, Math.max(1, item.attempt)),
     })),
+    // Llamadas por paso: ejecuciones, llamadas de pago y duración.
     calls: {
+      // Búsquedas.
       retrieval: callCount(
         state.ledger.retrievalExecutions,
         state.ledger.retrievalProviderCalls,
         state.ledger.retrievalMs,
       ),
+      // Evaluaciones.
       evaluation: callCount(
         state.ledger.evaluationExecutions,
         state.ledger.evaluationProviderCalls,
         state.ledger.evaluationMs,
       ),
+      // Reformulaciones.
       reformulation: callCount(
         state.ledger.reformulationExecutions,
         state.ledger.reformulationProviderCalls,
         state.ledger.reformulationMs,
       ),
+      // Generación final.
       generation: callCount(
         state.ledger.generationExecutions,
         state.ledger.generationProviderCalls,
         state.ledger.generationMs,
       ),
     },
+    // Consumo y coste conocidos (o null).
     usage: state.ledger.usage,
     cost: state.ledger.cost,
   };

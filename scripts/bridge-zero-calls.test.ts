@@ -6,19 +6,23 @@ import { expect, it } from "vite-plus/test";
 import { handleBridgeRequest } from "../apps/api/src/bridge-worker";
 // Entorno remoto cuyo Workers AI falla si se llama.
 const env = {
+  // Ficha y papel del puente: verificación con recursos remotos.
   BRIDGE_TOKEN: "synthetic-bridge-token",
   BRIDGE_ROLE: "verify",
   BRIDGE_REMOTE: "true",
+  // Modo real con generación y evaluador de prueba.
   APP_MODE: "real",
   ANTHROPIC_API_KEY: "synthetic-key",
   MODEL_ID: "example/generator",
   EVALUATOR_MODEL_ID: "example/evaluator",
+  // Índice real del curso.
   EMBEDDING_MODEL: "@cf/baai/bge-m3",
   EMBEDDING_DIMENSIONS: "1024",
   CORPUS_VERSION: "c3a59a406888b",
   INDEX_PROFILE: "p76509a5f9743",
   VECTOR_METRIC: "cosine",
   MIN_RETRIEVAL_SCORE: "0.5",
+  // Workers AI que lanza un error si alguien lo llama.
   AI: {
     run: async () => {
       // Cualquier llamada al proveedor es un error.
@@ -70,8 +74,10 @@ it("mantiene el error de JSON sin solicitar gasto", async () => {
 it("bloquea una generación sin reserva", async () => {
   // Sin reserva, sin RAG responde 400 y no llama al proveedor.
   expect(
+    // Petición sin RAG sin la cabecera de reserva.
     (
       await post(
+        // Cuerpo con modo, grupo y una pregunta.
         JSON.stringify({
           mode: "sin-rag",
           audience: "program",

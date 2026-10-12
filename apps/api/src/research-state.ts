@@ -14,12 +14,15 @@ import {
 } from "@thepower-rag/contracts";
 // Plazos y tipos del paquete de investigación.
 import {
+  // Plazo de cada llamada y tiempo restante.
   callTimeoutMs,
   remainingMs,
+  // Tipos de evidencia, consumo, contadores y cobertura.
   type AcceptedEvidence,
   type Consumption,
   type Counters,
   type CoverageEntry,
+  // Tipos de evidencia, lagunas, resultados, plan y puertos.
   type EvidenceItem,
   type GapCause,
   type PortResult,
@@ -293,43 +296,53 @@ function last<T>() {
 
 // Estado del grafo: un canal «último valor» por campo.
 export const ResearchGraphState = Annotation.Root({
+  // Identidad, pregunta, conversación y trabajo.
   runId: last<string>(),
   question: last<string>(),
   originalQuestion: last<string>(),
   threadId: last<string | null>(),
   jobId: last<string | null>(),
+  // Grupo, corpus, guion, inicio y ronda.
   audience: last<Audience>(),
   corpusVersion: last<string>(),
   scenarioId: last<ResearchScenarioId | null>(),
   startedAt: last<number>(),
   round: last<number>(),
+  // Plan y contadores.
   researchPlan: last<ResearchPlan | null>(),
   counters: last<Counters>(),
+  // Registros de cada llamada (para la traza).
   courseQueries: last<CourseQueryLog[]>(),
   toolCalls: last<ToolCallLog[]>(),
   searches: last<SearchLog[]>(),
   discovered: last<DiscoveredLog[]>(),
   pagesRead: last<ReadLog[]>(),
+  // Consultas pendientes y ya vistas.
   pendingCourse: last<PendingQuery[]>(),
   pendingSearch: last<PendingQuery[]>(),
   seenQueries: last<string[]>(),
+  // Evidencia, cobertura, causas y contradicciones.
   candidates: last<EvidenceItem[]>(),
   accepted: last<AcceptedEvidence[]>(),
   rejected: last<RejectedEvidence[]>(),
   coverage: last<CoverageEntry[]>(),
   causes: last<Record<string, GapCause>>(),
   contradictions: last<string[]>(),
+  // Seguimiento y subpreguntas elegibles.
   followUp: last<{ reason: string; queries: PendingQuery[] } | null>(),
   eligible: last<string[]>(),
   newAccepted: last<number>(),
+  // Borrador, parada y resultado.
   draft: last<unknown>(),
   stop: last<ResearchStop | null>(),
   stopDetail: last<string>(),
   outcome: last<ResearchOutcome | null>(),
+  // Informe y verificación.
   reportText: last<string>(),
   citedSourceIds: last<string[]>(),
   claimChecked: last<number>(),
   claimDropped: last<{ claim: string; reason: string }[]>(),
+  // Libro de consumo y traza visible.
   ledger: last<Ledger>(),
   trace: last<ResearchStep[]>(),
 });

@@ -149,6 +149,7 @@ function courseKey(sourceId: string): string {
 function rulesFor(scenario: ResearchScenarioId | null, round: number): RuleTable {
   // Reglas del escenario principal.
   const main: RuleTable = {
+    // Cada regla: subpreguntas que apoya, palabra clave que debe aparecer en el extracto y motivo.
     [webId(P.vectorizeCreate)]: {
       subs: ["q1"],
       keyword: "no se puede cambiar",
@@ -169,11 +170,13 @@ function rulesFor(scenario: ResearchScenarioId | null, round: number): RuleTable
       keyword: "longitud del vector",
       reason: "Indica cómo medir la dimensión del modelo.",
     },
+    // Fragmento del corpus del curso (S10) que aporta el dato interno.
     "s10-rag:01": {
       subs: ["q3"],
       keyword: "768 dimensiones",
       reason: "El ejercicio de S10 citaba embeddings de 768 dimensiones.",
     },
+    // Reglas de rechazo: el evaluador de prueba las descarta con su motivo.
     "s10-rag:00": { reject: "Habla de embeddings en general, no de su dimensión." },
     [webId(P.d1Overview)]: { reject: "Trata D1, no índices vectoriales." },
     [webId(P.injected)]: { reject: "Contiene instrucciones embebidas y no aporta a la pregunta." },
@@ -183,10 +186,12 @@ function rulesFor(scenario: ResearchScenarioId | null, round: number): RuleTable
   if (scenario === "internal-fact-missing") {
     // Reglas propias.
     return {
+      // Se rechaza: el curso no documenta una nota mínima (es el dato que falta a propósito).
       "s12-deep-research:01": {
         reject: "Describe el ejercicio de S12, pero no menciona una nota mínima.",
       },
       "s19-evaluacion:00": { reject: "Trata la evaluación de sistemas de IA, no calificaciones." },
+      // S5 y la página web sí apoyan la parte técnica.
       "s05-langgraph:00": {
         subs: ["q2"],
         keyword: "checkpointer",
@@ -265,6 +270,8 @@ function coverageFor(
     case "no-progress-stop":
       // Dos parciales.
       return {
+        // q1 y q2 siguen parciales y piden seguimiento; como la ronda no aporta nada nuevo, el
+        // grafo para.
         q1: {
           status: "partial",
           gap: "Falta confirmar si basta con cambiar el modelo de consulta.",
@@ -275,6 +282,7 @@ function coverageFor(
           gap: "Falta el comando que lee las dimensiones del índice existente.",
           followUp: true,
         },
+        // q3 ya está cubierta.
         q3: covered,
       };
     // Dato interno que falta.
@@ -330,14 +338,17 @@ function planFor(
   if (scenario !== null && MAIN_SCENARIOS.includes(scenario)) {
     // Tres subpreguntas.
     return {
+      // Ruta de investigación con dos subpreguntas técnicas externas y una del curso.
       route: "investigate",
       rationale:
         "Pregunta técnica con relación al curso: dos subpreguntas externas y una del curso.",
+      // q1 y q2 buscan en la web con su consulta; q3 se responde con el corpus.
       subquestions: [
         { id: "q1", text: MAIN_Q1, kind: "technical", external: true, query: MAIN_Q1_QUERY },
         { id: "q2", text: MAIN_Q2, kind: "technical", external: true, query: MAIN_Q2_QUERY },
         { id: "q3", text: MAIN_Q3, kind: "course", external: false },
       ],
+      // Sin herramienta de sesión.
       tool: null,
     };
   }
@@ -362,8 +373,10 @@ function planFor(
     const number = scenario === "course-tool" ? 12 : Number(session?.[1] ?? 0);
     // Ruta tool.
     return {
+      // Ruta «tool»: basta la herramienta de solo lectura get_course_session.
       route: "tool",
       rationale: "Dato interno de una sesión: basta la herramienta de solo lectura.",
+      // Una sola subpregunta del tipo «session», sin búsqueda externa.
       subquestions: [
         {
           id: "q1",
@@ -372,6 +385,7 @@ function planFor(
           external: false,
         },
       ],
+      // Argumentos de la herramienta: sesión pedida y grupo del alumno.
       tool: { sessionId: `S${String(number)}`, audience },
     };
   }
@@ -417,14 +431,16 @@ function assessFor(
       const score = scores.get(shown.sourceId) ?? null;
       // Acepta si supera el umbral.
       return score !== null && score >= FIXTURE_MIN_SCORE
-        ? {
+        ? // Aceptada: apoya q1 con un extracto literal de 200 caracteres.
+          {
             sourceId: shown.sourceId,
             decision: "accept",
             subquestionIds: ["q1"],
             excerpts: [flatten(shown.text).slice(0, 200).trim()],
             reason: "Supera el umbral lexical de prueba. No es un evaluador.",
           }
-        : {
+        : // Rechazada: sin subpreguntas ni extractos.
+          {
             sourceId: shown.sourceId,
             decision: "reject",
             subquestionIds: [],
@@ -523,16 +539,19 @@ function synthesizeFor(
   if (scenario === "invalid-citation") {
     // Añade afirmaciones falsas que la verificación debe retirar.
     findings.push(
+      // Afirmación que el extracto citado no sostiene.
       {
         subquestionId: "q1",
         text: "Basta con reiniciar el navegador para que desaparezca el aviso.",
         sourceIds: create ? [create.sourceId] : [],
       },
+      // Afirmación que cita una fuente que no existe.
       {
         subquestionId: "q2",
         text: "Según una página que no se ha leído, el error se corrige solo.",
         sourceIds: ["web-000000000000"],
       },
+      // Afirmación del curso apoyada en una fuente web: autoridad incorrecta.
       {
         subquestionId: "q3",
         text: "En el curso se vio que el índice no se puede cambiar después de crearlo.",
@@ -756,7 +775,8 @@ export function createFixtureResearchPorts(
     // Evidencia o null.
     return chunk === undefined
       ? null
-      : {
+      : // Evidencia del curso con los mismos campos que la del puerto real.
+        {
           kind: "course",
           sourceId: chunk.chunkId,
           documentId: chunk.documentId,
@@ -886,12 +906,14 @@ export function createFixtureResearchPorts(
         }
         // Página leída con hash.
         return ok({
+          // Página leída: URL pedida y final, título, texto y fechas fijas de la demo.
           requestedUrl: url,
           finalUrl: page.finalUrl ?? page.url,
           title: page.title,
           text: page.text,
           retrievedAt: FIXTURE_RETRIEVED_AT,
           publishedAt: null,
+          // Hash SHA-256 del texto, igual que con un lector real.
           contentHash: `sha256:${await sha256Hex(page.text)}`,
         });
       },

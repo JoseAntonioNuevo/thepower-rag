@@ -49,17 +49,21 @@ import { loopback, resolveOwner } from "./research-owner";
 import { presentResearchResult } from "./research-result";
 // Operaciones del almacén.
 import {
+  // Admitir, eventos y cancelación de trabajos.
   admitJob,
   appendEvent,
   cancelJob,
+  // Conversaciones y lectura de trabajos.
   createConversation,
   getConversation,
   getJob,
   listConversations,
+  // Listados de eventos, mensajes y operaciones, y memoria de la conversación.
   listEvents,
   listMessages,
   listOperations,
   memoryTurns,
+  // Recuperación tras una caída, limpieza de checkpoints, cuenta y reanudación.
   promoteDispatched,
   purgeCheckpoints,
   readAccount,
@@ -498,9 +502,12 @@ export function researchRoutes() {
     const contextual = contextualize(history, question);
     // Medios del trabajo.
     const mediaBinding = hasMedia
-      ? {
+      ? // Con adjuntos: voz pedida y referencias (id y hash) a la imagen y al audio. Sin adjuntos:
+        // null.
+        {
           voice,
           image: imageAsset ? { id: imageAsset.id, hash: imageAsset.content_hash } : null,
+          // La duración del audio se usa para reservar el coste de la transcripción.
           audio: audioAsset
             ? {
                 id: audioAsset.id,
@@ -512,6 +519,7 @@ export function researchRoutes() {
       : null;
     // Huella de la petición: igual pregunta y medios dan la misma huella.
     const fingerprint = await fingerprintOf(
+      // La huella cubre pregunta, grupo, guion y adjuntos: reenviar lo mismo da la misma huella.
       mediaBinding
         ? {
             question,
@@ -523,7 +531,8 @@ export function researchRoutes() {
               ? { id: mediaBinding.audio.id, hash: mediaBinding.audio.hash }
               : null,
           }
-        : {
+        : // Sin adjuntos la huella conserva la forma de la fase 2.
+          {
             question,
             audience: conversation.audience,
             scenarioId: scenario?.success ? scenario.data : null,
@@ -551,18 +560,23 @@ export function researchRoutes() {
     const jobPrices = { ...prices, holdMicros: hold };
     // Admite el trabajo en la base.
     const admitted = await admitJob(database, {
+      // Dueño, conversación y clave de idempotencia del navegador.
       ownerId: owner.id,
       conversationId: conversation.id,
       idempotencyKey: body.idempotencyKey,
+      // Huella y preguntas (original y con memoria).
       fingerprint,
       originalQuestion: contextual.original,
       contextualized: contextual.contextualized,
       scenarioId: scenario?.success ? scenario.data : null,
+      // Corpus, tarifas congeladas con la reserva inicial y fecha.
       corpusVersion,
       prices: jobPrices,
       now: Date.now(),
+      // Plazos: total del trabajo y máximo en cola.
       deadlineMs: RESEARCH_LIMITS.deadlineMs,
       queueMs: RESEARCH_QUEUE_MS,
+      // Adjuntos vinculados al trabajo.
       media: mediaBinding,
     });
     // Rechazado.
@@ -572,8 +586,10 @@ export function researchRoutes() {
         admitted.reason === "fingerprint" ? 409 : admitted.reason === "budget" ? 402 : 409;
       // Mensaje según el motivo.
       return json(
+        // «configuration»: el cliente puede leer el motivo y mostrarlo.
         {
           error: "configuration",
+          // Mensaje en español según el motivo del rechazo.
           message:
             admitted.reason === "budget"
               ? "No queda presupuesto de investigación para reservar este trabajo."
@@ -586,6 +602,7 @@ export function researchRoutes() {
                     : admitted.reason === "attachment"
                       ? "El adjunto cambió o pertenece a otro trabajo."
                       : "No se pudo crear el trabajo.",
+          // Si fue el presupuesto, indica qué variable lo limita.
           missing: admitted.reason === "budget" ? ["RESEARCH_BUDGET_USD"] : [],
         },
         status,
@@ -611,12 +628,14 @@ export function researchRoutes() {
       if (dispatch === "unconfirmed") {
         // 202 en atención.
         return json(
+          // No se sabe si el Workflow se creó: el trabajo queda en atención para revisarlo.
           {
             jobId: job.id,
             conversationId: conversation.id,
             execution: "attention",
             dispatch: "unconfirmed",
           },
+          // 202 Accepted: la petición se aceptó y el trabajo sigue en segundo plano.
           202,
           owner.setCookie,
         );
@@ -624,14 +643,17 @@ export function researchRoutes() {
     }
     // 202 con el trabajo.
     return json(
+      // Ids que el navegador usa para sondear el estado.
       {
         jobId: job.id,
         conversationId: conversation.id,
         runId: job.run_id,
+        // Estado de ejecución, si se creó ahora o ya existía, y estado del lanzamiento.
         execution: job.execution_status,
         created: admitted.created,
         dispatch: job.dispatch_state,
       },
+      // La cookie del propietario se renueva si hace falta.
       202,
       owner.setCookie,
     );
@@ -671,16 +693,20 @@ export function researchRoutes() {
     const operations = await listOperations(database, job.id);
     // Estado, eventos y operaciones.
     return json({
+      // Identidad del trabajo.
       jobId: job.id,
       conversationId: job.conversation_id,
       runId: job.run_id,
+      // Estado, resultado, motivo de atención y progreso.
       execution: job.execution_status,
       reportOutcome: job.report_outcome,
       attention: job.attention_reason,
       progress: job.progress_text,
+      // Plazo, cancelación pedida y estado del lanzamiento.
       deadlineAt: job.deadline_at,
       cancelRequested: job.cancel_requested === 1,
       dispatch: job.dispatch_state,
+      // Eventos nuevos y operaciones (solo tipo y estado, sin resultados ni costes).
       events,
       operations: operations.map((operation) => ({
         kind: operation.kind,
@@ -851,6 +877,7 @@ export function researchRoutes() {
       }
       // Activo: 409 sin tocar la operación.
       return json(
+        // 409: no se toca una operación mientras otro ejecutor podría estar terminándola.
         {
           error: "configuration",
           message:
@@ -978,12 +1005,15 @@ export function researchRoutes() {
     const open = account.unknown_micros > 0;
     // Importes como texto fijo.
     return json({
+      // Importes en texto con seis decimales para no perder precisión.
       currency: "USD",
       budget: formatMicros(account.budget_micros),
       reserved: formatMicros(account.reserved_micros),
       unknown: formatMicros(account.unknown_micros),
       consumed: formatMicros(account.consumed_micros),
+      // Un total solo está completo si no hay importes desconocidos.
       totalComplete: !open,
+      // Nota honesta sobre qué significa cada cifra.
       note: open
         ? "Hay cargos desconocidos o sin precio. No forman un total en USD y no se liberan."
         : "Reservado es un tope. Consumido es lo ya asentado. Desconocido no es cero.",
@@ -1094,24 +1124,31 @@ export function researchRoutes() {
     await bucket.put(objectKey, bytes, { httpMetadata: { contentType: inspected.facts.mime } });
     // Fila del archivo.
     const row = {
+      // Fila del archivo con los datos medidos en el servidor, no los que declara el navegador.
       id,
       owner_id: owner.id,
       conversation_id: conversation.id,
+      // Papel, clave de R2, hash, tipo real y tamaño.
       role: inspected.facts.role,
       object_key: objectKey,
       content_hash: hash,
       mime: inspected.facts.mime,
       byte_size: bytes.byteLength,
+      // Dimensiones solo para imagen.
       width: inspected.facts.role === "image" ? inspected.facts.width : null,
       height: inspected.facts.role === "image" ? inspected.facts.height : null,
+      // Datos de audio solo para audio.
       duration_ms: inspected.facts.role === "audio" ? inspected.facts.durationMs : null,
       sample_rate: inspected.facts.role === "audio" ? inspected.facts.sampleRate : null,
       channels: inspected.facts.role === "audio" ? inspected.facts.channels : null,
       bit_depth: inspected.facts.role === "audio" ? inspected.facts.bitDepth : null,
+      // «admitted»: validado y guardado, pendiente de leer o transcribir.
       status: "admitted",
+      // Aún sin texto extraído ni trabajo asociado.
       extracted_text: null,
       detail: null,
       job_id: null,
+      // Clave de idempotencia de la subida y fecha.
       idempotency_key: key,
       created_at: Date.now(),
     };
@@ -1177,13 +1214,17 @@ export function researchRoutes() {
     if (context.req.method === "HEAD") {
       // Respuesta vacía.
       return new Response(null, {
+        // HEAD: solo cabeceras, para que el reproductor sepa tamaño y tipo.
         status: 200,
         headers: {
+          // Tipo y tamaño reales; «accept-ranges» permite pedir trozos del audio.
           "content-type": asset.mime,
           "content-length": String(head.size),
           "accept-ranges": "bytes",
+          // nosniff: el navegador no adivina otro tipo. inline: se muestra, no se descarga.
           "x-content-type-options": "nosniff",
           "content-disposition": `inline; filename="${safeName}"`,
+          // Privado y sin caché: solo su dueño puede verlo.
           "cache-control": "private, no-store",
         },
       });
@@ -1352,14 +1393,18 @@ async function readLimited(
 function pricesFrom(env: WorkerEnv) {
   // Instantánea con presupuesto, tarifas y buscador.
   return priceSnapshot({
+    // Presupuesto total y tope por trabajo (en demo, los valores de fixture).
     budgetUsd: env.RESEARCH_BUDGET_USD ?? env.RESEARCH_FIXTURE_BUDGET_USD ?? "",
     jobLimitUsd: env.RESEARCH_JOB_LIMIT_USD ?? env.RESEARCH_FIXTURE_JOB_LIMIT_USD ?? "",
+    // Tarifas del modelo de investigación por millón de tokens.
     inputUsdPerMillion: env.RESEARCH_INPUT_USD_PER_MILLION ?? "",
     outputUsdPerMillion: env.RESEARCH_OUTPUT_USD_PER_MILLION ?? "",
+    // Precio de búsquedas y lecturas, créditos de Firecrawl y buscador elegido.
     searchUsd: env.RESEARCH_SEARCH_USD,
     readUsd: env.RESEARCH_READ_USD,
     firecrawlUsdPerCredit: env.FIRECRAWL_USD_PER_CREDIT,
     searchProvider: env.RESEARCH_SEARCH_PROVIDER === "tavily" ? "tavily" : "firecrawl",
+    // Precio por crédito de Tavily.
     tavilyUsdPerCredit: env.TAVILY_USD_PER_CREDIT,
   });
 }

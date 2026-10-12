@@ -41,13 +41,16 @@ describe("markdown del curso", () => {
     });
     // Lista.
     expect(blocks[2]).toEqual({
+      // Bloque de lista.
       kind: "list",
       items: [
+        // Primer elemento: negrita, texto y cita.
         [
           { kind: "bold", text: "Lunes 5 de octubre" },
           { kind: "text", text: " — S5 " },
           { kind: "cite", id: "c3a59a406888b:calendario-lx:05" },
         ],
+        // Segundo elemento.
         [
           { kind: "bold", text: "Miércoles 7 de octubre" },
           { kind: "text", text: " — S6 " },
@@ -89,13 +92,16 @@ describe("markdown del curso", () => {
     ].join("\n");
     // Cabeceras y filas.
     expect(parseCourseMarkdown(table)[0]).toMatchObject({
+      // Bloque de tabla con dos columnas.
       kind: "table",
       headers: [[{ kind: "text", text: "Sesión" }], [{ kind: "text", text: "Día y fecha" }]],
+      // Primera fila: S1.
       rows: [
         [
           [{ kind: "text", text: "S1" }],
           [{ kind: "text", text: "Lunes 21 de septiembre de 2026" }],
         ],
+        // Segunda fila: S10 con negrita y cita en la celda.
         [
           [{ kind: "text", text: "S10" }],
           [
@@ -108,10 +114,12 @@ describe("markdown del curso", () => {
     });
     // Tabla en una sola línea.
     expect(
+      // La tabla llega aplanada en una línea, como a veces la escribe el modelo.
       parseCourseMarkdown(
         "| Sesión | Día y fecha | |---|---| | S1 | Lunes 21 de septiembre de 2026 | | S2 | Miércoles 23 de septiembre |",
       )[0],
     ).toMatchObject({
+      // Se reconoce igual con sus dos filas.
       kind: "table",
       rows: [
         [

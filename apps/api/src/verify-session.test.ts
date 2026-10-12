@@ -58,6 +58,7 @@ describe("verificación local", () => {
     expect(providerTimeoutMs(0, 20_000)).toBe(0);
     // Puertos reales con bindings vacíos.
     const ports = createRealCragPorts({
+      // Alcance de la prueba.
       signal: new AbortController().signal,
       scope: {
         runId: "run",
@@ -66,6 +67,7 @@ describe("verificación local", () => {
         profileId: "p-test",
         embeddingLabel: "bge",
       },
+      // Bindings vacíos: embeddings, índice y D1 sin datos.
       embedder: { run: async () => ({ data: [] }) },
       index: { query: async () => ({ matches: [] }), upsert: async () => ({}) },
       database: {
@@ -77,6 +79,7 @@ describe("verificación local", () => {
           }),
         }),
       },
+      // Modelos sin usar; la prueba solo mira plazos y bloqueos.
       evaluator: {} as never,
       generator: {} as never,
       messages: [],

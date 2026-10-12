@@ -284,20 +284,24 @@ export function formatCoverage(corpus: PreparedCorpus): string {
   };
   // Cabecera y resumen.
   const lines = [
+    // Título y versiones del corpus.
     "# Cobertura del corpus",
     "",
     `Versión de contenido: ${corpus.contentVersion}.`,
     `Versión de preparación: ${corpus.preparationId}.`,
+    // Perfil de índice local y avisos sobre lo no verificado.
     `Perfil de índice local: ${corpus.indexProfile.id} (${corpus.indexProfile.family}, ${corpus.indexProfile.model}, ${String(corpus.indexProfile.dimensions)} dimensiones, ${corpus.indexProfile.metric}).`,
     "La revisión remota del índice no está verificada.",
     "El programa de Desarrollo Agéntico no forma parte de este corpus.",
     "",
+    // Cobertura del temario, de cada calendario y de los ejercicios.
     `Temario: ${corpus.coverage.curriculum}. Fichas ausentes: ${String(counts.absentCard)}.`,
     `Calendario L/X: ${corpus.coverage.calendarLx}. Fechas ausentes: ${String(counts.missingLx)}.`,
     `Calendario M/J: ${corpus.coverage.calendarMj}. Fechas ausentes: ${String(counts.missingMj)}.`,
     `Detalle de ejercicios: ${corpus.coverage.exerciseDetail}. Resúmenes: ${String(counts.summary)}. Solo título: ${String(counts.title)}.`,
     "Verificación remota: no verificada.",
     "",
+    // Cabecera de la tabla por sesión.
     "| Sesión | Temario | Ejercicio | Fecha L/X | Profesor L/X | Fecha M/J | Profesor M/J |",
     "| --- | --- | --- | --- | --- | --- | --- |",
   ];
@@ -407,16 +411,21 @@ export function prepareCorpus(
     });
     // Documento preparado.
     return {
+      // Identidad, título y grupo.
       id,
       title,
       audience,
+      // Metadatos de la cabecera del Markdown.
       session: fields.session ?? null,
       verified: fields.verified ?? "",
       source: fields.source ?? "",
+      // Ruta y huella de la fuente.
       sourcePath: file.path,
       sourceHash: fnv1a64(file.text),
+      // Si hay temario y qué detalle tiene el ejercicio.
       curriculum: fields.curriculum === "present" ? "present" : "absent",
       exerciseDetail: exerciseDetail(fields.exerciseDetail),
+      // Texto completo y fragmentos.
       body: file.text,
       chunks,
     };

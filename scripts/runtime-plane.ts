@@ -203,22 +203,27 @@ export async function startOwnedBridge(input: {
   }
   // Especificación del puente.
   const spec: BridgeSpec = {
+    // Cuenta, puertos, ficha y raíz del proyecto.
     accountId: input.accountId,
     port: input.port,
     inspectorPort: input.inspectorPort,
     token: input.token,
     projectRoot: input.projectRoot,
+    // Papel, si usa recursos remotos y carpeta de estado.
     role: input.role,
     remote: input.remote,
     persistDir: input.persistDir,
+    // Índice y base D1 leídos con Wrangler.
     indexName: input.indexName,
     databaseId,
+    // Modelos, perfil, corpus, dimensión y umbral.
     modelId: input.modelId,
     evaluatorModelId: input.evaluatorModelId,
     profileId: input.profileId,
     corpusVersion: input.corpusVersion,
     dimensions: input.dimensions,
     minScore: input.minScore,
+    // Clave, métrica e índices de metadatos confirmados.
     apiKey: input.apiKey,
     metric,
     metadataIndexes,

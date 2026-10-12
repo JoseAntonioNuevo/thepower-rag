@@ -22,19 +22,23 @@ import { activeSelectionSql, sqlLiteral } from "./sql";
 function manifest(profileId = "p0123456789ab"): CorpusManifest {
   // Manifiesto completo.
   return {
+    // Manifiesto de perfil con ids de 13 caracteres como los reales.
     kind: "profile",
     contentVersion: "c0123456789ab",
     preparationId: "c0123456789ab",
     verifiedDate: "2026-10-03",
     profileId,
+    // Perfil BGE-M3 de solo 2 dimensiones para que los vectores de la prueba sean cortos.
     embeddingModel: "@cf/baai/bge-m3",
     dimensions: 2,
     metric: "cosine",
     family: "workers-ai",
     providerRevision: null,
+    // Troceado real: 900 caracteres con 80 de solapamiento.
     chunkMaxChars: 900,
     chunkOverlap: 80,
     contentManifestKey: contentManifestKey("c0123456789ab"),
+    // Un documento del programa.
     documents: [
       {
         id: "nota",
@@ -46,6 +50,7 @@ function manifest(profileId = "p0123456789ab"): CorpusManifest {
         body: "# Nota\n\nTexto de prueba.",
       },
     ],
+    // Dos fragmentos del documento; el id del vector coincide con el del fragmento.
     chunks: [
       {
         chunkId: "c0123456789ab:nota:00",
@@ -118,18 +123,21 @@ function ports(options?: {
     writeCatalog: async (written) => {
       // Guarda el catálogo tal como lo devolvería D1.
       catalog = {
+        // Documentos con los campos que lee D1.
         documents: written.documents.map((document) => ({
           id: document.id,
           title: document.title,
           audience: document.audience,
           sourceHash: document.sourceHash,
         })),
+        // Fragmentos con su texto y orden.
         chunks: written.chunks.map((chunk) => ({
           chunkId: chunk.chunkId,
           documentId: chunk.documentId,
           text: chunk.text,
           ordinal: chunk.ordinal,
         })),
+        // Mapa vector → fragmento.
         mappings: written.chunks.map((chunk) => ({
           vectorId: chunk.vectorId,
           chunkId: chunk.chunkId,
@@ -170,9 +178,11 @@ function ports(options?: {
         .map((id) => ({ id, metadata: stored.get(id) ?? null }));
     },
     describeIndex: async () => ({
+      // Configuración del índice: nombre, dimensión y métrica, ajustables por cada prueba.
       name: "thepower-ai-course-rag-0123456789ab",
       dimensions: options?.dimensions === undefined ? current.dimensions : options.dimensions,
       metric: options?.metric === undefined ? "cosine" : options.metric,
+      // Vectores visibles: los guardados, 0 si se simula visibilidad tardía o un valor forzado.
       vectorCount:
         options?.vectorCount === undefined
           ? options?.visible === false
@@ -256,6 +266,7 @@ describe("ingesta", () => {
     const content = memory.objects.get(contentManifestKey(first.preparationId));
     // Ingesta del segundo con su propio índice.
     await runIngestion({
+      // Segundo perfil del mismo corpus, con vectores de 4 dimensiones.
       manifest: second,
       vectors: [
         [0.1, 0.2, 0.3, 0.4],
@@ -263,6 +274,7 @@ describe("ingesta", () => {
       ],
       ports: {
         ...memory,
+        // Su índice tiene 4 dimensiones: no se mezcla con el del primer perfil.
         describeIndex: async () => ({
           name: null,
           dimensions: 4,
@@ -341,6 +353,7 @@ describe("ingesta", () => {
           expect(visible).toBe(true);
           // Devuelve los vectores con sus metadatos.
           return ids.map((id) => ({
+            // Cada vector vuelve con sus metadatos de versión, grupo y perfil.
             id,
             metadata: {
               corpusVersion: current.preparationId,
@@ -349,6 +362,7 @@ describe("ingesta", () => {
             },
           }));
         },
+        // Índice coherente con el manifiesto.
         describeIndex: async () => ({
           name: null,
           dimensions: 2,
@@ -356,6 +370,7 @@ describe("ingesta", () => {
           vectorCount: 2,
         }),
       },
+      // Lotes de un vector para probar la reanudación lote a lote.
       upsertBatchSize: 1,
     });
     // Queda lista.
@@ -374,11 +389,13 @@ describe("ingesta", () => {
     const memory = ports();
     // Ingesta marcada como activa.
     const result = await runIngestion({
+      // Manifiesto y vectores normales.
       manifest: manifest(),
       vectors: [
         [0.1, 0.2],
         [0.3, 0.4],
       ],
+      // Diario con una anotación previa ya correcta.
       journal: [
         {
           store: "r2",
@@ -391,6 +408,7 @@ describe("ingesta", () => {
           mutationId: null,
         },
       ],
+      // Escribir en R2 no debe ocurrir: el perfil activo no se toca.
       ports: {
         ...memory,
         putObject: async () => {

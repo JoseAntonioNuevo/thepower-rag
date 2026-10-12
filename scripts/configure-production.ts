@@ -1,6 +1,10 @@
 // GUÍA DE LECTURA · scripts/configure-production.ts
 // Genera apps/web/wrangler.jsonc para producción a partir de D1 y de la calibración guardada. Solo lee
 // con --read; nunca despliega. Producción usa siempre Claude Haiku 5.5 por la API de Anthropic.
+// AVISO: es el generador histórico del primer despliegue. Reescribe el archivo completo en JSON sin
+// comentarios y solo conserva el entorno «local» y la protección del chat: el entorno «research» y los
+// bindings de S12 (RESEARCH_DB, RESEARCH_MEDIA, Workflow, Tavily) se perderían. Revisa el diff antes de
+// aceptar su salida.
 // Lectura y escritura de archivos.
 import { readFileSync, writeFileSync } from "node:fs";
 // Rutas.
@@ -134,9 +138,12 @@ const config = {
     },
   },
 };
-// Configuración anterior (sin comas finales para JSON.parse).
+// Configuración anterior. Se quitan los comentarios «//» de línea completa y las comas finales
+// porque JSON.parse solo entiende JSON estricto, no JSONC.
 const previous = JSON.parse(
-  readFileSync(path.join(root, "apps/web/wrangler.jsonc"), "utf8").replace(/,\s*([}\]])/g, "$1"),
+  readFileSync(path.join(root, "apps/web/wrangler.jsonc"), "utf8")
+    .replace(/^\s*\/\/.*$/gm, "")
+    .replace(/,\s*([}\]])/g, "$1"),
 ) as { env?: { production?: { vars?: Record<string, string>; ratelimits?: unknown } } };
 // Variables de protección anteriores.
 const protectionVars = previous.env?.production?.vars;

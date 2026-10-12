@@ -50,6 +50,7 @@ const corpus = JSON.parse(
 const profile = semanticIdentity(corpus, auth.observedDimensions!);
 // Solo ejemplos de desarrollo: el conjunto reservado de comparación nunca se usa para ajustar el umbral.
 const cases = [
+  // Cinco preguntas que el corpus sí responde (supported: true).
   {
     text: "¿Cómo modela LangGraph un agente con estado y nodos?",
     audience: "program",
@@ -71,6 +72,7 @@ const cases = [
     audience: "program",
     supported: true,
   },
+  // Tres preguntas que no constan: su puntuación debe quedar por debajo del umbral.
   {
     text: "¿Qué beca interna del año 1991 cubre este programa?",
     audience: "program",
@@ -81,17 +83,21 @@ const cases = [
 ];
 // Arranca el puente remoto en modo storage.
 const owned = await startOwnedBridge({
+  // Cuenta, puertos y ficha aleatoria del puente.
   accountId: auth.accountId!,
   port: 8791,
   inspectorPort: 8792,
   token: randomBytes(24).toString("hex"),
+  // Raíz, papel «storage», bindings remotos y estado persistido.
   projectRoot: root,
   role: "storage",
   remote: true,
   offline: false,
   persistDir: path.join(root, "activation-receipts/wrangler-state"),
+  // Índice del perfil y su dimensión.
   indexName: vectorizeIndexName(profile.id),
   dimensions: auth.observedDimensions!,
+  // Wrangler fijado del proyecto.
   runner: createWranglerRunner(
     path.join(root, "apps/web/node_modules/wrangler/bin/wrangler.js"),
     root,
@@ -101,14 +107,17 @@ const owned = await startOwnedBridge({
 const file = path.join(root, "activation-receipts/allowance-session.json");
 // Sesión de gasto: solo embeddings.
 const ledger = await openExecutionSession({
+  // Archivo de la sesión, cuenta, perfil y procedencia real.
   file,
   accountId: auth.accountId!,
   profileId: profile.id,
   provenance: "remote-binding",
   pricesSynthetic: false,
+  // Tope de gasto y número máximo de llamadas.
   maxSpendUsd: auth.maxSpendUsd!,
   maxGenerativeCalls: 4,
   maxEmbeddingCalls: 128,
+  // Precio publicado de BGE-M3; esta calibración no genera texto.
   prices: {
     embeddingUsdPerMillionInput: 0.0118,
     generativeUsdPerMillionInput: null,
@@ -185,17 +194,21 @@ try {
     : Math.ceil((maxNegative + 0.001) * 100) / 100;
   // Recibo de calibración.
   const receipt = {
+    // Fecha, perfil, modelo, dimensión y umbral elegido.
     at: new Date().toISOString(),
     profileId: profile.id,
     embeddingModel: "@cf/baai/bge-m3",
     dimensions: auth.observedDimensions,
     minScore,
+    // Método usado (texto del recibo en inglés, como se guardó).
     method: separated
       ? "midpoint with separation on 8 development queries"
       : "conservative cutoff above all development negatives; overlapping positive may be refused",
+    // Recall en desarrollo y la separación entre positivos y negativos.
     developmentRecall: positives.filter((s) => s >= minScore).length / positives.length,
     minPositive,
     maxNegative,
+    // Puntuaciones observadas y constancia de que no se usó el conjunto reservado.
     observations,
     reservedSetUsed: false,
   };

@@ -93,14 +93,21 @@ function attachmentSource(
 ): ResearchSource {
   // Fuente de tipo attachment aportada por el alumno.
   return {
+    // «attachment»: lo aportó el alumno. No es una fuente del curso ni de la web.
     kind: "attachment",
+    // Id estable de la fuente: papel y archivo.
     sourceId: `attachment:${role}:${assetId}`,
     role,
     assetId,
+    // Título visible según el tipo de archivo.
     title: role === "image" ? "Texto leído en la imagen" : "Transcripción del audio",
+    // Extracto recortado al máximo permitido.
     excerpts: [text.slice(0, RESEARCH_LIMITS.maxExcerptChars)],
+    // Hash para identificar el contenido exacto.
     contentHash: hash,
+    // Autoridad «user-input»: no puede sostener por sí sola un hecho del curso.
     authority: "user-input",
+    // Aún no se asigna a ninguna subpregunta.
     subquestionIds: [],
   };
 }
@@ -171,11 +178,14 @@ export async function perceiveJob(
   if (input.image_asset_id === null && input.audio_asset_id === null) {
     // Listo con la pregunta del trabajo.
     return {
+      // Sin adjuntos: se investiga directamente la pregunta escrita.
       kind: "ready",
+      // Pregunta con memoria si existe; si no, la original. Recortada al máximo.
       question: (job.contextualized_question ?? job.original_question).slice(
         0,
         RESEARCH_LIMITS.maxQuestionChars,
       ),
+      // Sin medios, sin fuentes adjuntas y sin aclaración.
       media: { ...EMPTY_MEDIA },
       sources: [],
       proceed: true,
@@ -220,9 +230,12 @@ export async function perceiveJob(
     media.visionCalls = 1;
     // Llamada registrada en el diario: real o de prueba.
     const result = await journalMediaCall<ImageRead>(database, job, prices, {
+      // «vision»: el diario reserva antes, marca la llamada como enviada y guarda el resultado.
       kind: "vision",
+      // La entrada de la huella: mismo archivo y mismo modelo es la misma operación.
       payload: { hash: loaded.row.content_hash, model: context.visionModelId ?? "fixture-vision" },
       signal: context.signal,
+      // Modo real con modelo de visión: lee la imagen. En demo: lectura de prueba según el hash.
       invoke: (signal) =>
         context.mode === "real" && context.vision && mime
           ? visionImage(
@@ -286,14 +299,17 @@ export async function perceiveJob(
     media.transcriptionCalls = 1;
     // Transcripción registrada en el diario.
     const result = await journalMediaCall<TranscriptRead>(database, job, prices, {
+      // «transcribe»: la duración permite reservar el coste del audio.
       kind: "transcribe",
       durationMs: loaded.row.duration_ms ?? input.audio_duration_ms ?? undefined,
+      // Huella: mismo audio y mismo modelo.
       payload: {
         hash: loaded.row.content_hash,
         model: context.sttModelId,
         durationMs: loaded.row.duration_ms,
       },
       signal: context.signal,
+      // Modo real: Whisper en Workers AI. En demo: transcripción de prueba.
       invoke: (signal) =>
         context.mode === "real" && context.ai
           ? workersTranscript(context.ai, context.sttModelId, loaded.bytes, signal)
@@ -456,7 +472,9 @@ export async function speakAnswer(input: {
   if (Date.now() + RESEARCH_LIMITS.minCallMs > input.job.deadline_at) {
     // Voz omitida.
     return {
+      // Se conserva la entrada y la voz queda omitida por falta de tiempo.
       ...input.media,
+      // Estado de la voz: el texto que se habría leído, sin archivo.
       speech: {
         status: "skipped",
         text,
@@ -471,6 +489,7 @@ export async function speakAnswer(input: {
   if (input.context.bucket === null) {
     // Voz no configurada.
     return {
+      // Sin R2 no hay dónde guardar el audio: voz sin configurar.
       ...input.media,
       speech: {
         status: "unconfigured",
@@ -486,6 +505,7 @@ export async function speakAnswer(input: {
   if (input.context.mode === "real" && input.context.ai === null) {
     // Voz no configurada.
     return {
+      // Modo real sin binding AI: voz sin configurar, pero el informe sigue siendo válido.
       ...input.media,
       speech: {
         status: "unconfigured",
@@ -535,26 +555,32 @@ export async function speakAnswer(input: {
         const hash = await sha256Bytes(produced.value);
         // Fila del audio.
         await insertAsset(input.database, {
+          // Fila del audio generado: mismo dueño y conversación que el trabajo.
           id,
           owner_id: input.job.owner_id,
           conversation_id: input.job.conversation_id,
+          // Papel «speech», clave de R2, hash, tipo y tamaño.
           role: "speech",
           object_key: key,
           content_hash: hash,
           mime,
           byte_size: produced.value.byteLength,
+          // Campos de imagen y de audio de entrada que no aplican a la voz.
           width: null,
           height: null,
           duration_ms: null,
           sample_rate: null,
           channels: null,
           bit_depth: null,
+          // Lista para reproducir, con el texto hablado.
           status: "ready",
           extracted_text: text,
+          // Explica si es la voz real o el tono local de prueba.
           detail:
             input.context.mode === "real"
               ? "Audio del modelo."
               : "Tono local de prueba, no es una voz neural.",
+          // Trabajo, clave de idempotencia (una voz por trabajo) y fecha.
           job_id: input.job.id,
           idempotency_key: `speech:${input.job.id}`,
           created_at: Date.now(),
@@ -568,6 +594,7 @@ export async function speakAnswer(input: {
   if (!result.ok) {
     // Voz fallida.
     return {
+      // Una llamada de voz que falló: el informe se conserva sin audio.
       ...input.media,
       speechCalls: 1,
       speech: {
@@ -582,13 +609,17 @@ export async function speakAnswer(input: {
   }
   // Voz lista.
   return {
+    // Voz lista: archivo, tipo y nota sobre su origen.
     ...input.media,
+    // Una llamada de voz.
     speechCalls: 1,
     speech: {
+      // Estado, texto hablado, archivo y tipo.
       status: "ready",
       text,
       assetId: result.value.assetId,
       mime: result.value.mime,
+      // Nota según el origen del audio.
       detail:
         input.context.mode === "real"
           ? "Voz generada."
@@ -609,38 +640,46 @@ export function shellSummary(
 ): ResearchSummary {
   // Resumen con contadores a cero.
   return {
+    // Identidad, modo y alcance del trabajo.
     runId: job.run_id,
     fixture: ports.fixture,
     scenarioId: job.scenario_id,
     measured: ports.measured,
     audience: job.audience,
     corpusVersion: job.corpus_version,
+    // Pregunta original (o el texto del informe si no hay pregunta).
     originalQuestion: (job.original_question || reportText).slice(
       0,
       RESEARCH_LIMITS.maxQuestionChars,
     ),
     threadId: job.conversation_id,
     jobId: job.id,
+    // Nada de plan, rondas, búsquedas ni evidencia: no se llegó a investigar.
     contextualizedQuestion: null,
     route: null,
     planRationale: null,
     subquestions: [],
+    // Sin rondas ni registros de llamadas.
     rounds: 0,
     courseQueries: [],
     toolCalls: [],
     searches: [],
     discovered: [],
     pagesRead: [],
+    // Sin evidencia, cobertura ni seguimiento.
     accepted: [],
     rejected: [],
     coverage: [],
     contradictions: [],
     followUp: null,
+    // Motivo de parada y resultado.
     stop: outcome === "clarify" ? "clarify" : "invalid-output",
     stopDetail: detail.slice(0, RESEARCH_LIMITS.maxReasonChars),
     outcome,
+    // Sin afirmaciones que comprobar ni fuentes citadas.
     claimCheck: { method: "Sin informe de investigación.", checked: 0, dropped: [] },
     citedSourceIds: [],
+    // Contadores a cero.
     counters: {
       searchCalls: 0,
       pagesRead: 0,
@@ -649,6 +688,7 @@ export function shellSummary(
       courseQueries: 0,
       elapsedMs: null,
     },
+    // Límites del laboratorio, para que la interfaz los muestre.
     limits: {
       maxSubquestions: RESEARCH_LIMITS.maxSubquestions,
       maxRounds: RESEARCH_LIMITS.maxRounds,
@@ -656,6 +696,7 @@ export function shellSummary(
       maxPagesRead: RESEARCH_LIMITS.maxPagesRead,
       deadlineMs: RESEARCH_LIMITS.deadlineMs,
     },
+    // Contabilidad: sin cifras del proveedor, el total no está completo.
     accounting: {
       measured: ports.measured,
       estimatedMaxUsd: ports.estimatedMaxUsd,
@@ -666,7 +707,9 @@ export function shellSummary(
       totalComplete: false,
       note: "La entrada multimodal no llegó a investigarse. La reserva de lo no enviado se libera al cerrar.",
     },
+    // Un único paso de traza con el motivo.
     trace: [{ runId: job.run_id, node: "validate", round: 0, status: detail.slice(0, 240) }],
+    // Estado de los medios (lecturas, transcripción y voz).
     media,
   };
 }

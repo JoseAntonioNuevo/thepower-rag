@@ -132,52 +132,62 @@ export const DEMO_RESEARCH_QUESTION =
 
 // Guiones de la demo de investigación; cada uno enseña un recorrido del grafo sin gastar.
 export const DEMO_RESEARCH_SCENARIOS = [
+  // Respuesta suficiente a la primera: el grafo sintetiza sin seguimiento.
   {
     id: "sufficient-first-round",
     label: "Evidencia suficiente en la primera ronda",
     question: DEMO_RESEARCH_QUESTION,
   },
+  // Cobertura parcial: abre la única ronda de seguimiento.
   {
     id: "partial-follow-up",
     label: "Evidencia parcial y ronda de seguimiento",
     question: DEMO_RESEARCH_QUESTION,
   },
+  // Una página sin relación se descarta en la evaluación.
   {
     id: "irrelevant-discarded",
     label: "Página irrelevante descartada",
     question: DEMO_RESEARCH_QUESTION,
   },
+  // Dato interno que no consta: se dice que falta en vez de inventarlo.
   {
     id: "internal-fact-missing",
     label: "Dato interno del curso sin documentar",
     question:
       "¿Qué nota mínima exige el profesor para aprobar el ejercicio de S12? Y, técnicamente, ¿para qué sirve un checkpointer en LangGraph?",
   },
+  // El buscador y una lectura fallan: el informe lo refleja.
   {
     id: "provider-failure",
     label: "Fallo del buscador y de una lectura",
     question: DEMO_RESEARCH_QUESTION,
   },
+  // Una ronda sin evidencia nueva detiene la investigación.
   {
     id: "no-progress-stop",
     label: "Parada por falta de progreso",
     question: DEMO_RESEARCH_QUESTION,
   },
+  // El modelo cita algo que no está en los extractos: el verificador lo retira.
   {
     id: "invalid-citation",
     label: "Cita inválida y conclusión sin apoyo",
     question: DEMO_RESEARCH_QUESTION,
   },
+  // Usa la herramienta get_course_session para la fecha y el ejercicio.
   {
     id: "course-tool",
     label: "Dato interno con la herramienta de sesión",
     question: "¿Cuándo es la sesión 12 de mi grupo y qué ejercicio tiene?",
   },
+  // Una búsqueda lenta, útil para probar el botón de cancelar.
   {
     id: "slow-search",
     label: "Búsqueda lenta para cancelar",
     question: DEMO_RESEARCH_QUESTION,
   },
+  // Una llamada queda enviada sin resultado: el trabajo pasa a atención.
   {
     id: "ambiguous-operation",
     label: "Operación ambigua: hace falta conciliación",
@@ -187,6 +197,7 @@ export const DEMO_RESEARCH_SCENARIOS = [
 
 // Identificadores válidos de guion (incluye uno extra para probar un fallo tras el plan).
 export const researchScenarioSchema = z.enum([
+  // Los mismos ids que DEMO_RESEARCH_SCENARIOS…
   "sufficient-first-round",
   "partial-follow-up",
   "irrelevant-discarded",
@@ -197,6 +208,7 @@ export const researchScenarioSchema = z.enum([
   "course-tool",
   "slow-search",
   "ambiguous-operation",
+  // …más «crash-after-plan», que simula una caída tras el plan (solo pruebas).
   "crash-after-plan",
 ]);
 
@@ -268,26 +280,32 @@ export const researchSourceSchema = z.discriminatedUnion("kind", [
   }),
   // Página web leída, con fecha de lectura y hash del contenido.
   z.object({
+    // Fuente web: URL, dominio y título.
     kind: z.literal("web"),
     sourceId: researchSourceIdSchema,
     url: z.string().url().max(L.maxUrlChars),
     domain: z.string().min(1).max(253),
     title: z.string().min(1).max(L.maxTitleChars),
+    // Fecha de lectura, fecha de publicación si se conoce y hash del texto.
     retrievedAt: z.string().datetime(),
     publishedAt: z.string().max(64).nullable(),
     contentHash: z.string().regex(/^sha256:[0-9a-f]{64}$/),
+    // Extractos literales, subpreguntas que apoya y si es una página de demo.
     excerpts: z.array(excerpt).min(1).max(L.maxExcerptsPerSource),
     subquestionIds: z.array(subquestionId).max(L.maxSubquestions),
     fixture: z.boolean(),
   }),
   // Imagen o audio que subió el usuario; su autoridad es la de una entrada del usuario.
   z.object({
+    // Adjunto del alumno: imagen o audio.
     kind: z.literal("attachment"),
     sourceId: researchSourceIdSchema,
     role: z.enum(["image", "audio"]),
+    // Id del archivo (UUID), título y extractos leídos.
     assetId: z.string().regex(/^[0-9a-f-]{36}$/i),
     title: z.string().min(1).max(L.maxTitleChars),
     excerpts: z.array(excerpt).min(1).max(L.maxExcerptsPerSource),
+    // Hash del archivo y autoridad fija «user-input».
     contentHash: z.string().regex(/^sha256:[0-9a-f]{64}$/),
     authority: z.literal("user-input"),
     subquestionIds: z.array(subquestionId).max(L.maxSubquestions),
@@ -298,15 +316,19 @@ export type ResearchSource = z.infer<typeof researchSourceSchema>;
 
 // Nodos del grafo de investigación, en el orden aproximado en que se recorren.
 export const researchNodeSchema = z.enum([
+  // Validar y planificar.
   "validate",
   "plan",
+  // Reunir evidencia: curso, herramienta, búsqueda, selección y lectura.
   "course",
   "tool",
   "search",
   "select",
   "read",
+  // Evaluar y decidir otra ronda.
   "assess",
   "decide",
+  // Seguimiento, síntesis, verificación y fin.
   "follow-up",
   "synthesize",
   "verify",
@@ -331,20 +353,25 @@ export type ResearchStep = z.infer<typeof researchStepSchema>;
 
 // Motivo por el que se detuvo la investigación.
 export const researchStopSchema = z.enum([
+  // Paradas normales: todo cubierto, respuesta del curso o aclaración.
   "all-covered",
   "course-answer",
   "clarify",
+  // Topes del laboratorio: rondas, búsquedas, páginas y plazo.
   "max-rounds",
   "search-budget",
   "page-budget",
   "deadline",
+  // Sin progreso, consultas repetidas o sin laguna concreta.
   "no-progress",
   "repeated-queries",
   "no-specific-gap",
+  // Fallos de proveedor, del modelo o salida inválida, y cancelación.
   "provider-failure",
   "model-failure",
   "invalid-output",
   "aborted",
+  // Nada se sostiene o queda una contradicción sin resolver.
   "nothing-supported",
   "unresolved-contradiction",
 ]);
@@ -395,10 +422,12 @@ export const researchMediaSchema = z.object({
   // Resultado de transcribir el audio, o null.
   audio: z
     .object({
+      // Archivo, hash, estado de la lectura y transcripción.
       assetId,
       contentHash,
       status: z.enum(["read", "failed", "unknown-fixture"]),
       transcript: z.string().max(1_000),
+      // Detalle, idioma detectado, duración y palabras.
       detail: mediaDetail,
       language: z.string().max(16).nullable(),
       durationSeconds: z.number().finite().nonnegative().nullable(),
@@ -460,9 +489,11 @@ export const researchSummarySchema = z.object({
   toolCalls: z
     .array(
       z.object({
+        // Ronda, nombre fijo de la herramienta y sus argumentos.
         round: z.number().int().min(1).max(L.maxRounds),
         name: z.literal("get_course_session"),
         args: z.object({ sessionId: z.string().max(8), audience: audienceSchema }),
+        // Resultado, detalle y fuentes que produjo.
         status: z.enum(["ok", "rejected", "error"]),
         detail: reason,
         sourceIds: z.array(researchSourceIdSchema).max(4),
@@ -473,9 +504,11 @@ export const researchSummarySchema = z.object({
   searches: z
     .array(
       z.object({
+        // Ronda, subpregunta y consulta.
         round: z.number().int().min(1).max(L.maxRounds),
         subquestionId,
         query,
+        // Resultado y número de resultados.
         status: callStatus,
         resultCount: z.number().int().min(0).max(L.maxResultsPerSearch),
         detail: reason,
@@ -498,12 +531,15 @@ export const researchSummarySchema = z.object({
   pagesRead: z
     .array(
       z.object({
+        // Ronda, URL pedida y URL final.
         round: z.number().int().min(1).max(L.maxRounds),
         url: z.string().max(L.maxUrlChars),
         finalUrl: z.string().max(L.maxUrlChars).nullable(),
+        // Fuente creada (si se admitió), estado y detalle.
         sourceId: researchSourceIdSchema.nullable(),
         status: z.enum(["ok", "error", "timeout", "late", "rejected"]),
         detail: reason,
+        // Caracteres leídos, hash y si traía instrucciones incrustadas.
         chars: z.number().int().min(0).max(L.maxPageChars),
         contentHash: z.string().max(80).nullable(),
         instructionsFlagged: z.boolean(),
@@ -561,12 +597,14 @@ export const researchSummarySchema = z.object({
   outcome: researchOutcomeSchema,
   // Comprobación de las afirmaciones del informe contra los extractos citados.
   claimCheck: z.object({
+    // Método usado, afirmaciones comprobadas (tope: hallazgos + comprobaciones + respuesta).
     method: z.string().min(1).max(L.maxReasonChars),
     checked: z
       .number()
       .int()
       .min(0)
       .max(L.maxFindings + L.maxChecks + 1),
+    // Afirmaciones retiradas con su motivo.
     dropped: z
       .array(
         z.object({

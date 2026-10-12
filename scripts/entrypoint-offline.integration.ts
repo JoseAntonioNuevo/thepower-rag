@@ -177,17 +177,20 @@ describe("entrypoint offline", () => {
     const wrangler = path.join(root, "apps/web/node_modules/wrangler/bin/wrangler.js");
     // Arranca el puente local.
     const started = await startLoopbackBridge(
+      // Cuenta, puertos, ficha y raíz.
       {
         accountId: COURSE_DESTINATION.accountId,
         port,
         inspectorPort: port + 1,
         token,
         projectRoot: root,
+        // Papel «probe» en local y estado en la carpeta de la prueba.
         role: "probe",
         remote: false,
         persistDir: path.join(directory, "state"),
       },
       {
+        // Plazo de arranque y el Wrangler fijado del proyecto.
         timeoutMs: 60_000,
         command: wrangler,
         spawn: spawnWranglerBridge(wrangler, root, COURSE_DESTINATION.accountId),

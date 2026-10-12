@@ -106,19 +106,24 @@ export function bridgeWranglerConfig(spec: BridgeSpec): Record<string, unknown> 
   const main = bridgeMainPath(spec.projectRoot);
   // Configuración base: sin workers.dev ni vistas previas y solo en 127.0.0.1.
   const config: Record<string, unknown> = {
+    // Nombre, cuenta y fecha de compatibilidad.
     name: "thepower-rag-bridge",
     account_id: spec.accountId,
     compatibility_date: "2026-10-02",
+    // nodejs_compat y punto de entrada absoluto (bridge-worker.ts).
     compatibility_flags: ["nodejs_compat"],
     main,
+    // Sin URL pública de ningún tipo.
     workers_dev: false,
     preview_urls: false,
+    // wrangler dev solo escucha en 127.0.0.1 por HTTP.
     dev: {
       ip: "127.0.0.1",
       port: spec.port,
       local_protocol: "http",
       inspector_ip: "127.0.0.1",
     },
+    // Papel del puente y si usa recursos remotos; la ficha va aparte en .dev.vars.
     vars: {
       BRIDGE_ROLE: spec.role,
       BRIDGE_REMOTE: spec.remote ? "true" : "false",
@@ -292,19 +297,23 @@ export async function startLoopbackBridge(
   await chmod(varsPath, 0o600);
   // Argumentos de wrangler dev.
   const args = [
+    // Configuración temporal.
     "dev",
     "--config",
     configPath,
+    // Solo loopback, con su puerto.
     "--ip",
     "127.0.0.1",
     "--port",
     String(spec.port),
+    // Inspector también en loopback.
     "--inspector-port",
     String(spec.inspectorPort),
     "--local-protocol",
     "http",
     "--inspector-ip",
     "127.0.0.1",
+    // Estado persistido, sin sesión interactiva y solo errores.
     "--persist-to",
     spec.persistDir,
     "--no-show-interactive-dev-session",

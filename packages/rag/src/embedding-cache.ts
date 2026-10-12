@@ -218,12 +218,14 @@ export function cacheFromVectors(
   );
   // Caché con una fila por fragmento.
   return {
+    // Identidad: preparación, perfil, modelo, dimensión, revisión y procedencia.
     preparationId: manifest.preparationId,
     profileId: manifest.profileId,
     model: manifest.embeddingModel,
     dimensions: manifest.dimensions,
     providerRevision,
     provenance,
+    // Una fila por fragmento: huellas del documento y del texto, y el vector copiado.
     items: manifest.chunks.map((chunk, index) => ({
       chunkId: chunk.chunkId,
       sourceHash: documents.get(chunk.documentId) ?? "",

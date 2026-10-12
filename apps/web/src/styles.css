@@ -1,27 +1,49 @@
+/*
+ * GUÍA DE LECTURA · apps/web/src/styles.css
+ * Estilos propios de la interfaz del curso (chat, panel de fuentes y traza, mesa de investigación).
+ * El movimiento (duraciones, curvas, pestañas, acordeón, esqueletos…) vive en transitions.css, que
+ * es el catálogo de transitions.dev; aquí solo se usan sus clases t-* y sus variables --duration-*.
+ * Orden: variables y base → chat (cabecera, selectores, conversación, compositor) → panel (fuentes,
+ * citas, traza) → escritorio (@media) → investigación (fase 1 y mesa durable) → móvil.
+ * Decisiones: móvil primero, controles de 44 px de alto, foco visible con teclado y colores con
+ * contraste suficiente. No hay frameworks CSS: todo es CSS estándar.
+ */
+/* Variables de diseño globales: tipografías y paleta de tinta sobre papel. Todo el CSS las reutiliza con var(--nombre) para cambiar un color en un solo sitio. */
 :root {
+  /* Serifa para leer textos largos (respuestas, títulos). Lista de respaldo por sistema. */
   --font-serif: "Iowan Old Style", Palatino, "Palatino Linotype", Georgia, serif;
+  /* Sans-serif para la interfaz (botones, etiquetas, metadatos). */
   --font-ui: "Avenir Next", "Segoe UI", "Helvetica Neue", sans-serif;
+  /* Tinta principal y tinta suave para textos secundarios. */
   --ink: #1c1917;
   --ink-soft: #44403c;
+  /* Fondo de la página (papel), fondo de las hojas y lavado para zonas apagadas. */
   --paper: #f6f4ef;
   --sheet: #fffcf7;
   --wash: #e7e2d8;
+  /* Color de los bordes. */
   --line: #d6d3d1;
+  /* Azul de acción: botones principales y elementos activos. */
   --navy: #1d4e89;
+  /* Valores por defecto de toda la página. */
   color: var(--ink);
   background: var(--paper);
   font-family: var(--font-ui);
+  /* Interlineado cómodo para leer. */
   line-height: 1.5;
 }
 
+/* border-box: el ancho incluye borde y relleno. Evita que un padding desborde una columna. */
 * {
   box-sizing: border-box;
 }
 
+/* Quita el margen por defecto del navegador para que el fondo llegue a los bordes. */
 body {
   margin: 0;
 }
 
+/* Los controles de formulario heredan la tipografía de la página (por defecto usan la del sistema). */
 button,
 input,
 textarea,
@@ -29,6 +51,7 @@ select {
   font: inherit;
 }
 
+/* Botón base: 44 px de alto, el mínimo táctil recomendado para dedos en móvil. */
 button {
   min-height: 44px;
   border: 1px solid var(--navy);
@@ -38,10 +61,12 @@ button {
   padding: 0 14px;
 }
 
+/* Cursor de mano solo cuando el botón se puede pulsar. */
 button:not(:disabled) {
   cursor: pointer;
 }
 
+/* Botón desactivado: gris y cursor de prohibido, para que se vea que no responde. */
 button:disabled {
   background: var(--line);
   border-color: var(--line);
@@ -49,6 +74,7 @@ button:disabled {
   cursor: not-allowed;
 }
 
+/* Área de texto base del chat: ancho completo y solo se puede estirar en vertical. */
 textarea {
   width: 100%;
   min-height: 52px;
@@ -59,23 +85,27 @@ textarea {
   resize: vertical;
 }
 
+/* Foco visible solo con teclado: contorno naranja grueso para accesibilidad (WCAG). */
 :focus-visible {
   outline: 3px solid #9a3412;
   outline-offset: 2px;
 }
 
+/* Contenedor principal centrado: como mucho 960 px y 16 px de margen a cada lado en móvil. */
 .shell {
   width: min(960px, calc(100% - 32px));
   margin: 0 auto;
   padding: 32px 0 56px;
 }
 
+/* Títulos, mensajes y títulos de cita usan la fuente con serifa (lectura larga). */
 h1,
 .message,
 .citation-title {
   font-family: var(--font-serif);
 }
 
+/* Título grande de la cabecera. clamp() ajusta el tamaño al ancho de la ventana entre un mínimo y un máximo. */
 .masthead h1 {
   margin: 0;
   font-size: clamp(1.75rem, 2.4vw, 2.25rem);
@@ -84,6 +114,7 @@ h1,
   line-height: 1.15;
 }
 
+/* Subtítulo de la cabecera: ancho limitado a 62 caracteres para que se lea cómodo. */
 .masthead p {
   margin: 10px 0 0;
   max-width: 62ch;
@@ -92,6 +123,7 @@ h1,
   line-height: 1.45;
 }
 
+/* Notas secundarias y texto pequeño en tinta suave. */
 .stage-note,
 .group-note,
 .muted,
@@ -99,18 +131,21 @@ small {
   color: var(--ink-soft);
 }
 
+/* Separación y tamaño de las notas bajo los selectores de etapa y grupo. */
 .stage-note,
 .group-note {
   margin: 8px 0 0;
   font-size: 0.92rem;
 }
 
+/* Barra de selectores (etapa y grupo) apilada en rejilla. */
 .toolbar {
   display: grid;
   gap: 18px;
   margin-top: 28px;
 }
 
+/* Cada selector es un fieldset sin borde. min-inline-size: 0 deja que encoja en pantallas estrechas. */
 .choice {
   margin: 0;
   padding: 0;
@@ -118,12 +153,14 @@ small {
   min-inline-size: 0;
 }
 
+/* Texto del selector («Etapa», «Grupo del curso»). */
 .choice legend {
   padding: 0;
   margin: 0 0 6px;
   font-size: 0.92rem;
 }
 
+/* Control segmentado (pestañas) de transitions.dev: fondo lavado y ancho completo. */
 .choice .t-tabs {
   display: flex;
   width: 100%;
@@ -131,6 +168,7 @@ small {
   background: var(--wash);
 }
 
+/* Píldora que se desliza bajo la opción elegida (la mueve transitions.css). */
 .choice .t-tabs-pill {
   top: 3px;
   height: calc(100% - 6px);
@@ -139,6 +177,7 @@ small {
   box-shadow: inset 0 0 0 1px var(--ink);
 }
 
+/* Cada opción del control segmentado. z-index 1 la pone por encima de la píldora. */
 .segment {
   position: relative;
   z-index: 1;
@@ -153,10 +192,12 @@ small {
   cursor: pointer;
 }
 
+/* :has() pinta en tinta fuerte la opción cuyo radio está marcado. */
 .segment:has(input:checked) {
   color: var(--ink);
 }
 
+/* El radio real ocupa toda la opción pero es invisible: se pulsa en cualquier punto y sigue siendo accesible. */
 .segment input {
   position: absolute;
   inset: 0;
@@ -167,27 +208,32 @@ small {
   cursor: inherit;
 }
 
+/* Mientras una respuesta está en curso el fieldset se desactiva y el cursor deja de ser de mano. */
 fieldset:disabled .segment,
 fieldset:disabled .segment input {
   cursor: default;
 }
 
+/* Caja de error: esquinas y relleno. */
 .error {
   border-radius: 8px;
   padding: 10px 12px;
 }
 
+/* Colores del error: fondo rojo muy claro y texto rojo oscuro con buen contraste. */
 .error {
   background: #fef2f2;
   color: #7f1d1d;
 }
 
+/* Disposición principal: conversación y panel lateral (en escritorio, dos columnas; ver @media). */
 .layout {
   display: grid;
   gap: 28px;
   margin-top: 28px;
 }
 
+/* Hoja de la conversación: columna flexible para que el compositor quede abajo. */
 .conversation {
   display: flex;
   flex-direction: column;
@@ -198,6 +244,7 @@ fieldset:disabled .segment input {
   padding: 18px 18px 14px;
 }
 
+/* Lista de mensajes: ocupa el espacio libre y empieza arriba. */
 .transcript {
   display: grid;
   flex: 1;
@@ -206,6 +253,7 @@ fieldset:disabled .segment input {
   margin: 0 0 18px;
 }
 
+/* Mensaje: ancho de lectura limitado. pre-wrap respeta los saltos de línea del texto. */
 .message {
   max-width: 42rem;
   padding: 10px 12px;
@@ -213,44 +261,53 @@ fieldset:disabled .segment input {
   white-space: pre-wrap;
 }
 
+/* Los párrafos dentro del mensaje no añaden margen extra. */
 .message p {
   margin: 0;
 }
 
+/* Mensaje del alumno: a la derecha y con fondo cálido, como en una app de mensajería. */
 .message-user {
   justify-self: end;
   max-width: min(36rem, 85%);
   background: #efe8dc;
 }
 
+/* Mensaje del asistente: sin burbuja, alineado con el texto. normal deja que el Markdown controle los saltos. */
 .message-assistant {
   padding-left: 0;
   background: transparent;
   white-space: normal;
 }
 
+/* Párrafos del Markdown reducido de la respuesta (course-answer.tsx). */
 .message .course-answer p {
   margin: 0 0 0.85em;
 }
 
+/* Listas de la respuesta con sangría. */
 .message .course-answer ul {
   margin: 0 0 0.85em;
   padding-left: 1.25rem;
 }
 
+/* Separación entre elementos de lista. */
 .message .course-answer li {
   margin: 0.28em 0;
 }
 
+/* Negrita de la respuesta, algo más suave que bold. */
 .message .course-answer strong {
   font-weight: 600;
 }
 
+/* Contenedor de tablas: si no caben, se desplazan en horizontal sin romper la página. */
 .course-table-wrap {
   margin: 0 0 0.85em;
   overflow-x: auto;
 }
 
+/* Tabla del Markdown de la respuesta. */
 .course-table {
   width: 100%;
   border-collapse: collapse;
@@ -258,6 +315,7 @@ fieldset:disabled .segment input {
   font-size: 0.92rem;
 }
 
+/* Celdas: relleno, línea inferior y alineación arriba a la izquierda. */
 .course-table th,
 .course-table td {
   padding: 8px 10px;
@@ -266,21 +324,25 @@ fieldset:disabled .segment input {
   vertical-align: top;
 }
 
+/* Cabecera de la tabla. */
 .course-table th {
   background: #f3efe6;
   color: #57534e;
   font-weight: 600;
 }
 
+/* Filas pares con fondo alterno (efecto cebra) para seguir la fila con la vista. */
 .course-table tbody tr:nth-child(even) td {
   background: #faf7f2;
 }
 
+/* Etiqueta de cita dentro del texto de la respuesta. */
 .chip-inline {
   margin: 0 0.2em;
   vertical-align: baseline;
 }
 
+/* Nota bajo la respuesta: modelo, consumo y coste estimado. */
 .run-note {
   margin-top: 14px;
   color: #57534e;
@@ -288,6 +350,7 @@ fieldset:disabled .segment input {
   font-size: 0.84rem;
 }
 
+/* Desplegables: mismo alto táctil que los botones. */
 select {
   width: 100%;
   min-height: 44px;
@@ -297,16 +360,19 @@ select {
   padding: 0 8px;
 }
 
+/* Cursor de mano en desplegables activos. */
 select:not(:disabled) {
   cursor: pointer;
 }
 
+/* Compositor: zona de escritura pegada al final de la conversación (margin-top: auto). */
 .composer {
   display: grid;
   gap: 8px;
   margin-top: auto;
 }
 
+/* Selector de guion de la demo CRAG, encima del compositor. */
 .composer-script {
   display: flex;
   align-items: center;
@@ -317,12 +383,14 @@ select:not(:disabled) {
   font-size: 0.84rem;
 }
 
+/* El desplegable del guion no ocupa todo el ancho. */
 .composer-script select {
   width: auto;
   max-width: min(100%, 28rem);
   min-height: 36px;
 }
 
+/* Leyenda bajo el compositor: estado, errores y acciones. Altura mínima para que no salte el diseño. */
 .composer-caption {
   min-height: 1.35em;
   margin: 0;
@@ -331,11 +399,13 @@ select:not(:disabled) {
   text-align: center;
 }
 
+/* El estado animado de la conversación, centrado en la leyenda. */
 .composer-caption .conversation-status {
   justify-content: center;
   margin: 0;
 }
 
+/* Botón con aspecto de enlace dentro de la leyenda («Parar», «Empezar de nuevo»). */
 button.caption-action {
   min-height: 0;
   margin-left: 8px;
@@ -348,18 +418,22 @@ button.caption-action {
   text-underline-offset: 3px;
 }
 
+/* Sin margen cuando el botón es el primer elemento de la leyenda. */
 .composer-caption > button.caption-action {
   margin-left: 0;
 }
 
+/* Al pasar el ratón, el enlace se oscurece. */
 button.caption-action:hover:not(:disabled) {
   color: var(--ink);
 }
 
+/* Los mensajes de alerta de la leyenda, en rojo. */
 .composer-caption [role="alert"] {
   color: #7f1d1d;
 }
 
+/* Caja redondeada tipo píldora que agrupa el texto y el botón de enviar. */
 .composer-pill {
   display: flex;
   align-items: flex-end;
@@ -370,6 +444,7 @@ button.caption-action:hover:not(:disabled) {
   background: #fff;
 }
 
+/* El textarea dentro de la píldora no tiene borde propio y crece hasta 140 px. */
 .composer-pill textarea {
   flex: 1;
   width: auto;
@@ -383,15 +458,18 @@ button.caption-action:hover:not(:disabled) {
   resize: none;
 }
 
+/* El foco no se pinta en el textarea... */
 .composer-pill textarea:focus-visible {
   outline: none;
 }
 
+/* ...sino en toda la píldora, con :has(), para que el contorno rodee también el botón. */
 .composer-pill:has(:focus-visible) {
   outline: 3px solid #9a3412;
   outline-offset: 2px;
 }
 
+/* Botón de enviar redondo dentro de la píldora. */
 .composer-pill .send {
   height: 44px;
   min-height: 44px;
@@ -399,6 +477,7 @@ button.caption-action:hover:not(:disabled) {
   border-radius: 999px;
 }
 
+/* Listas del panel (pasos, traza y citas) sin viñetas. */
 .steps,
 .trace-list,
 .citations {
@@ -409,21 +488,25 @@ button.caption-action:hover:not(:disabled) {
   list-style: none;
 }
 
+/* Pasos del grafo numerados con un contador CSS. */
 .steps {
   margin-top: 12px;
   counter-reset: graph-step;
 }
 
+/* Los elementos de la lista de pasos no llevan relleno. */
 .steps li {
   padding: 0;
 }
 
+/* Escribe «1. », «2. »… delante de cada paso usando el contador. */
 .steps li::before {
   counter-increment: graph-step;
   content: counter(graph-step) ". ";
   color: #57534e;
 }
 
+/* Tarjeta de una fuente citada con línea separadora. */
 .citation {
   display: grid;
   gap: 6px;
@@ -431,24 +514,29 @@ button.caption-action:hover:not(:disabled) {
   border-bottom: 1px solid var(--wash);
 }
 
+/* Aparición escalonada de las líneas de la cita: cada tarjeta suma su retraso (--cite-index). */
 .citation .t-stagger-line--1 {
   transition-delay: var(--cite-index, 0ms);
 }
 
+/* Segunda línea: un escalón más tarde. */
 .citation .t-stagger-line--2 {
   transition-delay: calc(var(--cite-index, 0ms) + var(--stagger-stagger));
 }
 
+/* Tercera línea: dos escalones más tarde. */
 .citation .t-stagger-line--3 {
   transition-delay: calc(var(--cite-index, 0ms) + (var(--stagger-stagger) * 2));
 }
 
+/* Fila de etiquetas (chips) de una fuente. */
 .chip-row {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
 }
 
+/* Etiqueta redondeada pequeña. */
 .chip {
   display: inline-flex;
   align-items: center;
@@ -459,26 +547,31 @@ button.caption-action:hover:not(:disabled) {
   line-height: 1.2;
 }
 
+/* Etiqueta de sesión del temario (azul). */
 .chip-session {
   background: #e8eef6;
   color: var(--navy);
 }
 
+/* Etiqueta de calendario de un grupo (naranja). */
 .chip-calendar {
   background: #fff7ed;
   color: #9a3412;
 }
 
+/* Etiqueta de ejercicio (verde). */
 .chip-exercise {
   background: #eef6e8;
   color: #3f6212;
 }
 
+/* Etiqueta neutra. */
 .chip-note {
   background: var(--wash);
   color: var(--ink-soft);
 }
 
+/* Extracto de la fuente recortado a 3 líneas con puntos suspensivos (line-clamp). */
 .citation-excerpt {
   display: -webkit-box;
   overflow: hidden;
@@ -488,19 +581,23 @@ button.caption-action:hover:not(:disabled) {
   font-size: 0.92rem;
 }
 
+/* Esqueleto de carga de las fuentes. --pulse-count: infinite mantiene el pulso hasta que llegan. */
 .source-skel {
   min-height: 96px;
   --pulse-count: infinite;
 }
 
+/* Cuando llegan los datos, el esqueleto deja de reservar altura. */
 .source-skel.is-revealed {
   min-height: 0;
 }
 
+/* El contenido revelado vuelve al flujo normal. */
 .source-skel.is-revealed .t-skel-content {
   position: relative;
 }
 
+/* Barra gris que imita una línea de texto mientras carga. */
 .skel-line {
   display: block;
   height: 12px;
@@ -509,14 +606,17 @@ button.caption-action:hover:not(:disabled) {
   background: var(--wash);
 }
 
+/* Línea corta del esqueleto. */
 .skel-line-short {
   width: 38%;
 }
 
+/* Línea media del esqueleto. */
 .skel-line-mid {
   width: 72%;
 }
 
+/* Quita márgenes por defecto a los textos del panel. */
 .citation-title,
 .citation-section,
 .citation-meta,
@@ -526,28 +626,34 @@ button.caption-action:hover:not(:disabled) {
   margin: 0;
 }
 
+/* Título de la fuente, algo mayor. */
 .citation-title {
   font-size: 1.05rem;
 }
 
+/* Metadatos de la fuente y resumen de la traza, en gris y pequeño. */
 .citation-meta,
 .trace-summary {
   color: var(--ink-soft);
   font-size: 0.88rem;
 }
 
+/* Espacio bajo el resumen de la traza. */
 .trace-summary {
   margin-bottom: 8px;
 }
 
+/* Un fieldset desactivado se atenúa para indicar que está bloqueado. */
 fieldset:disabled {
   opacity: 0.72;
 }
 
+/* min-width: 0 deja que el panel encoja dentro de la rejilla sin desbordar. */
 .panel {
   min-width: 0;
 }
 
+/* Encabezados del panel en versalitas pequeñas («FUENTES», «TRAZA»). */
 .panel h2 {
   margin: 0 0 10px;
   font-size: 0.78rem;
@@ -557,12 +663,14 @@ fieldset:disabled {
   color: #57534e;
 }
 
+/* Cabeceras que se quedan fijas (sticky) al desplazar el panel. */
 .sources-sticky,
 .citation-head {
   position: sticky;
   background: var(--paper);
 }
 
+/* Cabecera «Fuentes» fija arriba del todo. */
 .sources-sticky {
   top: 0;
   z-index: 3;
@@ -570,6 +678,7 @@ fieldset:disabled {
   padding: 0 0 8px;
 }
 
+/* Degradado bajo cada cabecera fija: el contenido se funde al pasar por debajo. */
 .sources-sticky::after,
 .citation-head::after {
   content: "";
@@ -581,34 +690,42 @@ fieldset:disabled {
   pointer-events: none;
 }
 
+/* Posición del degradado de la cabecera de fuentes. */
 .sources-sticky::after {
   top: 100%;
 }
 
+/* Cabecera de cada cita, fija justo debajo de la de «Fuentes». */
 .citation-head {
   top: 2rem;
   z-index: 2;
   padding-bottom: 6px;
 }
 
+/* Posición del degradado de la cabecera de la cita. */
 .citation-head::after {
   top: calc(100% - 6px);
 }
 
+/* Separación entre secciones del panel. */
 .panel section + section {
   margin-top: 28px;
 }
 
+/* Escritorio (800 px o más): conversación a la izquierda y panel a la derecha. */
 @media (min-width: 800px) {
+  /* La conversación ocupa 1,6 partes y el panel 0,72 (mínimo 240 px). */
   .layout {
     grid-template-columns: minmax(0, 1.6fr) minmax(240px, 0.72fr);
     align-items: stretch;
   }
 
+  /* Sin panel (sin RAG), una sola columna. */
   .layout-single {
     grid-template-columns: minmax(0, 1fr);
   }
 
+  /* El panel toma la altura de la conversación y su contenido se desplaza por dentro. */
   .panel {
     height: 0;
     min-height: 100%;
@@ -616,6 +733,7 @@ fieldset:disabled {
     border-left: 1px solid var(--wash);
   }
 
+  /* Zona desplazable del panel. overscroll-behavior evita que el scroll pase a la página. */
   .panel-scroll {
     height: 100%;
     overflow-y: auto;
@@ -626,21 +744,25 @@ fieldset:disabled {
 }
 
 /* Etapa de investigación (S12, fase 1). */
+/* Etiqueta de fuente web (índigo). */
 .chip-web {
   background: #eef2ff;
   color: #3730a3;
 }
 
+/* Etiqueta de la herramienta get_course_session (violeta). */
 .chip-tool {
   background: #f5f3ff;
   color: #5b21b6;
 }
 
+/* Traza de la investigación en bloques separados. */
 .research-trace {
   display: grid;
   gap: 14px;
 }
 
+/* Vista previa de la imagen adjunta. */
 .media-preview {
   max-width: min(100%, 280px);
   height: auto;
@@ -648,17 +770,20 @@ fieldset:disabled {
   border-radius: 8px;
 }
 
+/* Reproductor de audio adjunto. */
 .media-audio {
   width: min(100%, 320px);
 }
 
 /* Mesa de investigación durable: tarjeta, botones, adjuntos, estado y resultado. */
+/* Contenedor de la mesa de investigación. */
 .research-desk {
   display: grid;
   gap: 16px;
   margin-top: 28px;
 }
 
+/* Iconos SVG de trazo: heredan el color del texto (currentColor). */
 .icon {
   width: 16px;
   height: 16px;
@@ -670,6 +795,7 @@ fieldset:disabled {
   stroke-linejoin: round;
 }
 
+/* Botón base de la mesa. Las duraciones y curvas son tokens de transitions.css (--duration-*, --ease-*). */
 .btn {
   display: inline-flex;
   align-items: center;
@@ -690,10 +816,12 @@ fieldset:disabled {
     transform var(--duration-quick) var(--ease-smooth-out);
 }
 
+/* Al pulsar, el botón encoge un poco (sensación táctil). */
 .btn:active:not(:disabled) {
   transform: scale(var(--scale-small));
 }
 
+/* Botón principal: azul con un brillo interior y sombra suave. */
 .btn-primary {
   background: var(--navy);
   color: #fff;
@@ -702,6 +830,7 @@ fieldset:disabled {
     0 1px 2px rgb(28 25 23 / 18%);
 }
 
+/* Hover del principal: más oscuro y con sombra azul. */
 .btn-primary:hover:not(:disabled) {
   background: #173f70;
   box-shadow:
@@ -709,6 +838,7 @@ fieldset:disabled {
     0 4px 12px -4px rgb(29 78 137 / 45%);
 }
 
+/* Principal desactivado: mismo color pero transparente. */
 .btn-primary:disabled {
   border-color: transparent;
   background: var(--navy);
@@ -717,14 +847,17 @@ fieldset:disabled {
   opacity: 0.38;
 }
 
+/* El icono del botón principal se mueve con su propia transición. */
 .btn-primary .icon {
   transition: transform var(--duration-fast) var(--ease-smooth-out);
 }
 
+/* En hover, el icono avanza unos píxeles (invita a pulsar). */
 .btn-primary:hover:not(:disabled) .icon {
   transform: translateX(var(--distance-micro));
 }
 
+/* Botón secundario: blanco con borde. */
 .btn-secondary {
   border-color: var(--line);
   background: #fff;
@@ -732,33 +865,39 @@ fieldset:disabled {
   box-shadow: 0 1px 2px rgb(28 25 23 / 6%);
 }
 
+/* Hover del secundario. */
 .btn-secondary:hover:not(:disabled) {
   border-color: #a8a29e;
   background: var(--sheet);
 }
 
+/* Botón discreto: sin fondo. */
 .btn-quiet {
   border-color: var(--line);
   background: transparent;
   color: var(--ink-soft);
 }
 
+/* Hover del discreto. */
 .btn-quiet:hover:not(:disabled) {
   background: var(--wash);
   color: var(--ink);
 }
 
+/* Botón de acción destructiva (cancelar, borrar): rojo. */
 .btn-danger {
   border-color: #fecaca;
   background: #fff;
   color: #b91c1c;
 }
 
+/* Hover del destructivo. */
 .btn-danger:hover:not(:disabled) {
   border-color: #fca5a5;
   background: #fef2f2;
 }
 
+/* Estado desactivado común a secundario, discreto y destructivo. */
 .btn-secondary:disabled,
 .btn-quiet:disabled,
 .btn-danger:disabled {
@@ -768,6 +907,7 @@ fieldset:disabled {
   box-shadow: none;
 }
 
+/* Variante pequeña de botón. */
 .btn-sm {
   min-height: 34px;
   padding: 0 12px;
@@ -775,6 +915,7 @@ fieldset:disabled {
   font-size: 0.86rem;
 }
 
+/* Botón redondo solo con icono (quitar adjunto, etc.). */
 .btn-icon {
   display: inline-grid;
   place-items: center;
@@ -792,11 +933,13 @@ fieldset:disabled {
     color var(--duration-quick) var(--ease-out);
 }
 
+/* Hover del botón de icono. */
 .btn-icon:hover {
   background: var(--wash);
   color: var(--ink);
 }
 
+/* Oculta un elemento a la vista pero lo deja para lectores de pantalla (patrón estándar). */
 .visually-hidden {
   position: absolute;
   width: 1px;
@@ -809,6 +952,7 @@ fieldset:disabled {
   border: 0;
 }
 
+/* Tarjeta principal de la mesa con sombra en capas. */
 .desk-card {
   display: grid;
   gap: 16px;
@@ -821,6 +965,7 @@ fieldset:disabled {
     0 12px 32px -18px rgb(28 25 23 / 18%);
 }
 
+/* Cabecera de la tarjeta: título a la izquierda y acciones a la derecha; se reparte en varias filas si no cabe. */
 .desk-head {
   display: flex;
   flex-wrap: wrap;
@@ -829,11 +974,13 @@ fieldset:disabled {
   gap: 12px 16px;
 }
 
+/* Bloque del título: crece y puede encoger. */
 .desk-heading {
   flex: 1 1 280px;
   min-width: 0;
 }
 
+/* Título de la mesa con serifa. */
 .desk-title {
   margin: 0;
   font-family: var(--font-serif);
@@ -843,6 +990,7 @@ fieldset:disabled {
   line-height: 1.2;
 }
 
+/* Explicación bajo el título. */
 .desk-caption {
   max-width: 56ch;
   margin: 4px 0 0;
@@ -850,12 +998,14 @@ fieldset:disabled {
   font-size: 0.86rem;
 }
 
+/* Lista de conversaciones como fila de chips. */
 .research-desk .conversation-list {
   display: flex;
   flex-wrap: wrap;
   gap: 6px;
 }
 
+/* Chip de una conversación. */
 .conv-chip {
   min-height: 32px;
   padding: 0 12px;
@@ -870,11 +1020,13 @@ fieldset:disabled {
     color var(--duration-quick) var(--ease-out);
 }
 
+/* Hover del chip. */
 .conv-chip:hover {
   background: var(--wash);
   color: var(--ink);
 }
 
+/* Conversación seleccionada (aria-pressed=true): azul y en negrita. */
 .conv-chip[aria-pressed="true"] {
   border-color: #b9cbe3;
   background: #e8eef6;
@@ -882,6 +1034,7 @@ fieldset:disabled {
   font-weight: 600;
 }
 
+/* Mensaje cuando aún no hay conversaciones. */
 .desk-empty {
   margin: 0;
   padding: 10px 12px;
@@ -891,6 +1044,7 @@ fieldset:disabled {
   font-size: 0.9rem;
 }
 
+/* Campo de formulario de la mesa (etiqueta y control en línea). */
 .desk-field {
   display: flex;
   flex-wrap: wrap;
@@ -900,21 +1054,25 @@ fieldset:disabled {
   font-size: 0.86rem;
 }
 
+/* Etiqueta del campo en negrita. */
 .desk-field-label {
   font-weight: 600;
 }
 
+/* El desplegable del campo no ocupa todo el ancho. */
 .desk-field select {
   width: auto;
   max-width: min(100%, 28rem);
   min-height: 36px;
 }
 
+/* Compositor de la investigación. */
 .desk-composer {
   display: grid;
   gap: 10px;
 }
 
+/* Caja que agrupa la pregunta y las herramientas (adjuntar, voz, enviar). */
 .desk-input {
   border: 1px solid var(--line);
   border-radius: 14px;
@@ -924,11 +1082,13 @@ fieldset:disabled {
     box-shadow var(--duration-quick) var(--ease-out);
 }
 
+/* Cuando algo dentro tiene el foco, toda la caja se resalta en azul. */
 .desk-input:focus-within {
   border-color: #8aa6cc;
   box-shadow: 0 0 0 3px rgb(29 78 137 / 12%);
 }
 
+/* Textarea de la pregunta sin borde propio. */
 .desk-input textarea {
   display: block;
   min-height: 96px;
@@ -938,14 +1098,17 @@ fieldset:disabled {
   background: transparent;
 }
 
+/* Texto de ejemplo del textarea en gris claro. */
 .desk-input textarea::placeholder {
   color: #a8a29e;
 }
 
+/* El foco se pinta en la caja (ver :focus-within), no en el textarea. */
 .desk-input textarea:focus-visible {
   outline: none;
 }
 
+/* Fila de herramientas bajo la pregunta. */
 .desk-tools {
   display: flex;
   flex-wrap: wrap;
@@ -954,10 +1117,12 @@ fieldset:disabled {
   padding: 8px 10px 10px;
 }
 
+/* El botón de enviar se empuja a la derecha. */
 .desk-send {
   margin-left: auto;
 }
 
+/* Botón de adjuntar imagen o audio (envuelve un input de archivo invisible). */
 .btn-attach {
   position: relative;
   display: inline-flex;
@@ -977,22 +1142,26 @@ fieldset:disabled {
     color var(--duration-quick) var(--ease-out);
 }
 
+/* Hover del botón de adjuntar. */
 .btn-attach:hover {
   background: var(--wash);
   color: var(--ink);
 }
 
+/* Con un archivo ya elegido, el botón se pinta en azul. */
 .btn-attach[data-active="true"] {
   border-color: #b9cbe3;
   background: #e8eef6;
   color: var(--navy);
 }
 
+/* Foco de teclado visible en el input de archivo oculto, dibujado en su botón. */
 .btn-attach:has(:focus-visible) {
   outline: 3px solid #9a3412;
   outline-offset: 2px;
 }
 
+/* Interruptor de «respuesta con voz». */
 .desk-voice {
   display: inline-flex;
   align-items: center;
@@ -1002,6 +1171,7 @@ fieldset:disabled {
   font-size: 0.86rem;
 }
 
+/* Interruptor (toggle) de transitions.dev: el ancho depende del recorrido del botón. */
 button.t-toggle {
   width: calc(16px + var(--toggle-travel) + 4px);
   height: 20px;
@@ -1013,10 +1183,12 @@ button.t-toggle {
   background: #d6d3d1;
 }
 
+/* Interruptor encendido en azul. */
 button.t-toggle[data-on="true"] {
   background: var(--navy);
 }
 
+/* Círculo del interruptor. */
 .t-toggle-thumb {
   display: block;
   width: 16px;
@@ -1026,17 +1198,20 @@ button.t-toggle[data-on="true"] {
   box-shadow: 0 1px 2px rgb(28 25 23 / 30%);
 }
 
+/* Fila de adjuntos elegidos. */
 .desk-attachments {
   display: flex;
   flex-wrap: wrap;
   gap: 8px;
 }
 
+/* Los paneles que se deslizan aquí solo bajan 8 px al aparecer. */
 .desk-attachments .t-panel-slide,
 .desk-log .t-panel-slide {
   --panel-translate-y: 8px;
 }
 
+/* Tarjeta de un adjunto. */
 .attachment {
   display: flex;
   flex-wrap: wrap;
@@ -1049,10 +1224,12 @@ button.t-toggle[data-on="true"] {
   background: #fff;
 }
 
+/* El adjunto de audio no tiene miniatura: un poco más de relleno a la izquierda. */
 .attachment-audio {
   padding-left: 12px;
 }
 
+/* Miniatura cuadrada de la imagen, recortada sin deformar (object-fit: cover). */
 .attachment-thumb {
   width: 44px;
   height: 44px;
@@ -1060,12 +1237,14 @@ button.t-toggle[data-on="true"] {
   object-fit: cover;
 }
 
+/* Nombre y tamaño del adjunto apilados. */
 .attachment-text {
   display: grid;
   min-width: 0;
   max-width: 220px;
 }
 
+/* Nombre largo recortado con puntos suspensivos. */
 .attachment-name {
   overflow: hidden;
   color: var(--ink);
@@ -1074,12 +1253,14 @@ button.t-toggle[data-on="true"] {
   white-space: nowrap;
 }
 
+/* Tamaño con cifras de ancho fijo (tabular-nums) para que no bailen. */
 .attachment-size {
   color: var(--ink-soft);
   font-size: 0.76rem;
   font-variant-numeric: tabular-nums;
 }
 
+/* Caja de estado del trabajo. --tone cambia el color del borde y del punto según data-tone. */
 .desk-status {
   --tone: #a8a29e;
   --matrix-active: var(--navy);
@@ -1093,26 +1274,32 @@ button.t-toggle[data-on="true"] {
   transition: border-color var(--duration-fast) var(--ease-smooth-out);
 }
 
+/* Tono «en curso»: azul. */
 .desk-status[data-tone="live"] {
   --tone: var(--navy);
 }
 
+/* Tono «terminado bien»: verde. */
 .desk-status[data-tone="ok"] {
   --tone: #15803d;
 }
 
+/* Tono «neutro»: gris. */
 .desk-status[data-tone="muted"] {
   --tone: #78716c;
 }
 
+/* Tono «necesita atención»: naranja. */
 .desk-status[data-tone="warn"] {
   --tone: #c2410c;
 }
 
+/* Tono «fallo»: rojo. */
 .desk-status[data-tone="bad"] {
   --tone: #b91c1c;
 }
 
+/* Fila superior del estado: punto, etiqueta y acciones. */
 .desk-status-head {
   display: flex;
   flex-wrap: wrap;
@@ -1120,6 +1307,7 @@ button.t-toggle[data-on="true"] {
   gap: 8px 10px;
 }
 
+/* Punto de color del estado con un halo hecho con color-mix(). */
 .status-dot {
   width: 10px;
   height: 10px;
@@ -1132,10 +1320,12 @@ button.t-toggle[data-on="true"] {
     box-shadow var(--duration-fast) var(--ease-smooth-out);
 }
 
+/* Etiqueta del estado en negrita. */
 .desk-status-label {
   font-weight: 600;
 }
 
+/* Acciones del estado (cancelar, recuperar) empujadas a la derecha. */
 .desk-status-actions {
   display: flex;
   flex-wrap: wrap;
@@ -1143,12 +1333,14 @@ button.t-toggle[data-on="true"] {
   margin-left: auto;
 }
 
+/* Explicación del estado. */
 .desk-status-detail {
   margin: 0;
   color: var(--ink-soft);
   font-size: 0.9rem;
 }
 
+/* Registro de eventos del trabajo en fuente monoespaciada, como una consola. */
 .desk-log {
   display: grid;
   gap: 4px;
@@ -1161,36 +1353,43 @@ button.t-toggle[data-on="true"] {
   list-style: none;
 }
 
+/* Cada evento: número y texto; las palabras largas se parten. */
 .desk-log li {
   display: flex;
   gap: 10px;
   overflow-wrap: anywhere;
 }
 
+/* Número de secuencia alineado a la derecha. */
 .desk-log-seq {
   min-width: 2ch;
   color: #a8a29e;
   text-align: right;
 }
 
+/* Campo de error de la mesa (componente de sacudida de transitions.dev). */
 .research-desk .t-input.error {
   margin: 0;
   border: 1px solid #fecaca;
 }
 
+/* Con el error activo el borde se pone rojo. */
 .research-desk .t-input.error.is-error {
   border-color: #b91c1c;
 }
 
+/* Mensaje del error sin margen. */
 .research-desk .t-error-msg {
   margin: 0;
 }
 
+/* Bloque del presupuesto. */
 .desk-budget {
   display: grid;
   gap: 8px;
 }
 
+/* Rejilla de tres casillas: reservado, consumido y desconocido. */
 .budget-grid {
   display: grid;
   grid-template-columns: repeat(3, minmax(0, 1fr));
@@ -1198,6 +1397,7 @@ button.t-toggle[data-on="true"] {
   margin: 0;
 }
 
+/* Casilla del presupuesto. */
 .budget-tile {
   min-width: 0;
   padding: 10px 12px;
@@ -1206,6 +1406,7 @@ button.t-toggle[data-on="true"] {
   background: var(--sheet);
 }
 
+/* Rótulo de la casilla en versalitas. */
 .budget-tile dt {
   color: #57534e;
   font-size: 0.72rem;
@@ -1214,6 +1415,7 @@ button.t-toggle[data-on="true"] {
   text-transform: uppercase;
 }
 
+/* Valor de la casilla con cifras alineadas. */
 .budget-tile dd {
   margin: 2px 0 0;
   color: var(--ink);
@@ -1222,10 +1424,12 @@ button.t-toggle[data-on="true"] {
   overflow-wrap: anywhere;
 }
 
+/* Zona del resultado: altura mínima para que no salte al cargar. */
 .desk-result {
   min-height: 160px;
 }
 
+/* Esqueleto del resultado mientras corre el trabajo. */
 .desk-result-skel {
   height: 100%;
   padding: 20px;
@@ -1234,6 +1438,7 @@ button.t-toggle[data-on="true"] {
   background: var(--sheet);
 }
 
+/* Tarjeta del resultado final. */
 .desk-result-body {
   display: grid;
   gap: 16px;
@@ -1244,10 +1449,12 @@ button.t-toggle[data-on="true"] {
   box-shadow: 0 12px 32px -18px rgb(28 25 23 / 18%);
 }
 
+/* Resumen sin margen dentro del resultado. */
 .desk-result-body .trace-summary {
   margin: 0;
 }
 
+/* Cada bloque del resultado (pregunta, informe, fuentes) en su propia caja. */
 .desk-result-body > .research-block {
   padding: 12px 14px;
   border: 1px solid var(--wash);
@@ -1255,29 +1462,35 @@ button.t-toggle[data-on="true"] {
   background: #fff;
 }
 
+/* Informe con serifa y más interlineado para leerlo cómodo. */
 .desk-report {
   font-family: var(--font-serif);
   font-size: 1.05rem;
   line-height: 1.6;
 }
 
+/* Párrafos y listas del informe. */
 .desk-report .course-answer p,
 .desk-report .course-answer ul {
   margin: 0 0 0.85em;
 }
 
+/* Sangría de las listas del informe. */
 .desk-report .course-answer ul {
   padding-left: 1.25rem;
 }
 
+/* Negrita del informe. */
 .desk-report .course-answer strong {
   font-weight: 600;
 }
 
+/* Acordeón de la mesa (traza, fuentes…) con línea superior. */
 .desk-acc {
   border-top: 1px solid var(--wash);
 }
 
+/* Cabecera del acordeón: botón a todo el ancho. */
 .desk-acc .t-acc-head {
   display: flex;
   align-items: center;
@@ -1293,14 +1506,17 @@ button.t-toggle[data-on="true"] {
   text-align: left;
 }
 
+/* Título del acordeón con transición de color. */
 .desk-acc-title {
   transition: color var(--duration-quick) var(--ease-out);
 }
 
+/* Hover: el título se pinta en azul. */
 .desk-acc .t-acc-head:hover .desk-acc-title {
   color: var(--navy);
 }
 
+/* Contador redondo junto al título (número de fuentes, pasos…). */
 .desk-count {
   display: inline-grid;
   place-items: center;
@@ -1314,11 +1530,13 @@ button.t-toggle[data-on="true"] {
   font-variant-numeric: tabular-nums;
 }
 
+/* Flecha del acordeón a la derecha. */
 .desk-acc .t-acc-chevron {
   margin-left: auto;
   color: var(--ink-soft);
 }
 
+/* Dibujo de la flecha (SVG de trazo). */
 .desk-acc .t-acc-chevron svg {
   width: 16px;
   height: 16px;
@@ -1329,34 +1547,42 @@ button.t-toggle[data-on="true"] {
   stroke-linejoin: round;
 }
 
+/* Contenido del acordeón. */
 .desk-acc-body {
   padding: 4px 0 12px;
 }
 
+/* En la mesa, la cabecera de la cita no es fija (el acordeón ya agrupa). */
 .research-desk .citation-head {
   position: static;
   background: transparent;
 }
 
+/* Y no lleva degradado. */
 .research-desk .citation-head::after {
   content: none;
 }
 
+/* Móvil (560 px o menos): menos relleno y el presupuesto en una sola columna. */
 @media (max-width: 560px) {
+  /* Tarjetas con menos relleno. */
   .desk-card,
   .desk-result-body {
     padding: 16px;
   }
 
+  /* Presupuesto en una columna. */
   .budget-grid {
     grid-template-columns: minmax(0, 1fr);
   }
 
+  /* Acciones del estado debajo, alineadas a la izquierda. */
   .desk-status-actions {
     margin-left: 0;
   }
 }
 
+/* Aviso destacado de la investigación (por ejemplo, modo demo). */
 .research-banner {
   margin: 0;
   padding: 10px 12px;
@@ -1367,6 +1593,7 @@ button.t-toggle[data-on="true"] {
   font-size: 0.88rem;
 }
 
+/* Subtítulo de cada bloque de la investigación. */
 .research-block h3 {
   margin: 0 0 6px;
   color: var(--ink-soft);
@@ -1375,14 +1602,17 @@ button.t-toggle[data-on="true"] {
   font-weight: 600;
 }
 
+/* Párrafos de cada bloque. */
 .research-block p {
   margin: 0 0 6px;
 }
 
+/* La pregunta conserva sus saltos de línea. */
 .research-question {
   white-space: pre-line;
 }
 
+/* Metadatos de una fuente web (dominio, enlace). */
 .research-meta {
   margin: 0;
   color: var(--ink-soft);
@@ -1390,16 +1620,19 @@ button.t-toggle[data-on="true"] {
   overflow-wrap: anywhere;
 }
 
+/* Enlace de la fuente en azul. */
 .research-meta a {
   color: var(--navy);
 }
 
+/* Botón desplegable de los extractos de una fuente. */
 .research-excerpts summary {
   cursor: pointer;
   color: var(--ink-soft);
   font-size: 0.84rem;
 }
 
+/* Lista de extractos citados. */
 .research-excerpts ul {
   display: grid;
   gap: 6px;

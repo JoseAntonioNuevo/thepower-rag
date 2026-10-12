@@ -19,12 +19,14 @@ const HASH = `sha256:${"a".repeat(64)}`;
 function web(text: string, subquestionIds: string[], sourceId = "web-check"): AcceptedEvidence {
   // Página de prueba.
   const item: WebEvidence = {
+    // Página web admitida con URL, dominio y título fijos.
     kind: "web",
     sourceId,
     requestedUrl: "https://docs.langchain.com/langgraph/persistence",
     url: "https://docs.langchain.com/langgraph/persistence",
     domain: "docs.langchain.com",
     title: "Persistencia",
+    // Texto que pasa el test, fechas y hash fijo.
     text,
     retrievedAt: "2026-10-10T00:00:00.000Z",
     publishedAt: null,
@@ -72,6 +74,7 @@ function technicalOnly<T>(items: readonly T[]): T {
 function coverage(q1: CoverageEntry["status"] = "uncovered"): CoverageEntry[] {
   // Lista de dos coberturas.
   return [
+    // q1: dato interno; por defecto sin cubrir y con su laguna.
     {
       subquestionId: "q1",
       status: q1,
@@ -79,6 +82,7 @@ function coverage(q1: CoverageEntry["status"] = "uncovered"): CoverageEntry[] {
       followUp: false,
       sourceIds: [],
     },
+    // q2: técnica, cubierta por la página web.
     {
       subquestionId: "q2",
       status: "covered",
@@ -133,11 +137,14 @@ describe("comprobación de afirmaciones", () => {
     const accepted = web(page, ["q2"]);
     // Informe con una respuesta inventada y un hallazgo válido.
     const report = verifyReport(
+      // Borrador del modelo.
       {
+        // Respuesta que inventa una nota mínima y cita la página técnica.
         answer: {
           text: "El curso exige nota mínima 9 para el ejercicio con LangGraph checkpointer.",
           sourceIds: ["web-check"],
         },
+        // Hallazgo válido: reproduce la página.
         findings: [
           {
             subquestionId: "q2",
@@ -145,6 +152,7 @@ describe("comprobación de afirmaciones", () => {
             sourceIds: ["web-check"],
           },
         ],
+        // Comprobación que repite la invención.
         checks: [
           {
             text: "El curso exige nota mínima 9 para aprobar el ejercicio.",
@@ -153,6 +161,7 @@ describe("comprobación de afirmaciones", () => {
         ],
         unresolved: [],
       },
+      // Contexto de la verificación: subpreguntas, cobertura, causas, evidencia y contradicciones.
       {
         subquestions: subs,
         coverage: coverage(),
@@ -187,7 +196,9 @@ describe("comprobación de afirmaciones", () => {
     );
     // Informe con la contradicción registrada.
     const report = verifyReport(
+      // Borrador que afirma algo que las fuentes contradicen.
       {
+        // Respuesta y hallazgo con la misma afirmación.
         answer: {
           text: "La dimensión del índice no se puede cambiar después de crearlo.",
           sourceIds: ["web-check"],
@@ -199,9 +210,11 @@ describe("comprobación de afirmaciones", () => {
             sourceIds: ["web-check"],
           },
         ],
+        // Sin comprobaciones ni pendientes.
         checks: [],
         unresolved: [],
       },
+      // Contexto con la contradicción registrada.
       {
         subquestions: [technicalOnly(subs)],
         coverage: [technicalOnly(coverage())],
@@ -238,12 +251,14 @@ describe("comprobación de afirmaciones", () => {
   function gradeReport(answer: string, checks: { text: string; sourceIds: string[] }[] = []) {
     // Verifica con la página técnica.
     return verifyReport(
+      // Borrador: respuesta a probar, hallazgo técnico y comprobaciones opcionales.
       {
         answer: { text: answer, sourceIds: ["web-check"] },
         findings: [finding],
         checks,
         unresolved: [],
       },
+      // Contexto con la página técnica admitida.
       {
         subquestions: subs,
         coverage: coverage(),
@@ -368,14 +383,18 @@ describe("comprobación de afirmaciones", () => {
     };
     // Verifica con ese extracto.
     return verifyReport(
+      // Borrador con la respuesta y el hallazgo a probar.
       {
         answer: { text: answer, sourceIds: ["web-dim"] },
         findings: [{ subquestionId: "q1", text: findingText, sourceIds: ["web-dim"] }],
         checks: [],
         unresolved: [],
       },
+      // Contexto: una subpregunta técnica cubierta por «web-dim».
       {
+        // Una subpregunta técnica.
         subquestions: [technicalSub],
+        // Cubierta por la fuente.
         coverage: [
           {
             subquestionId: "q1",
@@ -385,6 +404,7 @@ describe("comprobación de afirmaciones", () => {
             sourceIds: ["web-dim"],
           },
         ],
+        // Causa, evidencia admitida y sin contradicciones.
         causes: { q1: "evidence" },
         accepted: [web(source, ["q1"], "web-dim")],
         contradictions: [],
@@ -433,14 +453,18 @@ describe("comprobación de afirmaciones", () => {
     };
     // Verifica la frase intercambiada.
     const report = verifyReport(
+      // Borrador con las cifras intercambiadas.
       {
         answer: { text: swapped, sourceIds: ["web-hours"] },
         findings: [{ subquestionId: "q1", text: swapped, sourceIds: ["web-hours"] }],
         checks: [],
         unresolved: [],
       },
+      // Contexto con la fuente original de esas cifras.
       {
+        // Una subpregunta técnica.
         subquestions: [technicalSub],
+        // Cubierta por la fuente de las cifras.
         coverage: [
           {
             subquestionId: "q1",
@@ -450,6 +474,7 @@ describe("comprobación de afirmaciones", () => {
             sourceIds: ["web-hours"],
           },
         ],
+        // Causa, evidencia y sin contradicciones.
         causes: { q1: "evidence" },
         accepted: [web(source, ["q1"], "web-hours")],
         contradictions: [],
@@ -530,14 +555,18 @@ describe("comprobación de afirmaciones", () => {
     const accepted = web(negative, ["q1"]);
     // Informe con la afirmativa como respuesta.
     const report = verifyReport(
+      // Borrador: respuesta positiva y hallazgo negativo de la misma frase.
       {
         answer: { text: positive, sourceIds: ["web-check"] },
         findings: [{ subquestionId: "q1", text: negative, sourceIds: ["web-check"] }],
         checks: [],
         unresolved: [],
       },
+      // Contexto con la página admitida.
       {
+        // Una subpregunta técnica.
         subquestions: [technicalSub],
+        // Cubierta por la página.
         coverage: [
           {
             subquestionId: "q1",
@@ -547,6 +576,7 @@ describe("comprobación de afirmaciones", () => {
             sourceIds: ["web-check"],
           },
         ],
+        // Causa, evidencia y sin contradicciones.
         causes: { q1: "evidence" },
         accepted: [accepted],
         contradictions: [],

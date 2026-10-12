@@ -1,21 +1,37 @@
+# Qué no entra en Git. Regla general: nada generado, nada de estado local y ningún secreto.
+
+# Dependencias instaladas por Bun.
 node_modules/
+# Builds de Vite y del Worker.
 dist/
+# Estado local de Wrangler (D1, R2 y Workflows emulados).
 .wrangler/
+# Secretos locales del Worker. Solo se versiona la plantilla .dev.vars.example.
 .dev.vars*
 !.dev.vars.example
+# Secretos de la raíz. Solo se versiona la plantilla .env.example.
 .env
 .env.*
 !.env.example
+# Cachés de TypeScript y de Vite.
 *.tsbuildinfo
 .vite/
+# Informes de cobertura y registros.
 coverage/
 *.log
+# Archivos del sistema de macOS.
 .DS_Store
+# Caché de Vite+.
 .vp/
+# Resultados de comparaciones en vivo (pueden contener respuestas reservadas).
 resultados/
+# Autorización local de la activación: permisos y topes de gasto de esta máquina.
 .activation.json
+# Recibos de las ejecuciones de activación (estado local, no código).
 activation-receipts/
+# Índice local de búsqueda de tgrep.
 .tgrep/
+# Estado local de herramientas de proyecto.
 .projects/cache/
 .projects/vault/
 .projects/state.test.json

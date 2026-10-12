@@ -109,10 +109,12 @@ function demoEnv(
 ): WorkerEnv {
   // Variables de demo y tarifas.
   return {
+    // Demo: secreto local del propietario y bindings de la prueba.
     APP_MODE: "demo",
     RESEARCH_OWNER_SECRET: "local-loopback-research-owner",
     RESEARCH_DB: database,
     RESEARCH_WORKFLOW: workflow,
+    // Presupuesto, tope por trabajo y tarifas del perfil de investigación.
     RESEARCH_BUDGET_USD: "1.000000",
     RESEARCH_JOB_LIMIT_USD: "0.250000",
     RESEARCH_INPUT_USD_PER_MILLION: "0.100000",
@@ -129,16 +131,20 @@ function realEnv(
 ): WorkerEnv {
   // Demo más variables reales.
   return {
+    // Parte de la demo y la convierte en real.
     ...demoEnv(database, workflow),
     APP_MODE: "real",
+    // Protección pública: origen, presupuesto, Turnstile y limitadores que siempre aceptan.
     PUBLIC_ORIGIN: publicOrigin,
     PUBLIC_BUDGET_USD: "1",
     TURNSTILE_SITE_KEY: "synthetic-site-key",
     TURNSTILE_SECRET_KEY: turnstileSecret,
     CHAT_IP_LIMITER: { limit: async () => ({ success: true }) },
     CHAT_SESSION_LIMITER: { limit: async () => ({ success: true }) },
+    // Generación con clave de prueba.
     ANTHROPIC_API_KEY: "local-test-key",
     MODEL_ID: "example/generator",
+    // RAG real configurado con bindings vacíos.
     EMBEDDING_MODEL: "example/embed",
     EMBEDDING_DIMENSIONS: "1024",
     CORPUS_VERSION: "test-corpus",
@@ -149,6 +155,7 @@ function realEnv(
     VECTORIZE: {},
     DB: {},
     CORPUS: {},
+    // Investigación real: modelo, buscador, autorización y precio del crédito.
     RESEARCH_MODEL_ID: "example/research",
     FIRECRAWL_API_KEY: "local-firecrawl",
     RESEARCH_SPEND_AUTHORIZATION: RESEARCH_SPEND_TOKEN,
@@ -297,12 +304,15 @@ describe("HTTP durable de investigación", () => {
 
     // Pregunta de seguimiento con otra clave.
     const follow = await send(
+      // Envío a la misma conversación.
       env,
       `${demoOrigin}/api/research/conversations/${conversation.id}/jobs`,
       {
+        // POST con cookie y origen de la demo.
         method: "POST",
         headers: { "content-type": "application/json", cookie, origin: demoOrigin },
         body: JSON.stringify({
+          // Clave nueva y pregunta que depende de la anterior («ese índice»).
           idempotencyKey: "idem-http-2",
           question: "¿y ese índice?",
           scenarioId: "sufficient-first-round",
@@ -416,6 +426,7 @@ describe("HTTP durable de investigación", () => {
     });
     // Dos envíos a la vez.
     const [left, right] = await Promise.all([
+      // Dos envíos idénticos a la misma conversación al mismo tiempo.
       send(env, `${demoOrigin}/api/research/conversations/${conversation.id}/jobs`, {
         method: "POST",
         headers: { "content-type": "application/json", cookie, origin: demoOrigin },
@@ -478,11 +489,13 @@ describe("HTTP durable de investigación", () => {
     const conversation = (await created.json()) as { id: string };
     // Trabajo con caída tras el plan.
     const submitted = await send(
+      // Envío del guion que simula una caída tras el plan.
       env,
       `${demoOrigin}/api/research/conversations/${conversation.id}/jobs`,
       {
         method: "POST",
         headers: { "content-type": "application/json", cookie, origin: demoOrigin },
+        // Clave, pregunta de demo y guion «crash-after-plan».
         body: JSON.stringify({
           idempotencyKey: "idem-http-crash",
           question: DEMO_RESEARCH_QUESTION,
@@ -781,10 +794,12 @@ describe("HTTP durable de investigación", () => {
     const conversation = (await created.json()) as { id: string };
     // Trabajo.
     const submitted = await send(
+      // Envío por el origen público: pasa por Turnstile y límites.
       env,
       `${publicOrigin}/api/research/conversations/${conversation.id}/jobs`,
       {
         method: "POST",
+        // Cabeceras: JSON, cookie, origen, IP del cliente y token de Turnstile.
         headers: {
           "content-type": "application/json",
           cookie,
@@ -792,6 +807,7 @@ describe("HTTP durable de investigación", () => {
           "cf-connecting-ip": ip,
           "x-turnstile-token": "synthetic-token",
         },
+        // Clave y pregunta.
         body: JSON.stringify({
           idempotencyKey: "idem-public-1",
           question: DEMO_RESEARCH_QUESTION,

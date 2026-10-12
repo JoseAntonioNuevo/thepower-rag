@@ -31,6 +31,7 @@ const runner = createWranglerRunner(
 async function budget() {
   // Consulta con wrangler.
   const run = await runner.run(
+    // d1 execute en remoto con el config del build de producción.
     [
       "d1",
       "execute",
@@ -38,6 +39,7 @@ async function budget() {
       "--remote",
       "--config",
       path.join(root, "apps/web/dist/thepower_rag/wrangler.json"),
+      // Salida JSON y lectura del contador del presupuesto.
       "--json",
       "--command",
       "SELECT reserved_usd,turns FROM public_budget WHERE id='course-2026'",

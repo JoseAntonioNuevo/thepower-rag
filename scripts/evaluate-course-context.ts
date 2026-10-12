@@ -86,17 +86,21 @@ const runner = createWranglerRunner(
 const sql = `SELECT chunks.chunk_id AS chunkId,chunks.document_id AS documentId,documents.title AS title,chunks.section AS section,chunks.text AS text,documents.audience AS audience,chunks.version_id AS corpusVersion FROM chunks JOIN documents ON documents.version_id=chunks.version_id AND documents.document_id=chunks.document_id WHERE chunks.version_id='c3a59a406888b' ORDER BY documents.document_id,chunks.ordinal`;
 // Lee el catálogo real.
 const read = await runner.run(
+  // d1 execute contra la base del curso, en remoto.
   [
     "d1",
     "execute",
     "thepower-ai-course-rag-d1",
     "--remote",
+    // Config generado por el build de producción.
     "--config",
     path.join(root, "apps/web/dist/thepower_rag/wrangler.json"),
+    // Salida JSON y la consulta.
     "--json",
     "--command",
     sql,
   ],
+  // Entorno mínimo con la cuenta del curso.
   scopedWranglerEnv(process.env, COURSE_DESTINATION.accountId),
 );
 // Fallo.
@@ -130,6 +134,7 @@ for (const group of ["program", "L/X", "M/J"] as const) {
 }
 // Casos de regresión de desarrollo, no el conjunto reservado de comparación.
 const cases: [string, Audience, string, string][] = [
+  // Cada caso: id, grupo, pregunta y hecho esperado para la revisión manual.
   [
     "days-lx",
     "L/X",
@@ -142,6 +147,7 @@ const cases: [string, Audience, string, string][] = [
     "¿Qué días de la semana tenemos clases y cuál es el horario?",
     "martes y jueves, 18:30–20:00, calendario M/J",
   ],
+  // Totales y temario.
   [
     "count",
     "program",
@@ -154,6 +160,7 @@ const cases: [string, Audience, string, string][] = [
     "Dame la lista completa de sesiones del curso, con número y tema, sin saltarte ninguna.",
     "lista S1–S20 con sus títulos",
   ],
+  // Contenido de sesiones y un seguimiento que depende de la anterior.
   [
     "langchain",
     "program",
@@ -166,6 +173,7 @@ const cases: [string, Audience, string, string][] = [
     "¿Y qué práctica se hace en esa siguiente sesión?",
     "asistente de soporte por etapas, memoria, herramientas y límites de S5",
   ],
+  // Profesores, fechas de un mes y próxima sesión.
   [
     "teachers",
     "M/J",
@@ -184,6 +192,7 @@ const cases: [string, Audience, string, string][] = [
     "Según la fecha actual, ¿cuál es la próxima sesión y quién la imparte?",
     "2026-10-05 S5 José Antonio",
   ],
+  // Datos que no constan: deben decirse como ausentes.
   [
     "missing-fee",
     "program",
@@ -196,6 +205,7 @@ const cases: [string, Audience, string, string][] = [
     "¿Dónde está detallada la rúbrica del primer ejercicio y cuál es su fecha de entrega?",
     "rúbrica y fecha no constan; ficha S1 solo título",
   ],
+  // Pregunta conceptual que no debe pedir grupo.
   [
     "conceptual",
     "program",
@@ -276,12 +286,15 @@ for (const [id, group, question, expected] of cases) {
   writeFileSync(
     file,
     JSON.stringify(
+      // Fecha y tipo de prueba (texto del recibo en inglés, como se guardó).
       {
         at: new Date().toISOString(),
         kind: "directed development regression; local SDK generation using verified production D1 context, not public endpoint and not independent benchmark",
+        // Modelo, modo y procedencia.
         model: auth.modelId,
         mode: "priority",
         provenance: "remote D1 and Claude API",
+        // Resultados y estado de la sesión de gasto.
         results,
         allowance: ledger.snapshot(),
       },

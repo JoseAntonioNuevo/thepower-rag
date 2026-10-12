@@ -30,11 +30,13 @@ export function localEmulatedLanguageModel(input: {
       input.note({ id: "local-emulated-generator", remote: false, binding: null });
       // Stream simulado: inicio, texto, fin y uso desconocido.
       return {
+        // Mismo protocolo de stream que un modelo real.
         stream: simulateReadableStream({
           chunks: [
             { type: "text-start", id: "text-1" },
             { type: "text-delta", id: "text-1", delta: "Respuesta de verificación local." },
             { type: "text-end", id: "text-1" },
+            // Fin con consumo desconocido: no se inventan tokens.
             {
               type: "finish",
               finishReason: { unified: "stop", raw: undefined },

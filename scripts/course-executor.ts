@@ -149,12 +149,15 @@ export function createCourseExecutor(options: ExecutorOptions) {
       }
       // Sesión correcta.
       return {
+        // ok: la cuenta de la sesión de Wrangler es la del curso.
         ok: true,
         summary: "sesión verificada para la cuenta del curso",
+        // Líneas que verá el usuario: correo y cuántas cuentas tiene la sesión.
         lines: [
           `correo: ${parsed.identity.email ?? "no expuesto"}`,
           `cuentas en la sesión: ${String(parsed.identity.accountCount)}`,
         ],
+        // Recibo que se guarda en activation-receipts: identidad leída, sin secretos.
         receipt: {
           accountId: parsed.identity.accountId,
           accountName: parsed.identity.accountName,
@@ -438,14 +441,17 @@ export function createCourseExecutor(options: ExecutorOptions) {
     async probeEmbeddings(auth: ActivationAuth): Promise<CommandOutcome> {
       // Sonda.
       return executeProbe({
+        // Autorización, plano de datos (puente) y sesión de gasto (la persistida o la de la sonda).
         auth,
         plane: options.plane ?? null,
         allowance: options.allowance ?? probeAllowance(auth),
+        // Rutas de recibos y de la caché de embeddings, con la fecha de la ejecución.
         paths: options.paths ?? {
           receiptDir: path.join(options.cwd, "activation-receipts"),
           cacheDir: path.join(options.cwd, "activation-receipts", "cache"),
           now: new Date().toISOString(),
         },
+        // Cuenta de destino comprobada.
         accountId: auth.accountId ?? "",
       });
     },
@@ -453,10 +459,13 @@ export function createCourseExecutor(options: ExecutorOptions) {
     async ingest(auth: ActivationAuth): Promise<CommandOutcome> {
       // Ingesta.
       return executeIngest({
+        // Autorización y corpus preparado (inyectado o leído de disco).
         auth,
         corpus: options.corpus ?? loadPrepared(options.corpusPath),
+        // Plano y sesión de gasto.
         plane: options.plane ?? null,
         allowance: options.allowance ?? probeAllowance(auth),
+        // Recibos y caché: la caché evita volver a pagar embeddings ya calculados.
         paths: options.paths ?? {
           receiptDir: path.join(options.cwd, "activation-receipts"),
           cacheDir: path.join(options.cwd, "activation-receipts", "cache"),
@@ -470,6 +479,7 @@ export function createCourseExecutor(options: ExecutorOptions) {
       if (options.plane) {
         // Ingesta sin reembeber.
         return executeIngest({
+          // Misma ingesta, pero reanudando el perfil indicado: lo ya escrito no se repite.
           auth,
           corpus: options.corpus ?? loadPrepared(options.corpusPath),
           plane: options.plane,
@@ -479,6 +489,7 @@ export function createCourseExecutor(options: ExecutorOptions) {
             cacheDir: path.join(options.cwd, "activation-receipts", "cache"),
             now: new Date().toISOString(),
           },
+          // Perfil que se reanuda.
           resumeProfileId: profileId,
         });
       }
@@ -518,13 +529,16 @@ export function createCourseExecutor(options: ExecutorOptions) {
       const missing = VECTORIZE_METADATA_INDEXES.filter((name) => !names.names.includes(name));
       // Lectura administrativa sin escribir.
       return {
+        // Correcto solo si están todos los índices de metadatos y la métrica es cosine.
         ok: missing.length === 0 && parsed.index.metric === "cosine",
         summary: "lectura administrativa del índice, sin upsert",
+        // Lo observado con «wrangler vectorize get»: dimensión, métrica y metadatos que faltan.
         lines: [
           `dimensión observada en get: ${String(parsed.index.dimensions)}`,
           `métrica observada en get: ${parsed.index.metric}`,
           `metadatos ausentes: ${missing.length === 0 ? "ninguno" : missing.join(", ")}`,
         ],
+        // Recibo con lo leído del índice.
         receipt: {
           indexName: parsed.index.name,
           dimensions: parsed.index.dimensions,
@@ -631,6 +645,7 @@ export function semanticIndexName(corpusPath: string, dimensions: number): strin
   }
   // Nombre derivado del perfil.
   return vectorizeIndexName(
+    // El id del perfil se deriva de sus parámetros: BGE-M3, dimensión observada, cosine y troceado.
     indexProfileId({
       family: "workers-ai",
       model: "@cf/baai/bge-m3",
@@ -638,6 +653,7 @@ export function semanticIndexName(corpusPath: string, dimensions: number): strin
       metric: "cosine",
       chunkMaxChars: PREP_CHUNKING.maxChars,
       chunkOverlap: PREP_CHUNKING.overlap,
+      // Revisión desconocida y versión de preparación del corpus.
       providerRevision: null,
       preparationId: corpus.preparationId,
     }),
@@ -735,10 +751,12 @@ async function writeMigrationConfig(
   // Lo escribe.
   await writeFile(
     config,
+    // Configuración mínima de Wrangler para aplicar migraciones: nombre, cuenta y fecha.
     JSON.stringify({
       name: "thepower-rag-activation",
       account_id: accountId,
       compatibility_date: "2026-10-02",
+      // Solo el D1 del curso, con su id real y la carpeta de migraciones.
       d1_databases: [
         {
           binding: "DB",

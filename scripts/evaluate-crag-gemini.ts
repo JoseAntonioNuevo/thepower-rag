@@ -108,48 +108,58 @@ const s16 = find("s16-cloud-aws");
 if (!s5.length || !s6.length || !s16.length) throw new Error("Faltan fragmentos.");
 // Puertos reales sin búsqueda (no se usa).
 const ports = createRealCragPorts({
+  // Señal y alcance de la prueba.
   signal: new AbortController().signal,
   scope,
+  // Embeddings, índice y D1 vacíos: este script no busca.
   embedder: {} as EmbeddingRunner,
   index: {} as VectorIndex,
   database: {} as SqlDatabase,
+  // Evaluador y generador con Claude Haiku 5.5.
   evaluator: createEvaluatorModel({
     apiKey: key,
     modelId: HAIKU_MODEL_ID,
     evaluatorModelId: HAIKU_MODEL_ID,
   }),
   generator: createGenerationModel({ apiKey: key, modelId: HAIKU_MODEL_ID }),
+  // Historial y datos de embeddings que no se usan.
   messages: [{ role: "user", content: "¿Cómo modela LangGraph un agente con estado y nodos?" }],
   embeddingModel: "not-used",
   dimensions: 1024,
+  // Sesión de gasto con tope.
   allowance: ledger,
 });
 // Casos con la decisión esperada.
 const cases = [
+  // S5 sola basta para una pregunta sobre estado y nodos.
   {
     id: "sufficient",
     question: "¿Cómo modela LangGraph un agente con estado y nodos?",
     chunks: s5,
     expected: "sufficient",
   },
+  // S5 sola no cubre la parte de observabilidad: parcial.
   {
     id: "partial",
     question: "Explica LangGraph y cómo instrumentar el agente con Langfuse y LangSmith.",
     chunks: s5,
     expected: "partial",
   },
+  // S5 y S6 juntas sí la cubren.
   {
     id: "combined",
     question: "Explica LangGraph y cómo instrumentar el agente con Langfuse y LangSmith.",
     chunks: [...s5, ...s6],
     expected: "sufficient",
   },
+  // S16 no tiene relación: insuficiente.
   {
     id: "irrelevant",
     question: "¿Cómo modela LangGraph un agente con estado y nodos?",
     chunks: s16,
     expected: "insufficient",
   },
+  // Dato que no consta: insuficiente aunque haya fragmentos.
   {
     id: "unknown",
     question: "¿Qué beca interna de 1991 cubre el programa?",

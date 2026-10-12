@@ -16,18 +16,22 @@ import {
 } from "@thepower-rag/contracts";
 // Núcleo RAG: audiencias, calendario, citas, índice de prueba, recuperación y tipos.
 import {
+  // Audiencias y atajo del calendario semanal.
   allowsAudience,
   isWeeklyScheduleQuestion,
   calendarOverviewId,
   calendarOverviewOutcome,
+  // Citas y embedding léxico de la demo (modelo, dimensión, umbral y función).
   citationsFor,
   FIXTURE_DIMENSIONS,
   FIXTURE_EMBEDDING_MODEL,
   FIXTURE_MIN_SCORE,
   fixtureEmbed,
+  // Umbral, detección de calendario y recuperación básica.
   gateScoredChunks,
   isScheduleQuestion,
   retrieveBasic,
+  // Tipos de CRAG, presupuesto, fragmentos y resultado de la recuperación.
   type CragPorts,
   type AllowanceLedger,
   type IndexedChunk,
@@ -206,23 +210,28 @@ export function createApp(deps: AppDeps = {}) {
     };
     // Cuerpo de la respuesta.
     const body: HealthResponse = {
+      // Nombre, fase, modo de ejecución y runtime.
       app: "thepower-rag",
       phase: "crag",
       execution: assessment.execution,
       runtime: runtimeLabel(),
+      // Estado de cada capacidad: sin RAG, RAG, CRAG e investigación.
       capabilities: assessment.capabilities,
+      // Corpus: en demo, el preparado del bundle; en real, la versión y el perfil configurados.
       corpus: {
         version: demoCorpus ? bundled : configuredVersion,
         contentVersion: sourceKnown ? fixtureContentVersion() : null,
         profileId: demoCorpus ? fixtureProfile().id : (assessment.retrieval?.indexProfile ?? null),
         profileFamily: demoCorpus ? "fixture" : assessment.retrieval ? "workers-ai" : "unknown",
         coverage: sourceKnown ? fixtureCoverage() : unknownCoverage,
+        // Modelo de embeddings y dimensión que usa cada modo.
         embedding: demoCorpus
           ? FIXTURE_EMBEDDING_MODEL
           : (assessment.retrieval?.embeddingModel ?? "sin configurar"),
         dimensions: demoCorpus ? FIXTURE_DIMENSIONS : (assessment.retrieval?.dimensions ?? null),
         remoteRevision: null,
       },
+      // Compatibilidad de dependencias, investigación durable y medios de S12.
       compatibility,
       durableResearch: durableResearchConfigured(context.env),
       media: mediaReadiness(context.env),
@@ -438,23 +447,30 @@ export function createApp(deps: AppDeps = {}) {
         const model = deps.languageModel ?? createGenerationModel(settings, deps.onProviderCall);
         // Generación en streaming sin fuentes ni citas.
         return streamProviderCourseResponse({
+          // Modelo, instrucciones sin RAG e historial completo.
           model,
           system: SIN_RAG_PROMPT.text,
           messages: history,
+          // Metadatos (proveedor, modelo, prompt) y tarifas para el coste mostrado.
           metadata: metadata("provider", settings.modelId, SIN_RAG_PROMPT.id, "complete"),
           costPricing: generationPricing(settings),
+          // Sin RAG no hay fuentes, así que no se validan citas.
           validateCitations: false,
+          // Traza mínima: deja claro que no hubo recuperación.
           trace: {
+            // Pregunta sin reescritura y sin corpus ni embeddings.
             query: question,
             queryRewrite: "pending",
             corpusVersion: null,
             embedding: "ninguno",
             scoreMeaning: "Sin RAG no calcula puntuaciones.",
+            // Sin recuperados; se respondió con generación.
             retrieved: [],
             decision: "answer",
             generation: "called",
             status: "Generación sin recuperación.",
           },
+          // Sin fuentes y con la señal de cancelación.
           sources: [],
           signal,
         });
@@ -476,13 +492,16 @@ export function createApp(deps: AppDeps = {}) {
     if (useFixture && assessment.execution === "demo") {
       // Recuperación básica con el embedding de prueba.
       outcome = retrieveBasic({
+        // Pregunta, grupo y fragmentos del corpus de la demo con su embedding léxico.
         question,
         audience: parsed.data.audience,
         chunks,
         embed,
+        // Umbral y etiqueta del índice de prueba.
         minScore: FIXTURE_MIN_SCORE,
         embeddingLabel: FIXTURE_EMBEDDING_MODEL,
         corpusVersion: chunks[0]?.corpusVersion ?? fixtureCorpusVersion(),
+        // Qué significa la puntuación, para no confundirla con una probabilidad.
         scoreMeaning:
           "Coseno del índice de prueba por tokens. No es una probabilidad ni un embedding de BGE-M3.",
       });
@@ -505,8 +524,10 @@ export function createApp(deps: AppDeps = {}) {
       if (isScheduleQuestion(question) && parsed.data.audience === "program") {
         // Resultado clarify.
         outcome = {
+          // Aclarar: sin evidencia y sin llamar al modelo.
           decision: "clarify",
           evidence: [],
+          // Traza de la aclaración.
           trace: {
             query: question,
             queryRewrite: "pending",
@@ -536,6 +557,7 @@ export function createApp(deps: AppDeps = {}) {
         }
         // Recuperación básica con el índice inyectado.
         outcome = retrieveBasic({
+          // Recuperación con el índice que inyecta la prueba y su umbral configurado.
           question,
           audience: parsed.data.audience,
           chunks,
@@ -583,8 +605,10 @@ export function createApp(deps: AppDeps = {}) {
       if (isScheduleQuestion(question) && parsed.data.audience === "program") {
         // Resultado clarify.
         outcome = {
+          // Aclarar sin buscar en Vectorize: falta el grupo para una pregunta de horario.
           decision: "clarify",
           evidence: [],
+          // Traza de la aclaración con los datos del índice real.
           trace: {
             query: question,
             queryRewrite: "pending",
@@ -730,16 +754,19 @@ export function createApp(deps: AppDeps = {}) {
       const origin = assessment.execution === "demo" ? "offline-fixture" : "pipeline";
       // Respuesta fija.
       return streamFixedCourseResponse({
+        // Metadatos: origen, sin modelo, id del prompt de control y resultado.
         metadata: metadata(
           origin,
           null,
           "rag-control-v1",
           outcome.decision === "clarify" ? "clarified" : "refused",
         ),
+        // Traza, fuentes (vacías) y texto de rechazo o aclaración.
         trace: outcome.trace,
         sources,
         text,
         signal,
+        // El texto es nuestro, no del modelo: no se validan citas.
         validateCitations: false,
       });
     }
@@ -748,13 +775,16 @@ export function createApp(deps: AppDeps = {}) {
     if (assessment.execution === "demo") {
       // Respuesta fija con citas validadas.
       return streamFixedCourseResponse({
+        // Respuesta plantilla con citas reales a la evidencia recuperada.
         metadata: metadata("offline-fixture", null, "rag-fixture-v1", "complete"),
         validateCitations: true,
+        // La traza deja claro que no hubo generación.
         trace: {
           ...outcome.trace,
           generation: "skipped",
           status: "Respuesta plantilla de la canalización de prueba. No hay llamada a un modelo.",
         },
+        // Fuentes, texto de plantilla y señal de cancelación.
         sources,
         text: fixtureAnswer(outcome.evidence),
         signal,
@@ -777,24 +807,31 @@ export function createApp(deps: AppDeps = {}) {
       const model = deps.languageModel ?? createGenerationModel(settings, deps.onProviderCall);
       // Generación con la evidencia en el sistema, citas validadas y coste.
       return streamProviderCourseResponse({
+        // Modelo e instrucciones: contexto completo del grupo o solo los fragmentos recuperados.
         model,
         system:
           context.env.RAG_CONTEXT_MODE === "complete"
             ? completeRagSystem(outcome.evidence, parsed.data.audience)
             : ragSystem(outcome.evidence),
+        // Historial de la conversación.
         messages: history,
+        // Metadatos con el id del prompt usado.
         metadata: metadata(
           "provider",
           settings.modelId,
           context.env.RAG_CONTEXT_MODE === "complete" ? COMPLETE_RAG_PROMPT.id : RAG_PROMPT.id,
           "complete",
         ),
+        // Traza y fuentes de la recuperación.
         trace: outcome.trace,
         sources,
         signal,
+        // Se validan las citas [cite:id]. En modo completo solo se muestran las fuentes citadas.
         validateCitations: true,
         onlyCitedSources: context.env.RAG_CONTEXT_MODE === "complete",
+        // El modo completo admite una respuesta más larga (1200 tokens).
         maxOutputTokens: context.env.RAG_CONTEXT_MODE === "complete" ? 1200 : undefined,
+        // Tarifas para el coste estimado.
         costPricing: generationPricing(settings),
       });
     } catch {

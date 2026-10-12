@@ -81,15 +81,18 @@ function counted(ports: ResearchPorts): { ports: ResearchPorts; calls: Calls } {
   const calls: Calls = { model: [], search: 0, read: [], course: 0, tool: 0 };
   // Puertos que registran cada llamada y delegan.
   return {
+    // Registro de llamadas por tipo.
     calls,
     ports: {
       ...ports,
+      // Cada método anota la llamada y delega en el puerto original.
       model: {
         plan: (i, c) => (calls.model.push("plan"), ports.model.plan(i, c)),
         assess: (i, c) => (calls.model.push("assess"), ports.model.assess(i, c)),
         followUp: (i, c) => (calls.model.push("followUp"), ports.model.followUp(i, c)),
         synthesize: (i, c) => (calls.model.push("synthesize"), ports.model.synthesize(i, c)),
       },
+      // Búsqueda, lectura, curso y herramienta, con el mismo patrón.
       search: { search: (i, c) => ((calls.search += 1), ports.search.search(i, c)) },
       reader: { read: (i, c) => (calls.read.push(i.url), ports.reader.read(i, c)) },
       course: { retrieve: (i, c) => ((calls.course += 1), ports.course.retrieve(i, c)) },
@@ -410,10 +413,12 @@ describe("grafo de investigación con adaptadores de prueba", () => {
           const web = input.evidence.find((item) => item.kind === "web");
           // Sustituye la respuesta por una inventada.
           return base.ok
-            ? {
+            ? // Copia el resultado correcto…
+              {
                 ...base,
                 value: {
                   ...(base.value as Record<string, unknown>),
+                  // …pero cambia la respuesta por una afirmación inventada que cita la página web.
                   answer: {
                     text: "El curso exige nota mínima 9 para el ejercicio con LangGraph checkpointer.",
                     sourceIds: web === undefined ? [] : [web.sourceId],
@@ -627,6 +632,7 @@ describe("grafo de investigación con adaptadores de prueba", () => {
               resolved = true;
               // Resuelve tarde.
               resolve({
+                // Plan que llega después del plazo: el grafo no debe aceptarlo.
                 ok: true,
                 value: {
                   route: "clarify",
@@ -635,6 +641,7 @@ describe("grafo de investigación con adaptadores de prueba", () => {
                   subquestions: [],
                   tool: null,
                 },
+                // Con un consumo informado de 1 USD.
                 consumption: { kind: "reported", usd: 1, credits: null },
               });
             }, 220);

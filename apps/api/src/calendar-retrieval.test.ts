@@ -56,11 +56,13 @@ function setup(group: "L/X" | "M/J", badScope = false) {
       prompt = JSON.stringify(options);
       // Stream de respuesta.
       return {
+        // Stream simulado: el modelo repite el texto del calendario con su cita.
         stream: simulateReadableStream({
           chunks: [
             { type: "text-start", id: "a" },
             { type: "text-delta", id: "a", delta: `${row.text} [cite:${id}]` },
             { type: "text-end", id: "a" },
+            // Fin con consumo de 10 tokens de entrada y 10 de salida.
             {
               type: "finish",
               finishReason: { unified: "stop", raw: undefined },
@@ -106,15 +108,18 @@ function setup(group: "L/X" | "M/J", badScope = false) {
   };
   // Entorno real.
   const env: WorkerEnv = {
+    // Modo real con un modelo de prueba.
     APP_MODE: "real",
     ANTHROPIC_API_KEY: "synthetic-key",
     MODEL_ID: "example/model",
+    // Ajustes del índice; el umbral 0,99 haría fallar la búsqueda vectorial a propósito.
     EMBEDDING_MODEL: "@cf/baai/bge-m3",
     EMBEDDING_DIMENSIONS: "1024",
     CORPUS_VERSION: version,
     INDEX_PROFILE: profile.id,
     VECTOR_METRIC: "cosine",
     MIN_RETRIEVAL_SCORE: "0.99",
+    // Bindings simulados: embeddings, Vectorize y D1.
     AI: { run: embed },
     VECTORIZE: { query },
     DB: db,
@@ -135,11 +140,13 @@ function setup(group: "L/X" | "M/J", badScope = false) {
 async function post(group: "L/X" | "M/J" | "program", state: ReturnType<typeof setup>) {
   // Petición de RAG.
   const response = await state.app.request(
+    // Petición de RAG con la pregunta exacta del caso real.
     "/api/chat",
     {
       method: "POST",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({
+        // Modo, grupo y un único mensaje del usuario.
         mode: "rag",
         audience: group,
         messages: [

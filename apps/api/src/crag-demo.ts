@@ -6,12 +6,15 @@
 import { DEMO_CRAG_SCENARIOS, type DemoScenarioId } from "@thepower-rag/contracts";
 // Utilidades de CRAG y del embedding de la demo.
 import {
+  // Coseno, topes del grafo y embedding léxico de la demo.
   cosine,
   CRAG_BOUNDS,
   FIXTURE_EMBEDDING_MODEL,
   FIXTURE_MIN_SCORE,
   fixtureEmbed,
+  // Normaliza consultas para detectar repeticiones.
   normalizeQuery,
+  // Tipos de candidato, puertos, señal y fragmento.
   type CragChunk,
   type CragPorts,
   type CragSignal,
@@ -47,14 +50,17 @@ export function resolveDemoScenario(
 function scripted(chunk: IndexedChunk, score: number): CragChunk {
   // Candidato.
   return {
+    // Datos del fragmento tal y como los espera el grafo.
     documentId: chunk.documentId,
     chunkId: chunk.chunkId,
     title: chunk.title,
     section: chunk.section,
     text: chunk.text,
     audience: chunk.audience,
+    // Versión del corpus y perfil de la demo, para que el grafo compruebe que coinciden.
     corpusVersion: chunk.corpusVersion,
     profileId: fixtureProfile().id,
+    // Puntuación fija del guion.
     score,
   };
 }
@@ -82,11 +88,13 @@ function decision(
 ): unknown {
   // Salida del evaluador de prueba.
   return {
+    // Orden de los candidatos con su puntuación y un motivo que aclara que es un guion.
     ranking: chunks.map((chunk) => ({
       chunkId: chunk.chunkId,
       score: chunk.score ?? 0,
       reason: "Guion de prueba. No es un modelo.",
     })),
+    // Estado (suficiente, parcial o insuficiente), motivo, lagunas e ids útiles.
     status,
     reason,
     gaps,
@@ -178,9 +186,12 @@ export function createDemoCragPorts(input: {
       if (scenario === "evaluator-error") {
         // Salida inválida.
         return {
+          // providerCall: false indica que no hubo llamada de pago.
           ok: true,
           providerCall: false,
+          // Salida cruda con un id inexistente: el validador del grafo debe rechazarla.
           raw: {
+            // Una sola entrada con un id inventado.
             ranking: [
               {
                 chunkId: "no-existe",
@@ -188,6 +199,7 @@ export function createDemoCragPorts(input: {
                 reason: "Id que no está en la búsqueda.",
               },
             ],
+            // Dice «suficiente» con ese id como útil.
             status: "sufficient",
             reason: "Salida inválida de prueba.",
             gaps: [],
@@ -212,6 +224,7 @@ export function createDemoCragPorts(input: {
         if (ids.includes(S6)) {
           // Suficiente.
           return {
+            // Suficiente: S5 y S6 cubren la pregunta.
             ok: true,
             providerCall: false,
             raw: decision(
@@ -225,6 +238,7 @@ export function createDemoCragPorts(input: {
         }
         // Solo S5: parcial con laguna.
         return {
+          // Parcial: conserva S5 y nombra la laguna para reformular.
           ok: true,
           providerCall: false,
           raw: decision(
@@ -244,6 +258,7 @@ export function createDemoCragPorts(input: {
         if (ids.includes(S6) && !ids.includes(S16)) {
           // Suficiente.
           return {
+            // Suficiente tras la reformulación: S6 cubre lo que faltaba.
             ok: true,
             providerCall: false,
             raw: decision(
@@ -257,6 +272,7 @@ export function createDemoCragPorts(input: {
         }
         // S16: insuficiente.
         return {
+          // Insuficiente: se descarta el contexto de esta pasada.
           ok: true,
           providerCall: false,
           raw: decision(
@@ -285,6 +301,7 @@ export function createDemoCragPorts(input: {
       if (useful.length === 0) {
         // Insuficiente.
         return {
+          // Pregunta libre sin fragmentos útiles: insuficiente.
           ok: true,
           providerCall: false,
           raw: decision(
@@ -298,6 +315,8 @@ export function createDemoCragPorts(input: {
       }
       // Suficiente con los útiles.
       return {
+        // Pregunta libre: los fragmentos que superan el umbral léxico son útiles (como mucho
+        // maxRetained).
         ok: true,
         providerCall: false,
         raw: decision(

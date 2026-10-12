@@ -150,16 +150,20 @@ console.log("versiones directas declaradas:");
 const rootManifest = path.join(root, "package.json");
 // Dependencias que se muestran.
 for (const [manifest, name] of [
+  // Herramientas: Vite+, TypeScript y dotenv.
   [rootManifest, "vite-plus"],
   [rootManifest, "typescript"],
   [rootManifest, "dotenv"],
+  // Interfaz: React y el cliente de chat del AI SDK.
   [path.join(root, "apps/web/package.json"), "react"],
   [path.join(root, "apps/web/package.json"), "@ai-sdk/react"],
+  // API: Hono, AI SDK, Anthropic y LangGraph.
   [path.join(root, "apps/api/package.json"), "hono"],
   [path.join(root, "apps/api/package.json"), "ai"],
   [path.join(root, "apps/api/package.json"), "@ai-sdk/anthropic"],
   [path.join(root, "apps/api/package.json"), "@langchain/langgraph"],
   [path.join(root, "apps/api/package.json"), "@langchain/core"],
+  // Contratos y Cloudflare.
   [path.join(root, "packages/contracts/package.json"), "zod"],
   [path.join(root, "apps/web/package.json"), "wrangler"],
   [path.join(root, "apps/web/package.json"), "@cloudflare/vite-plugin"],

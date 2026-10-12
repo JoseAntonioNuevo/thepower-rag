@@ -7,17 +7,22 @@ import { mkdir, readFile, rename, writeFile } from "node:fs/promises";
 import path from "node:path";
 // Núcleo: cotas, índices de metadatos, procedencia, sesión de gasto, caché, manifiesto y tipos.
 import {
+  // Cotas de cada operación e índices de metadatos obligatorios.
   OPERATION_BOUNDS,
   VECTORIZE_METADATA_INDEXES,
+  // Procedencia, sesión de gasto y si el plan cabe en el tope.
   classifyRuntime,
   createAllowanceLedger,
   planFits,
+  // Caché de embeddings y manifiesto semántico.
   cacheFromVectors,
   semanticManifest,
+  // Validación de la caché y nombre del índice.
   usableForRemoteIndex,
   validateEmbeddingCache,
   vectorizeIndexName,
   vectorsFromCache,
+  // Tipos.
   type AdapterRecord,
   type AllowanceLedger,
   type CorpusManifest,
@@ -490,11 +495,13 @@ export async function executeIngest(input: {
   const result = await input.plane.ingest({ manifest, vectors });
   // Resultado.
   return {
+    // ok si quedó lista o pendiente de visibilidad.
     ok: result.phase === "ready" || result.phase === "pending-visibility",
     summary:
       result.phase === "ready"
         ? "ingesta leída de vuelta"
         : `ingesta en ${result.phase}. No se marca activa ni se vuelve a insertar solo para esperar.`,
+    // Recibo: fase, perfil, llamadas de embeddings, escrituras y procedencia.
     receipt: {
       phase: result.phase,
       profileId: result.profileId,

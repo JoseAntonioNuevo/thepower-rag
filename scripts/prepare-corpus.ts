@@ -51,6 +51,7 @@ const corpus = prepareCorpus(collect(sourceRoot), {
 });
 // Versión pública: sin los textos completos, solo metadatos y fragmentos.
 const publicCorpus = {
+  // Mismos metadatos del documento…
   ...corpus,
   documents: corpus.documents.map((document) => ({
     id: document.id,
@@ -63,6 +64,7 @@ const publicCorpus = {
     sourceHash: document.sourceHash,
     curriculum: document.curriculum,
     exerciseDetail: document.exerciseDetail,
+    // …y sus fragmentos; el campo body (texto completo) se omite.
     chunks: document.chunks,
   })),
 };

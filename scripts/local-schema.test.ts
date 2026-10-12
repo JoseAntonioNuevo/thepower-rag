@@ -14,8 +14,13 @@ const root = path.resolve(import.meta.dirname, "..");
 
 // Sentencias SQL de un archivo, separadas por punto y coma.
 function statements(file: string): string[] {
-  // Lee, divide, quita espacios y descarta vacías.
+  // Lee el archivo, quita las líneas de comentario SQL (`--`), divide por `;`,
+  // quita espacios y descarta vacías. Los comentarios documentan la migración,
+  // pero no forman parte de la sentencia que se compara con el esquema local.
   return readFileSync(path.join(root, file), "utf8")
+    .split("\n")
+    .filter((line: string) => !line.trim().startsWith("--"))
+    .join("\n")
     .split(";")
     .map((item: string) => item.trim())
     .filter((item: string) => item.length > 0);

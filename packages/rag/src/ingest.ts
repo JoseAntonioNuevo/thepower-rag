@@ -174,10 +174,13 @@ export interface IngestEvidence {
 export function manifestFrom(corpus: PreparedCorpus): CorpusManifest {
   // Copia los datos del perfil, los documentos y todos los fragmentos aplanados.
   return {
+    // «profile»: manifiesto de un perfil concreto (el de contenido es común a todos los perfiles).
     kind: "profile",
+    // Identidad del contenido preparado.
     contentVersion: corpus.contentVersion,
     preparationId: corpus.preparationId,
     verifiedDate: corpus.verifiedDate,
+    // Parámetros del perfil de índice: modelo, dimensión, métrica, familia y troceado.
     profileId: corpus.indexProfile.id,
     embeddingModel: corpus.indexProfile.model,
     dimensions: corpus.indexProfile.dimensions,
@@ -186,7 +189,9 @@ export function manifestFrom(corpus: PreparedCorpus): CorpusManifest {
     providerRevision: corpus.indexProfile.providerRevision,
     chunkMaxChars: corpus.indexProfile.chunkMaxChars,
     chunkOverlap: corpus.indexProfile.chunkOverlap,
+    // Clave en R2 del manifiesto de contenido del que depende este perfil.
     contentManifestKey: contentManifestKey(corpus.preparationId),
+    // Documentos con su texto completo, que se suben a R2.
     documents: corpus.documents.map((document) => ({
       id: document.id,
       title: document.title,
@@ -196,6 +201,7 @@ export function manifestFrom(corpus: PreparedCorpus): CorpusManifest {
       sourceHash: document.sourceHash,
       body: document.body,
     })),
+    // Fragmentos aplanados de todos los documentos, con el id de su vector en Vectorize.
     chunks: corpus.documents.flatMap((document) =>
       document.chunks.map((chunk) => ({
         chunkId: chunk.chunkId,
@@ -206,6 +212,7 @@ export function manifestFrom(corpus: PreparedCorpus): CorpusManifest {
         ordinal: chunk.ordinal,
       })),
     ),
+    // La revisión remota se conoce solo tras ingestar, así que empieza en null.
     remoteRevision: null,
   };
 }
@@ -666,6 +673,8 @@ export async function runIngestion(input: {
   if (input.profileIsActive === true) {
     // Fase actual sin tocar nada.
     return {
+      // Perfil activo: se calcula la fase con el diario, sin escribir nada (no se toca lo que está
+      // sirviendo).
       phase: ingestionPhase({
         versionId,
         profileId,
@@ -739,11 +748,13 @@ export async function runIngestion(input: {
       const read = await input.ports.getObject(key);
       // Éxito solo si se lee igual.
       await mark(
+        // Anotación del diario: almacén, versión, perfil y clave; outcome y error dicen cómo fue.
         journalItem({
           store: "r2",
           versionId,
           profileId,
           key,
+          // Correcto solo si lo leído coincide byte a byte con lo escrito.
           outcome: read === body ? "succeeded" : "failed",
           error: read === body ? null : "r2-readback-mismatch",
           mutationId: null,
@@ -752,6 +763,7 @@ export async function runIngestion(input: {
     } catch {
       // Error de escritura.
       await mark(
+        // Anota que la escritura en R2 lanzó un error.
         journalItem({
           store: "r2",
           versionId,
@@ -802,6 +814,7 @@ export async function runIngestion(input: {
           const read = await input.ports.getObject(profileKey);
           // Anota el resultado.
           await mark(
+            // Anota la comprobación del manifiesto del perfil en R2.
             journalItem({
               store: "r2",
               versionId,
@@ -815,11 +828,14 @@ export async function runIngestion(input: {
         } catch {
           // Anota el error.
           await mark(
+            // Anota que escribir el manifiesto del perfil falló.
             journalItem({
+              // Almacén, versión, perfil y clave del manifiesto del perfil.
               store: "r2",
               versionId,
               profileId,
               key: profileKey,
+              // Resultado fallido con su motivo.
               outcome: "failed",
               error: "r2-write-failed",
               mutationId: null,
@@ -844,6 +860,7 @@ export async function runIngestion(input: {
       const matches = catalogMatches(input.manifest, catalog);
       // Anota el resultado.
       await mark(
+        // Anota la comprobación del catálogo en D1 (versión, documentos y fragmentos).
         journalItem({
           store: "d1",
           versionId,
@@ -857,6 +874,7 @@ export async function runIngestion(input: {
     } catch {
       // Anota el error.
       await mark(
+        // Anota que escribir el catálogo en D1 falló.
         journalItem({
           store: "d1",
           versionId,
@@ -897,6 +915,8 @@ export async function runIngestion(input: {
       if (!metadataReady) {
         // Anota el fallo.
         await mark(
+          // Sin índices de metadatos no se puede filtrar por versión, perfil y audiencia: se anota
+          // como fallo.
           journalItem({
             store: "vectorize",
             versionId,
@@ -956,6 +976,7 @@ export async function runIngestion(input: {
           mutationId = result.mutationId;
           // Anota el éxito del lote.
           await mark(
+            // Anota el lote insertado y el id de mutación que devolvió Vectorize.
             journalItem({
               store: "vectorize",
               versionId,
@@ -998,6 +1019,7 @@ export async function runIngestion(input: {
           if (journal.some((item) => item.key === "vectors")) {
             // Actualiza la anotación de vectores anterior con el nuevo resultado.
             await mark(
+              // Reescribe la anotación «vectors» con la clasificación de la lectura de vuelta.
               journalItem({
                 store: "vectorize",
                 versionId,
@@ -1031,6 +1053,7 @@ export async function runIngestion(input: {
             if (read !== receipt) {
               // Anota el fallo.
               await mark(
+                // La configuración del índice leída no coincide con el recibo: fallo.
                 journalItem({
                   store: "vectorize",
                   versionId,
@@ -1044,6 +1067,8 @@ export async function runIngestion(input: {
             } else {
               // Anota la visibilidad confirmada.
               await mark(
+                // Visibilidad confirmada: los vectores se leen de vuelta con la configuración
+                // esperada.
                 journalItem({
                   store: "vectorize",
                   versionId,
@@ -1058,11 +1083,15 @@ export async function runIngestion(input: {
           } else {
             // Anota el resultado pendiente o fallido.
             await mark(
+              // Aún no visibles (pending) o incongruentes (failed): se anota sin reenviar los
+              // lotes.
               journalItem({
+                // Almacén, versión, perfil y clave de visibilidad.
                 store: "vectorize",
                 versionId,
                 profileId,
                 key: "vectors:visibility",
+                // Resultado y error de la clasificación, y la mutación.
                 outcome: classification.outcome,
                 error: classification.error,
                 mutationId,
@@ -1074,6 +1103,7 @@ export async function runIngestion(input: {
     } catch {
       // Error al escribir en Vectorize.
       await mark(
+        // Anota que la escritura en Vectorize lanzó un error.
         journalItem({
           store: "vectorize",
           versionId,

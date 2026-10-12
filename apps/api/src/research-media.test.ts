@@ -94,10 +94,12 @@ function envFor(
         };
       },
     },
+    // Presupuesto y tarifas de la investigación, iguales a los del perfil de demo.
     RESEARCH_BUDGET_USD: "1.000000",
     RESEARCH_JOB_LIMIT_USD: "0.250000",
     RESEARCH_INPUT_USD_PER_MILLION: "0.100000",
     RESEARCH_OUTPUT_USD_PER_MILLION: "0.500000",
+    // Precio simulado de una búsqueda y de una lectura.
     RESEARCH_SEARCH_USD: "0.002000",
     RESEARCH_READ_USD: "0.005000",
   };
@@ -156,8 +158,11 @@ describe("medios de la investigación", () => {
     expect(withVoice).toBeGreaterThan(prices.holdMicros);
     // Instantánea v1.
     const legacy = parsePriceSnapshot(
+      // Instantánea con el formato v1 (sin precios de medios), como la guardaría un trabajo
+      // antiguo.
       JSON.stringify({
         version: RESEARCH_PRICE_VERSION_V1,
+        // Importes en micro-USD.
         budgetMicros: 1_000_000,
         jobLimitMicros: 250_000,
         modelCallMicros: 10,
@@ -368,12 +373,15 @@ describe("medios de la investigación", () => {
       .first<{ total: number }>();
     // Trabajo con imagen, audio y voz.
     const submitted = await send(
+      // Envío del trabajo a la ruta de la conversación.
       env,
       `${demoOrigin}/api/research/conversations/${conversation.id}/jobs`,
       {
+        // POST JSON con las cabeceras de origen y cookie de la prueba.
         method: "POST",
         headers: { ...headers, "content-type": "application/json" },
         body: JSON.stringify({
+          // Clave de idempotencia, pregunta vacía (solo adjuntos), voz y los dos archivos.
           idempotencyKey: "idem-multi-01",
           question: "",
           voice: true,
@@ -388,12 +396,14 @@ describe("medios de la investigación", () => {
     const job = (await submitted.json()) as { jobId: string };
     // Misma clave con otra voz.
     const different = await send(
+      // Mismo envío salvo la voz: la huella cambia y la clave ya usada debe rechazarse.
       env,
       `${demoOrigin}/api/research/conversations/${conversation.id}/jobs`,
       {
         method: "POST",
         headers: { ...headers, "content-type": "application/json" },
         body: JSON.stringify({
+          // Misma clave que antes, voz desactivada.
           idempotencyKey: "idem-multi-01",
           question: "",
           voice: false,
@@ -553,6 +563,7 @@ describe("medios de la investigación", () => {
     const admitted = await (
       await import("./research-store")
     ).admitJob(database, {
+      // Datos mínimos del trabajo para la prueba del diario.
       ownerId: "owner-a",
       conversationId,
       idempotencyKey: "idem-journal-1",
@@ -561,12 +572,14 @@ describe("medios de la investigación", () => {
       contextualized: null,
       scenarioId: null,
       corpusVersion: "fixture",
+      // La reserva inicial incluye una llamada de visión si la instantánea es v2.
       prices: {
         ...prices,
         holdMicros:
           prices.holdMicros +
           (prices.version === "research-prices-v2" ? prices.visionCallMicros : 0),
       },
+      // Fecha, plazo total y plazo en cola.
       now: Date.now(),
       deadlineMs: 120_000,
       queueMs: 60_000,
@@ -744,18 +757,22 @@ describe("medios de la investigación", () => {
       .run();
     // Trabajo solo con voz.
     const admitted = await admitJob(database, {
+      // Trabajo sin archivos, solo con voz pedida.
       ownerId: "owner-a",
       conversationId,
       idempotencyKey: "idem-voice-only",
       fingerprint: "fingerprint-voice-only",
       originalQuestion: question,
+      // Pregunta con memoria previa: la voz no debe leer esa memoria.
       contextualized: `Memoria previa.\n\nPregunta actual:\n${question}`,
       scenarioId: null,
       corpusVersion: "fixture",
+      // Reserva que incluye la voz.
       prices: { ...prices, holdMicros: hold },
       now: Date.now(),
       deadlineMs: 120_000,
       queueMs: 60_000,
+      // Medios: voz sí, sin imagen ni audio.
       media: { voice: true, image: null, audio: null },
     });
     // Admitido.
@@ -805,12 +822,14 @@ describe("medios de la investigación", () => {
     await bucket.put(boundKey, new Uint8Array([4, 5, 6]));
     // Fila huérfana.
     await insertAsset(database, {
+      // Fila de imagen sin trabajo y antigua (created_at 1): la limpieza debe borrarla.
       id: "11111111-1111-4111-8111-111111111111",
       owner_id: "owner-a",
       conversation_id: "conversation",
       role: "image",
       object_key: orphanKey,
       content_hash: "sha256:aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+      // Datos de imagen; los campos de audio no aplican.
       mime: "image/png",
       byte_size: 3,
       width: 8,
@@ -819,6 +838,7 @@ describe("medios de la investigación", () => {
       sample_rate: null,
       channels: null,
       bit_depth: null,
+      // Estado admitido y sin trabajo asociado.
       status: "admitted",
       extracted_text: null,
       detail: null,
@@ -828,6 +848,7 @@ describe("medios de la investigación", () => {
     });
     // Fila ligada a un trabajo.
     await insertAsset(database, {
+      // Misma forma, pero ligada a «job-bound»: la limpieza no debe tocarla.
       id: "22222222-2222-4222-8222-222222222222",
       owner_id: "owner-a",
       conversation_id: "conversation",
@@ -845,6 +866,7 @@ describe("medios de la investigación", () => {
       status: "admitted",
       extracted_text: null,
       detail: null,
+      // Este campo es la diferencia con la fila huérfana.
       job_id: "job-bound",
       idempotency_key: "idem-bound",
       created_at: 1,
@@ -917,12 +939,14 @@ describe("medios de la investigación", () => {
     });
     // Fila de la imagen.
     await insertAsset(database, {
+      // Fila de la imagen subida para este trabajo.
       id: assetId,
       owner_id: "owner-a",
       conversation_id: conversationId,
       role: "image",
       object_key: `research/owner-a/${conversationId}/${assetId}`,
       content_hash: hash,
+      // Imagen PNG de 980×180 píxeles.
       mime: "image/png",
       byte_size: image.byteLength,
       width: 980,
@@ -931,6 +955,7 @@ describe("medios de la investigación", () => {
       sample_rate: null,
       channels: null,
       bit_depth: null,
+      // Admitida, sin texto leído y aún sin trabajo.
       status: "admitted",
       extracted_text: null,
       detail: null,
@@ -940,6 +965,7 @@ describe("medios de la investigación", () => {
     });
     // Trabajo con imagen y voz.
     const admitted = await admitJob(database, {
+      // Trabajo con pregunta vacía: la imagen sola debe pedir aclaración.
       ownerId: "owner-a",
       conversationId,
       idempotencyKey: "idem-clarify-voice",
@@ -948,10 +974,12 @@ describe("medios de la investigación", () => {
       contextualized: null,
       scenarioId: null,
       corpusVersion: "fixture",
+      // Reserva calculada para imagen y voz.
       prices: { ...prices, holdMicros: hold },
       now: Date.now(),
       deadlineMs: 120_000,
       queueMs: 60_000,
+      // Medios: voz e imagen, sin audio.
       media: { voice: true, image: { id: assetId, hash }, audio: null },
     });
     // Admitido.

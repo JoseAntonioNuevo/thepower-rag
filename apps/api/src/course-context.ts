@@ -43,9 +43,11 @@ export async function readCourseContext(
   const rows = result.results;
   // Debe haber filas, como mucho el máximo, todas válidas y sin pasar de los caracteres.
   if (
+    // Sin filas o con más del máximo: el catálogo no es el esperado.
     !Array.isArray(rows) ||
     !rows.length ||
     rows.length > MAX_CHUNKS ||
+    // Cada fila: misma versión, grupo permitido, texto no vacío e id de esa versión.
     rows.some(
       (row) =>
         row.corpusVersion !== corpusVersion ||
@@ -54,6 +56,7 @@ export async function readCourseContext(
         !row.text.trim() ||
         !row.chunkId.startsWith(corpusVersion + ":"),
     ) ||
+    // Y el total de caracteres no puede pasar del máximo.
     rows.reduce((n, row) => n + row.text.length, 0) > MAX_CHARS
   )
     throw new CourseContextError(
@@ -102,8 +105,10 @@ export function completeContextOutcome(
   const docs = new Set(chunks.map((c) => c.documentId));
   // Responder con todos los fragmentos.
   return {
+    // Responder con todos los fragmentos del grupo como evidencia.
     decision: "answer",
     evidence: chunks,
+    // Traza: deja claro que no hubo embeddings ni coseno.
     trace: {
       query: question,
       queryRewrite: "context-complete",
@@ -111,6 +116,7 @@ export function completeContextOutcome(
       embedding: "No ejecutado: contexto completo del programa y del grupo seleccionado",
       scoreMeaning:
         "Recuperación del catálogo por versión y grupo. El corpus es pequeño y cabe completo; no se filtra por coseno.",
+      // No hay lista de recuperados con puntuación: entra todo.
       retrieved: [],
       decision: "answer",
       generation: "called",

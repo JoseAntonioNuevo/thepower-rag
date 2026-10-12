@@ -33,6 +33,7 @@ interface Turn {
 
 // Los cinco turnos con lo que se espera de cada uno.
 const TURNS: readonly Turn[] = [
+  // Sin RAG: una generación, sin embeddings.
   {
     id: "sin-rag",
     mode: "sin-rag",
@@ -43,6 +44,7 @@ const TURNS: readonly Turn[] = [
     expect: (body) =>
       body.includes('"completion":"complete"') && body.includes('"type":"text-delta"'),
   },
+  // RAG: un embedding y una generación; debe dar la fecha de M/J y no la de L/X.
   {
     id: "rag",
     mode: "rag",
@@ -52,6 +54,7 @@ const TURNS: readonly Turn[] = [
     generativeCalls: 1,
     expect: (body) => body.includes("2026-10-22") && !body.includes("2026-10-26"),
   },
+  // CRAG: un embedding y dos llamadas (evaluar y generar); cita S5.
   {
     id: "crag",
     mode: "crag",
@@ -61,6 +64,7 @@ const TURNS: readonly Turn[] = [
     generativeCalls: 2,
     expect: (body) => body.includes("s05-langgraph"),
   },
+  // Aclaración: sin llamadas; pide el grupo.
   {
     id: "clarify",
     mode: "crag",
@@ -70,6 +74,7 @@ const TURNS: readonly Turn[] = [
     generativeCalls: 0,
     expect: (body) => body.toLowerCase().includes("grupo"),
   },
+  // Rechazo: un embedding y ninguna generación; sin citas.
   {
     id: "refuse",
     mode: "rag",
@@ -213,6 +218,8 @@ export function createHttpVerifier(input: {
       .reservations.filter((item) => item.kind === "generation").length;
     // Resultado y recibo.
     return {
+      // Correcto si pasan los cinco turnos, la procedencia se conoce y no hay más de 4
+      // generaciones.
       ok: turns.every((turn) => turn.ok) && provenance !== "unknown" && generativeCalls <= 4,
       summary: turns.every((turn) => turn.ok)
         ? "verificación por la ruta HTTP del runtime"
@@ -220,11 +227,13 @@ export function createHttpVerifier(input: {
             .filter((turn) => !turn.ok)
             .map((turn) => `${turn.id} ${turn.detail}`)
             .join(" | ")}`,
+      // Recibo: procedencia, si fue real, error sintético y precios sintéticos.
       receipt: {
         provenance,
         live: classified.live,
         syntheticError: true,
         pricesSynthetic: provenance !== "remote-binding",
+        // Cargo medido desconocido (null), llamadas, turnos y adaptadores usados.
         measuredChargeUsd: null,
         generativeCalls,
         turns,

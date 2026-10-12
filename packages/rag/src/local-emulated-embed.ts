@@ -10,6 +10,7 @@ export const LOCAL_EMULATED_MIN_SCORE = 0.55;
 
 // Palabras frecuentes que no aportan significado y se ignoran.
 const STOPWORDS = new Set([
+  // Artículos, preposiciones y pronombres frecuentes.
   "para",
   "como",
   "con",

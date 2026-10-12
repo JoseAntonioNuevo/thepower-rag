@@ -1,59 +1,115 @@
+// GUÍA DE LECTURA · apps/web/wrangler.jsonc
+// Configuración de Cloudflare Workers para toda la aplicación: un único Worker sirve el React
+// compilado (Workers Static Assets) y la API Hono de apps/api en el mismo origen.
+// Cómo se usa:
+//   - Sin entorno (`bun run dev`): nivel superior, APP_MODE=demo, sin recursos de la cuenta.
+//   - `CLOUDFLARE_ENV=production`: la web publicada en rag-thepower.josenuevo.dev.
+//   - `CLOUDFLARE_ENV=local` (`bun run dev:real`): este Mac con la API del proveedor y los
+//     bindings reales del curso. Gasta el presupuesto existente.
+//   - `CLOUDFLARE_ENV=research` (`bun run dev:research`): investigación durable con D1, R2 y
+//     Workflows locales en apps/web/.wrangler/research-state, sin pago.
+// Reglas de Wrangler que conviene recordar:
+//   - Con un entorno, las «vars» y los bindings NO se heredan del nivel superior: cada
+//     entorno repite todo lo que necesita.
+//   - Los secretos (claves de proveedor, Turnstile, etc.) NUNCA van aquí: en local van en
+//     apps/web/.dev.vars (o .dev.vars.<entorno>) y en producción con `wrangler secret put`.
+//   - `remote: true` hace que el binding use el recurso real de la cuenta también en local.
+// Formato: solo comentarios «//» de línea completa. scripts/local-worker-config.ts los quita
+// antes de leer el JSON. scripts/configure-production.ts reescribe este archivo sin comentarios
+// y sin los entornos que no conoce: no lo ejecutes sin revisar el resultado.
 {
+  // Esquema JSON de Wrangler: da autocompletado y validación en el editor.
   "$schema": "./node_modules/wrangler/config-schema.json",
+  // Nombre del Worker en Cloudflare.
   "name": "thepower-rag",
+  // Cuenta del curso. Fijarla evita desplegar en la primera cuenta de la sesión de Wrangler.
   "account_id": "9c1493e94ba21f2c6872a9dd17ba19f7",
+  // Fecha de compatibilidad del runtime. Es la más reciente que aceptó Miniflare al verificar
+  // (ver docs/decisions.md): una fecha «futura» en UTC impide arrancar el servidor local.
   "compatibility_date": "2026-10-02",
+  // nodejs_compat habilita las APIs de Node que necesitan LangGraph y el AI SDK dentro de workerd.
   "compatibility_flags": ["nodejs_compat"],
+  // Punto de entrada del Worker de la demo: atiende /api/security y la app Hono.
   "main": "../api/src/worker.ts",
+  // Archivos estáticos (el build de React).
   "assets": {
+    // Cualquier ruta desconocida devuelve index.html: React decide qué pantalla pintar.
     "not_found_handling": "single-page-application",
+    // Las rutas /api/* entran primero al Worker y nunca se confunden con un archivo estático.
     "run_worker_first": ["/api/*"],
   },
+  // Variables del nivel superior (perfil por defecto de `bun run dev`).
   "vars": {
+    // demo: streams etiquetados, índice léxico de prueba y ninguna llamada de pago.
     "APP_MODE": "demo",
   },
+  // Entornos con nombre. Cada uno se elige con CLOUDFLARE_ENV.
   "env": {
+    // Producción: la URL pública del curso.
     "production": {
+      // Mismo nombre de Worker que el nivel superior.
       "name": "thepower-rag",
+      // Este punto de entrada exporta además la clase del Workflow de la investigación.
       "main": "../api/src/research-worker.ts",
+      // Sin subdominio workers.dev ni URLs de vista previa: solo el dominio propio.
       "workers_dev": false,
       "preview_urls": false,
+      // Variables públicas de producción (no son secretos).
       "vars": {
+        // Servicios reales.
         "APP_MODE": "real",
+        // RAG básico con todo el contexto autorizado del grupo (docs/rag-contexto-completo.md).
         "RAG_CONTEXT_MODE": "complete",
+        // Proveedor fijo de producción: no cambiarlo sin petición expresa del usuario.
         "LLM_PROVIDER": "anthropic",
+        // Modelos de cada papel: chat y RAG, evaluador de CRAG e investigación.
         "MODEL_ID": "claude-haiku-5-5",
         "EVALUATOR_MODEL_ID": "claude-haiku-5-5",
         "RESEARCH_MODEL_ID": "claude-haiku-5-5",
+        // Buscador web de la investigación y su precio por crédito en USD.
         "RESEARCH_SEARCH_PROVIDER": "tavily",
         "TAVILY_USD_PER_CREDIT": "0.008000",
+        // Autorización de gasto de la investigación (sin ella no se reserva nada).
         "RESEARCH_SPEND_AUTHORIZATION": "s12-research-phase1",
+        // Presupuesto total de la investigación y tope por trabajo, separados del chat.
         "RESEARCH_BUDGET_USD": "1.000000",
         "RESEARCH_JOB_LIMIT_USD": "0.250000",
+        // Modelo que lee imágenes, transcripción (Whisper) y voz (Aura) en Workers AI.
         "RESEARCH_VISION_MODEL_ID": "claude-haiku-5-5",
         "RESEARCH_STT_MODEL_ID": "@cf/openai/whisper-large-v3-turbo",
         "RESEARCH_TTS_MODEL_ID": "@cf/deepgram/aura-2-es",
+        // Únicos dominios que la investigación puede buscar y leer.
         "RESEARCH_ALLOWED_DOMAINS": "developers.cloudflare.com,docs.langchain.com,langchain-ai.github.io",
+        // Tarifas del modelo de investigación en USD por millón de tokens.
         "RESEARCH_INPUT_USD_PER_MILLION": "0.100000",
         "RESEARCH_OUTPUT_USD_PER_MILLION": "0.500000",
+        // Embeddings: BGE-M3 en Workers AI con la dimensión medida en la cuenta.
         "EMBEDDING_MODEL": "@cf/baai/bge-m3",
         "EMBEDDING_DIMENSIONS": "1024",
+        // Versión del corpus y perfil de índice activos (deben estar «ready» en D1).
         "CORPUS_VERSION": "c3a59a406888b",
         "INDEX_PROFILE": "p76509a5f9743",
+        // Métrica del índice y umbral calibrado con preguntas de desarrollo.
         "VECTOR_METRIC": "cosine",
         "MIN_RETRIEVAL_SCORE": "0.5",
+        // Tope del presupuesto público del chat (tabla public_budget).
         "PUBLIC_BUDGET_USD": "4.3",
+        // Tarifas del generador y del evaluador, para el coste mostrado y la reserva.
         "MODEL_INPUT_USD_PER_MILLION": "0.1",
         "MODEL_OUTPUT_USD_PER_MILLION": "0.5",
         "EVALUATOR_INPUT_USD_PER_MILLION": "0.1",
         "EVALUATOR_OUTPUT_USD_PER_MILLION": "0.5",
+        // Origen permitido para las peticiones del navegador.
         "PUBLIC_ORIGIN": "https://rag-thepower.josenuevo.dev",
+        // Clave pública del widget de Turnstile (la secreta va como secreto).
         "TURNSTILE_SITE_KEY": "0x4AAAAAAFM78XIBgxEHbTqT",
       },
+      // Workers AI: embeddings, Whisper y Aura.
       "ai": {
         "binding": "AI",
         "remote": true,
       },
+      // Índice vectorial del perfil activo.
       "vectorize": [
         {
           "binding": "VECTORIZE",
@@ -61,6 +117,7 @@
           "remote": true,
         },
       ],
+      // Bases D1: la del curso (catálogo y presupuesto del chat) y la de la investigación.
       "d1_databases": [
         {
           "binding": "DB",
@@ -77,6 +134,7 @@
           "remote": true,
         },
       ],
+      // R2 privados: el corpus del curso y los medios de la investigación, separados.
       "r2_buckets": [
         {
           "binding": "CORPUS",
@@ -89,6 +147,7 @@
           "remote": true,
         },
       ],
+      // Workflow durable que ejecuta cada trabajo de investigación (clase en research-workflow.ts).
       "workflows": [
         {
           "name": "thepower-research-job",
@@ -96,12 +155,15 @@
           "class_name": "ResearchJobWorkflow",
         },
       ],
+      // Mismos estáticos que el nivel superior (los entornos no heredan).
       "assets": {
         "not_found_handling": "single-page-application",
         "run_worker_first": ["/api/*"],
       },
+      // Límites de peticiones del chat público (chat-protection.ts).
       "ratelimits": [
         {
+          // Por sesión anónima: 6 peticiones cada 60 segundos.
           "name": "CHAT_SESSION_LIMITER",
           "namespace_id": "2026100310",
           "simple": {
@@ -110,6 +172,7 @@
           },
         },
         {
+          // Por red (IP): 120 peticiones cada 60 segundos.
           "name": "CHAT_IP_LIMITER",
           "namespace_id": "2026100311",
           "simple": {
@@ -119,10 +182,12 @@
         },
       ],
     },
+    // Desarrollo local con servicios reales (`bun run dev:real`): solo atiende localhost.
     "local": {
       "name": "thepower-rag-local",
       "workers_dev": false,
       "preview_urls": false,
+      // Mismos recursos remotos del curso que producción (sin los de la investigación).
       "ai": {
         "binding": "AI",
         "remote": true,
@@ -154,7 +219,9 @@
         "not_found_handling": "single-page-application",
         "run_worker_first": ["/api/*"],
       },
+      // Punto de entrada local: exige el mismo origen y reserva contra LOCAL_BUDGET_USD.
       "main": "../api/src/local-worker.ts",
+      // Las claves y LLM_PROVIDER llegan de .dev.vars.local o del .env de la raíz.
       "vars": {
         "APP_MODE": "real",
         "RAG_CONTEXT_MODE": "complete",
@@ -171,28 +238,36 @@
         "MODEL_OUTPUT_USD_PER_MILLION": "0.5",
         "EVALUATOR_INPUT_USD_PER_MILLION": "0.1",
         "EVALUATOR_OUTPUT_USD_PER_MILLION": "0.5",
+        // Tope del presupuesto de este perfil local.
         "LOCAL_BUDGET_USD": "4.3",
       },
     },
+    // Investigación durable local (`bun run dev:research`): guiones de demo, sin pago.
     "research": {
       "name": "thepower-rag-research",
       "workers_dev": false,
       "preview_urls": false,
+      // Exporta también la clase del Workflow.
       "main": "../api/src/research-worker.ts",
       "assets": {
         "not_found_handling": "single-page-application",
         "run_worker_first": ["/api/*"],
       },
       "vars": {
+        // demo: los puertos de la investigación son guiones, no proveedores.
         "APP_MODE": "demo",
+        // Secreto local para firmar la cookie del propietario. Solo vale en loopback.
         "RESEARCH_OWNER_SECRET": "local-loopback-research-owner",
+        // Mismo presupuesto y tarifas que producción para enseñar la contabilidad.
         "RESEARCH_BUDGET_USD": "1.000000",
         "RESEARCH_JOB_LIMIT_USD": "0.250000",
         "RESEARCH_INPUT_USD_PER_MILLION": "0.100000",
         "RESEARCH_OUTPUT_USD_PER_MILLION": "0.500000",
+        // Precio simulado de una búsqueda y de una lectura web.
         "RESEARCH_SEARCH_USD": "0.002000",
         "RESEARCH_READ_USD": "0.005000",
       },
+      // D1 local (id ficticio): Wrangler lo guarda en apps/web/.wrangler.
       "d1_databases": [
         {
           "binding": "RESEARCH_DB",
@@ -201,6 +276,7 @@
           "migrations_dir": "../api/migrations-research",
         },
       ],
+      // Workflow local: el trabajo sigue aunque se cierre la pestaña.
       "workflows": [
         {
           "name": "thepower-research-job",
@@ -208,6 +284,7 @@
           "class_name": "ResearchJobWorkflow",
         },
       ],
+      // R2 local para imágenes, audios y voz.
       "r2_buckets": [
         {
           "binding": "RESEARCH_MEDIA",

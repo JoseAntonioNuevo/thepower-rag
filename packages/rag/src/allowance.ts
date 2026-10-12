@@ -197,12 +197,14 @@ export function createAllowanceLedger(input: {
 }): AllowanceLedger {
   // Copia el estado guardado o empieza uno nuevo; las copias evitan modificar el objeto original.
   const state: AllowanceSnapshot = input.state
-    ? {
+    ? // Estado guardado: se copian precios y reservas para no tocar el original.
+      {
         ...input.state,
         prices: { ...input.state.prices },
         reservations: input.state.reservations.map((item) => ({ ...item })),
       }
-    : {
+    : // Estado nuevo: topes, margen de seguridad, precios y contador de reservas.
+      {
         maxSpendUsd: input.maxSpendUsd,
         maxGenerativeCalls: input.maxGenerativeCalls,
         maxEmbeddingCalls: input.maxEmbeddingCalls,

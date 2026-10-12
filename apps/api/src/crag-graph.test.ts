@@ -21,14 +21,17 @@ const scope: CragScope = {
 function chunk(id: string, audience: CragChunk["audience"] = "program"): CragChunk {
   // Campos mínimos de un fragmento.
   return {
+    // Mismo id de documento y de fragmento, para que sea fácil leer las aserciones.
     documentId: id,
     chunkId: id,
     title: id,
     section: "S",
     text: `texto ${id}`,
+    // Grupo, corpus y perfil que el grafo exige que coincidan.
     audience,
     corpusVersion: "c-test",
     profileId: "p-test",
+    // Puntuación neutra.
     score: 0.5,
   };
 }
@@ -42,11 +45,13 @@ function decision(
 ): unknown {
   // Objeto con ranking, estado, motivo, lagunas e ids útiles.
   return {
+    // Orden con la puntuación de cada candidato.
     ranking: chunks.map((item) => ({
       chunkId: item.chunkId,
       score: item.score ?? 0,
       reason: `motivo ${item.chunkId}`,
     })),
+    // Estado de la evaluación, motivo, lagunas e ids útiles.
     status,
     reason: status === "partial" ? "falta una parte" : `decision ${status}`,
     gaps,
@@ -85,8 +90,10 @@ function ports(overrides: Partial<CragPorts> = {}): CragPorts & {
         counts.rank += 1;
         // Todo suficiente y útil.
         return {
+          // providerCall: false, es un doble de prueba.
           ok: true,
           providerCall: false,
+          // Todos los candidatos suficientes y útiles.
           raw: decision(
             chunks,
             "sufficient",
@@ -168,11 +175,13 @@ describe("grafo CRAG", () => {
         retrieval += 1;
         // Primero s5; después s5 y s6.
         return {
+          // La primera búsqueda solo trae s5; la segunda, s5 y s6.
           ok: true,
           providerCall: false,
           chunks: retrieval === 1 ? [chunk("s5")] : [chunk("s5"), chunk("s6")],
         };
       },
+      // Con s6 la evidencia basta; sin s6 es parcial y nombra la laguna.
       rankAndAssess: async ({ chunks }) => ({
         ok: true,
         providerCall: false,
@@ -180,6 +189,7 @@ describe("grafo CRAG", () => {
           ? decision(chunks, "sufficient", ["s5", "s6"])
           : decision(chunks, "partial", ["s5"], ["falta observar la ejecución"]),
       }),
+      // Reformulación fija para la segunda búsqueda.
       reformulate: async () => ({
         ok: true,
         providerCall: false,
@@ -211,11 +221,13 @@ describe("grafo CRAG", () => {
         retrieval += 1;
         // Primero s16, después s6.
         return {
+          // Primero un fragmento inútil (s16) y después el útil (s6).
           ok: true,
           providerCall: false,
           chunks: retrieval === 1 ? [chunk("s16")] : [chunk("s6")],
         };
       },
+      // s16 es insuficiente: el grafo debe descartar ese contexto.
       rankAndAssess: async ({ chunks }) => ({
         ok: true,
         providerCall: false,
@@ -223,6 +235,7 @@ describe("grafo CRAG", () => {
           ? decision(chunks, "sufficient", ["s6"])
           : decision(chunks, "insufficient", []),
       }),
+      // Reformulación hacia herramientas de observabilidad.
       reformulate: async () => ({
         ok: true,
         providerCall: false,
@@ -249,13 +262,16 @@ describe("grafo CRAG", () => {
         // Guarda la consulta.
         seen.push(query);
         // Siempre s16.
+        // La búsqueda siempre devuelve s16…
         return { ok: true, providerCall: false, chunks: [chunk("s16")] };
       },
+      // …que nunca basta, así que el grafo agota los intentos.
       rankAndAssess: async ({ chunks }) => ({
         ok: true,
         providerCall: false,
         raw: decision(chunks, "insufficient", []),
       }),
+      // Cada reformulación es distinta para que no se detecte como repetida.
       reformulate: async ({ attempt }) => ({
         ok: true,
         providerCall: false,
@@ -314,6 +330,7 @@ describe("grafo CRAG", () => {
         ranks += 1;
         // Ranking con un id que no existe.
         return {
+          // Salida «suficiente» pero con un id que no estaba entre los candidatos.
           ok: true,
           providerCall: false,
           raw: {
@@ -383,19 +400,23 @@ describe("grafo CRAG", () => {
   it("aplica el orden devuelto y no acepta una generación fuera de plazo", async () => {
     // Evaluador que pone b delante de a.
     const ranked = await turn("orden", {
+      // Búsqueda con dos candidatos a y b.
       retrieve: async () => ({
         ok: true,
         providerCall: false,
         chunks: [chunk("a"), chunk("b")],
       }),
+      // El evaluador pide b antes que a aunque a puntúe más: manda el orden devuelto.
       rankAndAssess: async () => ({
         ok: true,
         providerCall: false,
         raw: {
+          // b con menos puntuación va primero.
           ranking: [
             { chunkId: "b", score: 0.2, reason: "va delante" },
             { chunkId: "a", score: 0.9, reason: "va detrás" },
           ],
+          // Suficiente y las dos útiles.
           status: "sufficient",
           reason: "las dos sirven",
           gaps: [],
@@ -421,36 +442,44 @@ describe("grafo CRAG", () => {
         retrieval += 1;
         // Primero a y b; después c.
         return {
+          // Primera búsqueda: a y b. Segunda: c.
           ok: true,
           providerCall: false,
           chunks: retrieval === 1 ? [chunk("a"), chunk("b")] : [chunk("c")],
         };
       },
+      // Con c: suficiente, y el empate entre c y b se resuelve por la posición devuelta.
       rankAndAssess: async ({ chunks }) => ({
         ok: true,
         providerCall: false,
         raw: chunks.some((item) => item.chunkId === "c")
           ? {
+              // c y b empatan a 0,4: se conserva el orden devuelto.
               ranking: [
                 { chunkId: "c", score: 0.4, reason: "nuevo" },
                 { chunkId: "b", score: 0.4, reason: "empate conservado" },
               ],
+              // Suficiente con b y c.
               status: "sufficient",
               reason: "cubre las dos",
               gaps: [],
               usefulIds: ["b", "c"],
             }
-          : {
+          : // Sin c: parcial, conserva b y nombra la laguna.
+            {
+              // b útil y a no.
               ranking: [
                 { chunkId: "b", score: 0.3, reason: "útil" },
                 { chunkId: "a", score: 0.1, reason: "no" },
               ],
+              // Parcial con la laguna «falta c».
               status: "partial",
               reason: "falta c",
               gaps: ["falta c"],
               usefulIds: ["b"],
             },
       }),
+      // Reformulación hacia c.
       reformulate: async () => ({
         ok: true,
         providerCall: false,

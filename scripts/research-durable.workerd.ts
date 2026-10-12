@@ -117,10 +117,12 @@ async function boot(
   await writeFile(
     configPath,
     JSON.stringify({
+      // Nombre, fecha de compatibilidad, flags y punto de entrada con el Workflow.
       name: "thepower-research-durable",
       compatibility_date: "2026-10-02",
       compatibility_flags: ["nodejs_compat"],
       main: path.join(root, "apps/api/src/research-worker.ts"),
+      // Mismas variables que el perfil research de wrangler.jsonc.
       vars: {
         APP_MODE: "demo",
         RESEARCH_OWNER_SECRET: "local-loopback-research-owner",
@@ -131,6 +133,7 @@ async function boot(
         RESEARCH_SEARCH_USD: "0.002000",
         RESEARCH_READ_USD: "0.005000",
       },
+      // D1 local con las migraciones de la investigación.
       d1_databases: [
         {
           binding: "RESEARCH_DB",
@@ -139,6 +142,7 @@ async function boot(
           migrations_dir: path.join(root, "apps/api/migrations-research"),
         },
       ],
+      // Workflow local que ejecuta cada trabajo.
       workflows: [
         {
           name: "thepower-research-job",
@@ -146,6 +150,7 @@ async function boot(
           class_name: "ResearchJobWorkflow",
         },
       ],
+      // R2 local para los medios.
       r2_buckets: [
         {
           binding: "RESEARCH_MEDIA",
@@ -177,10 +182,12 @@ async function boot(
   const child = spawn(
     process.execPath,
     [
+      // wrangler dev con la configuración temporal.
       wrangler,
       "dev",
       "--config",
       configPath,
+      // Solo en 127.0.0.1, con su puerto y su inspector propios.
       "--ip",
       "127.0.0.1",
       "--port",
@@ -189,15 +196,18 @@ async function boot(
       String(inspector),
       "--inspector-ip",
       "127.0.0.1",
+      // Todo local y con persistencia en la carpeta de la prueba.
       "--local",
       "--persist-to",
       persist,
+      // HTTP plano, sin sesión interactiva y solo errores en el registro.
       "--local-protocol",
       "http",
       "--no-show-interactive-dev-session",
       "--log-level",
       "error",
     ],
+    // Proceso separado (detached) para poder matar su grupo al terminar.
     { cwd: root, env, detached: true, stdio: ["ignore", "pipe", "pipe"] },
   );
   // Registros.

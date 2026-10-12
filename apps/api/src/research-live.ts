@@ -75,16 +75,21 @@ export function liveResearchPorts(
   if (!outputCap) throw new Error("research-model-reservation-incompatible");
   // Puertos reales con el modelo de investigación.
   return createRealResearchPorts({
+    // Señal, grupo del trabajo y versión del corpus configurada.
     signal,
     audience: job.audience as Audience,
     corpusVersion: assessment.retrieval.corpusVersion,
+    // Ajustes de investigación y de recuperación.
     settings: settings.settings,
     retrieval: assessment.retrieval,
+    // El mismo modelo planifica y redacta.
     planner: model,
     generator: model,
+    // Bindings del curso.
     embedder: embedder as EmbeddingRunner,
     index: index as VectorIndex,
     database: database as SqlDatabase,
+    // Buscador de las tarifas congeladas y tope de salida que permite la reserva.
     priceSearchProvider,
     modelOutputTokenCap: outputCap,
   });

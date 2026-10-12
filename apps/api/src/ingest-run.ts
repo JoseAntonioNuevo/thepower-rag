@@ -125,6 +125,7 @@ export async function runBoundIngestion(
       writeCatalog: async (current) => {
         // Versión, perfil, documentos, fragmentos y mapa de vectores en un lote.
         const statements = [
+          // Versión del corpus: upsert. Si ya existe, se actualizan modelo, dimensión y revisión.
           bindings.DB.prepare(
             `INSERT INTO corpus_versions (id, embedding_model, dimensions, remote_revision, status)
              VALUES (?, ?, ?, ?, 'catalog')
@@ -132,12 +133,14 @@ export async function runBoundIngestion(
                embedding_model = excluded.embedding_model,
                dimensions = excluded.dimensions,
                remote_revision = excluded.remote_revision`,
+            // Valores: versión, modelo, dimensión y revisión.
           ).bind(
             current.preparationId,
             current.embeddingModel,
             current.dimensions,
             current.providerRevision,
           ),
+          // Perfil: se crea como «partial» e inactivo. Un perfil activo conserva su estado.
           bindings.DB.prepare(
             `INSERT INTO index_profiles (
                id, corpus_version, embedding_model, dimensions, metric, chunk_max_chars,
@@ -154,6 +157,8 @@ export async function runBoundIngestion(
                family = excluded.family,
                expected_vectors = excluded.expected_vectors,
                status = CASE WHEN index_profiles.active = 1 THEN index_profiles.status ELSE excluded.status END`,
+            // Valores en el orden de las columnas. La métrica queda «sin verificar» hasta leerla de
+            // Vectorize.
           ).bind(
             current.profileId,
             current.preparationId,
@@ -171,11 +176,13 @@ export async function runBoundIngestion(
         for (const document of current.documents) {
           // Inserta o actualiza.
           statements.push(
+            // Upsert de cada documento de la versión.
             bindings.DB.prepare(
               `INSERT INTO documents (version_id, document_id, title, audience, source_hash)
                VALUES (?, ?, ?, ?, ?)
                ON CONFLICT(version_id, document_id) DO UPDATE SET
                  title = excluded.title, audience = excluded.audience, source_hash = excluded.source_hash`,
+              // Valores: versión, id, título, audiencia y hash de la fuente.
             ).bind(
               current.preparationId,
               document.id,
@@ -189,12 +196,14 @@ export async function runBoundIngestion(
         for (const chunk of current.chunks) {
           // Fragmento y su vector.
           statements.push(
+            // Upsert del texto del fragmento.
             bindings.DB.prepare(
               `INSERT INTO chunks (version_id, chunk_id, document_id, section, text, ordinal)
                VALUES (?, ?, ?, ?, ?, ?)
                ON CONFLICT(version_id, chunk_id) DO UPDATE SET
                  document_id = excluded.document_id, section = excluded.section,
                  text = excluded.text, ordinal = excluded.ordinal`,
+              // Valores: versión, id, documento, sección, texto y orden.
             ).bind(
               current.preparationId,
               chunk.chunkId,
@@ -203,6 +212,7 @@ export async function runBoundIngestion(
               chunk.text,
               chunk.ordinal,
             ),
+            // Relación vector → fragmento del perfil.
             bindings.DB.prepare(
               `INSERT INTO vector_map (profile_id, vector_id, chunk_id) VALUES (?, ?, ?)
                ON CONFLICT(profile_id, vector_id) DO UPDATE SET chunk_id = excluded.chunk_id`,
@@ -279,6 +289,7 @@ export async function runBoundIngestion(
       },
       persistJournal: async (item) => {
         // Guarda la anotación en D1.
+        // Upsert de la anotación: repetir la ingesta actualiza la fila en vez de duplicarla.
         await bindings.DB.prepare(
           `INSERT INTO ingest_items (
              corpus_version, profile_id, store, item_key, ok, error, outcome, mutation_id
@@ -289,6 +300,7 @@ export async function runBoundIngestion(
              outcome = excluded.outcome,
              mutation_id = excluded.mutation_id`,
         )
+          // Valores: versión, perfil, almacén, clave, ok (1/0), error, resultado y mutación.
           .bind(
             item.versionId,
             item.profileId,
@@ -303,6 +315,7 @@ export async function runBoundIngestion(
       },
       recordPhase: async (update) => {
         // Actualiza la fase de un perfil no activo.
+        // Fase del perfil: solo si no está activo. La métrica solo cambia si se observó una.
         await bindings.DB.prepare(
           `UPDATE index_profiles
            SET status = ?, mutation_id = ?, last_error = ?,
@@ -310,12 +323,17 @@ export async function runBoundIngestion(
                visible_vectors = CASE WHEN ? = 'ready' THEN expected_vectors ELSE NULL END
            WHERE id = ? AND active = 0`,
         )
+          // Valores: fase, mutación, error, métrica observada (dos veces por el CASE), fase y
+          // perfil.
           .bind(
+            // Fase, mutación y error.
             update.phase,
             update.mutationId,
             update.lastError,
+            // Métrica observada: una vez para el IS NULL y otra para el valor.
             update.observedMetric,
             update.observedMetric,
+            // Fase (para visible_vectors) y perfil.
             update.phase,
             manifest.profileId,
           )
@@ -369,12 +387,14 @@ export async function loadBoundJournal(
           : "failed";
     // Anotación del núcleo.
     return [
+      // Anotación del núcleo reconstruida desde la fila de D1.
       {
         store: row.store,
         versionId,
         profileId,
         key: row.itemKey,
         outcome,
+        // ok se deriva del resultado, no de la columna antigua.
         ok: outcome === "succeeded",
         error: row.error,
         mutationId: row.mutationId,

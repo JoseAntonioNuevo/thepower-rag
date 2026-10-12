@@ -132,17 +132,22 @@ export function createTavilySearch(input: { apiKey: string; fetch?: FetchLike })
         "search",
         input.apiKey,
         {
+          // Consulta recortada y búsqueda básica (la más barata), sin parámetros automáticos.
           query: query.slice(0, RESEARCH_LIMITS.maxQueryChars),
           search_depth: "basic",
           auto_parameters: false,
           topic: "general",
+          // Número de resultados y solo los dominios permitidos.
           max_results: bounded,
           include_domains: [...allowedDomains],
+          // Sin respuesta generada, contenido bruto ni imágenes: solo resultados.
           include_answer: false,
           include_raw_content: false,
           include_images: false,
+          // Pide el consumo para contabilizar los créditos.
           include_usage: true,
         },
+        // Señal de cancelación y tope de bytes de la respuesta.
         context,
         RESEARCH_LIMITS.maxSearchResponseBytes,
       );
@@ -204,13 +209,16 @@ export function createTavilyReader(input: {
         "extract",
         input.apiKey,
         {
+          // Una sola URL, extracción básica en Markdown y sin imágenes.
           urls: [url],
           extract_depth: "basic",
           format: "markdown",
           include_images: false,
+          // Pide el consumo y fija el plazo de Tavily (1 a 60 s) con un segundo de margen.
           include_usage: true,
           timeout: Math.max(1, Math.min(60, (context.timeoutMs - 1000) / 1000)),
         },
+        // Señal y tope de bytes de la lectura.
         context,
         RESEARCH_LIMITS.maxReadResponseBytes,
       );
@@ -252,16 +260,19 @@ export function createTavilyReader(input: {
       const text = row.raw_content.slice(0, RESEARCH_LIMITS.maxPageChars);
       // Página leída con su hash.
       return {
+        // Página leída: URL pedida y final (tras la comprobación), título vacío y texto.
         ok: true,
         value: {
           requestedUrl: url,
           finalUrl: final.url,
           title: "",
           text,
+          // Fecha de lectura, sin fecha de publicación y hash del texto.
           retrievedAt: new Date(now()).toISOString(),
           publishedAt: null,
           contentHash: `sha256:${await sha256Hex(text)}`,
         },
+        // Créditos consumidos.
         consumption: cost,
       };
     },

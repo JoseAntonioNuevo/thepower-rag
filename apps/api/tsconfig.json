@@ -1,8 +1,13 @@
+// TypeScript de la API (Worker de Cloudflare).
 {
+  // Hereda las reglas comunes.
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    // Tipos del runtime de Workers: D1, R2, Vectorize, Ai, Workflows, Request/Response…
     "types": ["@cloudflare/workers-types"],
+    // JSX de React (algunas pruebas lo usan).
     "jsx": "react-jsx"
   },
+  // Todo el código fuente de la API.
   "include": ["src"]
 }

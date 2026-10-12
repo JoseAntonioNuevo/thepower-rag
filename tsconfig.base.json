@@ -1,19 +1,34 @@
+// Configuración base de TypeScript para todo el monorepo. Cada paquete la extiende con «extends»
+// y solo añade sus tipos de entorno (Workers, DOM, Node…). TypeScript admite comentarios aquí.
 {
   "compilerOptions": {
+    // JavaScript moderno (ES2023): lo entienden workerd, Node y los navegadores actuales.
     "target": "ES2023",
+    // Solo la librería estándar de ES2023. Cada paquete añade DOM o Workers si los necesita.
     "lib": ["ES2023"],
+    // Módulos ES (import/export) y resolución al estilo de un bundler (Vite).
     "module": "ESNext",
     "moduleResolution": "Bundler",
+    // Comprobaciones estrictas: null, any implícito, etc.
     "strict": true,
+    // TypeScript solo comprueba tipos. Vite+ y Wrangler son los que compilan.
     "noEmit": true,
+    // No revisa los .d.ts de node_modules: más rápido y sin errores ajenos.
     "skipLibCheck": true,
+    // Obliga a escribir «import type» para los tipos: se borran sin efectos al compilar.
     "verbatimModuleSyntax": true,
+    // Cada archivo se puede compilar por separado (lo exige el bundler).
     "isolatedModules": true,
+    // Error si queda una variable o un parámetro sin usar.
     "noUnusedLocals": true,
     "noUnusedParameters": true,
+    // Error si un «case» de un switch cae al siguiente sin «break» o «return».
     "noFallthroughCasesInSwitch": true,
+    // Las mayúsculas de las rutas de import tienen que coincidir con el disco.
     "forceConsistentCasingInFileNames": true,
+    // Leer array[i] o record[clave] devuelve «T | undefined»: obliga a comprobarlo.
     "noUncheckedIndexedAccess": true,
+    // Permite importar archivos .json (por ejemplo, el corpus preparado).
     "resolveJsonModule": true
   }
 }

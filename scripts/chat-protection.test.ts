@@ -17,11 +17,13 @@ const now = 1791050000000;
 function environment(): WorkerEnv {
   // Variables y limitadores simulados.
   return {
+    // Modo real con presupuesto, origen y Turnstile de prueba.
     APP_MODE: "real",
     PUBLIC_BUDGET_USD: "4.3",
     PUBLIC_ORIGIN: origin,
     TURNSTILE_SITE_KEY: "synthetic-site-key",
     TURNSTILE_SECRET_KEY: "synthetic-secret-for-unit-tests-only",
+    // Limitadores simulados que siempre aceptan; vi.fn permite contar las llamadas.
     CHAT_IP_LIMITER: {
       limit: vi.fn<(input: { key: string }) => Promise<{ success: boolean }>>(async () => ({
         success: true,
