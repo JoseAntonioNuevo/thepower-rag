@@ -1,5 +1,9 @@
+// GUÍA DE LECTURA · apps/web/src/research-labels.ts
+// Textos en español para mostrar los valores del resumen de investigación y formatos pequeños.
+// Tipo del resumen.
 import type { ResearchSummary } from "@thepower-rag/contracts";
 
+// Texto de cada resultado.
 export const OUTCOME_LABEL: Record<ResearchSummary["outcome"], string> = {
   complete: "Informe completo",
   partial: "Informe parcial",
@@ -9,6 +13,7 @@ export const OUTCOME_LABEL: Record<ResearchSummary["outcome"], string> = {
   aborted: "Cancelado por el usuario",
 };
 
+// Texto de cada motivo de parada.
 export const STOP_LABEL: Record<ResearchSummary["stop"], string> = {
   "all-covered": "Todas las subpreguntas tienen evidencia",
   "course-answer": "Respuesta con el material del curso, sin búsqueda externa",
@@ -28,6 +33,7 @@ export const STOP_LABEL: Record<ResearchSummary["stop"], string> = {
   "unresolved-contradiction": "Contradicción sin resolver",
 };
 
+// Texto de cada ruta.
 export const ROUTE_LABEL: Record<NonNullable<ResearchSummary["route"]>, string> = {
   course: "Material del curso",
   tool: "Herramienta de sesión",
@@ -35,18 +41,21 @@ export const ROUTE_LABEL: Record<NonNullable<ResearchSummary["route"]>, string> 
   clarify: "Aclaración",
 };
 
+// Tipo de subpregunta.
 export const KIND_LABEL = {
   course: "Curso",
   session: "Sesión",
   technical: "Técnica",
 } as const;
 
+// Estado de cobertura.
 export const COVERAGE_LABEL = {
   covered: "cubierta",
   partial: "parcial",
   uncovered: "sin cubrir",
 } as const;
 
+// Causa de una laguna.
 export const CAUSE_LABEL = {
   evidence: "con evidencia",
   "missing-evidence": "falta evidencia",
@@ -54,6 +63,7 @@ export const CAUSE_LABEL = {
   "not-allowed": "fuente no autorizada",
 } as const;
 
+// Decisión sobre una URL descubierta.
 export const DECISION_LABEL = {
   selected: "seleccionada",
   "not-allowed": "dominio no permitido",
@@ -62,6 +72,7 @@ export const DECISION_LABEL = {
   "over-budget": "fuera del tope",
 } as const;
 
+// Tipo de fuente.
 export const SOURCE_KIND_LABEL = {
   course: "Curso",
   tool: "Herramienta",
@@ -69,21 +80,31 @@ export const SOURCE_KIND_LABEL = {
   attachment: "Entrada del alumno",
 } as const;
 
+// Importe en USD con 4 decimales, o por qué no hay.
 export function money(value: number | null, measured: boolean): string {
+  // Sin medir.
   if (!measured) {
+    // Texto.
     return "no medido";
   }
+  // Desconocido o importe.
   return value === null ? "desconocido" : `${value.toFixed(4)} USD`;
 }
 
+// Hash recortado.
 export function shortHash(hash: string | null): string {
+  // 15 caracteres y puntos suspensivos.
   return hash === null ? "sin hash" : `${hash.slice(0, 15)}…`;
 }
 
+// Dominio de una URL.
 export function hostOf(url: string): string {
+  // Si no es URL, se devuelve tal cual.
   try {
+    // Host.
     return new URL(url).hostname;
   } catch {
+    // Texto original.
     return url;
   }
 }

@@ -1,40 +1,69 @@
+// GUÍA DE LECTURA · scripts/evaluate-crag-gemini.ts
+// Prueba dirigida del evaluador CRAG real con Claude Haiku 5.5: casos suficiente, parcial, combinado,
+// irrelevante y desconocido, más una reformulación y una generación. Solo con --execute y con tope.
+// Lectura y escritura de archivos.
 import { existsSync, mkdirSync, readFileSync, writeFileSync } from "node:fs";
+// Rutas.
 import path from "node:path";
+// Sesión de gasto, validación y tipo de fragmento.
 import {
   createAllowanceLedger,
   validateRankingAndAssessment,
   type CragChunk,
 } from "@thepower-rag/core";
+// Puertos CRAG reales.
 import { createRealCragPorts } from "../apps/api/src/crag-real";
+// Fábricas de modelos.
 import { createEvaluatorModel, createGenerationModel, HAIKU_MODEL_ID } from "../apps/api/src/model";
+// Clave de Anthropic.
 import { readRepoAnthropicKey } from "./anthropic-key";
+// Tipo de embeddings.
 import type { EmbeddingRunner } from "../apps/api/src/vectors";
+// Tipos de D1 y Vectorize.
 import type { SqlDatabase, VectorIndex } from "../apps/api/src/stores";
+// Corpus preparado.
 import corpus from "../corpus/prepared/corpus.json";
+// Cuenta del curso.
 import { COURSE_DESTINATION } from "./course-destination";
 
+// Raíz.
 const root = path.resolve(import.meta.dirname, "..");
+// Sin --execute no hay red ni gasto.
 if (!process.argv.includes("--execute")) {
+  // Mensaje.
   console.log("Siete llamadas dirigidas preparadas; sin --execute no hay red ni gasto.");
+  // Sale.
   process.exit(0);
 }
+// Autorización.
 const auth = JSON.parse(readFileSync(path.join(root, "apps/web/.activation.json"), "utf8"));
+// Otra cuenta o tope: error.
 if (
   auth.accountId !== COURSE_DESTINATION.accountId ||
   !auth.allowOpenRouter ||
   auth.maxSpendUsd !== 5
 )
   throw new Error("Falta autorización del curso.");
+// Carpeta de evidencias.
 const out = path.join(root, "docs/evidence/crag-gemini");
+// La crea.
 mkdirSync(out, { recursive: true });
+// ¿Continuación?
 const continuing = process.argv.includes("--continue");
+// Archivo de resultados.
 const file = path.join(out, continuing ? "continuation-results.json" : "directed-results.json");
+// La continuación necesita la primera prueba.
 if (continuing && !existsSync(path.join(out, "directed-results.json")))
   throw new Error("No existe la primera prueba.");
+// No se repite.
 if (existsSync(file)) throw new Error("Ya hay evidencia; no se repite automáticamente.");
+// Clave.
 const key = readRepoAnthropicKey(root);
+// Sin clave: error.
 if (!key) throw new Error("Falta ANTHROPIC_API_KEY en .env.");
+// Tope de gasto.
 const maxSpend = continuing ? 0.12 : 0.25;
+// Sesión de gasto con tarifas de Haiku.
 const ledger = createAllowanceLedger({
   maxSpendUsd: maxSpend,
   maxGenerativeCalls: continuing ? 5 : 7,
@@ -45,6 +74,7 @@ const ledger = createAllowanceLedger({
     generativeUsdPerMillionOutput: 0.5,
   },
 });
+// Ámbito.
 const scope = {
   runId: crypto.randomUUID(),
   audience: "program" as const,
@@ -52,6 +82,7 @@ const scope = {
   profileId: "p76509a5f9743",
   embeddingLabel: "not-used-directed-evaluator-test",
 };
+// Fragmentos del programa.
 const chunks: CragChunk[] = corpus.documents
   .filter((d) => d.audience === "program")
   .flatMap((d) =>
@@ -65,11 +96,17 @@ const chunks: CragChunk[] = corpus.documents
       score: null,
     })),
   );
+// Fragmentos de un documento.
 const find = (id: string) => chunks.filter((c) => c.documentId === id);
+// S5.
 const s5 = find("s05-langgraph");
+// S6.
 const s6 = find("s06-observabilidad");
+// S16.
 const s16 = find("s16-cloud-aws");
+// Faltan fragmentos.
 if (!s5.length || !s6.length || !s16.length) throw new Error("Faltan fragmentos.");
+// Puertos reales sin búsqueda (no se usa).
 const ports = createRealCragPorts({
   signal: new AbortController().signal,
   scope,
@@ -87,6 +124,7 @@ const ports = createRealCragPorts({
   dimensions: 1024,
   allowance: ledger,
 });
+// Casos con la decisión esperada.
 const cases = [
   {
     id: "sufficient",
@@ -119,7 +157,9 @@ const cases = [
     expected: "insufficient",
   },
 ];
+// Resultados.
 const results: unknown[] = [];
+// Evidencia.
 const evidence = {
   at: new Date().toISOString(),
   evaluator: HAIKU_MODEL_ID,
@@ -129,11 +169,13 @@ const evidence = {
   endpointPricing: { inputUsdPerMillion: 0.1, outputUsdPerMillion: 0.5 },
   results,
 };
+// Guarda la evidencia.
 const save = () =>
   writeFileSync(
     file,
     JSON.stringify({ ...evidence, allowance: ledger.snapshot() }, null, 2) + "\n",
   );
+// Casos de esta pasada.
 const pendingCases = continuing
   ? [
       {
@@ -146,10 +188,15 @@ const pendingCases = continuing
       ...cases.filter((c) => c.id === "irrelevant" || c.id === "unknown"),
     ]
   : cases;
+// Cada caso.
 for (const c of pendingCases) {
+  // Reserva.
   if (!ports.reserve("evaluation").ok) throw new Error("Reserva denegada.");
+  // Inicio.
   const start = Date.now();
+  // Guarda aunque falle.
   try {
+    // Evaluación.
     const result = await ports.rankAndAssess({
       question: c.question,
       query: c.question,
@@ -157,9 +204,12 @@ for (const c of pendingCases) {
       attempt: 1,
       remainingMs: 20000,
     });
+    // Validación.
     const validated = result.ok ? validateRankingAndAssessment(c.chunks, result.raw) : result;
+    // ¿Decisión esperada?
     const passed =
       validated.ok && "assessment" in validated && validated.assessment.status === c.expected;
+    // Registra.
     results.push({
       id: c.id,
       expected: c.expected,
@@ -168,15 +218,22 @@ for (const c of pendingCases) {
       result,
       validated,
     });
+    // Guarda.
     save();
+    // Progreso.
     console.log({ id: c.id, passed, durationMs: Date.now() - start });
+    // Fallo: error.
     if (!passed) throw new Error("La evaluación no cumplió el contrato; ver evidencia privada.");
   } catch (e) {
+    // Guarda.
     save();
+    // Propaga.
     throw e;
   }
 }
+// Reserva la reformulación.
 if (!ports.reserve("reformulation").ok) throw new Error("Reserva denegada.");
+// Reformula.
 const rewrite = await ports.reformulate({
   question: cases[1]!.question,
   query: "LangGraph estado nodos",
@@ -184,17 +241,26 @@ const rewrite = await ports.reformulate({
   attempt: 1,
   remainingMs: 20000,
 });
+// Registra.
 results.push({ id: "rewrite", result: rewrite });
+// Guarda.
 save();
+// Fallo.
 if (!rewrite.ok) throw new Error("Reformulación fallida.");
+// Reserva la generación.
 if (!ports.reserve("generation").ok) throw new Error("Reserva denegada.");
+// Genera.
 const generated = await ports.generate({
   question: cases[0]!.question,
   evidence: s5,
   remainingMs: 20000,
 });
+// Registra.
 results.push({ id: "generation-luna", result: generated });
+// Guarda.
 save();
+// Debe citar.
 if (!generated.ok || !generated.text.includes("[cite:"))
   throw new Error("Generación sin respuesta o cita.");
+// Fin.
 console.log("Prueba dirigida completada; decisiones y respuesta guardadas.");
