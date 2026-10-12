@@ -1,9 +1,14 @@
+// GUÍA DE LECTURA · apps/api/src/crag-http.ts
+// Etapa CRAG por HTTP: comprueba configuración e índice, crea los puertos (demo, aclaración o
+// reales con el proveedor elegido), ejecuta el grafo y envía pasos, resumen, fuentes y respuesta.
+// Esquema y tipos del contrato.
 import {
   cragSummarySchema,
   type ChatRequest,
   type CragStep,
   type RunMetadata,
 } from "@thepower-rag/contracts";
+// Citas, detección de calendario, filtro de citas y tipos.
 import {
   citationsFor,
   isScheduleQuestion,
@@ -12,16 +17,27 @@ import {
   type AllowanceLedger,
   type IndexedChunk,
 } from "@thepower-rag/core";
+// Utilidades del AI SDK para el stream.
 import { createUIMessageStream, createUIMessageStreamResponse } from "ai";
+// Puertos de la demo y su guion.
 import { createDemoCragPorts, resolveDemoScenario } from "./crag-demo";
+// Grafo de CRAG.
 import { runCragTurn } from "./crag-graph";
+// Puertos reales.
 import { createRealCragPorts } from "./crag-real";
+// Mensaje genérico de fallo.
 import { PUBLIC_PROVIDER_MESSAGE } from "./course-stream";
+// Tipos del entorno.
 import type { Assessment, WorkerEnv } from "./env";
+// Corpus de la demo.
 import { fixtureCorpusVersion, fixtureProfile } from "./fixture";
+// Fábrica de modelos.
 import { createEvaluatorModel, createGenerationModel } from "./model";
+// Tarifa del coste mostrado.
 import { generationPricing } from "./provider-cost";
+// Instrucciones de CRAG.
 import { CRAG_PROMPT } from "./prompts";
+// Perfil de índice y tipos de los bindings.
 import {
   profileReady,
   readIndexProfile,
@@ -29,19 +45,28 @@ import {
   type SqlDatabase,
   type VectorIndex,
 } from "./stores";
+// Tipo del ejecutor de embeddings.
 import type { EmbeddingRunner } from "./vectors";
 
+// Dependencias inyectables.
 export interface CragHttpDeps {
+  // Aviso de cada llamada al proveedor.
   onProviderCall?: () => void;
+  // Puertos de prueba.
   cragPorts?: CragPorts;
+  // Perfil de índice de prueba.
   profile?: IndexProfileRow | null;
 }
 
+// Estado de la respuesta (identidad, se deja explícito).
 function completionFor(terminal: RunMetadata["completion"]): RunMetadata["completion"] {
+  // Mismo valor.
   return terminal;
 }
 
+// Puertos que no hacen nada: una aclaración no busca ni genera.
 function inertPorts(signal: AbortSignal): CragPorts {
+  // Puertos inertes.
   return {
     measured: false,
     now: () => Date.now(),
@@ -57,30 +82,49 @@ function inertPorts(signal: AbortSignal): CragPorts {
   };
 }
 
+// Atiende un turno de CRAG: 409 si falta configuración o un stream con el grafo.
 export async function cragHttpResponse(input: {
+  // Entorno.
   env: WorkerEnv;
+  // Diagnóstico.
   assessment: Assessment;
+  // Petición.
   request: ChatRequest;
+  // Pregunta.
   question: string;
+  // Historial.
   history: readonly { role: "user" | "assistant"; content: string }[];
+  // Señal de cancelación.
   signal: AbortSignal;
+  // Dependencias.
   deps: CragHttpDeps;
+  // Reserva del presupuesto.
   allowance?: AllowanceLedger;
 }): Promise<Response | { status: 409; missing: string[]; message: string }> {
+  // Pregunta de calendario sin grupo: aclaración.
   const clarify = input.request.audience === "program" && isScheduleQuestion(input.question);
+  // En real (salvo aclaración) hay que comprobar la configuración.
   if (input.assessment.execution === "real" && !clarify) {
+    // Estado de CRAG.
     const capability = input.assessment.capabilities.crag;
+    // No está listo.
     if (capability.status !== "ready") {
+      // 409 sin caer a la demo.
       return {
         status: 409,
         missing: capability.missing,
         message: "CRAG real no está configurado. No se usa la demostración ni RAG básico.",
       };
     }
+    // Ajustes del RAG.
     const retrieval = input.assessment.retrieval;
+    // Binding de embeddings.
     const runner = input.env.AI as EmbeddingRunner | undefined;
+    // Binding de Vectorize.
     const index = input.env.VECTORIZE as VectorIndex | undefined;
+    // Binding de D1.
     const database = input.env.DB as SqlDatabase | undefined;
+    // Falta algo.
     if (
       !runner ||
       !index ||
@@ -88,19 +132,25 @@ export async function cragHttpResponse(input: {
       retrieval === null ||
       input.assessment.generation === null
     ) {
+      // 409.
       return {
         status: 409,
         missing: capability.missing,
         message: "Faltan bindings o ajustes de CRAG.",
       };
     }
+    // Sin puertos inyectados, el índice debe estar listo.
     if (input.deps.cragPorts === undefined) {
+      // Perfil inyectado o leído de D1.
       const row =
         input.deps.profile !== undefined
           ? input.deps.profile
           : await readIndexProfile(database, retrieval.indexProfile, retrieval.corpusVersion);
+      // ¿Coincide y está listo?
       const gate = profileReady(row, retrieval);
+      // No.
       if (!gate.ok) {
+        // 409.
         return {
           status: 409,
           missing: gate.missing,
@@ -110,9 +160,13 @@ export async function cragHttpResponse(input: {
     }
   }
 
+  // ¿Modo demo?
   const demo = input.assessment.execution !== "real";
+  // Guion de la demo.
   const scenarioId = demo ? resolveDemoScenario(input.request.demoScenario, input.question) : null;
+  // Ajustes del RAG.
   const retrieval = input.assessment.retrieval;
+  // Alcance de la ejecución.
   const scope = {
     runId: crypto.randomUUID(),
     audience: input.request.audience,
@@ -124,6 +178,7 @@ export async function cragHttpResponse(input: {
       ? "fixture-token-hash-v1"
       : (retrieval?.embeddingModel ?? "sin configurar"),
   };
+  // Puertos inyectados, de la demo, inertes o reales.
   const ports =
     input.deps.cragPorts ??
     (demo
@@ -157,6 +212,7 @@ export async function cragHttpResponse(input: {
             allowance: input.allowance,
           }));
 
+  // Metadatos de la respuesta.
   const metadata: RunMetadata = {
     runId: scope.runId,
     origin: demo ? "offline-fixture" : "pipeline",
@@ -167,9 +223,12 @@ export async function cragHttpResponse(input: {
     cost: null,
   };
 
+  // Stream de la respuesta.
   const stream = createUIMessageStream({
     execute: async ({ writer }) => {
+      // Inicio.
       writer.write({ type: "start", messageMetadata: metadata });
+      // Ejecuta el grafo enviando cada paso.
       const result = await runCragTurn({
         question: input.question,
         scope,
@@ -177,11 +236,15 @@ export async function cragHttpResponse(input: {
         fixture: demo,
         scenarioId,
         onStep: (step: CragStep) => {
+          // Paso transitorio.
           writer.write({ type: "data-step", data: step, transient: true });
         },
       });
+      // Resumen validado.
       const summary = cragSummarySchema.parse(result.summary);
+      // Envía el resumen.
       writer.write({ type: "data-crag", id: "crag", data: summary });
+      // Citas solo si hay respuesta.
       const sources =
         result.terminal === "answer"
           ? citationsFor(
@@ -191,20 +254,30 @@ export async function cragHttpResponse(input: {
               })),
             )
           : [];
+      // Envía cada cita.
       for (const source of sources) {
+        // Cita.
         writer.write({ type: "data-source", id: source.chunkId, data: source });
       }
+      // Ids citables.
       const allowed = new Set(sources.map((source) => source.chunkId));
+      // Texto sin citas desconocidas.
       const text =
         result.terminal === "answer"
           ? suppressUnknownCitations(result.answerText, allowed)
           : result.answerText;
+      // Inicio del texto.
       writer.write({ type: "text-start", id: "answer" });
+      // Trozos de 160 caracteres.
       const size = 160;
+      // Envía cada trozo.
       for (let index = 0; index < text.length; index += size) {
+        // Trozo.
         writer.write({ type: "text-delta", id: "answer", delta: text.slice(index, index + size) });
       }
+      // Fin del texto.
       writer.write({ type: "text-end", id: "answer" });
+      // Estado según el final del grafo.
       const completion = completionFor(
         result.terminal === "answer"
           ? "complete"
@@ -216,6 +289,7 @@ export async function cragHttpResponse(input: {
                 ? "aborted"
                 : "error",
       );
+      // Final con consumo y coste.
       writer.write({
         type: "finish",
         messageMetadata: {
@@ -233,6 +307,7 @@ export async function cragHttpResponse(input: {
     },
     onError: () => PUBLIC_PROVIDER_MESSAGE,
   });
+  // Respuesta HTTP sin caché.
   return createUIMessageStreamResponse({
     stream,
     headers: {

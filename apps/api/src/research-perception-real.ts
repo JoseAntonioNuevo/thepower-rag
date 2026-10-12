@@ -1,8 +1,17 @@
+// GUÍA DE LECTURA · apps/api/src/research-perception-real.ts
+// Percepción real de S12: lectura de imagen con el modelo de visión del proveedor elegido, y
+// transcripción (Whisper) y voz (Aura) con Workers AI. Una llamada cada una, sin reintentos.
+// Límites de medios.
 import { MEDIA_LIMITS } from "@thepower-rag/contracts";
+// Tipo del resultado de un puerto.
 import type { PortResult } from "@thepower-rag/research";
+// Generación de texto del AI SDK y tipo de modelo.
 import { generateText, type LanguageModel } from "ai";
+// Tipo de las tarifas.
 import type { TokenPrices } from "./env";
+// Consumo estimado a partir de los tokens.
 import { tokenEstimateConsumption } from "./provider-cost";
+// Instrucciones de visión y adaptadores de Whisper y Aura.
 import {
   VISION_SYSTEM,
   auraInput,
@@ -15,10 +24,12 @@ import {
   type WorkersAi,
 } from "./research-perception";
 
+// Consumo estimado de la llamada de visión.
 function observedTokens(
   usage: { inputTokens?: number | null; outputTokens?: number | null } | undefined,
   prices?: TokenPrices,
 ) {
+  // Tokens por tarifa (la de la investigación si se indica).
   return tokenEstimateConsumption(usage, prices);
 }
 
@@ -33,7 +44,9 @@ export async function visionImage(
   signal: AbortSignal,
   prices?: TokenPrices,
 ): Promise<PortResult<ImageRead>> {
+  // Un fallo del proveedor se devuelve como resultado, no como excepción.
   try {
+    // Una llamada con la imagen como parte de archivo.
     const result = await generateText({
       model,
       system: VISION_SYSTEM,
@@ -50,8 +63,11 @@ export async function visionImage(
       maxRetries: 0,
       abortSignal: signal,
     });
+    // Lee el JSON pedido del texto.
     const parsed = parseVisionJson(result.text);
+    // Sin JSON válido.
     if (parsed === null) {
+      // Resultado inválido con su consumo.
       return {
         ok: false,
         error: "invalid",
@@ -59,8 +75,10 @@ export async function visionImage(
         consumption: observedTokens(result.usage, prices),
       };
     }
+    // Lectura correcta.
     return { ok: true, value: parsed, consumption: observedTokens(result.usage, prices) };
   } catch {
+    // Fallo o cancelación: consumo desconocido.
     return {
       ok: false,
       error: signal.aborted ? "aborted" : "provider",
@@ -70,34 +88,49 @@ export async function visionImage(
   }
 }
 
+// Extrae y valida el JSON de la respuesta de visión.
 export function parseVisionJson(text: string): ImageRead | null {
+  // Primera llave.
   const start = text.indexOf("{");
+  // Última llave.
   const end = text.lastIndexOf("}");
+  // Sin objeto JSON.
   if (start < 0 || end <= start) return null;
+  // JSON mal formado devuelve null.
   try {
+    // Analiza el objeto.
     const parsed = JSON.parse(text.slice(start, end + 1)) as {
+      // Texto leído en la imagen.
       observedText?: unknown;
+      // Notas.
       notes?: unknown;
+      // Si el modelo no está seguro.
       uncertain?: unknown;
     };
+    // El texto leído es obligatorio.
     if (typeof parsed.observedText !== "string") return null;
+    // Lectura recortada a los límites.
     return {
       observedText: parsed.observedText.trim().slice(0, MEDIA_LIMITS.maxObservedChars),
       notes: typeof parsed.notes === "string" ? parsed.notes.trim().slice(0, 500) : "",
       uncertain: parsed.uncertain === true,
     };
   } catch {
+    // JSON inválido.
     return null;
   }
 }
 
+// Transcribe un audio con Whisper de Workers AI.
 export async function workersTranscript(
   ai: WorkersAi,
   modelId: string,
   bytes: Uint8Array,
   signal: AbortSignal,
 ): Promise<PortResult<TranscriptRead>> {
+  // Cancelado antes de llamar.
   if (signal.aborted) {
+    // Resultado cancelado.
     return {
       ok: false,
       error: "aborted",
@@ -106,9 +139,13 @@ export async function workersTranscript(
       consumption: { kind: "unknown" },
     };
   }
+  // Un fallo se devuelve como resultado.
   try {
+    // Llamada a Workers AI.
     const raw = await ai.run(modelId, whisperInput(bytes));
+    // Cancelado mientras esperaba.
     if (signal.aborted) {
+      // No se publica.
       return {
         ok: false,
         error: "aborted",
@@ -117,8 +154,11 @@ export async function workersTranscript(
         consumption: { kind: "unknown" },
       };
     }
+    // Texto de la transcripción.
     const parsed = parseWhisper(raw);
+    // Sin texto.
     if (parsed === null) {
+      // Resultado inválido.
       return {
         ok: false,
         error: "invalid",
@@ -126,12 +166,14 @@ export async function workersTranscript(
         consumption: { kind: "reported", usd: null, credits: null },
       };
     }
+    // Transcripción correcta (el binding no informa el importe).
     return {
       ok: true,
       value: parsed,
       consumption: { kind: "reported", usd: null, credits: null },
     };
   } catch {
+    // Fallo o cancelación.
     return {
       ok: false,
       error: signal.aborted ? "aborted" : "provider",
@@ -143,13 +185,16 @@ export async function workersTranscript(
   }
 }
 
+// Genera voz con Aura de Workers AI.
 export async function workersSpeech(
   ai: WorkersAi,
   modelId: string,
   text: string,
   signal: AbortSignal,
 ): Promise<PortResult<Uint8Array>> {
+  // Cancelado antes de llamar.
   if (signal.aborted) {
+    // Resultado cancelado.
     return {
       ok: false,
       error: "aborted",
@@ -158,9 +203,13 @@ export async function workersSpeech(
       consumption: { kind: "unknown" },
     };
   }
+  // Un fallo se devuelve como resultado.
   try {
+    // Llamada a Workers AI.
     const raw = await ai.run(modelId, auraInput(text));
+    // Cancelado mientras esperaba.
     if (signal.aborted) {
+      // No se publica.
       return {
         ok: false,
         error: "aborted",
@@ -169,8 +218,11 @@ export async function workersSpeech(
         consumption: { kind: "unknown" },
       };
     }
+    // Bytes del audio devuelto.
     const bytes = await bytesFromAiOutput(raw, signal);
+    // Cancelado durante la lectura.
     if (signal.aborted) {
+      // No se publica.
       return {
         ok: false,
         error: "aborted",
@@ -179,7 +231,9 @@ export async function workersSpeech(
         consumption: { kind: "unknown" },
       };
     }
+    // Audio vacío o demasiado grande.
     if (bytes === null || bytes.byteLength < 32 || bytes.byteLength > MEDIA_LIMITS.maxAudioBytes) {
+      // Resultado inválido.
       return {
         ok: false,
         error: "invalid",
@@ -187,12 +241,14 @@ export async function workersSpeech(
         consumption: { kind: "reported", usd: null, credits: null },
       };
     }
+    // Audio correcto.
     return {
       ok: true,
       value: bytes,
       consumption: { kind: "reported", usd: null, credits: null },
     };
   } catch {
+    // Fallo o cancelación.
     return {
       ok: false,
       error: signal.aborted ? "aborted" : "provider",
