@@ -4,6 +4,7 @@ import { parse } from "dotenv";
 import { cloudflare } from "@cloudflare/vite-plugin";
 import react from "@vitejs/plugin-react";
 import { defineConfig } from "vite-plus";
+import { PROVIDER_ENV_VARIABLES } from "../../packages/contracts/src/limits";
 
 function configuredValue(value: string | undefined): value is string {
   if (value === undefined) return false;
@@ -33,19 +34,14 @@ export default defineConfig(({ command }) => ({
         if (command !== "serve" || researchDev) return;
         const vars = { ...workerConfig.vars };
         let changed = false;
-        const key = configuredRepoEnv("ANTHROPIC_API_KEY");
-        const currentKey =
-          typeof vars.ANTHROPIC_API_KEY === "string" ? vars.ANTHROPIC_API_KEY : undefined;
-        if (key && !configuredValue(currentKey)) {
-          vars.ANTHROPIC_API_KEY = key;
-          changed = true;
-        }
-        const workspaceId = configuredRepoEnv("ANTHROPIC_WORKSPACE_ID");
-        const currentWorkspace =
-          typeof vars.ANTHROPIC_WORKSPACE_ID === "string" ? vars.ANTHROPIC_WORKSPACE_ID : undefined;
-        if (workspaceId && !configuredValue(currentWorkspace)) {
-          vars.ANTHROPIC_WORKSPACE_ID = workspaceId;
-          changed = true;
+        // Proveedor y claves del .env de la raíz, solo si la configuración del Worker no los trae.
+        for (const name of PROVIDER_ENV_VARIABLES) {
+          const value = configuredRepoEnv(name);
+          const current = typeof vars[name] === "string" ? vars[name] : undefined;
+          if (value && !configuredValue(current)) {
+            vars[name] = value;
+            changed = true;
+          }
         }
         if (!changed) return;
         return { vars };

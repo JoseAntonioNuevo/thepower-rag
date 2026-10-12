@@ -2,7 +2,6 @@ import { readFileSync, writeFileSync, mkdirSync, existsSync } from "node:fs";
 import path from "node:path";
 import { generateText } from "../apps/api/src/context-evaluation-model";
 import {
-  anthropicProviderOptions,
   createGenerationModel,
   HAIKU_INPUT_USD_PER_MILLION,
   HAIKU_MODEL_ID,
@@ -188,7 +187,6 @@ for (const [id, group, question, expected] of cases) {
       maxOutputTokens: 1600,
       maxRetries: 0,
       timeout: { totalMs: 20000 },
-      providerOptions: anthropicProviderOptions,
     });
     const cost = providerCost(result.totalUsage);
     ledger.settle(reserve.id, cost?.amount ?? null);

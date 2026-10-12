@@ -37,12 +37,10 @@ export function liveResearchPorts(
   ) {
     throw new Error("research-not-ready");
   }
+  // Mismo proveedor y clave que el chat; la investigación solo cambia a RESEARCH_MODEL_ID.
   const model = createGenerationModel({
-    apiKey: assessment.generation.apiKey,
+    ...assessment.generation,
     modelId: settings.settings.plannerModelId,
-    ...(assessment.generation.workspaceId
-      ? { workspaceId: assessment.generation.workspaceId }
-      : {}),
   });
   const prices = parsePriceSnapshot(job.price_json);
   const outputCap =

@@ -34,17 +34,27 @@ export { healthResponseSchema } from "./health";
 export type { HealthResponse } from "./health";
 export {
   CRAG_VARIABLES,
+  DEFAULT_LLM_PROVIDER,
   GENERATION_VARIABLES,
   LIMITS,
+  LLM_PROVIDERS,
+  PROVIDER_CREDENTIAL,
+  PROVIDER_ENV_VARIABLES,
   RAG_BINDING_NAMES,
   RAG_SETTING_VARIABLES,
+  REASONING_EFFORTS,
+  generationVariables,
   isConfiguredValue,
+  llmProvider,
+  reasoningEffort,
 } from "./limits";
 export type {
   CragVariable,
   GenerationVariable,
+  LlmProvider,
   RagBindingName,
   RagSettingVariable,
+  ReasoningEffort,
 } from "./limits";
 export { DEMO_CRAG_SCENARIOS, cragStepSchema, cragSummarySchema, demoScenarioSchema } from "./crag";
 export type { CragStep, CragSummary, DemoScenarioId } from "./crag";
@@ -75,6 +85,7 @@ export {
   VISION_MODEL_IDS,
   isVisionModel,
   maxVisionInputTokens,
+  visionModelAccepted,
   visualTokens,
 } from "./media";
 export type { VisionModelId } from "./media";

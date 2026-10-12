@@ -12,6 +12,18 @@ LangGraph ejecuta el grafo de CRAG en cada turno de esa etapa. La comprobación 
 
 `compatibility_date` queda en `2026-10-02`. Miniflare de wrangler 4.147.0 compara la fecha con `new Date().toISOString()` en UTC. En la noche del 3 de octubre en Madrid, UTC seguía en el 2 de octubre, así que `2026-10-03` se rechazó como fecha futura y el servidor local no arrancaba. La fecha elegida es la más reciente que ese runtime acepta durante esta verificación.
 
+## Cualquier proveedor de modelos
+
+Desde el 12 de octubre de 2026, `LLM_PROVIDER` elige el proveedor de todos los papeles generativos: `anthropic` (por defecto), `openai`, `openrouter`, `gemini` o `compatible`. Cada papel conserva su variable de modelo. La versión publicada no cambia: sin la variable sigue Claude Haiku 5.5 por la API de Anthropic con `effort: low`.
+
+Se usan los paquetes del AI SDK de la misma serie que `@ai-sdk/anthropic` 4.0.78 (`@ai-sdk/openai` 4.0.91, `@ai-sdk/google` 4.0.93 y `@ai-sdk/openai-compatible` 3.0.67) y `@openrouter/ai-sdk-provider` 3.1.0, que el proyecto ya usó con OpenRouter. El Worker comprimido pasa de 808 KB a 994 KB.
+
+El razonamiento por defecto es bajo en todas las rutas. En OpenRouter, un nivel bajo que el modelo no admite sube al más cercano, y en DeepSeek V4 Flash eso es `high`: agotaba el plazo de CRAG y el tope de salida del plan. Por eso esa ruta lee una vez el catálogo público. Apaga el razonamiento si el modelo lo permite, pide su nivel más bajo si razona siempre y no envía nada si no razona. Si el catálogo falla, pide el nivel bajo.
+
+El coste mostrado usa `MODEL_*_USD_PER_MILLION` y el consumo estimado de la investigación y la visión usa `RESEARCH_*_USD_PER_MILLION`, las mismas tarifas con las que se reserva. Antes se calculaban siempre con la tarifa de Haiku. Con otro modelo sin tarifa, el coste mostrado queda desconocido. CRAG pasa ahora al evaluador y al generador los ajustes completos del proveedor, incluido el espacio de trabajo de Anthropic que antes omitía.
+
+Los embeddings, la voz y la transcripción siguen en Workers AI. Los scripts de verificación del despliegue siguen fijados a Claude Haiku 5.5.
+
 ## Fase 2: generación y RAG básico
 
 Sin RAG real usa OpenRouter con `MODEL_ID` y la clave. No exige `EVALUATOR_MODEL_ID`. RAG básico recupera una sola vez y, si el umbral no deja contexto, no llama al modelo. CRAG real pide además el evaluador y no bloquea las otras etapas cuando falta.

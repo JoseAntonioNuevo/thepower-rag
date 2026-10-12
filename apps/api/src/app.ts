@@ -52,6 +52,7 @@ import { readCourseContext, completeContextOutcome, CourseContextError } from ".
 import { protectChat } from "./chat-protection";
 import { reservePublicTurn } from "./public-budget";
 import { createGenerationModel } from "./model";
+import { generationPricing } from "./provider-cost";
 import {
   RAG_PROMPT,
   SIN_RAG_PROMPT,
@@ -332,6 +333,7 @@ export function createApp(deps: AppDeps = {}) {
           system: SIN_RAG_PROMPT.text,
           messages: history,
           metadata: metadata("provider", settings.modelId, SIN_RAG_PROMPT.id, "complete"),
+          costPricing: generationPricing(settings),
           validateCitations: false,
           trace: {
             query: question,
@@ -619,6 +621,7 @@ export function createApp(deps: AppDeps = {}) {
         validateCitations: true,
         onlyCitedSources: context.env.RAG_CONTEXT_MODE === "complete",
         maxOutputTokens: context.env.RAG_CONTEXT_MODE === "complete" ? 1200 : undefined,
+        costPricing: generationPricing(settings),
       });
     } catch {
       return jsonError({ error: "provider", message: PUBLIC_PROVIDER_MESSAGE }, 502);

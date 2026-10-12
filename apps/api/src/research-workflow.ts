@@ -1,7 +1,7 @@
-import { MEDIA_LIMITS, isVisionModel } from "@thepower-rag/contracts";
+import { MEDIA_LIMITS, llmProvider, visionModelAccepted } from "@thepower-rag/contracts";
 import { WorkflowEntrypoint } from "cloudflare:workers";
 import type { WorkflowEvent, WorkflowStep } from "cloudflare:workers";
-import { assessWorker, type WorkerEnv } from "./env";
+import { assessWorker, tokenPrices, type WorkerEnv } from "./env";
 import { asMediaBucket } from "./research-media";
 import { createGenerationModel } from "./model";
 import { asResearchDatabase, ensureResearchSchema } from "./research-db";
@@ -77,15 +77,12 @@ export class ResearchJobWorkflow extends WorkflowEntrypoint<WorkerEnv, Payload> 
 function mediaContext(env: WorkerEnv) {
   const assessment = assessWorker(env);
   const visionId = env.RESEARCH_VISION_MODEL_ID?.trim() || env.RESEARCH_MODEL_ID?.trim() || "";
+  const provider = llmProvider(env.LLM_PROVIDER);
+  const accepted = provider !== null && visionModelAccepted(provider, visionId);
+  // Mismo proveedor y clave que el chat; la visión solo cambia de modelo.
   const vision =
-    env.APP_MODE === "real" && assessment.generation && isVisionModel(visionId)
-      ? createGenerationModel({
-          apiKey: assessment.generation.apiKey,
-          modelId: visionId,
-          ...(assessment.generation.workspaceId
-            ? { workspaceId: assessment.generation.workspaceId }
-            : {}),
-        })
+    env.APP_MODE === "real" && assessment.generation && accepted
+      ? createGenerationModel({ ...assessment.generation, modelId: visionId })
       : null;
   const ai = env.AI;
   return {
@@ -93,7 +90,12 @@ function mediaContext(env: WorkerEnv) {
     bucket: asMediaBucket(env.RESEARCH_MEDIA),
     ai: typeof ai === "object" && ai !== null && "run" in ai ? (ai as WorkersAi) : null,
     vision,
-    visionModelId: isVisionModel(visionId) ? visionId : null,
+    visionModelId: accepted ? visionId : null,
+    // La visión se reserva con la tarifa de la investigación; su consumo usa la misma.
+    visionPrices: tokenPrices(
+      env.RESEARCH_INPUT_USD_PER_MILLION,
+      env.RESEARCH_OUTPUT_USD_PER_MILLION,
+    ),
     sttModelId: env.RESEARCH_STT_MODEL_ID?.trim() || MEDIA_LIMITS.sttModelId,
     ttsModelId: env.RESEARCH_TTS_MODEL_ID?.trim() || MEDIA_LIMITS.ttsModelId,
   };

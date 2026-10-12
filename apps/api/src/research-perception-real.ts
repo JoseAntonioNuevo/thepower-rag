@@ -1,7 +1,7 @@
 import { MEDIA_LIMITS } from "@thepower-rag/contracts";
 import type { PortResult } from "@thepower-rag/research";
 import { generateText, type LanguageModel } from "ai";
-import { anthropicProviderOptions } from "./model";
+import type { TokenPrices } from "./env";
 import { tokenEstimateConsumption } from "./provider-cost";
 import {
   VISION_SYSTEM,
@@ -17,19 +17,21 @@ import {
 
 function observedTokens(
   usage: { inputTokens?: number | null; outputTokens?: number | null } | undefined,
+  prices?: TokenPrices,
 ) {
-  return tokenEstimateConsumption(usage);
+  return tokenEstimateConsumption(usage, prices);
 }
 
 /**
  * Una llamada, sin reintentos del SDK. Un fallo después de salir la petición
  * deja el consumo desconocido: abortar en local no demuestra que no hubiera cargo.
  */
-export async function anthropicImage(
+export async function visionImage(
   model: LanguageModel,
   bytes: Uint8Array,
   mime: "image/png" | "image/jpeg",
   signal: AbortSignal,
+  prices?: TokenPrices,
 ): Promise<PortResult<ImageRead>> {
   try {
     const result = await generateText({
@@ -47,7 +49,6 @@ export async function anthropicImage(
       maxOutputTokens: MEDIA_LIMITS.visionOutputTokens,
       maxRetries: 0,
       abortSignal: signal,
-      providerOptions: anthropicProviderOptions,
     });
     const parsed = parseVisionJson(result.text);
     if (parsed === null) {
@@ -55,10 +56,10 @@ export async function anthropicImage(
         ok: false,
         error: "invalid",
         detail: "La visión no devolvió el JSON pedido.",
-        consumption: observedTokens(result.usage),
+        consumption: observedTokens(result.usage, prices),
       };
     }
-    return { ok: true, value: parsed, consumption: observedTokens(result.usage) };
+    return { ok: true, value: parsed, consumption: observedTokens(result.usage, prices) };
   } catch {
     return {
       ok: false,

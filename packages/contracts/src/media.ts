@@ -42,6 +42,21 @@ export function isVisionModel(modelId: string): modelId is VisionModelId {
   return (VISION_MODEL_IDS as readonly string[]).includes(modelId);
 }
 
+/**
+ * Modelo de visión admitido para el proveedor elegido. Con anthropic se mantiene la lista de
+ * Claude con imagen documentada. Con otro proveedor vale cualquier ID configurado: quien lo
+ * elige debe usar un modelo que acepte imágenes, y una llamada fallida queda como error de
+ * visión sin cambiar de modelo. El tope de tokens visuales sigue el cálculo de Claude, que
+ * para el tamaño máximo admitido suele superar al de GPT o Gemini: la reserva sigue siendo
+ * prudente, pero conviene comprobar la tarifa de imagen del modelo elegido.
+ */
+export function visionModelAccepted(provider: string, modelId: string): boolean {
+  if (provider === "anthropic") {
+    return isVisionModel(modelId);
+  }
+  return modelId.trim().length > 0;
+}
+
 export function visualTokens(width: number, height: number): number {
   const patch = MEDIA_LIMITS.patchPixels;
   return Math.ceil(width / patch) * Math.ceil(height / patch);

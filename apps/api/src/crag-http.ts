@@ -20,6 +20,7 @@ import { PUBLIC_PROVIDER_MESSAGE } from "./course-stream";
 import type { Assessment, WorkerEnv } from "./env";
 import { fixtureCorpusVersion, fixtureProfile } from "./fixture";
 import { createEvaluatorModel, createGenerationModel } from "./model";
+import { generationPricing } from "./provider-cost";
 import { CRAG_PROMPT } from "./prompts";
 import {
   profileReady,
@@ -135,21 +136,21 @@ export async function cragHttpResponse(input: {
             embedder: input.env.AI as EmbeddingRunner,
             index: input.env.VECTORIZE as VectorIndex,
             database: input.env.DB as SqlDatabase,
+            // Mismo proveedor y clave para los dos papeles; solo cambia el modelo.
             evaluator: createEvaluatorModel(
               {
-                apiKey: input.assessment.generation?.apiKey ?? "",
-                modelId: input.assessment.generation?.modelId ?? "",
+                ...(input.assessment.generation ?? { apiKey: "", modelId: "" }),
                 evaluatorModelId: input.env.EVALUATOR_MODEL_ID?.trim() ?? "",
               },
               input.deps.onProviderCall,
             ),
             generator: createGenerationModel(
-              {
-                apiKey: input.assessment.generation?.apiKey ?? "",
-                modelId: input.assessment.generation?.modelId ?? "",
-              },
+              input.assessment.generation ?? { apiKey: "", modelId: "" },
               input.deps.onProviderCall,
             ),
+            costPricing: input.assessment.generation
+              ? generationPricing(input.assessment.generation)
+              : null,
             messages: input.history,
             embeddingModel: retrieval?.embeddingModel ?? "",
             dimensions: retrieval?.dimensions ?? 0,

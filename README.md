@@ -27,7 +27,7 @@ El navegador habla con un único Worker. Workers Static Assets sirve React. Hono
 - D1 guarda texto, metadatos, versiones y registros de ejecución.
 - R2 guarda el corpus privado y, en S12, adjuntos de investigación en un bucket aparte.
 - Workers AI ejecuta embeddings con `@cf/baai/bge-m3`; la dimensión observada en esta cuenta es 1024.
-- La API de Claude genera con `claude-haiku-5-5`. El evaluador de CRAG usa el mismo modelo.
+- La versión publicada genera con `claude-haiku-5-5` por la API de Anthropic, y el evaluador de CRAG usa el mismo modelo. El código admite cualquier otro proveedor y modelo: [elegir proveedor y modelo](#elegir-proveedor-y-modelo).
 
 El perfil demo no usa esos servicios. Usa un índice lexical de 128 dimensiones, etiquetado como prueba. No es una búsqueda semántica ni Vectorize.
 
@@ -76,18 +76,20 @@ bun run preflight -- --capability rag
 
 ## Variables y bindings
 
-| Nombre                 | Uso                                         |
-| ---------------------- | ------------------------------------------- |
-| `APP_MODE`             | `demo` o `real`                             |
-| `ANTHROPIC_API_KEY`    | Secreto de la API de Claude, en `.dev.vars` |
-| `MODEL_ID`             | Modelo generativo del servidor              |
-| `EMBEDDING_MODEL`      | Modelo de embeddings del RAG real           |
-| `EMBEDDING_DIMENSIONS` | Dimensión observada, no supuesta            |
-| `CORPUS_VERSION`       | Versión de preparación que se consulta      |
-| `INDEX_PROFILE`        | Perfil de índice, distinto del hash lexical |
-| `VECTOR_METRIC`        | Debe ser `cosine` en el perfil real         |
-| `MIN_RETRIEVAL_SCORE`  | Umbral calibrado del índice que se use      |
-| `EVALUATOR_MODEL_ID`   | Solo CRAG real. No bloquea las otras etapas |
+| Nombre                 | Uso                                          |
+| ---------------------- | -------------------------------------------- |
+| `APP_MODE`             | `demo` o `real`                              |
+| `LLM_PROVIDER`         | Proveedor de los modelos; vacío, `anthropic` |
+| Clave del proveedor    | `ANTHROPIC_API_KEY`, `OPENROUTER_API_KEY`…   |
+| `MODEL_ID`             | Modelo generativo del servidor               |
+| `EMBEDDING_MODEL`      | Modelo de embeddings del RAG real            |
+| `EMBEDDING_DIMENSIONS` | Dimensión observada, no supuesta             |
+| `CORPUS_VERSION`       | Versión de preparación que se consulta       |
+| `INDEX_PROFILE`        | Perfil de índice, distinto del hash lexical  |
+| `VECTOR_METRIC`        | Debe ser `cosine` en el perfil real          |
+| `MIN_RETRIEVAL_SCORE`  | Umbral calibrado del índice que se use       |
+| `EVALUATOR_MODEL_ID`   | Solo CRAG real. No bloquea las otras etapas  |
+| `LLM_REASONING_EFFORT` | Opcional. Razonamiento de todos los modelos  |
 
 La generación configurada no implica que el RAG esté listo. El umbral 0,33 pertenece solo al coseno lexical de la demostración. El 0,55 del emulador local tampoco es un umbral de BGE-M3. El plan de recursos y los comandos están en `docs/cloud-activation-plan.md`. La evidencia de la fase 7 está en `docs/phase-7-verification.md`. Las fases anteriores siguen en sus documentos.
 
@@ -97,7 +99,55 @@ En local, `.dev.vars` sustituye las claves repetidas de `vars`. El entorno del p
 
 El perfil demo no declara los recursos de la cuenta. Producción usa los bindings del curso y los bindings durables propios de S12 descritos en `docs/s12-cloud-deployment.md`.
 
-Cuando el perfil real tenga `ANTHROPIC_API_KEY` y `MODEL_ID`, sin RAG llamará a la API de Claude con `claude-haiku-5-5`. RAG real llamará además a Workers AI, Vectorize y D1.
+Cuando el perfil real tenga la clave del proveedor y `MODEL_ID`, sin RAG llamará a ese modelo. RAG real llamará además a Workers AI, Vectorize y D1.
+
+## Elegir proveedor y modelo
+
+El código no está atado a Claude. `LLM_PROVIDER` elige el proveedor de todos los modelos generativos: sin RAG, RAG básico, evaluador y reformulador de CRAG, planificador de la investigación y visión. Cada papel tiene su variable de modelo: `MODEL_ID`, `EVALUATOR_MODEL_ID`, `RESEARCH_MODEL_ID` y, opcional, `RESEARCH_VISION_MODEL_ID`. Los IDs van en el formato de ese proveedor. Sin `LLM_PROVIDER` se usa `anthropic`, la ruta publicada.
+
+| Para usar…                                                                                       | `LLM_PROVIDER` | Clave                                                      | Ejemplo de `MODEL_ID`                     |
+| ------------------------------------------------------------------------------------------------ | -------------- | ---------------------------------------------------------- | ----------------------------------------- |
+| Claude por la API de Anthropic (versión publicada)                                               | `anthropic`    | `ANTHROPIC_API_KEY` (y `ANTHROPIC_WORKSPACE_ID`, opcional) | `claude-haiku-5-5`                        |
+| GPT por la API de OpenAI                                                                         | `openai`       | `OPENAI_API_KEY`                                           | `gpt-6-luna`                              |
+| **Cualquier modelo de OpenRouter**: Claude, GPT, Gemini, GLM, Kimi, DeepSeek, Qwen, Llama, Grok… | `openrouter`   | `OPENROUTER_API_KEY`                                       | `z-ai/glm-5.3` (ID exacto de su catálogo) |
+| Gemini con clave de Google AI Studio                                                             | `gemini`       | `GEMINI_API_KEY`                                           | `gemini-3.1-flash-lite`                   |
+| Groq, Mistral, DeepSeek, Ollama, vLLM u otra API compatible con Chat Completions                 | `compatible`   | `COMPAT_BASE_URL` y, si la pide, `COMPAT_API_KEY`          | El ID de ese servidor                     |
+
+Ejemplo con OpenRouter y un modelo distinto para cada papel:
+
+```sh
+APP_MODE=real
+LLM_PROVIDER=openrouter
+OPENROUTER_API_KEY=tu-clave
+MODEL_ID=moonshotai/kimi-k3
+EVALUATOR_MODEL_ID=google/gemini-3.1-flash-lite
+RESEARCH_MODEL_ID=z-ai/glm-5.3
+```
+
+Para cambiar de proveedor:
+
+1. Pon `LLM_PROVIDER`, su clave y los modelos en `apps/web/.dev.vars`. En local, `bun run dev` también toma `LLM_PROVIDER` y las claves del `.env` de la raíz si `.dev.vars` no las trae; `APP_MODE` y los modelos tienen que estar en `.dev.vars`.
+2. Pon las tarifas del modelo elegido en USD por millón de tokens: `MODEL_INPUT_USD_PER_MILLION` y `MODEL_OUTPUT_USD_PER_MILLION`; `EVALUATOR_*` si el evaluador es otro modelo, y `RESEARCH_*` para la investigación. Sirven para el coste mostrado y para reservar presupuesto. Sin tarifa, el coste mostrado queda `null`, salvo Claude Haiku 5.5, que trae la publicada. Un perfil con presupuesto, como el publicado o `bun run dev:real`, no admite consultas sin tarifa.
+3. `bun run preflight` muestra el proveedor, el razonamiento y si está la clave, sin enseñarla ni llamar a la red.
+4. Arranca con `bun run dev`. Sin RAG solo necesita lo anterior. RAG básico y CRAG necesitan además los bindings de Cloudflare.
+
+Razonamiento. Sin `LLM_REASONING_EFFORT`, cada ruta pide poco razonamiento para que la respuesta quepa en su tope de tokens y en el plazo de 20 segundos de CRAG. Anthropic usa `effort: low`, como la versión publicada. OpenAI y Gemini reciben `low` y el AI SDK lo traduce o lo omite si el modelo no razona. En `compatible` no se envía. En OpenRouter el código lee una vez la ficha del modelo en el catálogo público, sin clave ni coste. Apaga el razonamiento si el modelo lo permite, pide su nivel más bajo si razona siempre y no envía nada si no razona. Con `LLM_REASONING_EFFORT` (`none`, `minimal`, `low`, `medium`, `high`, `xhigh` o `max`) todas las rutas envían ese nivel. Con `omitir`, ninguna lo envía.
+
+Visión. Con `anthropic` se admite la lista de Claude con imagen documentada. Con otro proveedor vale cualquier modelo que acepte imágenes. El código no lo comprueba antes: si el modelo no admite imágenes, la lectura queda como error de visión.
+
+Lo que no cambia con `LLM_PROVIDER`: los embeddings (`EMBEDDING_MODEL`, BGE-M3 de Workers AI), la transcripción y la voz (`RESEARCH_STT_MODEL_ID` y `RESEARCH_TTS_MODEL_ID`, también Workers AI) y la búsqueda externa (`RESEARCH_SEARCH_PROVIDER`). Cambiar el modelo de embeddings exige otro índice, una ingesta y un perfil nuevo: [plan de recursos](docs/cloud-activation-plan.md). Los scripts de verificación del despliegue (`bun run activate` y `scripts/evaluate-*.ts`) siguen fijados a Claude Haiku 5.5 por Anthropic.
+
+Comprobado el 12 de octubre de 2026 con los módulos reales del Worker. Cada modelo hizo una respuesta sin RAG, la evaluación y la reformulación de CRAG, la respuesta final con citas y un plan de investigación; tres de ellos leyeron además una imagen. Pasaron Claude Haiku 5.5 por Anthropic y, por OpenRouter, Claude Haiku 5.5, GPT-6 Luna, GLM-5.3, Kimi K3, Gemini 3.1 Flash-Lite, DeepSeek V4 Flash, Qwen3.8 Flash, Llama 4 Maverick y Grok 4.7. La mayoría tardó entre 1 y 10 segundos por paso. La evaluación de DeepSeek V4 Flash (18,7 s) y de Llama 4 Maverick (17,4 s) rozó el plazo de 20 segundos: un modelo más lento lo agota y CRAG lo registra como fallo, sin cambiar de modelo. Una reformulación de GPT-6 Luna devolvió una vez un JSON ilegible y pasó en las ocho repeticiones siguientes; el sistema no reintenta. OpenAI directo, Gemini directo y `compatible` se comprueban con pruebas sin red. No es una evaluación de calidad: el catálogo y los modelos cambian.
+
+| Mensaje o síntoma                                   | Qué hacer                                                                                                    |
+| --------------------------------------------------- | ------------------------------------------------------------------------------------------------------------ |
+| `missing` incluye `OPENROUTER_API_KEY` u otra clave | Pon la clave del proveedor de `LLM_PROVIDER`.                                                                |
+| `missing` incluye `LLM_PROVIDER`                    | Usa `anthropic`, `openai`, `openrouter`, `gemini` o `compatible`.                                            |
+| `missing` incluye `COMPAT_BASE_URL`                 | Falta la URL o usa `http` hacia otra máquina. La clave solo viaja por https o a `localhost`.                 |
+| `missing` incluye `LLM_REASONING_EFFORT`            | El valor no existe. Déjalo vacío o usa uno de los niveles de arriba u `omitir`.                              |
+| El proveedor responde 400                           | El modelo rechaza un parámetro. Prueba `LLM_REASONING_EFFORT=omitir`.                                        |
+| El proveedor responde 404 o «model not found»       | El ID no existe en esa ruta. En OpenRouter, cópialo de [openrouter.ai/models](https://openrouter.ai/models). |
+| CRAG se detiene por plazo                           | El evaluador es lento para 20 segundos. Elige un `EVALUATOR_MODEL_ID` más rápido.                            |
 
 ## Hecho y pendiente
 

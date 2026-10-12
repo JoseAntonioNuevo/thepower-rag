@@ -1,14 +1,20 @@
 import {
   CRAG_VARIABLES,
-  GENERATION_VARIABLES,
+  DEFAULT_LLM_PROVIDER,
   MEDIA_LIMITS,
+  PROVIDER_CREDENTIAL,
   RAG_BINDING_NAMES,
   RAG_SETTING_VARIABLES,
   RESEARCH_SPEND_TOKEN,
   RESEARCH_VARIABLES,
+  generationVariables,
   isConfiguredValue,
-  isVisionModel,
+  llmProvider,
+  reasoningEffort,
+  visionModelAccepted,
   type CapabilityStatus,
+  type LlmProvider,
+  type ReasoningEffort,
 } from "@thepower-rag/contracts";
 import { parseAllowedDomains } from "@thepower-rag/research";
 
@@ -25,8 +31,15 @@ export interface WorkerEnv {
   MODEL_OUTPUT_USD_PER_MILLION?: string;
   EVALUATOR_INPUT_USD_PER_MILLION?: string;
   EVALUATOR_OUTPUT_USD_PER_MILLION?: string;
+  LLM_PROVIDER?: string;
+  LLM_REASONING_EFFORT?: string;
   ANTHROPIC_API_KEY?: string;
   ANTHROPIC_WORKSPACE_ID?: string;
+  OPENAI_API_KEY?: string;
+  OPENROUTER_API_KEY?: string;
+  GEMINI_API_KEY?: string;
+  COMPAT_BASE_URL?: string;
+  COMPAT_API_KEY?: string;
   MODEL_ID?: string;
   EVALUATOR_MODEL_ID?: string;
   EMBEDDING_MODEL?: string;
@@ -69,10 +82,30 @@ export interface CapabilityReport {
   missing: string[];
 }
 
+/** Tarifa en USD por millón de tokens; sirve para mostrar un coste estimado, no una factura. */
+export interface TokenPrices {
+  inputUsdPerMillion: number;
+  outputUsdPerMillion: number;
+}
+
+/**
+ * Ruta generativa común a chat, RAG, CRAG, investigación y visión. Cada papel cambia solo
+ * el modelo (MODEL_ID, EVALUATOR_MODEL_ID, RESEARCH_MODEL_ID…); proveedor y clave son los mismos.
+ */
 export interface GenerationSettings {
+  /** Proveedor de LLM_PROVIDER; sin valor, anthropic. */
+  provider?: LlmProvider;
+  /** Clave del proveedor. En compatible es opcional y puede quedar vacía. */
   apiKey: string;
   modelId: string;
+  /** Solo Anthropic: espacio de trabajo opcional. */
   workspaceId?: string;
+  /** Solo compatible: URL base de su API (COMPAT_BASE_URL). */
+  baseURL?: string;
+  /** Razonamiento pedido; undefined usa el valor por defecto del proveedor y null no lo envía. */
+  reasoning?: ReasoningEffort | null;
+  /** Tarifa de MODEL_*_USD_PER_MILLION para el coste mostrado; null si no está configurada. */
+  prices?: TokenPrices | null;
 }
 
 export interface RetrievalSettings {
@@ -221,11 +254,14 @@ export function mediaReadiness(env: WorkerEnv): MediaReadiness {
     };
   }
   const visionId = env.RESEARCH_VISION_MODEL_ID?.trim() || env.RESEARCH_MODEL_ID?.trim() || "";
+  const provider = llmProvider(env.LLM_PROVIDER);
   const ai = env.AI != null;
   return {
     storage,
     vision:
-      isVisionModel(visionId) && isConfiguredValue(env.ANTHROPIC_API_KEY)
+      provider !== null &&
+      visionModelAccepted(provider, visionId) &&
+      isConfiguredValue(text(env, PROVIDER_CREDENTIAL[provider] as keyof WorkerEnv))
         ? "configured"
         : "missing",
     transcription:
@@ -252,8 +288,14 @@ export function mediaMissing(
   if (env.APP_MODE !== "real") return missing;
   if (request.image && ready.vision !== "configured") {
     const visionId = env.RESEARCH_VISION_MODEL_ID?.trim() || env.RESEARCH_MODEL_ID?.trim() || "";
-    if (!isVisionModel(visionId)) missing.push("RESEARCH_VISION_MODEL_ID");
-    if (!isConfiguredValue(env.ANTHROPIC_API_KEY)) missing.push("ANTHROPIC_API_KEY");
+    const provider = llmProvider(env.LLM_PROVIDER);
+    if (provider === null) {
+      missing.push("LLM_PROVIDER");
+    } else {
+      if (!visionModelAccepted(provider, visionId)) missing.push("RESEARCH_VISION_MODEL_ID");
+      const credential = PROVIDER_CREDENTIAL[provider];
+      if (!isConfiguredValue(text(env, credential as keyof WorkerEnv))) missing.push(credential);
+    }
   }
   if ((request.audio || request.voice) && env.AI == null) {
     missing.push("AI");
@@ -315,9 +357,91 @@ function bindingNames(env: WorkerEnv): string[] {
   return RAG_BINDING_NAMES.filter((name) => env[name] == null);
 }
 
+/**
+ * Lo que falta para generar con el proveedor de LLM_PROVIDER: el nombre del proveedor si no
+ * existe, su credencial, MODEL_ID, un razonamiento que no existe o una URL compatible insegura.
+ */
+export function generationMissing(env: WorkerEnv): string[] {
+  const provider = llmProvider(env.LLM_PROVIDER);
+  if (provider === null) {
+    return ["LLM_PROVIDER", ...absent(env, ["MODEL_ID"])];
+  }
+  const missing = absent(env, generationVariables(provider));
+  if (reasoningEffort(env.LLM_REASONING_EFFORT, provider) === "invalid") {
+    missing.push("LLM_REASONING_EFFORT");
+  }
+  if (
+    provider === "compatible" &&
+    isConfiguredValue(env.COMPAT_BASE_URL) &&
+    !compatibleUrlAllowed(env.COMPAT_BASE_URL ?? "")
+  ) {
+    missing.push("COMPAT_BASE_URL");
+  }
+  return missing;
+}
+
+/**
+ * La clave de una API compatible solo viaja cifrada: https, o http hacia este mismo equipo
+ * (Ollama o vLLM en localhost). Así una URL mal escrita no envía la clave en claro por la red.
+ */
+export function compatibleUrlAllowed(value: string): boolean {
+  let url: URL;
+  try {
+    url = new URL(value.trim());
+  } catch {
+    return false;
+  }
+  if (url.protocol === "https:") return true;
+  return url.protocol === "http:" && ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname);
+}
+
+/** Tarifa por millón de tokens de dos variables; null si falta alguna o no es positiva. */
+export function tokenPrices(
+  input: string | undefined,
+  output: string | undefined,
+): TokenPrices | null {
+  const inputUsdPerMillion = positiveNumber(input);
+  const outputUsdPerMillion = positiveNumber(output);
+  return inputUsdPerMillion === null || outputUsdPerMillion === null
+    ? null
+    : { inputUsdPerMillion, outputUsdPerMillion };
+}
+
+/**
+ * Ajustes de generación del proveedor elegido, o null si falta algo. Construirlos no llama a
+ * la red. Los papeles que usan otro modelo copian estos ajustes y cambian solo modelId.
+ */
+export function generationSettings(env: WorkerEnv): GenerationSettings | null {
+  const provider = llmProvider(env.LLM_PROVIDER) ?? DEFAULT_LLM_PROVIDER;
+  if (generationMissing(env).length > 0) {
+    return null;
+  }
+  const reasoning = reasoningEffort(env.LLM_REASONING_EFFORT, provider);
+  const credential = text(env, PROVIDER_CREDENTIAL[provider] as keyof WorkerEnv)?.trim() ?? "";
+  return {
+    provider,
+    apiKey:
+      provider === "compatible"
+        ? isConfiguredValue(env.COMPAT_API_KEY)
+          ? (env.COMPAT_API_KEY?.trim() ?? "")
+          : ""
+        : credential,
+    modelId: text(env, "MODEL_ID")?.trim() ?? "",
+    ...(provider === "anthropic" && isConfiguredValue(text(env, "ANTHROPIC_WORKSPACE_ID"))
+      ? { workspaceId: text(env, "ANTHROPIC_WORKSPACE_ID")?.trim() }
+      : {}),
+    ...(provider === "compatible" ? { baseURL: credential } : {}),
+    // Solo un LLM_REASONING_EFFORT escrito fija el nivel; sin él decide cada proveedor.
+    ...(isConfiguredValue(env.LLM_REASONING_EFFORT) && reasoning !== "invalid"
+      ? { reasoning }
+      : {}),
+    prices: tokenPrices(env.MODEL_INPUT_USD_PER_MILLION, env.MODEL_OUTPUT_USD_PER_MILLION),
+  };
+}
+
 function retrievalMissing(env: WorkerEnv): string[] {
   const missing = new Set<string>([
-    ...absent(env, GENERATION_VARIABLES),
+    ...generationMissing(env),
     ...absent(env, RAG_SETTING_VARIABLES),
     ...bindingNames(env),
   ]);
@@ -341,7 +465,7 @@ function retrievalMissing(env: WorkerEnv): string[] {
 
 export function assessWorker(env: WorkerEnv): Assessment {
   const requested = env.APP_MODE?.trim();
-  const generationMissing = absent(env, GENERATION_VARIABLES);
+  const generationGaps = generationMissing(env);
   const ragMissing = retrievalMissing(env);
   if (requested !== undefined && requested !== "demo" && requested !== "real") {
     return {
@@ -358,16 +482,7 @@ export function assessWorker(env: WorkerEnv): Assessment {
     };
   }
 
-  const generation =
-    generationMissing.length === 0
-      ? {
-          apiKey: text(env, "ANTHROPIC_API_KEY")?.trim() ?? "",
-          modelId: text(env, "MODEL_ID")?.trim() ?? "",
-          ...(isConfiguredValue(text(env, "ANTHROPIC_WORKSPACE_ID"))
-            ? { workspaceId: text(env, "ANTHROPIC_WORKSPACE_ID")?.trim() }
-            : {}),
-        }
-      : null;
+  const generation = generationSettings(env);
   const dimensions = positiveInteger(env.EMBEDDING_DIMENSIONS);
   const minScore = finiteNumber(env.MIN_RETRIEVAL_SCORE);
   const retrieval =
@@ -406,7 +521,7 @@ export function assessWorker(env: WorkerEnv): Assessment {
     generation,
     retrieval,
     capabilities: {
-      "sin-rag": { status: generation ? "ready" : "blocked", missing: generationMissing },
+      "sin-rag": { status: generation ? "ready" : "blocked", missing: generationGaps },
       rag: { status: retrieval ? "ready" : "blocked", missing: ragMissing },
       crag: {
         status:

@@ -1,11 +1,20 @@
 # Copia local opcional: apps/web/.dev.vars
 # Wrangler lo lee junto a wrangler.jsonc. No lo versionamos.
 # Los valores son marcadores. Un valor que empieza por replace-with cuenta como ausente.
-# Si esta copia no trae ANTHROPIC_API_KEY, el desarrollo lee la clave del .env de la raíz.
+# Si esta copia no trae LLM_PROVIDER o la clave del proveedor, el desarrollo los lee
+# del .env de la raíz. LLM_PROVIDER: anthropic (vacío), openai, openrouter, gemini o
+# compatible. Los IDs de modelo y las tarifas son los del proveedor y modelo elegidos.
 
 APP_MODE=demo
+LLM_PROVIDER=anthropic
+LLM_REASONING_EFFORT=
 ANTHROPIC_API_KEY=replace-with-a-local-secret
 ANTHROPIC_WORKSPACE_ID=replace-with-the-workspace-id
+OPENAI_API_KEY=replace-with-a-local-secret
+OPENROUTER_API_KEY=replace-with-a-local-secret
+GEMINI_API_KEY=replace-with-a-local-secret
+COMPAT_BASE_URL=replace-with-https-base-url
+COMPAT_API_KEY=replace-with-a-local-secret
 MODEL_ID=claude-haiku-5-5
 EMBEDDING_MODEL=replace-with-workers-ai-model
 EMBEDDING_DIMENSIONS=replace-with-observed-dimension

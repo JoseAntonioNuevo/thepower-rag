@@ -1,10 +1,17 @@
 import { existsSync, readFileSync } from "node:fs";
 import path from "node:path";
 import { parse } from "dotenv";
-import { readRepoAnthropicKey, readRepoAnthropicWorkspaceId } from "./anthropic-key";
-import { assessWorker, type Assessment, type WorkerEnv } from "../apps/api/src/env";
+import { readRepoProviderEnv } from "./anthropic-key";
 import {
-  GENERATION_VARIABLES,
+  assessWorker,
+  generationMissing,
+  type Assessment,
+  type WorkerEnv,
+} from "../apps/api/src/env";
+import {
+  PROVIDER_ENV_VARIABLES,
+  generationVariables,
+  llmProvider,
   isConfiguredValue,
   RAG_BINDING_NAMES,
   RAG_SETTING_VARIABLES,
@@ -170,13 +177,12 @@ export function loadLocalWorkerConfig(
   const devVarsPath = path.join(path.dirname(configPath), devName);
   const devVarsText = existsSync(devVarsPath) ? readFileSync(devVarsPath, "utf8") : null;
   const vars = effectiveWorkerVars(inspected.vars, devVarsText);
-  const repoKey = environment === "research" ? undefined : readRepoAnthropicKey(root);
-  if (repoKey && !isConfiguredValue(vars.ANTHROPIC_API_KEY)) {
-    vars.ANTHROPIC_API_KEY = repoKey;
-  }
-  const repoWorkspace = environment === "research" ? undefined : readRepoAnthropicWorkspaceId(root);
-  if (repoWorkspace && !isConfiguredValue(vars.ANTHROPIC_WORKSPACE_ID)) {
-    vars.ANTHROPIC_WORKSPACE_ID = repoWorkspace;
+  // Como en Vite: proveedor y claves del .env de la raíz si el Worker no los trae.
+  const repoProvider = environment === "research" ? {} : readRepoProviderEnv(root);
+  for (const [name, value] of Object.entries(repoProvider)) {
+    if (!isConfiguredValue(vars[name])) {
+      vars[name] = value;
+    }
   }
   const relativeConfig = path.relative(root, configPath);
   return {
@@ -212,7 +218,9 @@ export function ragDeclarationReady(config: LocalWorkerConfig): { ok: boolean; m
     return { ok: true, missing: [] };
   }
   const missing: string[] = [];
-  for (const name of [...GENERATION_VARIABLES, ...RAG_SETTING_VARIABLES]) {
+  // Generación del proveedor elegido (LLM_PROVIDER) y ajustes del índice.
+  missing.push(...generationMissing(config.vars as WorkerEnv));
+  for (const name of RAG_SETTING_VARIABLES) {
     if (!present(config.vars, name)) {
       missing.push(name);
     }
@@ -256,8 +264,21 @@ export function formatPreflight(
     `APP_MODE efectivo: ${config.vars.APP_MODE ?? "ausente"}`,
     `perfil: ${config.assessment.execution}`,
   ];
+  const provider = llmProvider(config.vars.LLM_PROVIDER);
+  // Proveedor y nivel de razonamiento no son secretos: se muestran tal cual.
+  lines.push(
+    `proveedor (LLM_PROVIDER): ${provider ?? `desconocido (${config.vars.LLM_PROVIDER ?? ""})`}`,
+    `razonamiento (LLM_REASONING_EFFORT): ${
+      present(config.vars, "LLM_REASONING_EFFORT")
+        ? (config.vars.LLM_REASONING_EFFORT ?? "").trim()
+        : "por defecto del proveedor"
+    }`,
+  );
   const groups: [string, readonly string[]][] = [
-    ["generación", ["ANTHROPIC_API_KEY", "MODEL_ID"]],
+    [
+      "generación",
+      provider === null ? ["LLM_PROVIDER", "MODEL_ID"] : generationVariables(provider),
+    ],
     [
       "rag",
       [
@@ -283,7 +304,7 @@ export function formatPreflight(
     lines.push(`  ${name}: ${binding.level}; alcanzable: no comprobado; verificado: no`);
   }
   lines.push("nombres solo en process.env, ignorados por el Worker:");
-  for (const name of ["APP_MODE", "ANTHROPIC_API_KEY", "MODEL_ID", "EVALUATOR_MODEL_ID"]) {
+  for (const name of ["APP_MODE", ...PROVIDER_ENV_VARIABLES, "MODEL_ID", "EVALUATOR_MODEL_ID"]) {
     lines.push(`  ${name}: ${presentProcess(processEnv, name)}`);
   }
   lines.push(`sin RAG: ${config.assessment.capabilities["sin-rag"].status}`);

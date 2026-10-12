@@ -29,10 +29,11 @@ import {
   type TranscriptRead,
   type WorkersAi,
 } from "./research-perception";
-import { anthropicImage, workersSpeech, workersTranscript } from "./research-perception-real";
+import { visionImage, workersSpeech, workersTranscript } from "./research-perception-real";
 import type { PriceSnapshot } from "./research-money";
 import { readJobInput, rememberAdmittedTurn, type JobRow } from "./research-store";
 import type { LanguageModel } from "ai";
+import type { TokenPrices } from "./env";
 
 export interface MultimodalContext {
   mode: "demo" | "real";
@@ -40,6 +41,8 @@ export interface MultimodalContext {
   ai: WorkersAi | null;
   vision: LanguageModel | null;
   visionModelId: string | null;
+  /** Tarifa del consumo estimado de visión; sin valor, la publicada de Claude Haiku 5.5. */
+  visionPrices?: TokenPrices | null;
   sttModelId: string;
   ttsModelId: string;
   signal: AbortSignal;
@@ -159,7 +162,13 @@ export async function perceiveJob(
       signal: context.signal,
       invoke: (signal) =>
         context.mode === "real" && context.vision && mime
-          ? anthropicImage(context.vision, loaded.bytes, mime, signal)
+          ? visionImage(
+              context.vision,
+              loaded.bytes,
+              mime,
+              signal,
+              context.visionPrices ?? undefined,
+            )
           : fixtureImage(loaded.bytes),
     });
     const status = result.ok

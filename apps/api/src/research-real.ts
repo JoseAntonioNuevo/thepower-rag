@@ -9,10 +9,9 @@ import type {
 } from "@thepower-rag/research";
 import { APICallError, generateObject, NoObjectGeneratedError, type LanguageModel } from "ai";
 import { z } from "zod";
-import type { ResearchSettings, RetrievalSettings } from "./env";
+import type { ResearchSettings, RetrievalSettings, TokenPrices } from "./env";
 import { createFirecrawlReader, createFirecrawlSearch } from "./firecrawl";
 import { createTavilyReader, createTavilySearch } from "./tavily";
-import { anthropicProviderOptions } from "./model";
 import { tokenEstimateConsumption } from "./provider-cost";
 import { excerptChoices, resolveExcerpt } from "./research-excerpts";
 import { ASSESS_PROMPT, FOLLOW_UP_PROMPT, PLAN_PROMPT, SYNTHESIS_PROMPT } from "./research-prompts";
@@ -149,11 +148,12 @@ function consumptionFrom(
       }
     | null
     | undefined,
+  prices?: TokenPrices,
 ): Consumption {
-  return tokenEstimateConsumption(usage);
+  return tokenEstimateConsumption(usage, prices);
 }
 
-function failed(signal: AbortSignal, error?: unknown): PortResult<never> {
+function failed(signal: AbortSignal, error?: unknown, prices?: TokenPrices): PortResult<never> {
   const structured = NoObjectGeneratedError.isInstance(error);
   const http = APICallError.isInstance(error) ? error.statusCode : undefined;
   // Never expose the generated text, provider body, request or error message.
@@ -172,7 +172,7 @@ function failed(signal: AbortSignal, error?: unknown): PortResult<never> {
         ? "invalid"
         : "provider",
     detail: signal.aborted ? "La llamada se canceló." : detail,
-    consumption: structured ? consumptionFrom(error.usage) : { kind: "unknown" },
+    consumption: structured ? consumptionFrom(error.usage, prices) : { kind: "unknown" },
   };
 }
 
@@ -246,6 +246,8 @@ export function createResearchModelPort(input: {
   planner: LanguageModel;
   generator: LanguageModel;
   maxOutputTokens?: number;
+  /** Tarifa de RESEARCH_*_USD_PER_MILLION para el consumo estimado; sin valor, la de Haiku 5.5. */
+  prices?: TokenPrices;
 }): ResearchModelPort {
   return {
     async plan({ question, audience }, context) {
@@ -262,15 +264,14 @@ export function createResearchModelPort(input: {
           ),
           maxRetries: 0,
           abortSignal: context.signal,
-          providerOptions: anthropicProviderOptions,
         });
         return {
           ok: true,
           value: { ...result.object, rationale: boundedExplanation(result.object.rationale) },
-          consumption: consumptionFrom(result.usage),
+          consumption: consumptionFrom(result.usage, input.prices),
         };
       } catch (error) {
-        return failed(context.signal, error);
+        return failed(context.signal, error, input.prices);
       }
     },
     async assess({ question, subquestions, evidence, priorCoverage, round }, context) {
@@ -293,9 +294,8 @@ export function createResearchModelPort(input: {
           ),
           maxRetries: 0,
           abortSignal: context.signal,
-          providerOptions: anthropicProviderOptions,
         });
-        const consumption = consumptionFrom(result.usage);
+        const consumption = consumptionFrom(result.usage, input.prices);
         try {
           return {
             ok: true,
@@ -325,7 +325,7 @@ export function createResearchModelPort(input: {
           };
         }
       } catch (error) {
-        return failed(context.signal, error);
+        return failed(context.signal, error, input.prices);
       }
     },
     async followUp({ question, gaps, previousQueries }, context) {
@@ -342,15 +342,14 @@ export function createResearchModelPort(input: {
           ),
           maxRetries: 0,
           abortSignal: context.signal,
-          providerOptions: anthropicProviderOptions,
         });
         return {
           ok: true,
           value: result.object,
-          consumption: consumptionFrom(result.usage),
+          consumption: consumptionFrom(result.usage, input.prices),
         };
       } catch (error) {
-        return failed(context.signal, error);
+        return failed(context.signal, error, input.prices);
       }
     },
     async synthesize({ question, subquestions, coverage, contradictions, evidence }, context) {
@@ -367,9 +366,8 @@ export function createResearchModelPort(input: {
           ),
           maxRetries: 0,
           abortSignal: context.signal,
-          providerOptions: anthropicProviderOptions,
         });
-        const consumption = consumptionFrom(result.usage);
+        const consumption = consumptionFrom(result.usage, input.prices);
         try {
           const answers = result.object.answerRefs.map((ref) => resolveExcerpt(ref, evidence));
           return {
@@ -397,7 +395,7 @@ export function createResearchModelPort(input: {
           };
         }
       } catch (error) {
-        return failed(context.signal, error);
+        return failed(context.signal, error, input.prices);
       }
     },
   };
@@ -490,6 +488,11 @@ export function createRealResearchPorts(input: RealResearchInput): ResearchPorts
       planner: input.planner,
       generator: input.generator,
       maxOutputTokens: input.modelOutputTokenCap,
+      // El consumo estimado usa la misma tarifa con la que se reservó la investigación.
+      prices: {
+        inputUsdPerMillion: input.settings.inputUsdPerMillion,
+        outputUsdPerMillion: input.settings.outputUsdPerMillion,
+      },
     }),
     course: createVectorCoursePort({
       embedder: input.embedder,

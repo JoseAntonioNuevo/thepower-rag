@@ -1,5 +1,5 @@
-import { anthropicProviderOptions, refusedByModel } from "./model";
-import { providerCost } from "./provider-cost";
+import { refusedByModel } from "./model";
+import { providerCost, type CostPricing } from "./provider-cost";
 import { LIMITS } from "@thepower-rag/contracts";
 import {
   CRAG_BOUNDS,
@@ -115,6 +115,8 @@ export function createRealCragPorts(input: {
   embeddingModel: string;
   dimensions: number;
   allowance?: AllowanceLedger;
+  /** Tarifa del coste mostrado de la respuesta final; sin valor, la de Claude Haiku 5.5. */
+  costPricing?: CostPricing | null;
 }): CragPorts {
   const open = new Map<string, string>();
   const reserveKind = (
@@ -226,7 +228,6 @@ export function createRealCragPorts(input: {
               maxOutputTokens: 1600,
               maxRetries: LIMITS.maxRetries,
               abortSignal: signal,
-              providerOptions: anthropicProviderOptions,
             }),
         );
         settle("evaluation", null);
@@ -261,7 +262,6 @@ export function createRealCragPorts(input: {
               maxOutputTokens: 800,
               maxRetries: LIMITS.maxRetries,
               abortSignal: signal,
-              providerOptions: anthropicProviderOptions,
             }),
         );
         settle("reformulation", null);
@@ -293,7 +293,6 @@ export function createRealCragPorts(input: {
               maxRetries: LIMITS.maxRetries,
               abortSignal: signal,
               timeout: { totalMs: timeoutMs },
-              providerOptions: anthropicProviderOptions,
             }),
         );
         settle("generation", null);
@@ -316,7 +315,7 @@ export function createRealCragPorts(input: {
           inputTokens === null && outputTokens === null && totalTokens === null
             ? null
             : { inputTokens, outputTokens, totalTokens },
-        cost: providerCost(usage),
+        cost: providerCost(usage, input.costPricing),
       };
     },
   };

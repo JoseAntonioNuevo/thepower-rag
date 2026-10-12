@@ -1,5 +1,5 @@
-import { anthropicProviderOptions, refusedByModel } from "./model";
-import { providerCost } from "./provider-cost";
+import { refusedByModel } from "./model";
+import { providerCost, type CostPricing } from "./provider-cost";
 import {
   createUIMessageStream,
   createUIMessageStreamResponse,
@@ -98,6 +98,8 @@ export function streamProviderCourseResponse(input: {
   validateCitations: boolean;
   onlyCitedSources?: boolean;
   maxOutputTokens?: number;
+  /** Tarifa del coste mostrado; null lo deja desconocido y sin valor usa la de Claude Haiku 5.5. */
+  costPricing?: CostPricing | null;
 }): Response {
   const allowed = new Set(input.sources.map((source) => source.chunkId));
   const stream = createUIMessageStream<CourseUIMessage>({
@@ -131,7 +133,6 @@ export function streamProviderCourseResponse(input: {
           maxRetries: LIMITS.maxRetries,
           abortSignal: input.signal,
           timeout: { totalMs: LIMITS.generationTimeoutMs },
-          providerOptions: anthropicProviderOptions,
         });
         writer.write({ type: "text-start", id: "answer" });
         let pending = "";
@@ -175,7 +176,7 @@ export function streamProviderCourseResponse(input: {
             ...input.metadata,
             completion: "complete",
             usage: usageFrom(usage),
-            cost: providerCost(usage),
+            cost: providerCost(usage, input.costPricing),
           }),
         });
       } catch (error) {

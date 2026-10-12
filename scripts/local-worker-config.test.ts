@@ -1,4 +1,4 @@
-import { mkdtempSync, writeFileSync } from "node:fs";
+import { mkdirSync, mkdtempSync, writeFileSync } from "node:fs";
 import { tmpdir } from "node:os";
 import path from "node:path";
 import { describe, expect, it } from "vite-plus/test";
@@ -7,6 +7,7 @@ import {
   effectiveWorkerVars,
   formatPreflight,
   inspectBindings,
+  loadLocalWorkerConfig,
   ragDeclarationReady,
   wranglerStringVars,
   type LocalWorkerConfig,
@@ -60,6 +61,28 @@ describe("preflight", () => {
     const result = report('{"vars":{"APP_MODE":"demo"}}', null, { APP_MODE: "real" });
     expect(result.code).toBe(0);
     expect(result.lines.join("\n")).toContain("perfil: demo");
+  });
+
+  it("toma proveedor y clave de OpenRouter del .env de la raíz sin mostrarla", () => {
+    const root = mkdtempSync(path.join(tmpdir(), "thepower-rag-root-"));
+    mkdirSync(path.join(root, "apps/web"), { recursive: true });
+    writeFileSync(
+      path.join(root, "apps/web/wrangler.jsonc"),
+      JSON.stringify({ vars: { APP_MODE: "real", MODEL_ID: "z-ai/glm-5.3" } }),
+    );
+    writeFileSync(
+      path.join(root, ".env"),
+      "LLM_PROVIDER=openrouter\nOPENROUTER_API_KEY=clave-openrouter-secreta\nAPP_MODE=demo\n",
+    );
+    const loaded = loadLocalWorkerConfig(root);
+    expect(loaded.vars.LLM_PROVIDER).toBe("openrouter");
+    expect(loaded.vars.APP_MODE).toBe("real");
+    expect(loaded.assessment.generation?.provider).toBe("openrouter");
+    const text = formatPreflight(loaded, {}).lines.join("\n");
+    expect(text).toContain("proveedor (LLM_PROVIDER): openrouter");
+    expect(text).toContain("OPENROUTER_API_KEY: presente");
+    expect(text).toContain("sin RAG: ready");
+    expect(text).not.toContain("clave-openrouter-secreta");
   });
 
   it("interpreta comillas y un modo desconocido", () => {

@@ -11,7 +11,7 @@ import {
   whisperInput,
 } from "./research-perception";
 import {
-  anthropicImage,
+  visionImage,
   parseVisionJson,
   workersSpeech,
   workersTranscript,
@@ -109,7 +109,7 @@ describe("adaptadores reales de medios con dobles", () => {
         };
       },
     });
-    const result = await anthropicImage(model, bytes, "image/png", new AbortController().signal);
+    const result = await visionImage(model, bytes, "image/png", new AbortController().signal);
     expect(calls).toBe(1);
     expect(result.ok).toBe(true);
     expect(result.consumption).toMatchObject({
@@ -139,7 +139,7 @@ describe("adaptadores reales de medios con dobles", () => {
         throw new Error("provider down");
       },
     });
-    const failed = await anthropicImage(failing, bytes, "image/png", new AbortController().signal);
+    const failed = await visionImage(failing, bytes, "image/png", new AbortController().signal);
     expect(calls).toBe(1);
     expect(failed).toMatchObject({
       ok: false,
@@ -154,7 +154,7 @@ describe("adaptadores reales de medios con dobles", () => {
         throw new Error("aborted");
       },
     });
-    const aborted = await anthropicImage(aborting, bytes, "image/png", controller.signal);
+    const aborted = await visionImage(aborting, bytes, "image/png", controller.signal);
     expect(calls).toBe(2);
     expect(aborted).toMatchObject({
       ok: false,
@@ -199,13 +199,13 @@ describe("adaptadores reales de medios con dobles", () => {
         warnings: [],
       }),
     });
-    const partialResult = await anthropicImage(
+    const partialResult = await visionImage(
       partial,
       bytes,
       "image/png",
       new AbortController().signal,
     );
-    const missingResult = await anthropicImage(
+    const missingResult = await visionImage(
       missing,
       bytes,
       "image/png",
