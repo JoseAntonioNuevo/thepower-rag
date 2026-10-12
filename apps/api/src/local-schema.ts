@@ -1,3 +1,8 @@
+// GUÍA DE LECTURA · apps/api/src/local-schema.ts
+// Esquema SQL de las tablas que usa la verificación local con workerd: versiones del corpus,
+// documentos, fragmentos, perfiles de índice, diario de ingesta, mapa de vectores y un almacén
+// vectorial emulado. Las migraciones reales están en apps/api/migrations.
+// Sentencias en orden; las ALTER TABLE reproducen la evolución de las migraciones.
 export const LOCAL_SCHEMA = [
   `CREATE TABLE corpus_versions (
   id TEXT PRIMARY KEY,
@@ -64,6 +69,8 @@ export const LOCAL_SCHEMA = [
 )`,
 ] as const;
 
+// Devuelve las sentencias del esquema local.
 export function schemaStatements(): readonly string[] {
+  // Lista de solo lectura.
   return LOCAL_SCHEMA;
 }

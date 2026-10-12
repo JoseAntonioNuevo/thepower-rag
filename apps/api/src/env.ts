@@ -1,3 +1,8 @@
+// GUÍA DE LECTURA · apps/api/src/env.ts
+// Lectura de la configuración del Worker: variables y bindings, proveedor y ajustes de generación,
+// ajustes del RAG y de la investigación, y el diagnóstico por etapa que usan /api/health y /api/chat.
+// Nunca llama a la red: solo mira nombres, valores y bindings.
+// Nombres de variables, límites y reglas compartidas del contrato.
 import {
   CRAG_VARIABLES,
   DEFAULT_LLM_PROVIDER,
@@ -16,75 +21,138 @@ import {
   type LlmProvider,
   type ReasoningEffort,
 } from "@thepower-rag/contracts";
+// Lectura de la lista de dominios permitidos de la investigación.
 import { parseAllowedDomains } from "@thepower-rag/research";
 
+// Variables y bindings que recibe el Worker (todas opcionales).
 export interface WorkerEnv {
+  // demo o real.
   APP_MODE?: string;
+  // complete para el RAG con contexto completo.
   RAG_CONTEXT_MODE?: string;
+  // Origen público (para Turnstile).
   PUBLIC_ORIGIN?: string;
+  // Clave pública de Turnstile.
   TURNSTILE_SITE_KEY?: string;
+  // Secreto de Turnstile.
   TURNSTILE_SECRET_KEY?: string;
+  // Limitador de peticiones por IP.
   CHAT_IP_LIMITER?: { limit(input: { key: string }): Promise<{ success: boolean }> };
+  // Limitador de peticiones por sesión.
   CHAT_SESSION_LIMITER?: { limit(input: { key: string }): Promise<{ success: boolean }> };
+  // Presupuesto público en USD.
   PUBLIC_BUDGET_USD?: string;
+  // Tarifa de entrada del generador.
   MODEL_INPUT_USD_PER_MILLION?: string;
+  // Tarifa de salida del generador.
   MODEL_OUTPUT_USD_PER_MILLION?: string;
+  // Tarifa de entrada del evaluador.
   EVALUATOR_INPUT_USD_PER_MILLION?: string;
+  // Tarifa de salida del evaluador.
   EVALUATOR_OUTPUT_USD_PER_MILLION?: string;
+  // Proveedor de los modelos generativos.
   LLM_PROVIDER?: string;
+  // Nivel de razonamiento (opcional).
   LLM_REASONING_EFFORT?: string;
+  // Clave de Anthropic.
   ANTHROPIC_API_KEY?: string;
+  // Espacio de trabajo de Anthropic (opcional).
   ANTHROPIC_WORKSPACE_ID?: string;
+  // Clave de OpenAI.
   OPENAI_API_KEY?: string;
+  // Clave de OpenRouter.
   OPENROUTER_API_KEY?: string;
+  // Clave de la Gemini API.
   GEMINI_API_KEY?: string;
+  // URL de la API compatible.
   COMPAT_BASE_URL?: string;
+  // Clave de la API compatible (opcional).
   COMPAT_API_KEY?: string;
+  // Modelo generador.
   MODEL_ID?: string;
+  // Modelo evaluador de CRAG.
   EVALUATOR_MODEL_ID?: string;
+  // Modelo de embeddings de Workers AI.
   EMBEDDING_MODEL?: string;
+  // Dimensión observada.
   EMBEDDING_DIMENSIONS?: string;
+  // Versión del corpus.
   CORPUS_VERSION?: string;
+  // Perfil del índice.
   INDEX_PROFILE?: string;
+  // Métrica (cosine).
   VECTOR_METRIC?: string;
+  // Umbral de similitud.
   MIN_RETRIEVAL_SCORE?: string;
+  // Modelo de la investigación.
   RESEARCH_MODEL_ID?: string;
+  // Clave de Firecrawl.
   FIRECRAWL_API_KEY?: string;
+  // Buscador de la investigación: firecrawl o tavily.
   RESEARCH_SEARCH_PROVIDER?: string;
+  // Clave de Tavily.
   TAVILY_API_KEY?: string;
+  // Precio de un crédito de Tavily.
   TAVILY_USD_PER_CREDIT?: string;
+  // Dominios permitidos de la investigación.
   RESEARCH_ALLOWED_DOMAINS?: string;
+  // Autorización de gasto de S12.
   RESEARCH_SPEND_AUTHORIZATION?: string;
+  // Presupuesto total de la investigación.
   RESEARCH_BUDGET_USD?: string;
+  // Tope por trabajo.
   RESEARCH_JOB_LIMIT_USD?: string;
+  // Presupuesto de la demo durable.
   RESEARCH_FIXTURE_BUDGET_USD?: string;
+  // Tope por trabajo de la demo durable.
   RESEARCH_FIXTURE_JOB_LIMIT_USD?: string;
+  // Tarifa de entrada del modelo de investigación.
   RESEARCH_INPUT_USD_PER_MILLION?: string;
+  // Tarifa de salida del modelo de investigación.
   RESEARCH_OUTPUT_USD_PER_MILLION?: string;
+  // Precio de una búsqueda.
   RESEARCH_SEARCH_USD?: string;
+  // Precio de una lectura.
   RESEARCH_READ_USD?: string;
+  // Precio de un crédito de Firecrawl.
   FIRECRAWL_USD_PER_CREDIT?: string;
+  // Secreto del propietario en local.
   RESEARCH_OWNER_SECRET?: string;
+  // Binding de Workers AI.
   AI?: unknown;
+  // Binding de Vectorize.
   VECTORIZE?: unknown;
+  // Binding de D1 del curso.
   DB?: unknown;
+  // Binding de R2 del corpus.
   CORPUS?: unknown;
+  // Binding de D1 de la investigación.
   RESEARCH_DB?: unknown;
+  // Binding del Workflow de investigación.
   RESEARCH_WORKFLOW?: unknown;
+  // Binding de R2 de medios.
   RESEARCH_MEDIA?: unknown;
+  // Modelo de visión.
   RESEARCH_VISION_MODEL_ID?: string;
+  // Modelo de transcripción.
   RESEARCH_STT_MODEL_ID?: string;
+  // Modelo de voz.
   RESEARCH_TTS_MODEL_ID?: string;
 }
 
+// Estado de una capacidad y lo que le falta.
 export interface CapabilityReport {
+  // ready, blocked, offline-demo…
   status: CapabilityStatus;
+  // Nombres ausentes.
   missing: string[];
 }
 
 /** Tarifa en USD por millón de tokens; sirve para mostrar un coste estimado, no una factura. */
 export interface TokenPrices {
+  // Entrada.
   inputUsdPerMillion: number;
+  // Salida.
   outputUsdPerMillion: number;
 }
 
@@ -97,6 +165,7 @@ export interface GenerationSettings {
   provider?: LlmProvider;
   /** Clave del proveedor. En compatible es opcional y puede quedar vacía. */
   apiKey: string;
+  // Modelo en el formato del proveedor.
   modelId: string;
   /** Solo Anthropic: espacio de trabajo opcional. */
   workspaceId?: string;
@@ -108,43 +177,74 @@ export interface GenerationSettings {
   prices?: TokenPrices | null;
 }
 
+// Ajustes del RAG real.
 export interface RetrievalSettings {
+  // Modelo de embeddings.
   embeddingModel: string;
+  // Dimensión.
   dimensions: number;
+  // Versión del corpus.
   corpusVersion: string;
+  // Perfil de índice.
   indexProfile: string;
+  // Métrica.
   metric: "cosine";
+  // Umbral.
   minScore: number;
 }
 
+// Diagnóstico completo del Worker.
 export interface Assessment {
+  // Modo de ejecución.
   execution: "demo" | "real" | "misconfigured";
+  // Mensaje para el usuario, o null.
   message: string | null;
+  // Ajustes de generación, o null.
   generation: GenerationSettings | null;
+  // Ajustes del RAG, o null.
   retrieval: RetrievalSettings | null;
+  // Estado de cada etapa.
   capabilities: {
+    // Sin RAG.
     "sin-rag": CapabilityReport;
+    // RAG básico.
     rag: CapabilityReport;
+    // CRAG.
     crag: CapabilityReport;
+    // Investigación.
     research: CapabilityReport;
   };
 }
 
+// Ajustes de la investigación real.
 export interface ResearchSettings {
+  // Buscador.
   searchProvider?: "firecrawl" | "tavily";
+  // Clave de Tavily.
   tavilyApiKey?: string;
+  // Precio de un crédito de Tavily.
   tavilyUsdPerCredit?: number;
+  // Modelo de la investigación.
   plannerModelId: string;
+  // Clave de Firecrawl.
   firecrawlApiKey: string;
+  // Dominios permitidos.
   allowedDomains: string[];
+  // Presupuesto total.
   budgetUsd: number;
+  // Tarifa de entrada.
   inputUsdPerMillion: number;
+  // Tarifa de salida.
   outputUsdPerMillion: number;
+  // Precio de un crédito del buscador.
   firecrawlUsdPerCredit: number;
 }
 
+// Número positivo o null.
 function positiveNumber(value: string | undefined): number | null {
+  // Número finito.
   const parsed = finiteNumber(value);
+  // Solo si es mayor que cero.
   return parsed !== null && parsed > 0 ? parsed : null;
 }
 
@@ -155,35 +255,55 @@ function positiveNumber(value: string | undefined): number | null {
 export function researchSettings(
   env: WorkerEnv,
 ): { ok: true; settings: ResearchSettings } | { ok: false; missing: string[] } {
+  // Variables obligatorias ausentes.
   const missing = new Set<string>(absent(env, RESEARCH_VARIABLES));
+  // Buscador elegido (Firecrawl por defecto).
   const provider = env.RESEARCH_SEARCH_PROVIDER?.trim() || "firecrawl";
+  // Buscador desconocido.
   if (provider !== "firecrawl" && provider !== "tavily") missing.add("RESEARCH_SEARCH_PROVIDER");
+  // Con Tavily.
   if (provider === "tavily") {
+    // No hace falta la clave de Firecrawl.
     missing.delete("FIRECRAWL_API_KEY");
+    // Pero sí la de Tavily.
     if (!isConfiguredValue(env.TAVILY_API_KEY)) missing.add("TAVILY_API_KEY");
   }
+  // La autorización tiene que ser exactamente la de S12.
   if (
     isConfiguredValue(env.RESEARCH_SPEND_AUTHORIZATION) &&
     env.RESEARCH_SPEND_AUTHORIZATION?.trim() !== RESEARCH_SPEND_TOKEN
   ) {
+    // Autorización incorrecta.
     missing.add("RESEARCH_SPEND_AUTHORIZATION");
   }
+  // Dominios permitidos.
   const domains = parseAllowedDomains(env.RESEARCH_ALLOWED_DOMAINS);
+  // Lista inválida.
   if (!domains.ok) {
+    // Se marca.
     missing.add("RESEARCH_ALLOWED_DOMAINS");
   }
+  // Presupuesto.
   const budgetUsd = positiveNumber(env.RESEARCH_BUDGET_USD);
+  // Tarifa de entrada.
   const inputUsdPerMillion = positiveNumber(env.RESEARCH_INPUT_USD_PER_MILLION);
+  // Tarifa de salida.
   const outputUsdPerMillion = positiveNumber(env.RESEARCH_OUTPUT_USD_PER_MILLION);
+  // Precio del crédito del buscador elegido.
   const firecrawlUsdPerCredit =
     provider === "tavily"
       ? positiveNumber(env.TAVILY_USD_PER_CREDIT)
       : positiveNumber(env.FIRECRAWL_USD_PER_CREDIT);
+  // Falta el presupuesto.
   if (budgetUsd === null) missing.add("RESEARCH_BUDGET_USD");
+  // Falta la tarifa de entrada.
   if (inputUsdPerMillion === null) missing.add("RESEARCH_INPUT_USD_PER_MILLION");
+  // Falta la tarifa de salida.
   if (outputUsdPerMillion === null) missing.add("RESEARCH_OUTPUT_USD_PER_MILLION");
+  // Falta el precio del crédito.
   if (firecrawlUsdPerCredit === null)
     missing.add(provider === "tavily" ? "TAVILY_USD_PER_CREDIT" : "FIRECRAWL_USD_PER_CREDIT");
+  // Algo falta.
   if (
     missing.size > 0 ||
     !domains.ok ||
@@ -192,8 +312,10 @@ export function researchSettings(
     outputUsdPerMillion === null ||
     firecrawlUsdPerCredit === null
   ) {
+    // Lista de lo que falta.
     return { ok: false, missing: [...missing] };
   }
+  // Ajustes completos.
   return {
     ok: true,
     settings: {
@@ -220,31 +342,43 @@ export function researchSettings(
  * secreto y origen. En cualquier otro caso hace falta el secreto local.
  */
 export function researchOwnerReady(env: WorkerEnv): boolean {
+  // Propietario por Turnstile: modo real con presupuesto público, secreto y origen.
   const turnstileOwner =
     env.APP_MODE === "real" &&
     env.PUBLIC_BUDGET_USD !== undefined &&
     isConfiguredValue(env.TURNSTILE_SECRET_KEY) &&
     isConfiguredValue(env.PUBLIC_ORIGIN);
+  // O el secreto local del propietario.
   return turnstileOwner || isConfiguredValue(env.RESEARCH_OWNER_SECRET);
 }
 
 /** Bindings y propietario del perfil durable. No autoriza gasto. */
 export function durableResearchConfigured(env: WorkerEnv): boolean {
+  // Base de datos, Workflow y propietario.
   return env.RESEARCH_DB != null && env.RESEARCH_WORKFLOW != null && researchOwnerReady(env);
 }
 
+// Estado de los medios de S12.
 export interface MediaReadiness {
+  // Almacenamiento R2.
   storage: "ready" | "missing";
+  // Visión.
   vision: "fixture" | "configured" | "missing";
+  // Transcripción.
   transcription: "fixture" | "configured" | "missing";
+  // Voz.
   speech: "fixture" | "configured" | "missing";
+  // Nota legible.
   note: string;
 }
 
 /** No llama a ningún proveedor. Solo mira bindings y nombres. */
 export function mediaReadiness(env: WorkerEnv): MediaReadiness {
+  // ¿Hay bucket de medios?
   const storage = env.RESEARCH_MEDIA == null ? "missing" : "ready";
+  // En demo, todo son guiones.
   if (env.APP_MODE !== "real") {
+    // Estado de la demo.
     return {
       storage,
       vision: "fixture",
@@ -253,9 +387,13 @@ export function mediaReadiness(env: WorkerEnv): MediaReadiness {
       note: "Los medios de la demostración usan guiones y un tono local. No hay llamada de pago.",
     };
   }
+  // Modelo de visión: el específico o el de la investigación.
   const visionId = env.RESEARCH_VISION_MODEL_ID?.trim() || env.RESEARCH_MODEL_ID?.trim() || "";
+  // Proveedor elegido.
   const provider = llmProvider(env.LLM_PROVIDER);
+  // ¿Hay binding de Workers AI?
   const ai = env.AI != null;
+  // Estado real.
   return {
     storage,
     vision:
@@ -276,30 +414,47 @@ export function mediaReadiness(env: WorkerEnv): MediaReadiness {
   };
 }
 
+// Qué falta para los medios pedidos.
 export function mediaMissing(
   env: WorkerEnv,
   request: { image: boolean; audio: boolean; voice: boolean },
 ): string[] {
+  // Estado de los medios.
   const ready = mediaReadiness(env);
+  // Lo que falta.
   const missing: string[] = [];
+  // Cualquier medio necesita el bucket.
   if ((request.image || request.audio || request.voice) && ready.storage !== "ready") {
+    // Falta R2.
     missing.push("RESEARCH_MEDIA");
   }
+  // En demo no hace falta nada más.
   if (env.APP_MODE !== "real") return missing;
+  // Imagen sin visión configurada.
   if (request.image && ready.vision !== "configured") {
+    // Modelo de visión.
     const visionId = env.RESEARCH_VISION_MODEL_ID?.trim() || env.RESEARCH_MODEL_ID?.trim() || "";
+    // Proveedor.
     const provider = llmProvider(env.LLM_PROVIDER);
+    // Proveedor desconocido.
     if (provider === null) {
+      // Se marca.
       missing.push("LLM_PROVIDER");
     } else {
+      // Modelo de visión no admitido.
       if (!visionModelAccepted(provider, visionId)) missing.push("RESEARCH_VISION_MODEL_ID");
+      // Credencial del proveedor.
       const credential = PROVIDER_CREDENTIAL[provider];
+      // Sin credencial.
       if (!isConfiguredValue(text(env, credential as keyof WorkerEnv))) missing.push(credential);
     }
   }
+  // Audio o voz sin Workers AI.
   if ((request.audio || request.voice) && env.AI == null) {
+    // Falta AI.
     missing.push("AI");
   }
+  // Sin repetidos.
   return [...new Set(missing)];
 }
 
@@ -308,52 +463,80 @@ export function mediaMissing(
  * propio y autorización de gasto. No hereda el presupuesto del RAG.
  */
 function researchCapability(env: WorkerEnv, ragMissing: readonly string[]): CapabilityReport {
+  // Ajustes de la investigación.
   const settings = researchSettings(env);
+  // Lo que falta del RAG y de la investigación.
   const missing = new Set<string>([...ragMissing, ...(settings.ok ? [] : settings.missing)]);
+  // Sin base de datos de investigación.
   if (env.RESEARCH_DB == null) {
+    // Se marca.
     missing.add("RESEARCH_DB");
   }
+  // Sin Workflow.
   if (env.RESEARCH_WORKFLOW == null) {
+    // Se marca.
     missing.add("RESEARCH_WORKFLOW");
   }
+  // Sin propietario.
   if (!researchOwnerReady(env)) {
+    // Se marca.
     missing.add("RESEARCH_OWNER_SECRET");
   }
+  // Sin tope por trabajo.
   if (!isConfiguredValue(env.RESEARCH_JOB_LIMIT_USD)) {
+    // Se marca.
     missing.add("RESEARCH_JOB_LIMIT_USD");
   }
+  // Estado de la investigación.
   return {
     status: missing.size === 0 ? "ready" : "blocked",
     missing: [...missing],
   };
 }
 
+// Valor de texto de una variable, o undefined si no es texto.
 function text(env: WorkerEnv, name: keyof WorkerEnv): string | undefined {
+  // Valor.
   const value = env[name];
+  // Solo texto.
   return typeof value === "string" ? value : undefined;
 }
 
+// Nombres sin un valor configurado.
 function absent(env: WorkerEnv, names: readonly string[]): string[] {
+  // Filtra los ausentes o con marcador.
   return names.filter((name) => !isConfiguredValue(text(env, name as keyof WorkerEnv)));
 }
 
+// Entero positivo o null.
 function positiveInteger(value: string | undefined): number | null {
+  // Sin valor.
   if (!isConfiguredValue(value)) {
+    // null.
     return null;
   }
+  // Número.
   const parsed = Number(value);
+  // Entero mayor que cero.
   return Number.isInteger(parsed) && parsed > 0 ? parsed : null;
 }
 
+// Número finito o null.
 function finiteNumber(value: string | undefined): number | null {
+  // Sin valor.
   if (!isConfiguredValue(value)) {
+    // null.
     return null;
   }
+  // Número.
   const parsed = Number(value);
+  // Finito.
   return Number.isFinite(parsed) ? parsed : null;
 }
 
+// Bindings del RAG que faltan.
 function bindingNames(env: WorkerEnv): string[] {
+  // Los que no están definidos.
   return RAG_BINDING_NAMES.filter((name) => env[name] == null);
 }
 
@@ -362,21 +545,30 @@ function bindingNames(env: WorkerEnv): string[] {
  * existe, su credencial, MODEL_ID, un razonamiento que no existe o una URL compatible insegura.
  */
 export function generationMissing(env: WorkerEnv): string[] {
+  // Proveedor elegido.
   const provider = llmProvider(env.LLM_PROVIDER);
+  // Proveedor desconocido.
   if (provider === null) {
+    // Se informa junto con el modelo si falta.
     return ["LLM_PROVIDER", ...absent(env, ["MODEL_ID"])];
   }
+  // Credencial y modelo del proveedor.
   const missing = absent(env, generationVariables(provider));
+  // Nivel de razonamiento inválido.
   if (reasoningEffort(env.LLM_REASONING_EFFORT, provider) === "invalid") {
+    // Se informa.
     missing.push("LLM_REASONING_EFFORT");
   }
+  // URL compatible insegura.
   if (
     provider === "compatible" &&
     isConfiguredValue(env.COMPAT_BASE_URL) &&
     !compatibleUrlAllowed(env.COMPAT_BASE_URL ?? "")
   ) {
+    // Se informa.
     missing.push("COMPAT_BASE_URL");
   }
+  // Lo que falta.
   return missing;
 }
 
@@ -385,13 +577,19 @@ export function generationMissing(env: WorkerEnv): string[] {
  * (Ollama o vLLM en localhost). Así una URL mal escrita no envía la clave en claro por la red.
  */
 export function compatibleUrlAllowed(value: string): boolean {
+  // URL analizada.
   let url: URL;
+  // new URL falla con texto que no es una URL.
   try {
+    // Analiza.
     url = new URL(value.trim());
   } catch {
+    // No es una URL.
     return false;
   }
+  // https siempre vale.
   if (url.protocol === "https:") return true;
+  // http solo hacia este mismo equipo.
   return url.protocol === "http:" && ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname);
 }
 
@@ -400,8 +598,11 @@ export function tokenPrices(
   input: string | undefined,
   output: string | undefined,
 ): TokenPrices | null {
+  // Tarifa de entrada.
   const inputUsdPerMillion = positiveNumber(input);
+  // Tarifa de salida.
   const outputUsdPerMillion = positiveNumber(output);
+  // Las dos o ninguna.
   return inputUsdPerMillion === null || outputUsdPerMillion === null
     ? null
     : { inputUsdPerMillion, outputUsdPerMillion };
@@ -412,12 +613,18 @@ export function tokenPrices(
  * la red. Los papeles que usan otro modelo copian estos ajustes y cambian solo modelId.
  */
 export function generationSettings(env: WorkerEnv): GenerationSettings | null {
+  // Proveedor elegido (anthropic por defecto).
   const provider = llmProvider(env.LLM_PROVIDER) ?? DEFAULT_LLM_PROVIDER;
+  // Si falta algo, no hay ajustes.
   if (generationMissing(env).length > 0) {
+    // null.
     return null;
   }
+  // Nivel de razonamiento.
   const reasoning = reasoningEffort(env.LLM_REASONING_EFFORT, provider);
+  // Credencial del proveedor (en compatible, la URL).
   const credential = text(env, PROVIDER_CREDENTIAL[provider] as keyof WorkerEnv)?.trim() ?? "";
+  // Ajustes de generación.
   return {
     provider,
     apiKey:
@@ -439,35 +646,50 @@ export function generationSettings(env: WorkerEnv): GenerationSettings | null {
   };
 }
 
+// Lo que falta para el RAG real.
 function retrievalMissing(env: WorkerEnv): string[] {
+  // Generación, ajustes del RAG y bindings.
   const missing = new Set<string>([
     ...generationMissing(env),
     ...absent(env, RAG_SETTING_VARIABLES),
     ...bindingNames(env),
   ]);
+  // Dimensión no válida.
   if (
     isConfiguredValue(env.EMBEDDING_DIMENSIONS) &&
     positiveInteger(env.EMBEDDING_DIMENSIONS) === null
   ) {
+    // Se marca.
     missing.add("EMBEDDING_DIMENSIONS");
   }
+  // Umbral no válido.
   if (
     isConfiguredValue(env.MIN_RETRIEVAL_SCORE) &&
     finiteNumber(env.MIN_RETRIEVAL_SCORE) === null
   ) {
+    // Se marca.
     missing.add("MIN_RETRIEVAL_SCORE");
   }
+  // Métrica distinta de coseno.
   if (isConfiguredValue(env.VECTOR_METRIC) && env.VECTOR_METRIC?.trim() !== "cosine") {
+    // Se marca.
     missing.add("VECTOR_METRIC");
   }
+  // Lista sin repetidos.
   return [...missing];
 }
 
+// Diagnóstico completo del Worker.
 export function assessWorker(env: WorkerEnv): Assessment {
+  // Modo pedido.
   const requested = env.APP_MODE?.trim();
+  // Lo que falta para generar.
   const generationGaps = generationMissing(env);
+  // Lo que falta para el RAG.
   const ragMissing = retrievalMissing(env);
+  // Modo desconocido.
   if (requested !== undefined && requested !== "demo" && requested !== "real") {
+    // Todo bloqueado.
     return {
       execution: "misconfigured",
       message: "APP_MODE debe ser demo o real.",
@@ -482,9 +704,13 @@ export function assessWorker(env: WorkerEnv): Assessment {
     };
   }
 
+  // Ajustes de generación.
   const generation = generationSettings(env);
+  // Dimensión.
   const dimensions = positiveInteger(env.EMBEDDING_DIMENSIONS);
+  // Umbral.
   const minScore = finiteNumber(env.MIN_RETRIEVAL_SCORE);
+  // Ajustes del RAG si no falta nada.
   const retrieval =
     ragMissing.length === 0 && generation !== null && dimensions !== null && minScore !== null
       ? {
@@ -497,7 +723,9 @@ export function assessWorker(env: WorkerEnv): Assessment {
         }
       : null;
 
+  // Modo demo (o sin modo): todo con guiones.
   if (requested === undefined || requested === "demo") {
+    // Diagnóstico de la demo.
     return {
       execution: "demo",
       message: null,
@@ -512,6 +740,7 @@ export function assessWorker(env: WorkerEnv): Assessment {
     };
   }
 
+  // Diagnóstico del modo real por etapa.
   return {
     execution: "real",
     message:
