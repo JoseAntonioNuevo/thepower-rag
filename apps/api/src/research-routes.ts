@@ -1,12 +1,21 @@
+// GUÍA DE LECTURA · apps/api/src/research-routes.ts
+// Rutas HTTP de la investigación durable bajo /api/research: sesión, conversaciones, envío de trabajos,
+// estado y eventos, cancelación, recuperación, resultado, subida y descarga de medios y limpieza.
+// Las mutaciones pasan antes por origen, Turnstile y límites; cada lectura comprueba el propietario.
+// Límites, esquema de escenario y tipo de audiencia.
 import {
   MEDIA_LIMITS,
   RESEARCH_LIMITS,
   researchScenarioSchema,
   type Audience,
 } from "@thepower-rag/contracts";
+// Hono: enrutador HTTP.
 import { Hono } from "hono";
+// Protección del chat público.
 import { protectChat, protectionRequired } from "./chat-protection";
+// Acceso y esquema de la base de investigación.
 import { asResearchDatabase, ensureResearchSchema } from "./research-db";
+// Arranque, reinicio, parada y estado del Workflow.
 import {
   ensureWorkflow,
   restartWorkflow,
@@ -14,9 +23,13 @@ import {
   workflowActivity,
   type ResearchWorkflowBinding,
 } from "./research-dispatch";
+// Configuración del Worker.
 import { assessWorker, durableResearchConfigured, mediaMissing, type WorkerEnv } from "./env";
+// Inspección y hash de bytes.
 import { inspectMedia, sha256Bytes } from "./media-bytes";
+// Contextualiza la pregunta con la memoria.
 import { contextualize } from "./research-memory";
+// Filas y objetos de medios.
 import {
   assetById,
   assetByIdempotency,
@@ -28,9 +41,13 @@ import {
   readMediaObject,
   asMediaBucket,
 } from "./research-media";
+// Plazo de cola, formato de importes, reservas y tarifas.
 import { RESEARCH_QUEUE_MS, formatMicros, holdForJob, priceSnapshot } from "./research-money";
+// Origen local y propietario por cookie.
 import { loopback, resolveOwner } from "./research-owner";
+// Resultado presentado al navegador.
 import { presentResearchResult } from "./research-result";
+// Operaciones del almacén.
 import {
   admitJob,
   appendEvent,
@@ -48,36 +65,54 @@ import {
   readAccount,
   resumeRecoverable,
 } from "./research-store";
+// Versión del corpus de ejemplo.
 import { fixtureCorpusVersion } from "./fixture";
 
+// Formato de un UUID.
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
+// Formato de una clave de idempotencia.
 const IDEMPOTENCY = /^[A-Za-z0-9._:-]{8,80}$/;
 
+// Binding del Workflow o null.
 function workflowOf(env: WorkerEnv): ResearchWorkflowBinding | null {
+  // Valor del entorno.
   const value = env.RESEARCH_WORKFLOW;
+  // Si tiene create y get.
   if (typeof value === "object" && value !== null && "create" in value && "get" in value) {
+    // Se usa como Workflow.
     return value as ResearchWorkflowBinding;
   }
+  // null.
   return null;
 }
 
+// Huella SHA-256 de un objeto en JSON.
 async function fingerprintOf(value: unknown): Promise<string> {
+  // Resumen.
   const digest = await crypto.subtle.digest(
     "SHA-256",
     new TextEncoder().encode(JSON.stringify(value)),
   );
+  // Hexadecimal.
   return [...new Uint8Array(digest)].map((byte) => byte.toString(16).padStart(2, "0")).join("");
 }
 
+// Respuesta JSON sin caché y con cookie opcional.
 function json(body: unknown, status = 200, setCookie?: string): Response {
+  // Cabeceras.
   const headers = new Headers({ "cache-control": "no-store" });
+  // Con cookie.
   if (setCookie) {
+    // La añade.
     headers.set("set-cookie", setCookie);
   }
+  // Respuesta.
   return Response.json(body, { status, headers });
 }
 
+// Pregunta normalizada: NFC, sin espacios repetidos.
 function normalizeQuestion(value: string): string {
+  // Normaliza.
   return value.normalize("NFC").trim().replace(/\s+/g, " ");
 }
 
@@ -87,35 +122,53 @@ function normalizeQuestion(value: string): string {
  * demostración de loopback solo acepta su propio origen.
  */
 async function guardMutation(request: Request, env: WorkerEnv): Promise<Response | null> {
+  // En real público: protección completa.
   if (protectionRequired(env)) {
+    // Origen, Turnstile y límites.
     return protectChat(request, env);
   }
+  // Origen de la petición.
   const origin = request.headers.get("origin");
+  // URL.
   const url = new URL(request.url);
+  // Solo loopback con su mismo origen.
   if (!loopback(request.url) || origin !== url.origin) {
+    // 403.
     return json({ error: "configuration", message: "Origen no permitido.", missing: [] }, 403);
   }
+  // Permitida.
   return null;
 }
 
+// Crea el subenrutador /api/research.
 export function researchRoutes() {
+  // Enrutador Hono.
   const routes = new Hono<{ Bindings: WorkerEnv }>();
 
+  // Sin investigación durable configurada: 404 en todas las rutas.
   routes.use("*", async (context, next) => {
+    // No configurada.
     if (!durableResearchConfigured(context.env)) {
+      // 404.
       return json(
         { error: "configuration", message: "No hay ejecución durable.", missing: [] },
         404,
       );
     }
+    // Sigue a la ruta.
     await next();
   });
 
+  // GET /session: crea o renueva la cookie de propietario.
   routes.get("/session", async (context) => {
+    // Propietario.
     const owner = await resolveOwner(context.req.raw, context.env);
+    // Error.
     if (owner instanceof Response) {
+      // Se devuelve.
       return owner;
     }
+    // Sesión anónima.
     return json(
       {
         durable: true,
@@ -127,18 +180,29 @@ export function researchRoutes() {
     );
   });
 
+  // POST /conversations: crea una conversación con su grupo.
   routes.post("/conversations", async (context) => {
+    // Protección de la mutación.
     const blocked = await guardMutation(context.req.raw, context.env);
+    // Bloqueada.
     if (blocked) {
+      // Se devuelve.
       return blocked;
     }
+    // Propietario.
     const owner = await resolveOwner(context.req.raw, context.env);
+    // Error.
     if (owner instanceof Response) {
+      // Se devuelve.
       return owner;
     }
+    // Base.
     const database = asResearchDatabase(context.env.RESEARCH_DB);
+    // Tarifas.
     const prices = pricesFrom(context.env);
+    // Falta algo.
     if (!database || !prices) {
+      // 409.
       return json(
         {
           error: "configuration",
@@ -148,13 +212,17 @@ export function researchRoutes() {
         409,
       );
     }
+    // Prepara las tablas.
     try {
+      // Esquema y presupuesto.
       await ensureResearchSchema(database, prices.budgetMicros);
     } catch (error) {
+      // Registra el error recortado.
       console.error(
         "research schema",
         error instanceof Error ? error.message.slice(0, 300) : "schema",
       );
+      // 500.
       return json(
         {
           error: "configuration",
@@ -164,69 +232,110 @@ export function researchRoutes() {
         500,
       );
     }
+    // Cuerpo.
     const body = (await context.req.json().catch(() => null)) as { audience?: Audience } | null;
+    // Grupo.
     const audience = body?.audience;
+    // Grupo inválido.
     if (audience !== "program" && audience !== "L/X" && audience !== "M/J") {
+      // 400.
       return json({ error: "invalid_request", message: "El grupo no es válido.", issues: [] }, 400);
     }
+    // Crea la conversación.
     const conversation = await createConversation(database, owner.id, audience, Date.now());
+    // 201.
     return json({ id: conversation.id, audience: conversation.audience }, 201, owner.setCookie);
   });
 
+  // GET /conversations: lista las del propietario.
   routes.get("/conversations", async (context) => {
+    // Propietario.
     const owner = await resolveOwner(context.req.raw, context.env);
+    // Error.
     if (owner instanceof Response) {
+      // Se devuelve.
       return owner;
     }
+    // Base.
     const database = asResearchDatabase(context.env.RESEARCH_DB);
+    // Tarifas.
     const prices = pricesFrom(context.env);
+    // Falta algo.
     if (!database || !prices) {
+      // 409.
       return json(
         { error: "configuration", message: "Falta la base.", missing: ["RESEARCH_DB"] },
         409,
       );
     }
+    // Prepara las tablas.
     await ensureResearchSchema(database, prices.budgetMicros);
+    // Conversaciones.
     const conversations = await listConversations(database, owner.id);
+    // Lista.
     return json({ conversations }, 200, owner.setCookie);
   });
 
+  // GET /conversations/:id: conversación con sus mensajes.
   routes.get("/conversations/:id", async (context) => {
+    // Propietario.
     const owner = await resolveOwner(context.req.raw, context.env);
+    // Error.
     if (owner instanceof Response) {
+      // Se devuelve.
       return owner;
     }
+    // Base.
     const database = asResearchDatabase(context.env.RESEARCH_DB);
+    // Falta.
     if (!database) {
+      // 409.
       return json(
         { error: "configuration", message: "Falta la base.", missing: ["RESEARCH_DB"] },
         409,
       );
     }
+    // Conversación del propietario.
     const conversation = await getConversation(database, owner.id, context.req.param("id"));
+    // No existe.
     if (!conversation) {
+      // 404.
       return json(
         { error: "configuration", message: "La conversación no existe.", missing: [] },
         404,
       );
     }
+    // Mensajes.
     const messages = await listMessages(database, owner.id, conversation.id);
+    // Conversación y mensajes.
     return json({ conversation, messages });
   });
 
+  // POST /conversations/:id/jobs: valida, reserva y encola un trabajo.
   routes.post("/conversations/:id/jobs", async (context) => {
+    // Protección de la mutación.
     const blocked = await guardMutation(context.req.raw, context.env);
+    // Bloqueada.
     if (blocked) {
+      // Se devuelve.
       return blocked;
     }
+    // Propietario.
     const owner = await resolveOwner(context.req.raw, context.env);
+    // Error.
     if (owner instanceof Response) {
+      // Se devuelve.
       return owner;
     }
+    // Base.
     const database = asResearchDatabase(context.env.RESEARCH_DB);
+    // Workflow.
     const workflow = workflowOf(context.env);
+    // Tarifas.
     const prices = pricesFrom(context.env);
+    // Falta algo.
     if (!database || !workflow || !prices) {
+      // 409.
       return json(
         {
           error: "configuration",
@@ -236,9 +345,13 @@ export function researchRoutes() {
         409,
       );
     }
+    // ¿Modo real?
     const real = context.env.APP_MODE === "real";
+    // Capacidades en real.
     const assessment = real ? assessWorker(context.env) : null;
+    // Investigación real no lista.
     if (real && assessment?.capabilities.research.status !== "ready") {
+      // 409 sin guiones.
       return json(
         {
           error: "configuration",
@@ -249,45 +362,69 @@ export function researchRoutes() {
         409,
       );
     }
+    // Versión del corpus.
     const corpusVersion = assessment?.retrieval?.corpusVersion ?? fixtureCorpusVersion();
+    // Prepara las tablas.
     await ensureResearchSchema(database, prices.budgetMicros);
+    // Conversación del propietario.
     const conversation = await getConversation(database, owner.id, context.req.param("id"));
+    // No existe.
     if (!conversation) {
+      // 404.
       return json(
         { error: "configuration", message: "La conversación no existe.", missing: [] },
         404,
       );
     }
+    // Cuerpo.
     const body = (await context.req.json().catch(() => null)) as {
+      // Clave de idempotencia.
       idempotencyKey?: string;
+      // Pregunta.
       question?: string;
+      // Escenario de prueba.
       scenarioId?: string | null;
+      // Grupo.
       audience?: string;
+      // Voz.
       voice?: boolean;
+      // Imagen subida.
       imageAssetId?: string | null;
+      // Audio subido.
       audioAssetId?: string | null;
     } | null;
+    // Clave ausente o inválida.
     if (!body || !body.idempotencyKey || !IDEMPOTENCY.test(body.idempotencyKey)) {
+      // 400.
       return json(
         { error: "invalid_request", message: "Falta la clave de idempotencia.", issues: [] },
         400,
       );
     }
+    // Pregunta normalizada.
     const question = normalizeQuestion(body.question ?? "");
+    // ¿Voz?
     const voice = body.voice === true;
+    // Imagen.
     const imageAssetId = body.imageAssetId ?? null;
+    // Audio.
     const audioAssetId = body.audioAssetId ?? null;
+    // ¿Hay medios?
     const hasMedia = voice || imageAssetId !== null || audioAssetId !== null;
+    // Sin pregunta ni adjuntos, o demasiado larga.
     if (
       (question.length === 0 && !imageAssetId && !audioAssetId) ||
       question.length > RESEARCH_LIMITS.maxQuestionChars
     ) {
+      // 400.
       return json(
         { error: "invalid_request", message: "La pregunta no es válida.", issues: [] },
         400,
       );
     }
+    // Otro grupo.
     if (body.audience && body.audience !== conversation.audience) {
+      // 409.
       return json(
         {
           error: "invalid_request",
@@ -297,22 +434,30 @@ export function researchRoutes() {
         409,
       );
     }
+    // Escenario validado.
     const scenario = body.scenarioId ? researchScenarioSchema.safeParse(body.scenarioId) : null;
+    // Inválido.
     if (body.scenarioId && !scenario?.success) {
+      // 400.
       return json({ error: "invalid_request", message: "El guion no es válido.", issues: [] }, 400);
     }
+    // En real no hay guiones.
     if (real && body.scenarioId) {
+      // 409.
       return json(
         { error: "invalid_request", message: "El modo real no usa guiones.", issues: [] },
         409,
       );
     }
+    // Capacidades de medios que faltan.
     const missingMedia = mediaMissing(context.env, {
       image: imageAssetId !== null,
       audio: audioAssetId !== null,
       voice,
     });
+    // Falta alguna.
     if (missingMedia.length > 0) {
+      // 409.
       return json(
         {
           error: "configuration",
@@ -322,8 +467,11 @@ export function researchRoutes() {
         409,
       );
     }
+    // Imagen del propietario.
     const imageAsset = imageAssetId ? await assetById(database, owner.id, imageAssetId) : null;
+    // Audio del propietario.
     const audioAsset = audioAssetId ? await assetById(database, owner.id, audioAssetId) : null;
+    // Adjunto ajeno, de otro papel o inexistente.
     if (
       (imageAssetId &&
         (!imageAsset ||
@@ -334,6 +482,7 @@ export function researchRoutes() {
           audioAsset.conversation_id !== conversation.id ||
           audioAsset.role !== "audio"))
     ) {
+      // 409.
       return json(
         {
           error: "invalid_request",
@@ -343,8 +492,11 @@ export function researchRoutes() {
         409,
       );
     }
+    // Turnos previos.
     const history = await memoryTurns(database, owner.id, conversation.id);
+    // Pregunta con memoria.
     const contextual = contextualize(history, question);
+    // Medios del trabajo.
     const mediaBinding = hasMedia
       ? {
           voice,
@@ -358,6 +510,7 @@ export function researchRoutes() {
             : null,
         }
       : null;
+    // Huella de la petición: igual pregunta y medios dan la misma huella.
     const fingerprint = await fingerprintOf(
       mediaBinding
         ? {
@@ -376,12 +529,15 @@ export function researchRoutes() {
             scenarioId: scenario?.success ? scenario.data : null,
           },
     );
+    // Reserva en el peor caso.
     const hold = holdForJob(prices, {
       image: imageAsset !== null,
       audioDurationMs: audioAsset?.duration_ms ?? null,
       voice,
     });
+    // No cabe.
     if (hold === null) {
+      // 402.
       return json(
         {
           error: "configuration",
@@ -391,7 +547,9 @@ export function researchRoutes() {
         402,
       );
     }
+    // Tarifas del trabajo.
     const jobPrices = { ...prices, holdMicros: hold };
+    // Admite el trabajo en la base.
     const admitted = await admitJob(database, {
       ownerId: owner.id,
       conversationId: conversation.id,
@@ -407,9 +565,12 @@ export function researchRoutes() {
       queueMs: RESEARCH_QUEUE_MS,
       media: mediaBinding,
     });
+    // Rechazado.
     if (!admitted.ok) {
+      // Estado HTTP.
       const status =
         admitted.reason === "fingerprint" ? 409 : admitted.reason === "budget" ? 402 : 409;
+      // Mensaje según el motivo.
       return json(
         {
           error: "configuration",
@@ -430,9 +591,13 @@ export function researchRoutes() {
         status,
       );
     }
+    // Trabajo.
     let job = admitted.job;
+    // Workflow aún no creado.
     if (job.dispatch_state !== "created") {
+      // Crea el Workflow.
       const dispatch = await ensureWorkflow(database, workflow, owner.id, job.id);
+      // Evento.
       await appendEvent(
         database,
         job.id,
@@ -440,8 +605,11 @@ export function researchRoutes() {
         dispatch === "created" ? "Trabajo encolado." : "El arranque del flujo no está confirmado.",
         Date.now(),
       );
+      // Relee el trabajo.
       job = (await getJob(database, owner.id, job.id)) ?? job;
+      // Creación no confirmada.
       if (dispatch === "unconfirmed") {
+        // 202 en atención.
         return json(
           {
             jobId: job.id,
@@ -454,6 +622,7 @@ export function researchRoutes() {
         );
       }
     }
+    // 202 con el trabajo.
     return json(
       {
         jobId: job.id,
@@ -468,25 +637,39 @@ export function researchRoutes() {
     );
   });
 
+  // GET /jobs/:id: estado, eventos y operaciones.
   routes.get("/jobs/:id", async (context) => {
+    // Propietario.
     const owner = await resolveOwner(context.req.raw, context.env);
+    // Error.
     if (owner instanceof Response) {
+      // Se devuelve.
       return owner;
     }
+    // Base.
     const database = asResearchDatabase(context.env.RESEARCH_DB);
+    // Falta.
     if (!database) {
+      // 409.
       return json(
         { error: "configuration", message: "Falta la base.", missing: ["RESEARCH_DB"] },
         409,
       );
     }
+    // Trabajo.
     const job = await getJob(database, owner.id, context.req.param("id"));
+    // No existe.
     if (!job || !UUID.test(job.id)) {
+      // 404.
       return json({ error: "configuration", message: "El trabajo no existe.", missing: [] }, 404);
     }
+    // Eventos posteriores a este número.
     const after = Number(context.req.query("after") ?? "0");
+    // Eventos.
     const events = await listEvents(database, owner.id, job.id, Number.isFinite(after) ? after : 0);
+    // Operaciones.
     const operations = await listOperations(database, job.id);
+    // Estado, eventos y operaciones.
     return json({
       jobId: job.id,
       conversationId: job.conversation_id,
@@ -506,54 +689,84 @@ export function researchRoutes() {
     });
   });
 
+  // GET /jobs/:id/result: informe y resumen guardados.
   routes.get("/jobs/:id/result", async (context) => {
+    // Propietario.
     const owner = await resolveOwner(context.req.raw, context.env);
+    // Error.
     if (owner instanceof Response) {
+      // Se devuelve.
       return owner;
     }
+    // Base.
     const database = asResearchDatabase(context.env.RESEARCH_DB);
+    // Falta.
     if (!database) {
+      // 409.
       return json(
         { error: "configuration", message: "Falta la base.", missing: ["RESEARCH_DB"] },
         409,
       );
     }
+    // Trabajo.
     const job = await getJob(database, owner.id, context.req.param("id"));
+    // Sin resultado todavía.
     if (!job?.result_json) {
+      // 404.
       return json(
         { error: "configuration", message: "Todavía no hay resultado.", missing: [] },
         404,
       );
     }
+    // Resultado presentado.
     const presented = await presentResearchResult(database, owner.id, job.id, job.result_json);
+    // Inválido.
     if (presented === null) {
+      // 409.
       return json(
         { error: "configuration", message: "El resultado guardado no es válido.", missing: [] },
         409,
       );
     }
+    // Resultado.
     return json(presented);
   });
 
+  // POST /jobs/:id/cancel: cancela el trabajo y su Workflow.
   routes.post("/jobs/:id/cancel", async (context) => {
+    // Protección.
     const blocked = await guardMutation(context.req.raw, context.env);
+    // Bloqueada.
     if (blocked) {
+      // Se devuelve.
       return blocked;
     }
+    // Propietario.
     const owner = await resolveOwner(context.req.raw, context.env);
+    // Error.
     if (owner instanceof Response) {
+      // Se devuelve.
       return owner;
     }
+    // Base.
     const database = asResearchDatabase(context.env.RESEARCH_DB);
+    // Workflow.
     const workflow = workflowOf(context.env);
+    // Falta algo.
     if (!database || !workflow) {
+      // 409.
       return json({ error: "configuration", message: "Falta el ejecutor.", missing: [] }, 409);
     }
+    // Cancela en la base.
     const job = await cancelJob(database, owner.id, context.req.param("id"), Date.now());
+    // No existe.
     if (!job) {
+      // 404.
       return json({ error: "configuration", message: "El trabajo no existe.", missing: [] }, 404);
     }
+    // Detiene el Workflow.
     await stopWorkflow(workflow, job.id);
+    // Estado tras cancelar.
     return json({
       jobId: job.id,
       execution: job.execution_status,
@@ -562,29 +775,49 @@ export function researchRoutes() {
     });
   });
 
+  // POST /jobs/:id/recover: reanuda un trabajo sin reenviar llamadas ambiguas.
   routes.post("/jobs/:id/recover", async (context) => {
+    // Protección.
     const blocked = await guardMutation(context.req.raw, context.env);
+    // Bloqueada.
     if (blocked) {
+      // Se devuelve.
       return blocked;
     }
+    // Propietario.
     const owner = await resolveOwner(context.req.raw, context.env);
+    // Error.
     if (owner instanceof Response) {
+      // Se devuelve.
       return owner;
     }
+    // Base.
     const database = asResearchDatabase(context.env.RESEARCH_DB);
+    // Workflow.
     const workflow = workflowOf(context.env);
+    // Falta algo.
     if (!database || !workflow) {
+      // 409.
       return json({ error: "configuration", message: "Falta el ejecutor.", missing: [] }, 409);
     }
+    // Id.
     const jobId = context.req.param("id");
+    // Trabajo.
     const job = await getJob(database, owner.id, jobId);
+    // No existe.
     if (!job) {
+      // 404.
       return json({ error: "configuration", message: "El trabajo no existe.", missing: [] }, 404);
     }
+    // Operaciones.
     const operations = await listOperations(database, job.id);
+    // ¿Alguna desconocida?
     const unknown = operations.some((operation) => operation.state === "unknown");
+    // ¿Alguna enviada?
     const dispatched = operations.some((operation) => operation.state === "dispatched");
+    // Desconocida.
     if (unknown) {
+      // 409: requiere reconciliación.
       return json(
         {
           error: "configuration",
@@ -596,10 +829,15 @@ export function researchRoutes() {
         409,
       );
     }
+    // Enviada.
     if (dispatched) {
+      // ¿Sigue vivo el Workflow?
       const activity = await workflowActivity(workflow, job.id);
+      // Inactivo.
       if (activity === "inactive") {
+        // La enviada pasa a desconocida.
         await promoteDispatched(database, owner.id, job.id);
+        // 409.
         return json(
           {
             error: "configuration",
@@ -611,6 +849,7 @@ export function researchRoutes() {
           409,
         );
       }
+      // Activo: 409 sin tocar la operación.
       return json(
         {
           error: "configuration",
@@ -623,19 +862,28 @@ export function researchRoutes() {
         409,
       );
     }
+    // Atención recuperable.
     if (job.execution_status === "attention" && job.attention_reason === "recoverable") {
+      // Vuelve a running.
       const resumed = await resumeRecoverable(database, owner.id, job.id);
+      // No se pudo.
       if (!resumed) {
+        // 409.
         return json(
           { error: "configuration", message: "El trabajo ya no se puede reanudar.", missing: [] },
           409,
         );
       }
+      // Reinicia el Workflow.
       let restarted = await restartWorkflow(workflow, job.id);
+      // No se pudo.
       if (!restarted) {
+        // Lo crea de nuevo.
         const dispatch = await ensureWorkflow(database, workflow, owner.id, job.id);
+        // ¿Se creó?
         restarted = dispatch === "created";
       }
+      // 202 o 409.
       return json(
         {
           jobId: job.id,
@@ -647,7 +895,9 @@ export function researchRoutes() {
         restarted ? 202 : 409,
       );
     }
+    // Atención no recuperable.
     if (job.execution_status === "attention") {
+      // 409.
       return json(
         {
           error: "configuration",
@@ -659,20 +909,27 @@ export function researchRoutes() {
         409,
       );
     }
+    // Workflow sin crear.
     if (job.dispatch_state !== "created") {
+      // Lo crea.
       const dispatch = await ensureWorkflow(database, workflow, owner.id, job.id);
+      // 202 o 409.
       return json(
         { jobId: job.id, dispatch, execution: job.execution_status },
         dispatch === "created" ? 202 : 409,
       );
     }
+    // En curso o en cola.
     if (job.execution_status === "running" || job.execution_status === "queued") {
+      // Reinicia el Workflow.
       const restarted = await restartWorkflow(workflow, job.id);
+      // 202 o 409.
       return json(
         { jobId: job.id, restarted, execution: job.execution_status },
         restarted ? 202 : 409,
       );
     }
+    // Terminado: estado.
     return json({
       jobId: job.id,
       execution: job.execution_status,
@@ -680,14 +937,22 @@ export function researchRoutes() {
     });
   });
 
+  // GET /budget: estado de la cuenta de gasto.
   routes.get("/budget", async (context) => {
+    // Propietario.
     const owner = await resolveOwner(context.req.raw, context.env);
+    // Error.
     if (owner instanceof Response) {
+      // Se devuelve.
       return owner;
     }
+    // Base.
     const database = asResearchDatabase(context.env.RESEARCH_DB);
+    // Tarifas.
     const prices = pricesFrom(context.env);
+    // Falta algo.
     if (!database || !prices) {
+      // 409.
       return json(
         {
           error: "configuration",
@@ -697,15 +962,21 @@ export function researchRoutes() {
         409,
       );
     }
+    // Prepara las tablas.
     await ensureResearchSchema(database, prices.budgetMicros);
+    // Cuenta.
     const account = await readAccount(database);
+    // No existe.
     if (!account) {
+      // 409.
       return json(
         { error: "configuration", message: "No hay cuenta de investigación.", missing: [] },
         409,
       );
     }
+    // ¿Hay cargos desconocidos?
     const open = account.unknown_micros > 0;
+    // Importes como texto fijo.
     return json({
       currency: "USD",
       budget: formatMicros(account.budget_micros),
@@ -719,15 +990,25 @@ export function researchRoutes() {
     });
   });
 
+  // POST /conversations/:id/media: sube una imagen o un audio.
   routes.post("/conversations/:id/media", async (context) => {
+    // Protección.
     const blocked = await guardMutation(context.req.raw, context.env);
+    // Bloqueada.
     if (blocked) return blocked;
+    // Propietario.
     const owner = await resolveOwner(context.req.raw, context.env);
+    // Error.
     if (owner instanceof Response) return owner;
+    // Base.
     const database = asResearchDatabase(context.env.RESEARCH_DB);
+    // Bucket.
     const bucket = asMediaBucket(context.env.RESEARCH_MEDIA);
+    // Tarifas.
     const prices = pricesFrom(context.env);
+    // Falta algo.
     if (!database || !prices || !bucket) {
+      // 409.
       return json(
         {
           error: "configuration",
@@ -737,33 +1018,48 @@ export function researchRoutes() {
         409,
       );
     }
+    // Prepara las tablas.
     await ensureResearchSchema(database, prices.budgetMicros);
+    // Conversación del propietario.
     const conversation = await getConversation(database, owner.id, context.req.param("id"));
+    // No existe.
     if (!conversation) {
+      // 404.
       return json(
         { error: "configuration", message: "La conversación no existe.", missing: [] },
         404,
       );
     }
+    // Clave de idempotencia.
     const key = context.req.header("x-idempotency-key") ?? "";
+    // Inválida.
     if (!IDEMPOTENCY.test(key)) {
+      // 400.
       return json(
         { error: "invalid_request", message: "Falta la clave de idempotencia.", issues: [] },
         400,
       );
     }
+    // Lee el cuerpo con tope.
     const bytes = await readLimited(context.req.raw, MEDIA_LIMITS.maxImageBytes);
+    // Demasiado grande.
     if (bytes === "too-large") {
+      // 413.
       return json(
         { error: "invalid_request", message: "El archivo supera el tope.", issues: [] },
         413,
       );
     }
+    // Sin cuerpo.
     if (bytes === "missing") {
+      // 400.
       return json({ error: "invalid_request", message: "No llegó el archivo.", issues: [] }, 400);
     }
+    // Inspecciona los bytes: el tipo real, no el declarado.
     const inspected = await inspectMedia(bytes);
+    // Rechazado.
     if (!inspected.ok) {
+      // 400 con el motivo.
       return json(
         {
           error: "invalid_request",
@@ -773,20 +1069,30 @@ export function researchRoutes() {
         400,
       );
     }
+    // Hash.
     const hash = await sha256Bytes(bytes);
+    // Subida previa con la misma clave.
     const existing = await assetByIdempotency(database, owner.id, conversation.id, key);
+    // Existe.
     if (existing) {
+      // Otros bytes.
       if (existing.content_hash !== hash) {
+        // 409.
         return json(
           { error: "invalid_request", message: "Esa clave ya se usó con otros bytes.", issues: [] },
           409,
         );
       }
+      // Misma subida.
       return json(publicAsset(existing), 200, owner.setCookie);
     }
+    // Id nuevo.
     const id = crypto.randomUUID();
+    // Clave en R2.
     const objectKey = `research/${owner.id}/${conversation.id}/${id}`;
+    // Guarda el objeto.
     await bucket.put(objectKey, bytes, { httpMetadata: { contentType: inspected.facts.mime } });
+    // Fila del archivo.
     const row = {
       id,
       owner_id: owner.id,
@@ -809,44 +1115,67 @@ export function researchRoutes() {
       idempotency_key: key,
       created_at: Date.now(),
     };
+    // Guarda la fila; si falla, borra el objeto.
     try {
+      // INSERT.
       await insertAsset(database, row);
     } catch {
+      // Borra el objeto.
       await bucket.delete(objectKey);
+      // ¿Otra petición ganó?
       const raced = await assetByIdempotency(database, owner.id, conversation.id, key);
+      // Mismos bytes: la suya.
       if (raced?.content_hash === hash) return json(publicAsset(raced), 200, owner.setCookie);
+      // 409.
       return json(
         { error: "invalid_request", message: "No se pudo guardar el archivo.", issues: [] },
         409,
       );
     }
+    // 201.
     return json(publicAsset(row), 201, owner.setCookie);
   });
 
+  // GET o HEAD /media/:id: descarga o reproduce un medio propio, con rangos.
   routes.on(["GET", "HEAD"], "/media/:id", async (context) => {
+    // Propietario.
     const owner = await resolveOwner(context.req.raw, context.env);
+    // Error.
     if (owner instanceof Response) return owner;
+    // Base.
     const database = asResearchDatabase(context.env.RESEARCH_DB);
+    // Bucket.
     const bucket = asMediaBucket(context.env.RESEARCH_MEDIA);
+    // Falta algo.
     if (!database || !bucket) {
+      // 409.
       return json(
         { error: "configuration", message: "Falta el almacén de medios.", missing: [] },
         409,
       );
     }
+    // Fila del propietario.
     const asset = await assetById(database, owner.id, context.req.param("id"));
+    // No existe.
     if (!asset) {
+      // 404.
       return json({ error: "configuration", message: "El archivo no existe.", missing: [] }, 404);
     }
+    // Metadatos del objeto.
     const head = await bucket.head(asset.object_key);
+    // No está en R2.
     if (!head) {
+      // 404.
       return json(
         { error: "configuration", message: "El archivo no está en el almacén.", missing: [] },
         404,
       );
     }
+    // Nombre seguro.
     const safeName = mediaDownloadName(asset.role, asset.mime);
+    // HEAD: solo cabeceras.
     if (context.req.method === "HEAD") {
+      // Respuesta vacía.
       return new Response(null, {
         status: 200,
         headers: {
@@ -859,24 +1188,31 @@ export function researchRoutes() {
         },
       });
     }
+    // Rango pedido.
     const range = parseRange(context.req.header("range") ?? null, head.size);
+    // Inválido.
     if (range === "invalid") {
+      // 416.
       return new Response(null, {
         status: 416,
         headers: { "content-range": `bytes */${String(head.size)}` },
       });
     }
+    // Lee el objeto o el rango.
     const object = await readMediaObject(
       bucket,
       asset.object_key,
       range ? { offset: range.start, length: range.end - range.start + 1 } : undefined,
     );
+    // No existe.
     if (!object) {
+      // 404.
       return json(
         { error: "configuration", message: "El archivo no está en el almacén.", missing: [] },
         404,
       );
     }
+    // Respuesta 200 o 206.
     return mediaResponse({
       bytes: object.body,
       mime: asset.mime,
@@ -886,40 +1222,65 @@ export function researchRoutes() {
     });
   });
 
+  // POST /retention: limpia checkpoints y medios huérfanos.
   routes.post("/retention", async (context) => {
+    // Protección.
     const blocked = await guardMutation(context.req.raw, context.env);
+    // Bloqueada.
     if (blocked) {
+      // Se devuelve.
       return blocked;
     }
+    // Propietario.
     const owner = await resolveOwner(context.req.raw, context.env);
+    // Error.
     if (owner instanceof Response) {
+      // Se devuelve.
       return owner;
     }
+    // Base.
     const database = asResearchDatabase(context.env.RESEARCH_DB);
+    // Falta.
     if (!database) {
+      // 409.
       return json({ error: "configuration", message: "Falta la base.", missing: [] }, 409);
     }
+    // Checkpoints borrados.
     const removed = await purgeCheckpoints(database, Date.now());
+    // Bucket.
     const bucket = asMediaBucket(context.env.RESEARCH_MEDIA);
+    // Medios borrados.
     const orphans = bucket
       ? await purgeOrphanMedia(database, bucket, Date.now(), MEDIA_LIMITS.orphanAfterMs)
       : 0;
+    // Recuento.
     return json({ removed, orphans });
   });
 
+  // Subenrutador.
   return routes;
 }
 
+// Datos públicos de un medio.
 function publicAsset(row: {
+  // Id.
   id: string;
+  // Papel.
   role: string;
+  // MIME.
   mime: string;
+  // Bytes.
   byte_size: number;
+  // Hash.
   content_hash: string;
+  // Ancho.
   width: number | null;
+  // Alto.
   height: number | null;
+  // Duración.
   duration_ms: number | null;
 }) {
+  // Nombres en camelCase.
   return {
     id: row.id,
     role: row.role,
@@ -932,39 +1293,64 @@ function publicAsset(row: {
   };
 }
 
+// Lee el cuerpo con tope de bytes.
 async function readLimited(
   request: Request,
   max: number,
 ): Promise<Uint8Array | "too-large" | "missing"> {
+  // Tamaño declarado.
   const header = request.headers.get("content-length");
+  // Si lo hay.
   if (header !== null) {
+    // Número.
     const declared = Number(header);
+    // Inválido o mayor del tope.
     if (!Number.isFinite(declared) || declared < 1 || declared > max) return "too-large";
   }
+  // Lector.
   const reader = request.body?.getReader();
+  // Sin cuerpo.
   if (!reader) return "missing";
+  // Trozos.
   const chunks: Uint8Array[] = [];
+  // Total.
   let total = 0;
+  // Hasta el final.
   for (;;) {
+    // Siguiente.
     const next = await reader.read();
+    // Fin.
     if (next.done) break;
+    // Suma.
     total += next.value.byteLength;
+    // Supera el tope.
     if (total > max) {
+      // Cancela.
       await reader.cancel();
+      // Demasiado grande.
       return "too-large";
     }
+    // Guarda.
     chunks.push(next.value);
   }
+  // Une los trozos.
   const bytes = new Uint8Array(total);
+  // Posición.
   let offset = 0;
+  // Cada trozo.
   for (const chunk of chunks) {
+    // Copia.
     bytes.set(chunk, offset);
+    // Avanza.
     offset += chunk.byteLength;
   }
+  // Bytes.
   return bytes;
 }
 
+// Tarifas desde el entorno.
 function pricesFrom(env: WorkerEnv) {
+  // Instantánea con presupuesto, tarifas y buscador.
   return priceSnapshot({
     budgetUsd: env.RESEARCH_BUDGET_USD ?? env.RESEARCH_FIXTURE_BUDGET_USD ?? "",
     jobLimitUsd: env.RESEARCH_JOB_LIMIT_USD ?? env.RESEARCH_FIXTURE_JOB_LIMIT_USD ?? "",
