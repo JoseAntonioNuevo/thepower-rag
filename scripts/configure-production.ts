@@ -39,6 +39,8 @@ const config = {
       vars: {
         APP_MODE: "real",
         RAG_CONTEXT_MODE: "complete",
+        // Producción usa siempre Claude por la API de Anthropic.
+        LLM_PROVIDER: "anthropic",
         MODEL_ID: "claude-haiku-5-5",
         EVALUATOR_MODEL_ID: "claude-haiku-5-5",
         RESEARCH_MODEL_ID: "claude-haiku-5-5",

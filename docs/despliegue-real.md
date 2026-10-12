@@ -40,7 +40,7 @@ El coste que muestra cada respuesta corresponde a la generación final; excluye 
 
 La demo local sigue en `APP_MODE=demo`. `bun run dev` no selecciona producción. No hace falta una clave para el respaldo offline.
 
-Para preparar una versión de producción: `CLOUDFLARE_ENV=production bun run build`; después se usa el Wrangler fijado con el config generado en `apps/web/dist/thepower_rag/wrangler.json`. La clave de producción se carga por stdin con `wrangler secret put`, sin imprimirla. Los dominios se gestionaron en el dashboard; no hay un patrón que toque otros subdominios.
+Para preparar una versión de producción: `CLOUDFLARE_ENV=production bun run build`; después se usa el Wrangler fijado con el config generado en `apps/web/dist/thepower_rag/wrangler.json`. La clave de producción se carga por stdin con `wrangler secret put`, sin imprimirla. El 12 de octubre de 2026, a petición del usuario, se sustituyeron `ANTHROPIC_API_KEY` y `ANTHROPIC_WORKSPACE_ID` con `wrangler secret bulk` por stdin: la pareja nueva respondió 200 en `GET /v1/models` de Anthropic, y un espacio de trabajo que no corresponde a la clave devuelve 400, así que ambos se cambian juntos. La versión `0e1a2bab-09e4-4c74-b052-bc4b16f93bce` quedó al 100 % con el mismo código y `/api/health` siguió con las cuatro capacidades `ready`. Producción usa siempre Anthropic. Los dominios se gestionaron en el dashboard; no hay un patrón que toque otros subdominios.
 
 Los cambios que afecten a la calidad deben evaluarse con un conjunto nuevo. No usar el conjunto reservado actual para ajustar y volver a anunciar su resultado como independiente.
 
