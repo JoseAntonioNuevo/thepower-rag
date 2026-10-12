@@ -1,8 +1,16 @@
+// GUÍA DE LECTURA · packages/rag/src/provenance.test.ts
+// Pruebas de procedencia: cómo se clasifica una ejecución según sus adaptadores y por qué una
+// caché de embeddings de otra procedencia no se reutiliza aunque coincidan dimensión y perfil.
+// Utilidades de prueba.
 import { describe, expect, it } from "vite-plus/test";
+// Funciones de la caché de embeddings.
 import { cacheFromVectors, semanticManifest, validateEmbeddingCache } from "./embedding-cache";
+// Clasificación de la procedencia.
 import { classifyRuntime, usableForRemoteIndex } from "./provenance";
+// Tipo del corpus preparado.
 import type { PreparedCorpus } from "./prepare";
 
+// Corpus mínimo con un documento y un fragmento.
 const corpus = {
   contentVersion: "cc037ef0bb1f7",
   preparationId: "c3a59a406888b",
@@ -56,30 +64,45 @@ const corpus = {
   ],
 } as PreparedCorpus;
 
+// Grupo de pruebas de procedencia.
 describe("procedencia", () => {
+  // La procedencia sale de los adaptadores usados, no de lo que diga quien llama.
   it("clasifica el adaptador usado y no un booleano del llamador", () => {
+    // Embebedor emulado: emulación local, no en vivo.
     expect(
       classifyRuntime([{ id: "local-emulated-embedder", remote: false, binding: null }]),
     ).toEqual({ provenance: "local-native-emulation", live: false });
+    // Workers AI remoto: en vivo.
     expect(classifyRuntime([{ id: "workers-ai-binding", remote: true, binding: "AI" }])).toEqual({
       provenance: "remote-binding",
       live: true,
     });
+    // Tablas en memoria: datos de prueba.
     expect(classifyRuntime([{ id: "memory-tables", remote: false, binding: null }])).toEqual({
       provenance: "fixture",
       live: false,
     });
+    // Sin adaptadores: desconocido.
     expect(classifyRuntime([])).toEqual({ provenance: "unknown", live: null });
+    // La emulación no valida el índice remoto.
     expect(usableForRemoteIndex("local-native-emulation")).toBe(false);
+    // Solo los bindings remotos lo validan.
     expect(usableForRemoteIndex("remote-binding")).toBe(true);
   });
 
+  // Una caché hecha con datos de prueba no vale para la emulación local.
   it("no reutiliza una caché fixture aunque coincidan dimensión y perfil", () => {
+    // Manifiesto semántico de 32 dimensiones.
     const manifest = semanticManifest(corpus, 32);
+    // Un vector de 32 valores.
     const row = Array.from({ length: 32 }, () => 0.1);
+    // Caché marcada como datos de prueba.
     const fixture = cacheFromVectors(manifest, [row], null, "fixture");
+    // Se valida como si fuera emulación local.
     const rejected = validateEmbeddingCache(fixture, manifest, "local-native-emulation");
+    // Rechazada por procedencia distinta.
     expect(rejected.ok).toBe(false);
+    // Caché de la misma procedencia.
     const accepted = validateEmbeddingCache(
       cacheFromVectors(
         manifest,
@@ -90,6 +113,7 @@ describe("procedencia", () => {
       manifest,
       "local-native-emulation",
     );
+    // Aceptada.
     expect(accepted.ok).toBe(true);
   });
 });
