@@ -993,8 +993,8 @@ export async function runIngestion(input: {
             expectedIndexName: input.expectedIndexName ?? null,
             indexName: described.name,
           });
-          // Reconcile a previous readback failure after the accepted mutation,
-          // without replaying its upsert or losing pending-visibility semantics.
+          // Reconcilia una lectura fallida tras una escritura aceptada, sin repetir el upsert
+          // ni perder el estado pending-visibility.
           if (journal.some((item) => item.key === "vectors")) {
             // Actualiza la anotación de vectores anterior con el nuevo resultado.
             await mark(

@@ -42,7 +42,7 @@ type FetchLike = (url: string, init: RequestInit) => Promise<Response>;
 
 // Convierte los créditos informados en consumo (nunca en USD).
 function consumption(value: { credits: number } | undefined) {
-  // Credits are observed usage, never a provider-reported USD amount.
+  // Los créditos son uso observado, nunca un importe en USD informado por el proveedor.
   return value
     ? { kind: "reported" as const, credits: value.credits, usd: null }
     : { kind: "unknown" as const };
@@ -73,8 +73,8 @@ async function post(
       headers: { authorization: `Bearer ${apiKey}`, "content-type": "application/json" },
       body: JSON.stringify(body),
       signal: context.signal,
-      // workerd only supports follow/manual. Return redirects to the status
-      // check below so an Authorization header never follows another origin.
+      // workerd solo admite follow o manual. Con manual, una redirección llega a la comprobación
+      // de estado de abajo y la cabecera Authorization nunca viaja a otro origen.
       redirect: "manual",
     });
     // Respuesta con error HTTP.

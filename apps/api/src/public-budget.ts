@@ -8,8 +8,8 @@ import type { WorkerEnv } from "./env";
 // Tipo de la base de datos D1.
 import type { SqlDatabase } from "./stores";
 
-// A conditional D1 UPDATE serializes reservations across Worker instances.
-// Reservations remain consumed when provider charge is unknown, including errors.
+// Un UPDATE condicional de D1 ordena las reservas entre instancias del Worker.
+// Una reserva no se devuelve si el cargo del proveedor es desconocido, tampoco si hubo error.
 export async function reservePublicTurn(
   env: WorkerEnv,
   mode: string,
@@ -43,8 +43,8 @@ export async function reservePublicTurn(
       !Number.isFinite(evaluatorOutput)
     )
       return null;
-    // The ledger has one tariff: use the higher rate for every call, including
-    // reasoning output. Deliberately over-reserves rather than understating cost.
+    // La sesión de gasto tiene una sola tarifa: se usa la más alta para todas las llamadas, también
+    // para la salida de razonamiento. Reserva de más a propósito en vez de quedarse corta.
     inputPrice = Math.max(inputPrice, evaluatorInput);
     // Se usa la tarifa más alta de las dos para todas las llamadas.
     outputPrice = Math.max(outputPrice, evaluatorOutput);
@@ -53,8 +53,8 @@ export async function reservePublicTurn(
   const generative = mode === "crag" ? 6 : 1;
   // Embeddings del turno: ninguno sin RAG, 3 en CRAG y 1 en RAG.
   const embedding = mode === "sin-rag" ? 0 : mode === "crag" ? 3 : 1;
-  // Contract caps history at 20,000 chars, evidence at 6 x 900 chars;
-  // 50,000 input tokens per call is a conservative upper bound.
+  // El contrato limita el historial a 20.000 caracteres y la evidencia a 6 × 900 caracteres;
+  // 50.000 tokens de entrada por llamada es una cota superior prudente.
   const quote =
     (1.25 *
       (generative * (50_000 * inputPrice + 2_000 * outputPrice) + embedding * 2_000 * 0.0118)) /

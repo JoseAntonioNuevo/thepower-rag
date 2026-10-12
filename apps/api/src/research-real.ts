@@ -42,8 +42,8 @@ const sid = z.enum(["q1", "q2", "q3"]);
 // Esquema del plan: ruta, explicación, aclaración, subpreguntas y herramienta.
 const planSchema = z.object({
   route: z.enum(["course", "tool", "investigate", "clarify"]),
-  // Explanatory metadata is bounded after generation; factual questions and
-  // provider/tool arguments retain their strict schema constraints.
+  // La explicación se recorta después de generarla; las subpreguntas y los argumentos de
+  // herramienta o buscador mantienen sus límites estrictos en el esquema.
   rationale: z.string(),
   clarification: z.string().max(RESEARCH_LIMITS.maxReasonChars).nullable(),
   subquestions: z
@@ -90,8 +90,8 @@ const assessSchema = z.object({
 
 // Esquema de evaluación limitado a las fuentes y extractos que existen en esta ronda.
 function boundedAssessmentSchema(catalog: readonly { sourceId: string; excerpts: string[] }[]) {
-  // A flat provider schema avoids an anyOf branch for every source. The
-  // resolver below still checks each index against its own source.
+  // Un esquema plano evita una rama anyOf por fuente; resolveExcerpt comprueba después
+  // cada índice contra su propia fuente.
   const sources = catalog.map((source) => source.sourceId);
   // Índice máximo de extracto entre todas las fuentes.
   const maxIndex = Math.max(0, ...catalog.map((source) => source.excerpts.length - 1));
@@ -196,7 +196,7 @@ function failed(signal: AbortSignal, error?: unknown, prices?: TokenPrices): Por
   const structured = NoObjectGeneratedError.isInstance(error);
   // Estado HTTP si fue un error de la API.
   const http = APICallError.isInstance(error) ? error.statusCode : undefined;
-  // Never expose the generated text, provider body, request or error message.
+  // Nunca se muestran el texto generado, el cuerpo del proveedor, la petición ni el mensaje de error.
   const detail = structured
     ? error.finishReason === "length"
       ? "El modelo agotó el tope de salida antes de completar el objeto."

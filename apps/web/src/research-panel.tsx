@@ -230,10 +230,8 @@ export function ResearchTrace({ summary }: { summary: ResearchSummary }) {
                     {/* Cobertura, si la hay. */}
                     {coverage === undefined ? null : (
                       <>
-                        {/* Espacio. */}
                         {" "}
                         — {COVERAGE_LABEL[coverage.status]} ({CAUSE_LABEL[coverage.cause]})
-                        {/* Laguna. */}
                         {coverage.gap === null ? "" : `. ${coverage.gap}`}
                       </>
                     )}
@@ -394,44 +392,32 @@ export function ResearchTrace({ summary }: { summary: ResearchSummary }) {
           {/* Contadores frente a límites. */}
           <li>
             Rondas {summary.rounds}/{summary.limits.maxRounds}. Búsquedas{" "}
-            {/* Búsquedas. */}
             {summary.counters.searchCalls}/{summary.limits.maxSearchCalls}. Páginas{" "}
-            {/* Páginas. */}
             {summary.counters.pagesRead}/{summary.limits.maxPagesRead}. Llamadas de modelo{" "}
-            {/* Llamadas al modelo y herramienta. */}
             {summary.counters.modelCalls}. Herramienta {summary.counters.toolCalls}. Plazo total{" "}
-            {/* Plazo. */}
             {summary.limits.deadlineMs / 1000} s.
           </li>
           {/* Consumo: reserva, informado, estimado, créditos y desconocidos. */}
           <li>
             Reserva estimada: {money(a.estimatedMaxUsd, a.measured)}. USD informado por proveedores:{" "}
-            {/* USD informado. */}
             {money(a.providerReportedUsd, a.measured)}.
-            {/* Estimación por tarifas, si la hay. */}
             {a.estimatedUsd != null || a.estimateProvenance ? (
               <>
-                {/* Espacio. */}
                 {" "}
                 USD calculado con tarifas publicadas: {money(a.estimatedUsd ?? null, a.measured)}.
-                {/* Procedencia. */}
                 {a.estimateProvenance ? ` Procedencia: ${a.estimateProvenance}` : ""} Completo:{" "}
-                {/* Si la estimación está completa. */}
                 {a.estimateComplete === true ? "sí" : "no"}. No es un importe informado por el
                 proveedor.
               </>
             ) : null}{" "}
             Créditos informados:{" "}
-            {/* Créditos. */}
             {a.measured
               ? a.providerReportedCredits === null
                 ? "ninguno"
                 : a.providerReportedCredits
               : "no medido"}
             . Los créditos no son un total en USD. Llamadas con consumo desconocido:{" "}
-            {/* Llamadas con consumo desconocido. */}
             {a.measured ? a.unknownConsumptionCalls : "no medido"}. Informe final:{" "}
-            {/* Informe final y total. */}
             {money(a.finalAnswerUsd, a.measured)}. Total completo: {a.totalComplete ? "sí" : "no"}.
           </li>
           {/* Nota. */}

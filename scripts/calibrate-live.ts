@@ -48,7 +48,7 @@ const corpus = JSON.parse(
 ) as PreparedCorpus;
 // Perfil semántico.
 const profile = semanticIdentity(corpus, auth.observedDimensions!);
-// Development examples only. The reserved comparison set is never used to tune this threshold.
+// Solo ejemplos de desarrollo: el conjunto reservado de comparación nunca se usa para ajustar el umbral.
 const cases = [
   {
     text: "¿Cómo modela LangGraph un agente con estado y nodos?",

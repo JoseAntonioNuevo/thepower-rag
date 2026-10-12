@@ -1,7 +1,7 @@
 // GUÍA DE LECTURA · apps/api/src/local-worker.ts
 // Punto de entrada de bun run dev:real: solo atiende localhost, exige el mismo origen en el chat
 // y reserva contra LOCAL_BUDGET_USD antes de cada turno. Producción usa worker.ts.
-// Private loopback entry point; production continues to use worker.ts.
+// App Hono compartida con producción.
 import { createApp } from "./app";
 // Esquema de la petición de chat.
 import { chatRequestSchema } from "@thepower-rag/contracts";

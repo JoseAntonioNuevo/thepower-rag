@@ -1,3 +1,7 @@
+// GUÍA DE LECTURA · apps/api/src/research-schema.ts
+// SQL de la base de la investigación durable (RESEARCH_DB): cuenta de gasto, conversaciones, mensajes,
+// trabajos, operaciones de pago, checkpoints, eventos y medios, con triggers que impiden superar el
+// presupuesto. La copia aplicable con Wrangler está en apps/api/migrations-research/.
 /**
  * Esquema aditivo de la investigación. Vive en RESEARCH_DB, no en la base
  * del curso. Las sentencias son idempotentes. No borra filas de presupuesto.

@@ -241,7 +241,7 @@ export function createApp(deps: AppDeps = {}) {
         if (profileReady(row, assessment.retrieval).ok)
           body.corpus.coverage.remote = "index-verified";
       } catch {
-        /* Connectivity is not inferred from the binding declaration. */
+        /* Declarar el binding no demuestra conexión: sin lectura correcta no se marca verificado. */
       }
     }
     // Respuesta validada con el esquema y sin caché.

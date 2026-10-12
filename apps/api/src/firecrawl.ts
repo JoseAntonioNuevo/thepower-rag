@@ -166,8 +166,8 @@ async function post(
       },
       body: JSON.stringify(body),
       signal: context.signal,
-      // workerd rejects redirect: error before sending the request. Manual
-      // preserves the no-redirect policy through the non-2xx check below.
+      // workerd rechaza redirect: "error" antes de enviar. "manual" mantiene la regla de no seguir
+      // redirecciones: una respuesta 3xx falla en la comprobación de estado de abajo.
       redirect: "manual",
     });
   } catch {

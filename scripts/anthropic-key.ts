@@ -29,21 +29,21 @@ function configuredEnvValue(root: string, name: string): string | undefined {
   return value.trim();
 }
 
-/** Reads ANTHROPIC_API_KEY from the repo `.env`. A replace-with marker counts as absent. */
+/** Lee ANTHROPIC_API_KEY del `.env` de la raíz. Un marcador replace-with cuenta como ausente. */
 export function readRepoAnthropicKey(root: string): string | undefined {
   // Delegado.
   return configuredEnvValue(root, "ANTHROPIC_API_KEY");
 }
 
-/** Reads ANTHROPIC_WORKSPACE_ID from the repo `.env`. A replace-with marker counts as absent. */
+/** Lee ANTHROPIC_WORKSPACE_ID del `.env` de la raíz. Un marcador replace-with cuenta como ausente. */
 export function readRepoAnthropicWorkspaceId(root: string): string | undefined {
   // Delegado.
   return configuredEnvValue(root, "ANTHROPIC_WORKSPACE_ID");
 }
 
 /**
- * Reads the provider choice and every provider credential from the repo `.env`
- * (PROVIDER_ENV_VARIABLES). Markers and empty values count as absent and are left out.
+ * Lee del `.env` de la raíz el proveedor elegido y todas sus credenciales (PROVIDER_ENV_VARIABLES).
+ * Los marcadores y los valores vacíos cuentan como ausentes y no se devuelven.
  */
 export function readRepoProviderEnv(root: string): Record<string, string> {
   // Variables encontradas.

@@ -39,7 +39,7 @@ export const HAIKU_INPUT_USD_PER_MILLION = 0.1;
 // Tarifa publicada de salida de Haiku 5.5.
 export const HAIKU_OUTPUT_USD_PER_MILLION = 0.5;
 
-/** Effort low keeps adaptive thinking small so a short course answer still fits maxOutputTokens. */
+/** Esfuerzo bajo: el razonamiento adaptativo queda corto y la respuesta del curso cabe en maxOutputTokens. */
 export const anthropicProviderOptions = {
   anthropic: {
     effort: "low",

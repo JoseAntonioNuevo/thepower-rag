@@ -128,7 +128,7 @@ for (const group of ["program", "L/X", "M/J"] as const) {
     await readCourseContext(db, "c3a59a406888b", group, new AbortController().signal),
   );
 }
-// Development regression cases, not the reserved comparison set.
+// Casos de regresión de desarrollo, no el conjunto reservado de comparación.
 const cases: [string, Audience, string, string][] = [
   [
     "days-lx",

@@ -6,8 +6,8 @@ import type { Audience } from "@thepower-rag/contracts";
 // Tipos del fragmento indexado y del resultado de una recuperación.
 import type { IndexedChunk, RetrievalOutcome } from "./pipeline";
 
-// Only a general weekly timetable is an exact metadata lookup. Specific dates,
-// sessions, teachers and topics keep their normal retrieval path.
+// Solo el horario semanal general se responde leyendo una ficha concreta. Las fechas, sesiones,
+// profesores y temas concretos siguen la recuperación normal.
 export function isWeeklyScheduleQuestion(question: string): boolean {
   // Quita tildes (NFD separa letra y tilde, y la expresión borra las tildes) y pasa a minúsculas.
   const text = question

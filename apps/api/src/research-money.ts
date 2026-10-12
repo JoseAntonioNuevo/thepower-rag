@@ -148,7 +148,7 @@ export function tokenMicros(tokens: number, microsPerMillion: number): number {
   return ceilDiv(tokens * microsPerMillion, 1_000_000);
 }
 
-/** A resumed job keeps its stored reservation, including after output caps change. */
+/** Tope de salida que cabe en la reserva por llamada. Un trabajo reanudado conserva su reserva aunque cambien los topes. */
 export function modelOutputCap(
   prices: PriceSnapshot,
   inputUsdPerMillion: number,

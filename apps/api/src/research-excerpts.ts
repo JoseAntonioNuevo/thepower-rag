@@ -4,7 +4,7 @@
 // Límites de la investigación.
 import { RESEARCH_LIMITS } from "@thepower-rag/contracts";
 
-/** Every choice remains a consecutive span of the exact shown source text. */
+/** Cada extracto posible es un tramo seguido y literal del texto de la fuente que se enseñó. */
 export function excerptChoices(text: string): string[] {
   // Extractos posibles.
   const choices: string[] = [];
@@ -20,8 +20,8 @@ export function excerptChoices(text: string): string[] {
   for (const end of ends) {
     // Frase completa sin espacios a los lados.
     const choice = text.slice(start, end).trim();
-    // Omit an oversized sentence rather than starting inside its negation or
-    // qualifier. Model-selected blocks never invent a suffix of that sentence.
+    // Una frase demasiado larga se omite en vez de cortarla dentro de una negación o un matiz:
+    // así el modelo nunca elige un trozo que cambie el sentido de la frase.
     if (choice && choice.length <= cap) choices.push(choice);
     // La siguiente frase empieza aquí.
     start = end;
@@ -38,7 +38,7 @@ export interface ExcerptReference {
   excerptIndex: number;
 }
 
-/** No fallback, fuzzy matching, translation or model-authored text. */
+/** Resuelve una referencia a su texto exacto: sin alternativas, parecidos, traducciones ni texto del modelo. */
 export function resolveExcerpt(
   reference: ExcerptReference,
   sources: readonly { sourceId: string; excerpts: readonly string[] }[],

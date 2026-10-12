@@ -122,7 +122,7 @@ async function ipLimit(request: Request, env: WorkerEnv): Promise<Response | nul
   const ip = request.headers.get("cf-connecting-ip");
   // Sin IP no se puede verificar.
   if (!ip) return failure(403, "No se puede verificar el origen de la petición.");
-  // Store no raw IP or question in limiter keys/logs. The edge supplies this header.
+  // Ni la IP ni la pregunta se guardan en claro en claves o registros. La cabecera la pone Cloudflare.
   const key = "thepower-rag:v1:ip:" + (await digest(env.TURNSTILE_SECRET_KEY!, ip));
   // Aplica el límite.
   const result = await env.CHAT_IP_LIMITER!.limit({ key });
