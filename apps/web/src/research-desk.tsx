@@ -12,7 +12,11 @@ import {
   type ResearchSummary,
 } from "@thepower-rag/contracts";
 // Hooks de React.
-import { useCallback, useEffect, useRef, useState } from "react";
+import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from "react";
+// Componentes de movimiento compartidos con el chat.
+import { ChatError, MatrixLoader, PanelSlide, RevealSlot } from "./chat-motion-view";
+// Duración leída de las variables CSS.
+import { readCssMs } from "./chat-motion";
 // Respuesta con el Markdown del curso.
 import { CourseAnswer } from "./course-answer";
 // Fuentes y traza de la investigación.
@@ -104,8 +108,71 @@ function shownReport(payload: ResultPayload | null): { text: string | null; note
   return { text: null, note: null };
 }
 
-// Línea de estado que cambia con fundido.
-function StatusLine({ text }: { text: string }) {
+// Tono visual de cada estado de ejecución (color del punto y del borde).
+const EXECUTION_TONE: Record<string, string> = {
+  queued: "live",
+  running: "live",
+  complete: "ok",
+  cancelled: "muted",
+  attention: "warn",
+  failed: "bad",
+};
+
+// Presupuesto de la sesión según /api/research/budget.
+interface BudgetView {
+  // Reservado.
+  reserved: string;
+  // Consumido.
+  consumed: string;
+  // Desconocido.
+  unknown: string;
+  // Nota.
+  note: string;
+}
+
+// Tamaño legible de un archivo.
+function formatBytes(size: number): string {
+  // Menos de 1 KB.
+  if (size < 1024) {
+    // Bytes.
+    return `${String(size)} B`;
+  }
+  // Menos de 1 MB.
+  if (size < 1024 * 1024) {
+    // KB.
+    return `${(size / 1024).toFixed(1)} KB`;
+  }
+  // MB.
+  return `${(size / (1024 * 1024)).toFixed(1)} MB`;
+}
+
+// Icono de 16 px con trazo (imagen, audio, más, cerrar, enviar, parar, recuperar).
+function Icon({
+  name,
+}: {
+  name: "image" | "audio" | "plus" | "close" | "send" | "stop" | "retry";
+}) {
+  // Trazos de cada icono.
+  const paths: Record<typeof name, string> = {
+    image: "M2.5 3.5h11v9h-11zM2.5 10.5l3-3 3 3 2-2 3 3M10.5 6.5h.01",
+    audio: "M6 12V4l7-1.5v8M6 12a2 2 0 1 1-2-2 2 2 0 0 1 2 2zM13 10.5a2 2 0 1 1-2-2 2 2 0 0 1 2 2z",
+    plus: "M8 3v10M3 8h10",
+    close: "M4 4l8 8M12 4l-8 8",
+    send: "M3 8h10M9 4l4 4-4 4",
+    stop: "M4.5 4.5h7v7h-7z",
+    retry: "M3 8a5 5 0 1 0 1.5-3.5M3 3v2.5h2.5",
+  };
+  // SVG decorativo.
+  return (
+    <svg className="icon" viewBox="0 0 16 16" aria-hidden="true">
+      {/* Trazo. */}
+      <path d={paths[name]} />
+    </svg>
+  );
+}
+
+// Línea de estado que cambia con fundido y, si está viva, con brillo que recorre el texto.
+function StatusLine({ text, shimmer = false }: { text: string; shimmer?: boolean }) {
   // Nodo.
   const ref = useRef<HTMLSpanElement>(null);
   // Cambia el texto con animación.
@@ -128,24 +195,31 @@ function StatusLine({ text }: { text: string }) {
     if (element.textContent === "" || reduce) {
       // Texto.
       element.textContent = text;
+      // Copia para la capa del brillo.
+      element.dataset.text = text;
       // Sale.
       return;
     }
     // Animación de salida.
     element.classList.add("is-exit");
-    // Tras 150 ms.
-    const timer = window.setTimeout(() => {
-      // Texto nuevo.
-      element.textContent = text;
-      // Quita la salida.
-      element.classList.remove("is-exit");
-      // Prepara la entrada.
-      element.classList.add("is-enter-start");
-      // Reflow.
-      void element.offsetHeight;
-      // Entra.
-      element.classList.remove("is-enter-start");
-    }, 150);
+    // Tras la duración del cambio de texto.
+    const timer = window.setTimeout(
+      () => {
+        // Texto nuevo.
+        element.textContent = text;
+        // Copia para la capa del brillo.
+        element.dataset.text = text;
+        // Quita la salida.
+        element.classList.remove("is-exit");
+        // Prepara la entrada.
+        element.classList.add("is-enter-start");
+        // Reflow.
+        void element.offsetHeight;
+        // Entra.
+        element.classList.remove("is-enter-start");
+      },
+      readCssMs("--text-swap-dur", 150),
+    );
     // Limpieza.
     return () => {
       // Cancela.
@@ -153,7 +227,64 @@ function StatusLine({ text }: { text: string }) {
     };
   }, [text]);
   // Contenedor del texto.
-  return <span ref={ref} className="t-text-swap" />;
+  return <span ref={ref} className={shimmer ? "t-text-swap t-shimmer" : "t-text-swap"} />;
+}
+
+// Sección plegable: la altura crece con grid-template-rows y el chevrón se voltea.
+function Accordion({
+  title,
+  count,
+  defaultOpen = false,
+  children,
+}: {
+  // Título.
+  title: string;
+  // Número opcional junto al título.
+  count?: number;
+  // ¿Abierta al montar?
+  defaultOpen?: boolean;
+  // Contenido.
+  children: ReactNode;
+}) {
+  // ¿Abierta?
+  const [open, setOpen] = useState(defaultOpen);
+  // Id del panel.
+  const panelId = useId();
+  // Contenedor.
+  return (
+    <div className="t-acc desk-acc" data-open={open ? "true" : "false"}>
+      {/* Cabecera que abre y cierra. */}
+      <button
+        type="button"
+        className="t-acc-head"
+        aria-expanded={open}
+        aria-controls={panelId}
+        onClick={() => {
+          // Alterna.
+          setOpen((current) => !current);
+        }}
+      >
+        {/* Título. */}
+        <span className="desk-acc-title">{title}</span>
+        {/* Contador. */}
+        {count === undefined ? null : <span className="desk-count">{count}</span>}
+        {/* Chevrón. */}
+        <span className="t-acc-chevron" aria-hidden="true">
+          <svg viewBox="0 0 16 16">
+            <path d="M4 6.5L8 10.5L12 6.5" />
+          </svg>
+        </span>
+      </button>
+      {/* Pista de la rejilla. */}
+      <div className="t-acc-panel" id={panelId}>
+        {/* Interior con el relleno (inerte si está cerrada). */}
+        <div className="t-acc-panel-inner" inert={!open}>
+          {/* Contenido. */}
+          <div className="desk-acc-body">{children}</div>
+        </div>
+      </div>
+    </div>
+  );
 }
 
 // JSON de una respuesta o null.
@@ -245,7 +376,7 @@ export function ResearchDesk({
   // Aviso visible.
   const [notice, setNotice] = useState<string | null>(null);
   // Presupuesto.
-  const [budget, setBudget] = useState<string | null>(null);
+  const [budget, setBudget] = useState<BudgetView | null>(null);
   // Clave del trabajo.
   const idempotency = useRef<string | null>(null);
   // Turnstile.
@@ -273,10 +404,13 @@ export function ResearchDesk({
     } | null;
     // Correcto.
     if (response.ok && body?.reserved) {
-      // Texto del presupuesto.
-      setBudget(
-        `Reservado ${body.reserved}. Consumido ${body.consumed ?? ""}. Desconocido ${body.unknown ?? ""}. ${body.note ?? ""}`,
-      );
+      // Presupuesto por partes.
+      setBudget({
+        reserved: body.reserved,
+        consumed: body.consumed ?? "",
+        unknown: body.unknown ?? "",
+        note: body.note ?? "",
+      });
     }
   }
 
@@ -752,7 +886,7 @@ export function ResearchDesk({
   // Texto del estado.
   const status =
     job === null
-      ? "Sin trabajo activo."
+      ? "Sin trabajo activo"
       : job.execution === "attention" && job.attention === "recoverable"
         ? "Se puede recuperar"
         : job.execution === "attention" && job.attention === "reconciliation-required"
@@ -766,366 +900,519 @@ export function ResearchDesk({
         ? "Hay una operación ambigua. No se reenvía ni se libera la reserva."
         : (job?.progress ?? "Puedes cerrar la página: el trabajo sigue hasta que lo canceles.");
 
+  // Tono del estado.
+  const tone = job === null ? "idle" : (EXECUTION_TONE[job.execution] ?? "idle");
+  // ¿Trabajo vivo (en cola o en curso)?
+  const live = tone === "live";
+  // ¿Se puede enviar?
+  const canSubmit =
+    verificationReady &&
+    conversationId !== null &&
+    (question.trim().length > 0 || imageFile !== null || audioFile !== null);
+  // ¿Se puede cancelar?
+  const canCancel =
+    verificationReady &&
+    job !== null &&
+    job.execution !== "complete" &&
+    job.execution !== "cancelled";
+  // ¿Se puede recuperar?
+  const canRecover =
+    verificationReady &&
+    job !== null &&
+    (job.execution === "queued" || job.execution === "running" || job.execution === "attention");
+  // ¿El estado del trabajo admite alguna acción? Si no, no se muestran los botones.
+  const jobActionable =
+    job !== null && job.execution !== "complete" && job.execution !== "cancelled";
+  // Últimos eventos del trabajo, del más antiguo al más reciente.
+  const recentEvents = job?.events.slice(-6) ?? [];
+
   // Mesa.
   return (
     <div className="research-desk">
-      {/* Aviso de privacidad y duración. */}
-      <p className="composer-caption">
-        Conversación anónima de esta demostración. No es una cuenta de alumno. Cerrar la página no
-        cancela el trabajo.
-      </p>
-      {/* Lista de conversaciones. */}
-      <div className="conversation-list">
-        {/* Un botón por conversación. */}
-        {conversations.map((item, index) => (
-          <button
-            key={item.id}
-            type="button"
-            className="caption-action"
-            aria-pressed={item.id === conversationId}
-            onClick={() => {
-              // Nueva generación.
-              generation.current += 1;
-              // Selecciona.
-              setConversationId(item.id);
-              // La recuerda.
-              sessionStorage.setItem(`research-conversation:${audience}`, item.id);
-              // Limpia el resumen.
-              setSummary(null);
-              // Limpia el informe.
-              setReportText(null);
-              // Limpia la nota.
-              setReportNote(null);
-              // Sin trabajo.
-              setJob(null);
-              // Limpia el formulario.
-              clearLocalMedia();
-            }}
-          >
-            Conversación {index + 1}
-          </button>
-        ))}
-        {/* Nueva conversación. */}
-        <button
-          type="button"
-          onClick={() => void createConversation()}
-          disabled={!verificationReady}
-        >
-          Nueva conversación
-        </button>
-      </div>
-      {/* Selector de guion de prueba. */}
-      {allowScenario ? (
-        <label className="composer-script" htmlFor="guion-durable">
-          Guion
-          <select
-            id="guion-durable"
-            value={scenarioId ?? ""}
-            onChange={(event) => {
-              // Escenario elegido.
-              const found = [...DEMO_RESEARCH_SCENARIOS, RECOVERY_SCENARIO].find(
-                (item) => item.id === event.target.value,
-              );
-              // Lo guarda.
-              setScenarioId(found?.id ?? null);
-              // Si existe.
-              if (found) {
-                // Rellena su pregunta.
-                setQuestion(found.question);
-              }
-            }}
-          >
-            {/* Sin guion. */}
-            <option value="">Libre, con el material del curso de prueba</option>
-            {/* Un guion por escenario. */}
-            {[...DEMO_RESEARCH_SCENARIOS, RECOVERY_SCENARIO].map((item) => (
-              <option key={item.id} value={item.id}>
-                {/* Nombre. */}
-                {item.label}
-              </option>
-            ))}
-          </select>
-        </label>
-      ) : null}
-      {/* Formulario. */}
-      <form
-        className="composer"
-        onSubmit={(event) => {
-          // Evita recargar.
-          event.preventDefault();
-          // Envía.
-          void submit();
-        }}
-      >
-        {/* Pregunta. */}
-        <textarea
-          aria-label="Pregunta de investigación"
-          value={question}
-          rows={3}
-          onChange={(event) => {
-            // Actualiza.
-            setQuestion(event.target.value);
-          }}
-        />
-        {/* Archivos y voz. */}
-        <div className="media-row">
-          {/* Imagen. */}
-          <label>
-            Imagen PNG o JPEG
-            <input
-              ref={imageInput}
-              aria-label="Imagen"
-              type="file"
-              accept="image/png,image/jpeg"
-              onChange={(event) => {
-                // Archivo.
-                const file = event.target.files?.[0] ?? null;
-                // Vacía el input para poder repetir.
-                event.target.value = "";
-                // Lo guarda.
-                setImageFile(file);
-                // Clave nueva.
-                imageKey.current = file ? crypto.randomUUID() : null;
-                // URL local.
-                replaceImageUrl(file);
-              }}
-            />
-          </label>
-          {/* Audio. */}
-          <label>
-            Audio WAV
-            <input
-              ref={audioInput}
-              aria-label="Audio"
-              type="file"
-              accept="audio/wav,audio/wave,audio/x-wav"
-              onChange={(event) => {
-                // Archivo.
-                const file = event.target.files?.[0] ?? null;
-                // Vacía el input.
-                event.target.value = "";
-                // Lo guarda.
-                setAudioFile(file);
-                // Clave nueva.
-                audioKey.current = file ? crypto.randomUUID() : null;
-                // URL local.
-                replaceAudioUrl(file);
-              }}
-            />
-          </label>
-          {/* Voz. */}
-          <label>
-            {/* Casilla. */}
-            <input
-              type="checkbox"
-              checked={voice}
-              onChange={(event) => {
-                // Actualiza.
-                setVoice(event.target.checked);
-              }}
-            />{" "}
-            Generar voz
-          </label>
-        </div>
-        {/* Vista previa de la imagen. */}
-        {imageUrl ? (
-          <figure>
-            {/* Imagen. */}
-            <img
-              className="media-preview"
-              src={imageUrl}
-              alt="Vista previa de la imagen seleccionada"
-            />
-            {/* Nombre, tamaño y botón para quitarla. */}
-            <figcaption className="research-meta">
-              {imageFile?.name} · {imageFile ? `${String(imageFile.size)} bytes` : ""}
-              {/* Quitar. */}
-              <button
-                type="button"
-                onClick={() => {
-                  // Sin archivo.
-                  setImageFile(null);
-                  // Sin clave.
-                  imageKey.current = null;
-                  // Vacía el input.
-                  if (imageInput.current) imageInput.current.value = "";
-                  // Libera la URL.
-                  replaceImageUrl(null);
-                }}
-              >
-                Quitar imagen
-              </button>
-            </figcaption>
-          </figure>
-        ) : null}
-        {/* Vista previa del audio. */}
-        {audioUrl ? (
-          <div>
-            {/* Reproductor. */}
-            <audio className="media-audio" controls preload="none" src={audioUrl} />
-            {/* Nombre y botón para quitarlo. */}
-            <p className="research-meta">
-              {/* Nombre. */}
-              {audioFile?.name}
-              {/* Quitar. */}
-              <button
-                type="button"
-                onClick={() => {
-                  // Sin archivo.
-                  setAudioFile(null);
-                  // Sin clave.
-                  audioKey.current = null;
-                  // Vacía el input.
-                  if (audioInput.current) audioInput.current.value = "";
-                  // Libera la URL.
-                  replaceAudioUrl(null);
-                }}
-              >
-                Quitar audio
-              </button>
+      {/* Tarjeta de la pregunta. */}
+      <section className="desk-card" aria-labelledby="desk-title">
+        {/* Cabecera con título, aviso y nueva conversación. */}
+        <header className="desk-head">
+          {/* Título y aviso. */}
+          <div className="desk-heading">
+            {/* Título. */}
+            <h2 id="desk-title" className="desk-title">
+              Investigación durable
+            </h2>
+            {/* Aviso de privacidad y duración. */}
+            <p className="desk-caption">
+              Conversación anónima de esta demostración. No es una cuenta de alumno. Cerrar la
+              página no cancela el trabajo.
             </p>
           </div>
+          {/* Nueva conversación. */}
+          <button
+            type="button"
+            className="btn btn-secondary"
+            onClick={() => void createConversation()}
+            disabled={!verificationReady}
+          >
+            {/* Icono. */}
+            <Icon name="plus" />
+            Nueva conversación
+          </button>
+        </header>
+        {/* Lista de conversaciones o invitación a crear una. */}
+        {conversations.length > 0 ? (
+          <div className="conversation-list" role="group" aria-label="Conversaciones del grupo">
+            {/* Un botón por conversación. */}
+            {conversations.map((item, index) => (
+              <button
+                key={item.id}
+                type="button"
+                className="conv-chip"
+                aria-pressed={item.id === conversationId}
+                onClick={() => {
+                  // Nueva generación.
+                  generation.current += 1;
+                  // Selecciona.
+                  setConversationId(item.id);
+                  // La recuerda.
+                  sessionStorage.setItem(`research-conversation:${audience}`, item.id);
+                  // Limpia el resumen.
+                  setSummary(null);
+                  // Limpia el informe.
+                  setReportText(null);
+                  // Limpia la nota.
+                  setReportNote(null);
+                  // Sin trabajo.
+                  setJob(null);
+                  // Limpia el formulario.
+                  clearLocalMedia();
+                }}
+              >
+                Conversación {index + 1}
+              </button>
+            ))}
+          </div>
+        ) : (
+          <p className="desk-empty">Crea una conversación para empezar a investigar.</p>
+        )}
+        {/* Selector de guion de prueba. */}
+        {allowScenario ? (
+          <label className="desk-field" htmlFor="guion-durable">
+            {/* Etiqueta. */}
+            <span className="desk-field-label">Guion</span>
+            <select
+              id="guion-durable"
+              value={scenarioId ?? ""}
+              onChange={(event) => {
+                // Escenario elegido.
+                const found = [...DEMO_RESEARCH_SCENARIOS, RECOVERY_SCENARIO].find(
+                  (item) => item.id === event.target.value,
+                );
+                // Lo guarda.
+                setScenarioId(found?.id ?? null);
+                // Si existe.
+                if (found) {
+                  // Rellena su pregunta.
+                  setQuestion(found.question);
+                }
+              }}
+            >
+              {/* Sin guion. */}
+              <option value="">Libre, con el material del curso de prueba</option>
+              {/* Un guion por escenario. */}
+              {[...DEMO_RESEARCH_SCENARIOS, RECOVERY_SCENARIO].map((item) => (
+                <option key={item.id} value={item.id}>
+                  {/* Nombre. */}
+                  {item.label}
+                </option>
+              ))}
+            </select>
+          </label>
         ) : null}
-        {/* Enviar. */}
-        <button
-          type="submit"
-          disabled={
-            !verificationReady ||
-            !conversationId ||
-            (question.trim().length === 0 && !imageFile && !audioFile)
-          }
+        {/* Formulario. */}
+        <form
+          className="desk-composer"
+          onSubmit={(event) => {
+            // Evita recargar.
+            event.preventDefault();
+            // Envía.
+            void submit();
+          }}
         >
-          Investigar
-        </button>
-        {/* Cancelar. */}
-        <button
-          type="button"
-          onClick={() => void cancel()}
-          disabled={
-            !verificationReady ||
-            !job ||
-            job.execution === "complete" ||
-            job.execution === "cancelled"
-          }
-        >
-          Cancelar trabajo
-        </button>
-        {/* Recuperar. */}
-        <button
-          type="button"
-          onClick={() => void recover()}
-          disabled={
-            !verificationReady ||
-            job == null ||
-            (job.execution !== "queued" &&
-              job.execution !== "running" &&
-              job.execution !== "attention")
-          }
-        >
-          Recuperar
-        </button>
-        {/* Contenedor del widget de Turnstile. */}
-        <div ref={verificationContainer} aria-label="Verificación de seguridad" />
-      </form>
-      {/* Estado con esqueleto hasta tener resumen. */}
-      <div className={`t-skel research-status-skel${summary ? " is-revealed" : ""}`}>
-        {/* Esqueleto. */}
-        <div className="t-skel-skeleton is-pulsing">
-          {/* Texto. */}
-          <p>Consultando el trabajo…</p>
-        </div>
-        {/* Contenido. */}
-        <div className="t-skel-content">
-          {/* Estado y detalle. */}
-          <p>
-            {/* Estado con fundido. */}
-            <StatusLine text={status} /> {detail}
-          </p>
-        </div>
-      </div>
-      {/* Error de verificación. */}
-      {verificationError ? <p role="alert">{verificationError}</p> : null}
-      {/* Aviso. */}
-      {notice ? <p role="alert">{notice}</p> : null}
-      {/* Presupuesto. */}
-      {budget ? <p className="research-meta">{budget}</p> : null}
-      {/* Resultado. */}
-      {summary ? (
-        <>
-          {/* Aviso: terminar no significa informe completo. */}
-          <p className="trace-summary">
-            La ejecución puede haber terminado y el informe seguir siendo parcial, un rechazo o un
-            error.
-          </p>
-          {/* Imagen admitida. */}
-          {summary.media?.image ? (
-            <section className="research-block">
-              {/* Título. */}
-              <h3>Imagen</h3>
-              {/* Imagen guardada. */}
-              <img
-                className="media-preview"
-                src={`/api/research/media/${summary.media.image.assetId}`}
-                alt="Imagen admitida de esta investigación"
-              />
-              {/* Detalle. */}
-              <p>{summary.media.image.detail}</p>
-              {/* Texto observado. */}
-              {summary.media.image.observedText ? (
-                <p>
-                  Texto observado: <q>{summary.media.image.observedText}</q>
-                </p>
-              ) : null}
-              {/* Notas. */}
-              {summary.media.image.notes ? <p>{summary.media.image.notes}</p> : null}
-            </section>
-          ) : null}
-          {/* Audio admitido. */}
-          {summary.media?.audio ? (
-            <section className="research-block">
-              {/* Título. */}
-              <h3>Audio</h3>
-              {/* Detalle. */}
-              <p>{summary.media.audio.detail}</p>
-              {/* Transcripción. */}
-              {summary.media.audio.transcript ? (
-                <p>
-                  Transcripción: <q>{summary.media.audio.transcript}</q>
-                </p>
-              ) : null}
-            </section>
-          ) : null}
-          {/* Conflicto entre entradas. */}
-          {summary.media?.conflict ? <p role="alert">{summary.media.conflict}</p> : null}
-          {/* Informe. */}
-          {reportText ? <CourseAnswer text={reportText} /> : null}
-          {/* Voz. */}
-          {summary.media?.speech ? (
-            <section className="research-block">
-              {/* Título. */}
-              <h3>Voz</h3>
-              {/* Guion hablado. */}
-              <p>{summary.media.speech.text}</p>
-              {/* Detalle. */}
-              <p className="research-meta">{summary.media.speech.detail}</p>
-              {/* Reproductor. */}
-              {summary.media.speech.assetId ? (
-                <audio
-                  className="media-audio"
-                  controls
-                  preload="none"
-                  src={`/api/research/media/${summary.media.speech.assetId}`}
+          {/* Caja de la pregunta con sus herramientas. */}
+          <div className="desk-input">
+            {/* Pregunta. */}
+            <textarea
+              aria-label="Pregunta de investigación"
+              placeholder="¿Qué quieres investigar? Puedes añadir una imagen o un audio."
+              value={question}
+              rows={3}
+              onChange={(event) => {
+                // Actualiza.
+                setQuestion(event.target.value);
+              }}
+            />
+            {/* Herramientas: archivos, voz y envío. */}
+            <div className="desk-tools">
+              {/* Imagen: la etiqueta hace de botón y el input queda oculto. */}
+              <label className="btn-attach" data-active={imageFile ? "true" : "false"}>
+                {/* Icono. */}
+                <Icon name="image" />
+                {/* Texto. */}
+                <span>Imagen</span>
+                <input
+                  ref={imageInput}
+                  className="visually-hidden"
+                  aria-label="Imagen PNG o JPEG"
+                  type="file"
+                  accept="image/png,image/jpeg"
+                  onChange={(event) => {
+                    // Archivo.
+                    const file = event.target.files?.[0] ?? null;
+                    // Vacía el input para poder repetir.
+                    event.target.value = "";
+                    // Lo guarda.
+                    setImageFile(file);
+                    // Clave nueva.
+                    imageKey.current = file ? crypto.randomUUID() : null;
+                    // URL local.
+                    replaceImageUrl(file);
+                  }}
                 />
+              </label>
+              {/* Audio. */}
+              <label className="btn-attach" data-active={audioFile ? "true" : "false"}>
+                {/* Icono. */}
+                <Icon name="audio" />
+                {/* Texto. */}
+                <span>Audio WAV</span>
+                <input
+                  ref={audioInput}
+                  className="visually-hidden"
+                  aria-label="Audio WAV"
+                  type="file"
+                  accept="audio/wav,audio/wave,audio/x-wav"
+                  onChange={(event) => {
+                    // Archivo.
+                    const file = event.target.files?.[0] ?? null;
+                    // Vacía el input.
+                    event.target.value = "";
+                    // Lo guarda.
+                    setAudioFile(file);
+                    // Clave nueva.
+                    audioKey.current = file ? crypto.randomUUID() : null;
+                    // URL local.
+                    replaceAudioUrl(file);
+                  }}
+                />
+              </label>
+              {/* Voz: interruptor con rebote. */}
+              <span className="desk-voice">
+                <button
+                  type="button"
+                  role="switch"
+                  className="t-toggle"
+                  aria-checked={voice}
+                  aria-labelledby="voz-etiqueta"
+                  data-on={voice ? "true" : "false"}
+                  onClick={(event) => {
+                    // Activa los fotogramas solo tras la primera interacción.
+                    event.currentTarget.classList.add("is-init");
+                    // Alterna.
+                    setVoice((current) => !current);
+                  }}
+                >
+                  {/* Pulgar. */}
+                  <span className="t-toggle-thumb" />
+                </button>
+                {/* Etiqueta. */}
+                <span id="voz-etiqueta">Generar voz</span>
+              </span>
+              {/* Enviar. */}
+              <button type="submit" className="btn btn-primary desk-send" disabled={!canSubmit}>
+                Investigar
+                {/* Icono. */}
+                <Icon name="send" />
+              </button>
+            </div>
+          </div>
+          {/* Adjuntos elegidos. */}
+          {imageUrl || audioUrl ? (
+            <div className="desk-attachments">
+              {/* Vista previa de la imagen. */}
+              {imageUrl ? (
+                <PanelSlide className="attachment">
+                  {/* Miniatura. */}
+                  <img
+                    className="attachment-thumb"
+                    src={imageUrl}
+                    alt="Vista previa de la imagen seleccionada"
+                  />
+                  {/* Nombre y tamaño. */}
+                  <span className="attachment-text">
+                    <span className="attachment-name">{imageFile?.name}</span>
+                    <span className="attachment-size">
+                      {imageFile ? formatBytes(imageFile.size) : ""}
+                    </span>
+                  </span>
+                  {/* Quitar. */}
+                  <button
+                    type="button"
+                    className="btn-icon"
+                    aria-label="Quitar imagen"
+                    onClick={() => {
+                      // Sin archivo.
+                      setImageFile(null);
+                      // Sin clave.
+                      imageKey.current = null;
+                      // Vacía el input.
+                      if (imageInput.current) imageInput.current.value = "";
+                      // Libera la URL.
+                      replaceImageUrl(null);
+                    }}
+                  >
+                    <Icon name="close" />
+                  </button>
+                </PanelSlide>
               ) : null}
-            </section>
+              {/* Vista previa del audio. */}
+              {audioUrl ? (
+                <PanelSlide className="attachment attachment-audio">
+                  {/* Nombre y tamaño. */}
+                  <span className="attachment-text">
+                    <span className="attachment-name">{audioFile?.name}</span>
+                    <span className="attachment-size">
+                      {audioFile ? formatBytes(audioFile.size) : ""}
+                    </span>
+                  </span>
+                  {/* Quitar. */}
+                  <button
+                    type="button"
+                    className="btn-icon"
+                    aria-label="Quitar audio"
+                    onClick={() => {
+                      // Sin archivo.
+                      setAudioFile(null);
+                      // Sin clave.
+                      audioKey.current = null;
+                      // Vacía el input.
+                      if (audioInput.current) audioInput.current.value = "";
+                      // Libera la URL.
+                      replaceAudioUrl(null);
+                    }}
+                  >
+                    <Icon name="close" />
+                  </button>
+                  {/* Reproductor. */}
+                  <audio className="media-audio" controls preload="none" src={audioUrl} />
+                </PanelSlide>
+              ) : null}
+            </div>
           ) : null}
-          {/* Nota del informe. */}
-          {reportNote ? <p>{reportNote}</p> : null}
-          {/* Traza. */}
-          <ResearchTrace summary={summary} />
-          {/* Fuentes. */}
-          <ResearchSources sources={sources} />
-        </>
+          {/* Contenedor del widget de Turnstile. */}
+          <div ref={verificationContainer} aria-label="Verificación de seguridad" />
+        </form>
+      </section>
+      {/* Estado del trabajo con su tono, acciones y registro. */}
+      <section className="desk-status" data-tone={tone} aria-label="Estado del trabajo">
+        {/* Fila principal. */}
+        <div className="desk-status-head">
+          {/* Indicador: matriz viva o punto de color. */}
+          {live ? (
+            <span className="status-loader">
+              {/* Matriz. */}
+              <MatrixLoader variant="scan" />
+            </span>
+          ) : (
+            <span className="status-dot" aria-hidden="true" />
+          )}
+          {/* Estado con fundido. */}
+          <strong className="desk-status-label" role="status">
+            <StatusLine text={status} shimmer={live} />
+          </strong>
+          {/* Acciones sobre el trabajo. */}
+          {jobActionable ? (
+            <span className="desk-status-actions">
+              {/* Recuperar. */}
+              <button
+                type="button"
+                className="btn btn-quiet btn-sm"
+                onClick={() => void recover()}
+                disabled={!canRecover}
+              >
+                {/* Icono. */}
+                <Icon name="retry" />
+                Recuperar
+              </button>
+              {/* Cancelar. */}
+              <button
+                type="button"
+                className="btn btn-danger btn-sm"
+                onClick={() => void cancel()}
+                disabled={!canCancel}
+              >
+                {/* Icono. */}
+                <Icon name="stop" />
+                Cancelar trabajo
+              </button>
+            </span>
+          ) : null}
+        </div>
+        {/* Detalle. */}
+        <p className="desk-status-detail">{detail}</p>
+        {/* Registro de los últimos eventos. */}
+        {recentEvents.length > 0 ? (
+          <ol className="desk-log" aria-label="Registro del trabajo">
+            {/* Cada evento entra deslizándose. */}
+            {recentEvents.map((event) => (
+              <PanelSlide key={event.seq} as="li">
+                {/* Número. */}
+                <span className="desk-log-seq">{event.seq}</span>
+                {/* Texto. */}
+                <span>{event.text}</span>
+              </PanelSlide>
+            ))}
+          </ol>
+        ) : null}
+      </section>
+      {/* Error de verificación. */}
+      {verificationError ? <ChatError message={verificationError} /> : null}
+      {/* Aviso. */}
+      {notice ? <ChatError message={notice} /> : null}
+      {/* Presupuesto. */}
+      {budget ? (
+        <section className="desk-budget" aria-label="Presupuesto de la sesión">
+          {/* Tres cifras. */}
+          <dl className="budget-grid">
+            {/* Reservado. */}
+            <div className="budget-tile">
+              <dt>Reservado</dt>
+              <dd>
+                <StatusLine text={budget.reserved} />
+              </dd>
+            </div>
+            {/* Consumido. */}
+            <div className="budget-tile">
+              <dt>Consumido</dt>
+              <dd>
+                <StatusLine text={budget.consumed} />
+              </dd>
+            </div>
+            {/* Desconocido. */}
+            <div className="budget-tile">
+              <dt>Desconocido</dt>
+              <dd>
+                <StatusLine text={budget.unknown} />
+              </dd>
+            </div>
+          </dl>
+          {/* Nota. */}
+          {budget.note ? <p className="research-meta">{budget.note}</p> : null}
+        </section>
+      ) : null}
+      {/* Resultado: esqueleto mientras el trabajo sigue y revelado al terminar. */}
+      {live || summary ? (
+        <RevealSlot
+          loading={summary === null}
+          label="Resultado de la investigación"
+          className="source-skel desk-result"
+          skeleton={
+            <div className="desk-result-skel">
+              <span className="skel-line skel-line-short" />
+              <span className="skel-line" />
+              <span className="skel-line skel-line-mid" />
+              <span className="skel-line" />
+            </div>
+          }
+        >
+          {summary ? (
+            <div className="desk-result-body">
+              {/* Aviso: terminar no significa informe completo. */}
+              <p className="trace-summary">
+                La ejecución puede haber terminado y el informe seguir siendo parcial, un rechazo o
+                un error.
+              </p>
+              {/* Imagen admitida. */}
+              {summary.media?.image ? (
+                <section className="research-block">
+                  {/* Título. */}
+                  <h3>Imagen</h3>
+                  {/* Imagen guardada. */}
+                  <img
+                    className="media-preview"
+                    src={`/api/research/media/${summary.media.image.assetId}`}
+                    alt="Imagen admitida de esta investigación"
+                  />
+                  {/* Detalle. */}
+                  <p>{summary.media.image.detail}</p>
+                  {/* Texto observado. */}
+                  {summary.media.image.observedText ? (
+                    <p>
+                      Texto observado: <q>{summary.media.image.observedText}</q>
+                    </p>
+                  ) : null}
+                  {/* Notas. */}
+                  {summary.media.image.notes ? <p>{summary.media.image.notes}</p> : null}
+                </section>
+              ) : null}
+              {/* Audio admitido. */}
+              {summary.media?.audio ? (
+                <section className="research-block">
+                  {/* Título. */}
+                  <h3>Audio</h3>
+                  {/* Detalle. */}
+                  <p>{summary.media.audio.detail}</p>
+                  {/* Transcripción. */}
+                  {summary.media.audio.transcript ? (
+                    <p>
+                      Transcripción: <q>{summary.media.audio.transcript}</q>
+                    </p>
+                  ) : null}
+                </section>
+              ) : null}
+              {/* Conflicto entre entradas. */}
+              {summary.media?.conflict ? (
+                <p className="research-banner" role="alert">
+                  {summary.media.conflict}
+                </p>
+              ) : null}
+              {/* Informe. */}
+              {reportText ? (
+                <div className="desk-report">
+                  <CourseAnswer text={reportText} />
+                </div>
+              ) : null}
+              {/* Voz. */}
+              {summary.media?.speech ? (
+                <section className="research-block">
+                  {/* Título. */}
+                  <h3>Voz</h3>
+                  {/* Guion hablado. */}
+                  <p>{summary.media.speech.text}</p>
+                  {/* Detalle. */}
+                  <p className="research-meta">{summary.media.speech.detail}</p>
+                  {/* Reproductor. */}
+                  {summary.media.speech.assetId ? (
+                    <audio
+                      className="media-audio"
+                      controls
+                      preload="none"
+                      src={`/api/research/media/${summary.media.speech.assetId}`}
+                    />
+                  ) : null}
+                </section>
+              ) : null}
+              {/* Nota del informe. */}
+              {reportNote ? <p className="research-meta">{reportNote}</p> : null}
+              {/* Fuentes, abiertas al llegar. */}
+              <Accordion title="Fuentes" count={sources.length} defaultOpen>
+                <ResearchSources sources={sources} />
+              </Accordion>
+              {/* Traza, plegada para no tapar el informe. */}
+              <Accordion title="Traza del grafo">
+                <ResearchTrace summary={summary} />
+              </Accordion>
+            </div>
+          ) : null}
+        </RevealSlot>
       ) : null}
     </div>
   );
