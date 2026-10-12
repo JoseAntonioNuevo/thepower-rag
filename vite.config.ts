@@ -62,9 +62,9 @@ export default defineConfig({
             "scripts/research-durable.workerd.ts",
           ]
         : ["apps/**/*.test.ts", "packages/**/*.test.ts", "scripts/**/*.test.ts"],
-    environment: "node",
     // Entorno Node.
+    environment: "node",
+    // Plazo por test: 180 s en las de entrada y 20 s en el resto.
     testTimeout: process.env.THEPOWER_ENTRYPOINT === "1" ? 180_000 : 20_000,
-  // Plazo por test: 180 s en las de entrada y 20 s en el resto.
   },
 });

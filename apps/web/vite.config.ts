@@ -53,8 +53,7 @@ export default defineConfig(({ command }) => ({
     react(),
     // Cloudflare.
     cloudflare({
-      // Only the explicit local-real profile opens the existing remote bindings.
-      // Bindings remotos solo con CLOUDFLARE_ENV=local.
+      // Bindings remotos solo con CLOUDFLARE_ENV=local (perfil local con datos reales).
       remoteBindings: process.env.CLOUDFLARE_ENV === "local",
       // Estado local persistente (otra carpeta para investigación).
       persistState: researchDev ? { path: ".wrangler/research-state" } : true,
