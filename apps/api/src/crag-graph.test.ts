@@ -123,6 +123,8 @@ function ports(overrides: Partial<CragPorts> = {}): CragPorts & {
           cost: null,
         };
       }),
+    ...(overrides.rerank ? { rerank: overrides.rerank } : {}),
+    ...(overrides.assess ? { assess: overrides.assess } : {}),
   };
 }
 
@@ -574,5 +576,60 @@ describe("grafo CRAG", () => {
     expect(started).toBe(0);
     // Error.
     expect(blocked.result.terminal).toBe("error");
+  });
+
+  // Separa los nodos rank y assess en la traza y admite puertos dedicados rerank y assess.
+  it("ejecuta nodos separados de reordenamiento (rank) y valoración (assess)", async () => {
+    // Llamadas a puertos dedicados.
+    const stepCalls: string[] = [];
+    // Turno con puertos separados rerank y assess.
+    const split = await turn("estado y observabilidad", {
+      retrieve: async () => ({
+        ok: true,
+        providerCall: false,
+        chunks: [chunk("s5"), chunk("s6")],
+      }),
+      rerank: async () => {
+        // Anota rerank.
+        stepCalls.push("rerank");
+        // Devuelve el orden con puntuaciones en [0, 1].
+        return {
+          ok: true,
+          providerCall: false,
+          raw: [
+            { chunkId: "s6", score: 0.91, reason: "observabilidad directa" },
+            { chunkId: "s5", score: 0.84, reason: "estado y nodos" },
+          ],
+        };
+      },
+      assess: async ({ ranking }) => {
+        // Anota assess.
+        stepCalls.push("assess");
+        // Recibe el ranking ya validado del nodo anterior.
+        expect(ranking.map((hit) => hit.chunkId)).toEqual(["s6", "s5"]);
+        // Devuelve la valoración de suficiencia.
+        return {
+          ok: true,
+          providerCall: false,
+          raw: {
+            status: "sufficient",
+            reason: "Ambos aspectos quedan cubiertos.",
+            gaps: [],
+            usefulIds: ["s6", "s5"],
+          },
+        };
+      },
+    });
+    // Ambos puertos ejecutados en orden.
+    expect(stepCalls).toEqual(["rerank", "assess"]);
+    // La traza emite pasos separados rank y assess.
+    expect(split.result.steps.map((step) => step.kind)).toEqual([
+      "retrieve",
+      "rank",
+      "assess",
+      "answer",
+    ]);
+    // Respeta el orden del reordenador (s6 antes que s5).
+    expect(split.result.evidence.map((item) => item.chunkId)).toEqual(["s6", "s5"]);
   });
 });

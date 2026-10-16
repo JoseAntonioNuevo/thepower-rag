@@ -35,6 +35,20 @@ export const CRAG_BOUNDS = {
   executionBudgetMs: 20_000,
 } as const;
 
+// Escala de puntuaciones [0, 1] y umbrales calibrados para reordenamiento y valoración de suficiencia.
+export const CRAG_SCORE_THRESHOLDS = {
+  // Mínimo permitido en la escala de relevancia del reordenador.
+  minScore: 0,
+  // Máximo permitido en la escala de relevancia del reordenador.
+  maxScore: 1,
+  // Umbral de relevancia individual a partir del cual un fragmento se considera útil en calibración.
+  minChunkRelevance: 0.5,
+  // Umbral de cobertura mínima para considerar evidencia parcial (al menos una parte cubierta).
+  partialCoverageMin: 0.4,
+  // Umbral de cobertura completa para declarar evidencia suficiente cuando no quedan lagunas.
+  sufficientCoverageMin: 0.75,
+} as const;
+
 // Veredicto posible sobre la evidencia.
 export type EvidenceStatus = "sufficient" | "partial" | "insufficient";
 
@@ -140,6 +154,40 @@ export interface CragPorts {
     query: string;
     // Fragmentos candidatos.
     chunks: readonly CragChunk[];
+    // Número de intento.
+    attempt: number;
+    // Tiempo restante.
+    remainingMs: number;
+  }): Promise<
+    | { ok: true; raw: unknown; providerCall: boolean }
+    | { ok: false; reason: string; providerCall: boolean }
+  >;
+  // Reordena los fragmentos candidatos devolviendo una lista con puntuaciones en [0, 1] (opcional).
+  rerank?(input: {
+    // Pregunta original.
+    question: string;
+    // Consulta usada.
+    query: string;
+    // Fragmentos candidatos.
+    chunks: readonly CragChunk[];
+    // Número de intento.
+    attempt: number;
+    // Tiempo restante.
+    remainingMs: number;
+  }): Promise<
+    | { ok: true; raw: unknown; providerCall: boolean }
+    | { ok: false; reason: string; providerCall: boolean }
+  >;
+  // Valora si los fragmentos ya reordenados cubren la pregunta completa (opcional).
+  assess?(input: {
+    // Pregunta original.
+    question: string;
+    // Consulta usada.
+    query: string;
+    // Fragmentos mostrados.
+    chunks: readonly CragChunk[];
+    // Ordenación ya validada.
+    ranking: readonly RankedHit[];
     // Número de intento.
     attempt: number;
     // Tiempo restante.
@@ -317,20 +365,20 @@ function boundedText(value: unknown, max: number): string | null {
   return trimmed;
 }
 
-// Valida la salida del evaluador: ordenación completa, ids reales y veredicto coherente.
-export function validateRankingAndAssessment(
+// Valida únicamente el paso de reordenamiento: todos los candidatos, sin repetir y con puntuación en [0, 1].
+export function validateRanking(
   candidates: readonly CragChunk[],
   raw: unknown,
-): { ok: true; ranking: RankedHit[]; assessment: CragAssessment } | { ok: false; reason: string } {
-  // Salida como objeto.
-  const body = record(raw);
-  // Debe traer ranking y usefulIds como listas.
-  if (body === null || !Array.isArray(body.ranking) || !Array.isArray(body.usefulIds)) {
+): { ok: true; ranking: RankedHit[] } | { ok: false; reason: string } {
+  // Admite tanto un objeto { ranking: [...] } como directamente el array de filas.
+  const list = Array.isArray(raw) ? raw : record(raw)?.ranking;
+  // Debe ser una lista.
+  if (!Array.isArray(list)) {
     // Forma incorrecta.
     return { ok: false, reason: "La salida del evaluador no tiene la forma esperada." };
   }
   // La ordenación debe incluir cada candidato.
-  if (body.ranking.length !== candidates.length) {
+  if (list.length !== candidates.length) {
     // Falta alguno.
     return { ok: false, reason: "La ordenación no cubre los fragmentos recuperados." };
   }
@@ -341,7 +389,7 @@ export function validateRankingAndAssessment(
   // Ids ya vistos en la ordenación.
   const seen = new Set<string>();
   // Revisa cada fila de la ordenación.
-  for (const item of body.ranking) {
+  for (const item of list) {
     // Fila como objeto.
     const row = record(item);
     // Id del fragmento.
@@ -350,12 +398,14 @@ export function validateRankingAndAssessment(
     const reason = row === null ? null : boundedText(row.reason, CRAG_BOUNDS.maxReasonChars);
     // Puntuación.
     const score = row?.score;
-    // Id real y no repetido, motivo y puntuación finita.
+    // Id real y no repetido, motivo y puntuación finita en la escala [0, 1].
     if (
       chunkId === null ||
       reason === null ||
       typeof score !== "number" ||
       !Number.isFinite(score) ||
+      score < CRAG_SCORE_THRESHOLDS.minScore ||
+      score > CRAG_SCORE_THRESHOLDS.maxScore ||
       !expected.has(chunkId) ||
       seen.has(chunkId)
     ) {
@@ -375,6 +425,24 @@ export function validateRankingAndAssessment(
     // Falta alguno.
     return { ok: false, reason: "La ordenación omite un fragmento recuperado." };
   }
+  // Ranking válido.
+  return { ok: true, ranking };
+}
+
+// Valida únicamente el paso de valoración de suficiencia contra los fragmentos mostrados.
+export function validateAssessment(
+  candidates: readonly CragChunk[],
+  raw: unknown,
+): { ok: true; assessment: CragAssessment } | { ok: false; reason: string } {
+  // Salida como objeto.
+  const body = record(raw);
+  // Debe traer usefulIds como lista.
+  if (body === null || !Array.isArray(body.usefulIds)) {
+    // Forma incorrecta.
+    return { ok: false, reason: "La salida del evaluador no tiene la forma esperada." };
+  }
+  // Ids esperados.
+  const expected = new Set(candidates.map((chunk) => chunk.chunkId));
   // Veredicto.
   const status = body.status;
   // Tiene que ser uno de los tres.
@@ -453,8 +521,91 @@ export function validateRankingAndAssessment(
     // Suficiente con lagunas.
     return { ok: false, reason: "Una evidencia suficiente no lleva lagunas." };
   }
+  // Valoración válida.
+  return { ok: true, assessment: { status, reason, gaps, usefulIds } };
+}
+
+// Evalúa suficiencia con los umbrales calibrados separando relevancia del fragmento y cobertura global.
+export function assessCoverageByThresholds(input: {
+  // Ordenación ya validada en [0, 1].
+  ranking: readonly RankedHit[];
+  // Cobertura estimada de la pregunta completa en [0, 1].
+  coverageScore: number;
+  // Lagunas concretas aún no cubiertas por los fragmentos útiles.
+  gaps?: readonly string[];
+  // Umbral mínimo de relevancia individual (por defecto 0,50).
+  minChunkRelevance?: number;
+}): CragAssessment {
+  // Umbral de fragmento útil.
+  const minRelevance = input.minChunkRelevance ?? CRAG_SCORE_THRESHOLDS.minChunkRelevance;
+  // Fragmentos cuya relevancia individual supera el umbral, hasta maxRetained.
+  const usefulIds = input.ranking
+    .filter((hit) => hit.score >= minRelevance)
+    .slice(0, CRAG_BOUNDS.maxRetained)
+    .map((hit) => hit.chunkId);
+  // Lagunas limpias.
+  const gaps = (input.gaps ?? [])
+    .map((gap) => gap.trim())
+    .filter((gap) => gap.length > 0)
+    .slice(0, CRAG_BOUNDS.maxGaps);
+  // Sin fragmentos relevantes o con cobertura por debajo del corte parcial: insuficiente.
+  if (usefulIds.length === 0 || input.coverageScore < CRAG_SCORE_THRESHOLDS.partialCoverageMin) {
+    // Veredicto insuficiente.
+    return {
+      status: "insufficient",
+      reason: `Ningún fragmento supera el umbral de utilidad (${minRelevance.toFixed(2)}) o la cobertura (${input.coverageScore.toFixed(2)}) no alcanza ${CRAG_SCORE_THRESHOLDS.partialCoverageMin.toFixed(2)}.`,
+      gaps: [],
+      usefulIds: [],
+    };
+  }
+  // Cobertura completa (>= 0,75) y sin lagunas: suficiente.
+  if (gaps.length === 0 && input.coverageScore >= CRAG_SCORE_THRESHOLDS.sufficientCoverageMin) {
+    // Veredicto suficiente.
+    return {
+      status: "sufficient",
+      reason: `Fragmentos relevantes (>= ${minRelevance.toFixed(2)}) y cobertura global suficiente (${input.coverageScore.toFixed(2)} >= ${CRAG_SCORE_THRESHOLDS.sufficientCoverageMin.toFixed(2)}).`,
+      gaps: [],
+      usefulIds,
+    };
+  }
+  // Hay fragmentos útiles pero la cobertura de la pregunta es incompleta: parcial.
+  return {
+    status: "partial",
+    reason: `Hay fragmentos relevantes (>= ${minRelevance.toFixed(2)}), pero la cobertura global (${input.coverageScore.toFixed(2)}) deja lagunas pendientes.`,
+    gaps:
+      gaps.length > 0 ? gaps : ["Falta cubrir parte de la pregunta original con otra búsqueda."],
+    usefulIds,
+  };
+}
+
+// Valida la salida del evaluador: ordenación completa, ids reales y veredicto coherente.
+export function validateRankingAndAssessment(
+  candidates: readonly CragChunk[],
+  raw: unknown,
+): { ok: true; ranking: RankedHit[]; assessment: CragAssessment } | { ok: false; reason: string } {
+  // Salida como objeto.
+  const body = record(raw);
+  // Debe traer ranking y usefulIds como listas.
+  if (body === null || !Array.isArray(body.ranking) || !Array.isArray(body.usefulIds)) {
+    // Forma incorrecta.
+    return { ok: false, reason: "La salida del evaluador no tiene la forma esperada." };
+  }
+  // Paso 1: valida el reordenamiento.
+  const ranked = validateRanking(candidates, body);
+  // Si falla el reordenamiento, propaga el motivo.
+  if (!ranked.ok) {
+    // Motivo de error.
+    return ranked;
+  }
+  // Paso 2: valida la valoración de suficiencia.
+  const assessed = validateAssessment(candidates, body);
+  // Si falla la valoración, propaga el motivo.
+  if (!assessed.ok) {
+    // Motivo de error.
+    return assessed;
+  }
   // Salida válida.
-  return { ok: true, ranking, assessment: { status, reason, gaps, usefulIds } };
+  return { ok: true, ranking: ranked.ranking, assessment: assessed.assessment };
 }
 
 // Valida la reformulación: consulta no vacía y distinta de las anteriores.

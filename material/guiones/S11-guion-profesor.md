@@ -1,246 +1,137 @@
-> Aplicación publicada: https://rag-thepower.josenuevo.dev. Para llamadas reales sigue [el anexo cloud](recorrido-cloud.md). Este guion y su PDF conservan el recorrido offline como respaldo.
+> **Referencia en vivo y laboratorio:** para el recorrido sobre el asistente publicado y el laboratorio PostgreSQL/pgvector (`lab/`), consulta también [`recorrido-cloud.md`](recorrido-cloud.md). Este guion articula los 90 minutos de S11 sincronizados con las 15 diapositivas de `material/presentaciones/S11-crag.pptx`.
 
-# Guion S11 · CRAG
+# Guion S11 · Corrective RAG (CRAG): reordenamiento, suficiencia, grafo y métricas
 
-Martes 27 de octubre de 2026. Cohorte M/J. 18:30–20:00 Europe/Madrid. 90 minutos con preguntas.
+**Fecha:** martes 27 de octubre de 2026 · **Cohorte:** M/J · **Horario:** 18:30–20:00 `Europe/Madrid` (90 minutos con preguntas).  
+**Presentación:** `material/presentaciones/S11-crag.pptx` (`material/presentaciones/S11-crag.pdf`).  
+**Laboratorio del ejercicio:** `lab/` (`bun run lab:demo`, `bun run lab:eval`, `lab/eval/resultados-laboratorio.md`).  
+**Demostrador del curso:** `bun run dev` (guiones de desarrollo locales) / `https://rag-thepower.josenuevo.dev`.
 
-Misma aplicación que el jueves: `/Users/jose/Documents/the-power/3-rag`, `bun run dev`, y la URL que imprime la línea `Local:`. En el ensayo del 3 de octubre fue `http://localhost:5173/`. Si la línea de estado no es demo, para y sigue `material/notas/incidencias-y-respaldo.md`. No lo corrijas con `activate`. Presentación: `material/presentaciones/S11-crag.pptx`.
+---
 
-Los seis guiones están en el desplegable **Guion de demostración** y en `corpus/fixtures/crag-development-cases.json`. Un acierto de guion no mide el modelo ni CRAG. La etiqueta del panel debe decir `Guion de prueba.`
+## 0–10 min · Objetivo, QR de S10 y un límite real del RAG básico (Diapositivas 1 a 3)
 
-## 0–10 · QR y el límite del RAG básico
+### Diapositiva 1 · CRAG: El mismo asistente
 
-Diapositivas 1 a 3.
+Explica:
 
-### Diapositiva 1
+> En S10 construimos un RAG de una sola búsqueda con umbral previo. Hoy evolucionamos ese mismo proyecto —conservando intacta la etapa de RAG básico como línea base— hacia un grafo de **Corrective RAG (CRAG)** en LangGraph: recuperamos hasta 10 candidatos, separamos el **reordenamiento (`rank`)** de la **valoración de suficiencia (`assess`)**, conservamos o descartamos evidencia y permitimos hasta 2 reformulaciones (3 búsquedas en total) antes de responder o rechazar.
 
-Di:
+### Diapositiva 2 · Antes de empezar (QR)
 
-> El jueves el asistente buscaba una vez. Hoy es la misma aplicación. Puede conservar, descartar y buscar otra vez. No prometo que la respuesta sea mejor. Más control puede costar más tiempo y más llamadas.
+Deja el QR visible:
 
-Señala Pregunta, Evaluar, Conservar, Reformular.
+> Este QR de AI Engineer evalúa nuestra clase anterior: **S10, la del jueves 22 de octubre**.
 
-### Diapositiva 2 · QR
+### Diapositiva 3 · Un límite del RAG básico
 
-Di:
+Plantea el problema técnico concreto:
 
-> El QR es el mismo de AI Engineer. Hoy evalúa nuestra S10, la del 22 de octubre. No es un formulario nuevo.
+- Cuando una pregunta exige conectar dos documentos o dos secciones distintas (por ejemplo, _«¿Cómo modela LangGraph el estado de un agente y cómo se observa esa ejecución?»_ entre S5 y S6, o _«¿Cómo se autentican los clientes mTLS y qué tiempo de primera respuesta aplica en un incidente SEV-1?»_ en el laboratorio AetherCloud), una única búsqueda `top-4` puede traer solo una de las dos mitades o dejar la segunda bajo el corte.
+- Subraya que **CRAG no garantiza ganar en el 100 % de los casos**: añade llamadas, latencia y posibles falsos rechazos si el umbral de suficiencia es estricto. Por eso en S11 es obligatorio medirlo frente al RAG básico.
 
-Destino, ya decodificado:
+---
 
-`https://thepower-executive-feedback.thepower-5217.chatgpt.site/feedback-form.html?form=ai-engineer`
+## 10–25 min · Arquitectura del grafo: recuperar, reordenar y juzgar suficiencia (Diapositivas 4 a 6)
 
-No envíes la evaluación. Si no se lee, abre `material/assets/qr-ai-engineer.jpg`.
+### Diapositiva 4 · RAG básico frente a esta adaptación de CRAG
 
-### Diapositiva 3
+Compara en la tabla de la diapositiva 4 (inspiración: Yan, Gu, Zhu y Ling, arXiv:2401.15884):
 
-Di:
+- **Búsquedas:** 1 búsqueda (`top-4`) en RAG básico frente a hasta **3 búsquedas (`top-10`)** y **2 reformulaciones** en CRAG.
+- **Control:** un único umbral de similitud en RAG básico frente a dos nodos separados en CRAG: **`rank` (reordenamiento en `[0, 1]`)** y **`assess` (valoración de suficiencia y cobertura)**.
+- **Rutas:** responder o rechazar en RAG básico frente a **suficiente (`answer`)**, **parcial/ambigua (`retain → reformulate`)** e **insuficiente (`discard → reformulate`)**.
 
-> Una pregunta que pide a la vez cómo se modela LangGraph y cómo se observa esa ejecución necesita S5 y S6. El RAG básico no vuelve a buscar. Puede quedarse corto o citar de más por un parecido lexical, como vimos con S14. CRAG intenta corregir el recorrido. Puede no mejorar el resultado.
+### Diapositiva 5 · Estado del grafo y preservación de la pregunta original
 
-No abras todavía un guion.
+Abre `apps/api/src/crag-graph.ts` (y `lab/src/crag-graph.ts`):
 
-## 10–25 · Orden aplicada y evidencia
+- Señala que `originalQuestion` **nunca se sobrescribe** cuando `currentQuery` cambia tras una reformulación: el evaluador y el generador final comprueban siempre contra lo que preguntó el alumno.
+- Cada turno inicializa sus contadores (`retrievalCount: 0`, `reformulationCount: 0`) de cero.
 
-Diapositivas 4 a 6.
+### Diapositiva 6 · Diferencia entre recuperar (`retrieve`), reordenar (`rank`) y juzgar (`assess`)
 
-### Diapositiva 4 · la adaptación
+Detente en esta distinción clave del ejercicio (`packages/rag/src/crag.ts` y `lab/src/reranker.ts`):
 
-Di:
+1. **Recuperar (`retrieve`):** trae hasta **10 candidatos** rápidos desde el índice vectorial (`vector(768)` con HNSW en `lab/` o Vectorize `1024 d` en el curso).
+2. **Reordenar (`rank`):** evalúa cada candidato frente a la consulta y le asigna una puntuación en la **escala cerrada `[0, 1]`** (`0,00` = irrelevante; `1,00` = relevancia directa). Enseña también en `lab/src/reranker.ts` la función `formatQwen3RerankerPrompt` con la plantilla oficial `yes`/`no` de **`Qwen3-Reranker-0.6B`** propuesta como opción en el enunciado.
+3. **Juzgar suficiencia (`assess`):** **relevancia de un fragmento aislado ≠ cobertura de toda la pregunta**. Un fragmento de S5 puede recibir `score = 0,85` (muy relevante para la primera mitad de una pregunta compuesta), pero si falta la segunda mitad sobre S6, la cobertura global de la pregunta es `0,50` y la decisión del nodo `assess` debe ser **`partial`**, nunca `sufficient`.
 
-> El artículo es de Shi-Qi Yan, Jia-Chen Gu, Yun Zhu y Zhen-Hua Ling, arXiv:2401.15884. Lo que hay en la aplicación es una adaptación al corpus del curso. No reproduce el artículo: no busca en internet, el evaluador remoto no está verificado y un guion local no demuestra una mejora.
+---
 
-Compara en la tabla: una búsqueda frente a tres como máximo; un umbral frente a suficiente o parcial; generar si hay contexto frente a generar solo con evidencia útil.
+## 25–45 min · Escala `[0, 1]`, umbrales calibrados y recorrido de las rutas (Diapositivas 7 a 9)
 
-Cuando el perfil sea real, evaluar y reescribir también son llamadas. En la demo no se miden. El coste que veis es `no medido`, no cero.
+### Diapositiva 7 · Umbrales calibrados y rutas del grafo
 
-### Diapositiva 5 · estado
+Muestra los umbrales definidos en `CRAG_SCORE_THRESHOLDS` (`packages/rag/src/crag.ts`) y `LAB_CRAG_CONFIG` (`lab/src/config.ts`), calibrados sobre ejemplos de validación distintos del test de 20 preguntas:
 
-Abre, si quieres el esquema, `docs/crag-graph.md`. No hace falta proyectarlo entero.
+- **`minChunkRelevance = 0,50`:** umbral mínimo en `[0, 1]` para que un fragmento entre en `usefulIds` (máximo 6 fragmentos conservados).
+- **`partialCoverageMin = 0,40`:** cobertura mínima global cuando existe al menos un fragmento útil (`>= 0,50`) pero quedan subpreguntas pendientes en `gaps` → ruta **`partial` (`retain → reformulate → retrieve`)**.
+- **`sufficientCoverageMin = 0,75`:** cobertura global sin lagunas en `gaps` → ruta **`sufficient` (`answer`)**.
+- Por debajo de `0,40` de cobertura o sin ningún fragmento `>= 0,50` → ruta **`insufficient` (`discard → reformulate → retrieve`)**.
 
-Di:
+### Diapositiva 8 · Ejemplo completo de evidencia parcial (`partial-s5-s6` y `lab:demo`)
 
-> La pregunta original se queda. La consulta de búsqueda puede cambiar. No hay memoria de grafo entre conversaciones: cada turno nace vacío. En TypeScript ese estado es un objeto. En Python sería un TypedDict. No hay una segunda implementación.
+Recorre paso a paso el caso de evidencia parcial en el navegador (etapa **CRAG**, guion **Evidencia parcial y segunda búsqueda**) y en terminal con `bun run lab:demo`:
 
-El navegador no importa LangGraph. El grafo vive en el Worker.
+1. **Pregunta compuesta:** _«¿Cómo modela LangGraph el estado de un agente y cómo se observa esa ejecución?»_.
+2. **Pasada 1:** `retrieve` trae `s05-langgraph:00`; el nodo `rank` le da `0,800` (`>= 0,50`); el nodo `assess` detecta la laguna (_«Falta cómo observar la ejecución del agente»_, cobertura `0,50 < 0,75`) y emite `partial`.
+3. **Conservación y reformulación:** `retain` guarda `s05-langgraph:00`; `reformulate` escribe _«observabilidad Langfuse y LangSmith de un agente»_.
+4. **Pasada 2:** `retrieve` recupera `s06-observabilidad:00` (`0,860`); `rank` ordena `S6 (0,860), S5 (0,400)` sin duplicar IDs; `assess` verifica que ambas partes están cubiertas (`sufficient`) y `answer` redacta citando `[cite:c3a59a406888b:s06-observabilidad:00]` y `[cite:c3a59a406888b:s05-langgraph:00]`.
 
-### Diapositiva 6 · orden
+### Diapositiva 9 · Descartar y buscar otra vez (`irrelevant-then-s6`)
 
-Di:
+Selecciona el guion **Primera evidencia descartada**:
 
-> `usefulIds` dice qué fragmentos entran, como máximo seis, sin duplicados y con texto conocido. El orden del contexto lo marca el ranking validado. Si dos puntuaciones empatan, gana la posición que ya devolvió ese ranking. La puntuación no es una probabilidad.
+- En la búsqueda 1 entra `s16-cloud-aws:00` con puntuación `0,200 < 0,50`.
+- `assess` emite `insufficient`; `discard` anota `s16-cloud-aws:00` como descartado en el intento 1; tras reformular, la búsqueda 2 recupera `s06-observabilidad:00` (`0,880`) y la respuesta final **nunca cita ni recibe en su prompt el fragmento descartado S16**.
 
-## 25–45 · Grafo, evaluador y rutas
+---
 
-Diapositivas 7 a 9. Vuelve a Chrome.
+## 45–65 min · Límites de turno, fallos controlados y lectura de la traza (Diapositivas 10 y 11)
 
-Comprueba la línea de estado: `demo (fixture)`, corpus `c3a59a406888b`. En **Detalle del corpus**, embedding `fixture-token-hash-v1`.
+### Diapositiva 10 · Límites de un solo turno
 
-1. Etapa **CRAG**. Subtítulo: `Canalización local de prueba`.
-2. Audiencia **General**.
-3. El desplegable solo aparece en demo.
+Ejecuta el guion **Dato ausente y rechazo** (beca de 1991) y el caso de criptomonedas en `bun run lab:demo`:
 
-Mientras la respuesta está en curso el selector no cambia de guion. En estas respuestas locales el ciclo es corto. No hace falta pulsar **Detener**. Si lo pulsas, corta el trabajo local nuevo. En demo no hay un proveedor que siga calculando.
+- Muestra que el grafo ejecuta exactamente **3 búsquedas** (la inicial más **2 reformulaciones**) y se detiene en `refuse` con **0 llamadas al generador**.
+- Muestra también **Calendario sin cohorte** (`0` búsquedas, `clarify`) y **Fallo controlado del evaluador** (`error`, sin reintentos ocultos, respetando el plazo único de `20 s`).
 
-### Suficiente
+### Diapositiva 11 · La traza que ve la clase
 
-Guion: **Suficiente a la primera**.
+Señala en el panel **Traza de la clase** cómo aparecen desglosados los pasos `retrieve`, `rank` y `assess`, la consulta original frente a la última consulta reformulada, la lista de fragmentos conservados con su puntuación en `[0, 1]` y la lista de descartados con su número de intento.
 
-Pregunta que rellena el selector:
+---
 
-`¿Cómo modela LangGraph un agente con estado y nodos?`
+## 65–75 min · Lectura de métricas y resultados de comparación (Diapositiva 13)
 
-Pulsa **Enviar**.
+Pasa a la **Diapositiva 13** y abre `lab/eval/resultados-laboratorio.md` y `material/comparacion/resultados/tabla-resultados.md`:
 
-Qué debe verse:
+| Lote evaluado (20 preguntas: 14 respondibles + 6 sin respuesta) | Variante         |     Total | Respondibles (`X/14`) | Rechazos (`Y/6`) | Recuperaciones medias | Reformulaciones medias | Mediana latencia |
+| --------------------------------------------------------------- | ---------------- | --------: | --------------------: | ---------------: | --------------------: | ---------------------: | ---------------: |
+| **Laboratorio pgvector (`lab/`, 768 d + HNSW)**                 | RAG básico (S10) | **16/20** |                 10/14 |              6/6 |              **1,00** |                   0,00 |             1 ms |
+| **Laboratorio pgvector (`lab/`, 768 d + HNSW)**                 | CRAG (S11)       | **17/20** |                 11/14 |              6/6 |              **1,80** |                   0,80 |             4 ms |
+| **Histórico cloud 03/10/2026 (BGE-M3 1024 d)**                  | RAG básico       | **17/20** |                 11/14 |              6/6 |              **0,95** |                   0,00 |          1193 ms |
+| **Histórico cloud 03/10/2026 (BGE-M3 1024 d)**                  | CRAG             | **18/20** |                 13/14 |              5/6 |              **1,55** |                   0,60 |          4304 ms |
 
-- Texto que empieza por `Respuesta de prueba del grafo CRAG. El guion no mide calidad ni llama a un modelo.`
-- Una cita a `c3a59a406888b:s05-langgraph:00`
-- En la pasada del 3 de octubre no apareció S6 en esa respuesta
-- Panel: `Guion de prueba.` Terminal de respuesta. Una búsqueda
+Explica las tres conclusiones docentes:
 
-Captura: `2026-10-03-demo-fixture-crag-suficiente.png`.
+1. **Por qué mejora en preguntas compuestas:** en el laboratorio (`lab/`), el caso 14 (mTLS + incidente SEV-1) y los casos 5 y 10 fallan en RAG básico porque `top-4` pierde una sección, mientras que CRAG los resuelve con `top-10`, `rerank` y `assess`.
+2. **El coste de iterar (recuperaciones medias):** CRAG sube de `1,00` a `1,80` búsquedas medias en el laboratorio (y de `0,95` a `1,55` en el lote histórico cloud, multiplicando por `3,6x` la mediana de latencia de `1,19 s` a `4,30 s`) porque cada pregunta sin respuesta agota las 3 búsquedas antes de rechazar.
+3. **Honestidad sobre la referencia:** explica que el lote cloud del 3 de octubre es **histórico** (ejecutado con la versión congelada de aquel día antes de pasar a `claude-haiku-5-5` y separar `rank` y `assess`), y que para la referencia actual se ha dejado congelado un segundo conjunto nuevo en `material/comparacion/conjunto-reservado-referencia-actual-20.md`.
 
-Di: el guion obliga este recorrido. No es una medida de calidad.
+---
 
-### Parcial
+## 75–80 min · Enunciado publicado de S11 y criterios de entrega (Diapositiva 12)
 
-Guion: **Evidencia parcial y segunda búsqueda**.
+Abre `material/ejercicios/S11-enunciado.md`:
 
-Pregunta:
+- Proyecto **reconstruible desde 8 o más documentos ficticios e índice vacío** en PostgreSQL/pgvector (`vector(768)` + HNSW), **conservando el RAG básico de S10**.
+- Grafo en **LangGraph** con pasos separados: `retrieve` (hasta 10 candidatos) → `rerank` (escala explicada `[0, 1]`, con `Qwen3-Reranker-0.6B` como opción) → `assess` (suficiencia con umbrales calibrados, separando relevancia de un fragmento y cobertura total) → `retain` / `discard` → `reformulate` (máximo 2 reformulaciones, 3 búsquedas en total) → `answer` / `refuse`.
+- **Comparación ejecutada sobre 20 preguntas nuevas (14 respondibles y 6 no respondibles)** informando `X/14`, `Y/6`, **recuperaciones medias**, latencia y revisión manual de fuentes.
 
-`¿Cómo modela LangGraph el estado de un agente y cómo se observa esa ejecución?`
+---
 
-Debe citar S5 y S6:
+## 80–90 min · Preguntas y cierre (Diapositivas 14 y 15)
 
-- `c3a59a406888b:s05-langgraph:00`
-- `c3a59a406888b:s06-observabilidad:00`
-
-Señala que las dos fuentes están en el panel y que no se duplica el id. El orden es el del último ranking, no el orden en que llegaron. Captura: `2026-10-03-demo-fixture-crag-parcial.png`. Si la lista de conservados queda debajo, haz scroll en **Traza de la clase**.
-
-### Descarte
-
-Guion: **Primera evidencia descartada**.
-
-Pregunta:
-
-`¿Qué cubre la sesión de observabilidad del programa?`
-
-La respuesta cita S6 y no debe citar S16 como fuente de la respuesta. El panel anota el descarte de `c3a59a406888b:s16-cloud-aws:00` con el intento. Captura: `2026-10-03-demo-fixture-crag-descartada.png`.
-
-Di: lo descartado no entra en la respuesta. La pregunta original sigue escrita en el panel, aunque la consulta de búsqueda cambie.
-
-## 45–65 · Casos límite
-
-Diapositiva 10, y sigue el desplegable.
-
-### Dato ausente
-
-Guion: **Dato ausente y rechazo**.
-
-Pregunta:
-
-`¿Qué beca interna del año 1991 cubre este programa?`
-
-Texto:
-
-> No hay evidencia suficiente en el corpus del curso. No se responde con fragmentos rechazados ni con una búsqueda agotada.
-
-En el panel, medido el 3 de octubre:
-
-- `fixture: true`, escenario `missing-info`
-- terminal `refuse`
-- motivo: `Se agotaron los intentos sin evidencia suficiente.`
-- búsquedas 3, reformulaciones 2, quedan 0 y 0
-- generación 0
-- el mismo id `c3a59a406888b:s16-cloud-aws:00` aparece en los intentos 1, 2 y 3, cada uno con su fila
-- consulta de búsqueda terminada en `intento 3`
-- uso `null`, coste `null`, origen `offline-fixture`, completion `refused`
-
-Captura: `2026-10-03-demo-fixture-crag-ausente.png`.
-
-Di: tres búsquedas contando la primera, dos reformulaciones, y se acabó. No hay una cuarta. Un fallo también habría contado. El plazo de un turno real es de 20 segundos en total. Cada llamada recibe el tiempo que queda, no otros 20 segundos. Parar la espera no demuestra que un proveedor que ya recibió la llamada deje de cobrar. Aquí no hay proveedor.
-
-### Calendario
-
-Guion: **Calendario sin cohorte**. Audiencia **General**.
-
-Pregunta:
-
-`¿Cuándo es la sesión de RAG avanzado?`
-
-Texto:
-
-> La pregunta parece de calendario. Elige la cohorte L/X o M/J. La selección general no muestra los dos calendarios.
-
-Panel: `clarify`, búsquedas 0, quedan 3, reformulaciones 0. Captura: `2026-10-03-demo-fixture-crag-cohorte.png`.
-
-Di: ni busca, ni evalúa, ni genera. Elegid la cohorte si quisierais la fecha. No lo hago ahora para no mezclar el ejemplo.
-
-### Evaluador inválido
-
-Guion: **Fallo controlado del evaluador**.
-
-Pregunta:
-
-`Provoca un fallo controlado del evaluador de prueba.`
-
-Texto:
-
-> El evaluador devolvió una salida que no se puede usar. No se reintenta.
-
-Captura: `2026-10-03-demo-fixture-crag-error.png`.
-
-Di: una salida inválida es un error, no una excusa para reformular o para responder con lo que hubiera.
-
-### Pregunta libre, corta
-
-Vuelve el desplegable a **Libre, con el índice lexical de prueba**. Audiencia **General**. Escribe:
-
-`¿Qué enseña la sesión de modelos abiertos?`
-
-En la pasada del 3 de octubre la respuesta usó el mismo prefijo de prueba del grafo y citó `c3a59a406888b:s07-modelos-abiertos:00`. Tardó unos 4 ms.
-
-Di:
-
-> Al quitar el guion, la demo usa el índice lexical y un evaluador de reglas. Sigue sin medir calidad. El 0,33 no es un umbral semántico. Si el parecido de tokens falla, el rechazo también es un resultado válido de esta demo.
-
-Captura de esa pasada: `2026-10-03-demo-fixture-crag-libre.png`. Comprueba que el desplegable dice «Libre». Si la captura de respaldo no coincide con lo que ves en vivo, manda lo que está en pantalla y di la fecha de la captura.
-
-## 65–75 · Comparación, latencia y coste
-
-Diapositivas 11 y 13 si da tiempo. Si no, quédate en la 11 y di el protocolo en voz alta.
-
-Di:
-
-> La traza enseña el motivo, el orden, lo conservado y lo descartado. En demo es un guion. Un guion que acierta no es una victoria de CRAG.
-
-Para una comparación justa, más adelante y con otro presupuesto:
-
-- el mismo modelo y los mismos parámetros
-- la misma preparación, el mismo perfil y el mismo corpus
-- conversaciones limpias en los dos sistemas
-- las veinte preguntas nuevas, no estos seis guiones ni los ejemplos de calibración
-- sin cambiar nada después de ver el test
-
-Hoy no hay tabla. Las métricas están definidas y los números están vacíos. El coste desconocido no se escribe como cero.
-
-## 75–80 · Ejercicio
-
-Diapositiva 12. Abre `material/ejercicios/S11-enunciado.md`.
-
-Di:
-
-> Evolucionáis el mismo proyecto. El RAG básico de una búsqueda tiene que seguir ahí. Hay que mostrar orden aplicado, rutas, límites y traza. El encargo original pide comparar con veinte preguntas nuevas que escribís vosotros, en un entorno que podáis usar sin una suscripción obligatoria. El archivo reservado del profesor no se reparte y sigue sin ejecutarse. Un acierto del guion fixture no es esa comparación ni una medida de calidad. No hace falta pagar mi alojamiento ni usar mi cuenta.
-
-La dedicación de 6 a 8 horas es la del encargo original.
-
-## 80–90 · Preguntas
-
-Diapositiva 15. El QR evalúa S10, no esta clase.
-
-Si preguntan si CRAG ya ganó: no. No hay comparación ejecutada.
-
-Si preguntan por el artículo: es la inspiración citada. La aplicación no lo reproduce.
-
-Si el guion no responde, abre la captura del 3 de octubre con el mismo nombre, lee el panel y vuelve a la diapositiva. No arranques `activate --execute` ni el puente remoto.
+- Deja visible la **Diapositiva 15** con el QR de evaluación de la clase anterior (S10, 22 de octubre).

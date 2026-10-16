@@ -15,8 +15,8 @@ El temario de S1 a S20 y los dos calendarios de AI Engineer están en el corpus.
 S10, el 22 de octubre de 2026, cubre las dos primeras etapas. S11, el 27 de octubre de 2026, evoluciona la misma aplicación. S12 añade investigación y entradas multimodales sobre el mismo grafo.
 
 1. **Sin RAG.** Conversación sin documentos. En demo es un stream sin modelo. En real llama a la API de Claude.
-2. **RAG básico.** La configuración publicada `RAG_CONTEXT_MODE=complete` lee todos los fragmentos autorizados del curso para el grupo. Responde con fuentes, rechazo o petición de cohorte. La variante semántica conserva la búsqueda vectorial.
-3. **CRAG.** Un grafo correctivo con tres búsquedas y dos reformulaciones como máximo, un solo plazo de 20 segundos y la ordenación validada. En demo usa guiones. En real, si falta configuración o una sesión de gasto, no llama al proveedor y no usa otra etapa.
+2. **RAG básico.** La configuración de referencia de S10 (`RAG_CONTEXT_MODE=semantic`) embebe la consulta, busca en Vectorize con filtro de grupo, aplica el umbral calibrado (`0,50`) antes de llamar al modelo y responde con citas o rechaza sin generar. La variante `RAG_CONTEXT_MODE=complete` lee de D1 todos los fragmentos autorizados del curso cuando se quiere mostrar contexto completo sobre un corpus pequeño.
+3. **CRAG.** Un grafo correctivo con nodos separados de reordenamiento (`rank`, escala `[0, 1]`) y valoración de suficiencia (`assess`, umbrales `CRAG_SCORE_THRESHOLDS`), tres búsquedas y dos reformulaciones como máximo, un solo plazo de 20 segundos y la ordenación validada. En demo usa guiones. En real, si falta configuración o una sesión de gasto, no llama al proveedor y no usa otra etapa.
 4. **Investigación.** Plan y fuentes externas acotados, conversaciones aisladas, Workflow asíncrono y un presupuesto propio. Admite imagen PNG/JPEG, audio WAV corto y voz opcional. La demostración local conserva los guiones; producción usa Tavily y los adaptadores reales configurados.
 
 ## Arquitectura
@@ -31,7 +31,7 @@ El navegador habla con un único Worker. Workers Static Assets sirve React. Hono
 
 El perfil demo no usa esos servicios. Usa un índice lexical de 128 dimensiones, etiquetado como prueba. No es una búsqueda semántica ni Vectorize.
 
-Esta adaptación sustituye el diseño anterior con PostgreSQL y pgvector. No hay una segunda implementación.
+Para los ejercicios publicados de S10 y S11, el directorio [`lab/`](lab/README.md) acompaña al demostrador con un **laboratorio reproducible sobre PostgreSQL + `pgvector` (`vector(768)` e índice HNSW)**, 10 documentos ficticios de AetherCloud, reconstrucción desde índice vacío (`bun run lab:rebuild`), recorrido de S10 y S11 (`bun run lab:demo`) y evaluación ejecutada de 20 preguntas (`bun run lab:eval`, [`lab/eval/resultados-laboratorio.md`](lab/eval/resultados-laboratorio.md)).
 
 ## Requisitos
 

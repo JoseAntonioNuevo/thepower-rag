@@ -7,5 +7,5 @@
     "types": ["node"]
   },
   // Solo estos archivos. Cada app y paquete tiene su propio tsconfig.
-  "include": ["vite.config.ts", "scripts/**/*.ts"]
+  "include": ["vite.config.ts", "scripts/**/*.ts", "lab/**/*.ts"]
 }

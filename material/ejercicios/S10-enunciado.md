@@ -1,63 +1,79 @@
-# Enunciado S10 · Asistente con RAG básico
+# Enunciado S10 · Chatbot con RAG básico, fuentes y rechazo
 
-Práctica para casa. No hace falta entregarla durante los 90 minutos de clase. La dedicación orientativa del encargo original es de 4 a 6 horas. La fuente no trae una rúbrica, una aprobación ni un plazo distintos de esa orientación. Este documento no los inventa.
+**Sesión:** S10 · RAG (jueves 22 de octubre de 2026, 18:30–20:00 `Europe/Madrid`).  
+**Dedicación orientativa del alumno:** 4 a 6 horas (práctica autónoma fuera de los 90 minutos de clase).  
+**Objetivo:** construir de principio a fin el flujo completo que permite responder con documentación propia, citar las fuentes que respaldan cada respuesta y rechazar antes de generar lo que esa documentación no permite saber.
 
-Hay cuatro planos. No se sustituyen entre sí.
+---
 
-1. El encargo original enviado, incluida su evaluación de veinte preguntas.
-2. La adaptación de arquitectura y de corpus autorizada para la demostración de esta clase.
-3. El laboratorio offline con fixtures, que enseña el control y no la calidad de un modelo.
-4. El conjunto reservado del profesor, congelado y sin ejecutar. No se reparte y no se ejecuta.
+## 1. Requisitos técnicos obligatorios del ejercicio
 
-Que la activación remota del profesor siga pendiente no anula el encargo original. Tampoco obliga a pagar un alojamiento ni a usar la cuenta de Cloudflare del profesor.
+### 1.1 Corpus sintético e ingesta desde índice vacío
 
-## 1. Encargo original enviado
+- Preparar **al menos ocho documentos ficticios en formato Markdown o TXT** sobre un dominio coherente (por ejemplo, arquitectura, políticas operativas, tarifas, SLA o soporte de un producto ficticio).
+- Implementar el flujo completo y reproducible de **lectura desde los archivos en bruto, limpieza, fragmentación (chunking con solapamiento), cálculo de embeddings, almacenamiento e indexación partiendo de un índice vacío**.
+- Asignar **identificadores estables** tanto a los documentos como a los fragmentos (por ejemplo, `<version>:<documento>:<ordinal>`) y registrar la versión preparada del corpus.
 
-El temario de S10 pide un flujo que responda con documentación propia y rechace lo que esa documentación no permite saber. El título del ejercicio es un chatbot con RAG completo.
+### 1.2 Stack, modelos por variables, `vector(768)` e índice HNSW
 
-La guía enviada pedía al menos ocho documentos ficticios y un flujo de lectura, limpieza, fragmentación, embeddings, almacenamiento, búsqueda y generación. Citaba Gemini, Gemini Embedding y PostgreSQL con pgvector, con embeddings de 768 dimensiones. El contenido recuperado es dato, no una instrucción. Hace falta un control de puntuación antes de generar.
+- Base de datos vectorial: **PostgreSQL con `pgvector`** (`CREATE EXTENSION IF NOT EXISTS vector;`).
+- Referencias del documento publicado:
+  - Modelo generativo configurable mediante la variable **`GEN_MODEL_ID`** (referencia: **`gemini-3.8-flash`**).
+  - Modelo de embeddings configurable mediante la variable **`EMBEDDING_MODEL_ID`** (referencia: **`gemini-embedding-2`**).
+  - Conexión configurable mediante **`DATABASE_URL`** (sin credenciales escritas en el código).
+- **Embeddings de 768 dimensiones**, almacenados en una columna **`vector(768)`** con un **índice HNSW** explícito:
+  ```sql
+  CREATE INDEX ON lab_chunks USING hnsw (embedding vector_cosine_ops) WITH (m = 16, ef_construction = 64);
+  ```
+- Utilizar **exactamente el mismo modelo de embeddings y la misma dimensión (`768`)** al indexar los documentos y al consultar las preguntas, registrando las versiones de corpus, modelo y configuración.
 
-Esa misma guía pide una evaluación reservada de veinte preguntas: catorce respondibles y seis sin respuesta. Esa evaluación no forma parte de la demostración de clase. Sigue siendo parte del encargo original. Cada alumno prepara sus propias veinte preguntas, con la respuesta esperada o el motivo de rechazo escrito antes de ejecutarlas. No son las preguntas del archivo del profesor.
+### 1.3 Búsqueda vectorial, escala de puntuación y control previo a generar
 
-## 2. Adaptación autorizada para la demostración de aula
+- Consultar los fragmentos más próximos en PostgreSQL/pgvector y **explicar la escala de puntuación**:
+  - En `pgvector`, el operador `<=>` mide **distancia coseno** en \([0, 2]\), donde **un valor menor significa mayor proximidad** (`0` = vectores idénticos).
+  - La **similitud coseno** es `1 - (embedding <=> $1::vector(768))`, donde un valor mayor significa mayor proximidad.
+  - Ni la distancia ni la similitud coseno son una probabilidad estadística de que la respuesta sea verdadera.
+- **Aplicar un control de puntuación (umbral) antes de llamar al modelo generativo:**
+  - Calibrar el umbral con **ejemplos de validación separados del conjunto de test**.
+  - Si ningún fragmento recuperado supera el umbral calibrado, el sistema debe **rechazar la consulta de forma controlada sin invocar al modelo generativo**.
+  - Una simple instrucción en el prompt del tipo _«si no sabes la respuesta, dilo»_ **no sustituye** este control previo en código.
 
-El asistente que se proyecta cubre el programa real de AI Engineer, sesiones S1 a S20, los dos calendarios y todos los profesores. Para este chat de prueba se autorizó Vectorize, D1 y R2 en lugar del stack de pgvector del ejercicio. No es un cambio de todo el programa. La sesión S9 sigue enseñando PostgreSQL y pgvector.
+### 1.4 Generación fundamentada, citas y protección frente a inyección
 
-La demo está en TypeScript, Hono, el AI SDK y LangGraph.js. No hace falta una segunda versión en Python. Si venís de Python: una plantilla `` `${version}:${documentId}:${ordinal}` `` es el equivalente de un f-string.
+- Construir el contexto únicamente con los fragmentos que superaron el umbral e incluir sus identificadores reales.
+- **El contenido recuperado es dato no fiable, nunca instrucciones que reconfiguren el chatbot:** delimitar los fragmentos en un bloque de datos y neutralizar u omitir cualquier instrucción incrustada en los documentos.
+- La respuesta generada debe respaldar sus afirmaciones citando los fragmentos empleados (`[cite:id]` o formato equivalente resoluble contra el corpus) y filtrar cualquier cita inventada que no pertenezca a la evidencia seleccionada.
 
-## 3. Laboratorio offline propuesto
+---
 
-Sobre el proyecto de clase, `bun run dev` con `APP_MODE` efectivo `demo` recorre el control: corpus, una búsqueda, filtro, cita y rechazo. El índice es `fixture-token-hash-v1`, 128 dimensiones, coseno y umbral 0,33. Eso no es BGE-M3, no es Vectorize y no es un modelo. Un acierto de esta demo no mide calidad semántica ni cumple, por sí solo, la evaluación de veinte preguntas del encargo original.
+## 2. Evaluación obligatoria sobre 20 preguntas (14 respondibles + 6 sin respuesta)
 
-No copiéis 0,33 ni 128 como si fueran la medición de BGE-M3.
+- Diseñar un conjunto de **20 preguntas de test**:
+  - **14 preguntas respondibles** con la información de vuestros documentos ficticios.
+  - **6 preguntas sin respuesta** en el corpus (datos ausentes que el sistema debe rechazar).
+- **Separación estricta entre validación y test:**
+  - Los ejemplos usados para ajustar el troceado, el prompt o calibrar el umbral forman el conjunto de **validación**.
+  - Las **20 preguntas de test** se redactan con su **respuesta esperada (y documento/fragmento fuente) o su motivo de rechazo definidos antes de ejecutar**, y **no se reajusta el sistema después de ver los resultados del test**.
+- **Ejecutar la evaluación y presentar los resultados:**
+  - Guardar por cada una de las 20 preguntas: los fragmentos recuperados, sus puntuaciones, la decisión del control previo, la respuesta final y las fuentes citadas.
+  - Informar explícitamente los **aciertos sobre 14 respondibles (`X/14`)** y los **rechazos correctos sobre 6 sin respuesta (`Y/6`)**, identificando las versiones de corpus, preguntas y configuración utilizadas.
+  - _Nota de honestidad:_ si por una limitación técnica justificada algún caso quedase pendiente de ejecución, debéis describirlo con transparencia sin inventar cifras, pero tened en cuenta que **una evaluación solo preparada y sin ejecutar no completa el requisito de evaluación de la entrega**.
 
-## 4. Qué demuestra el laboratorio
+---
 
-1. Un corpus reproducible, con identidad de preparación y documentos separados por audiencia cuando el dato sea de una cohorte.
-2. Fragmentos con id estable y un vector. Guardad de dónde sale el vector.
-3. Una búsqueda, con filtro de audiencia y un umbral explícito.
-4. Una respuesta que solo use el contexto seleccionado y cite ids que se puedan abrir.
-5. Un rechazo cuando no haya contexto utilizable, sin llamar al generador para inventar el dato.
-6. Una aclaración cuando la pregunta sea de calendario y no se haya elegido cohorte.
+## 3. Entrega
 
-## 5. Qué sigue pidiendo el encargo original
+1. **Código de reconstrucción/ingesta y de consulta** (ejecutable desde documentos en bruto e índice vacío).
+2. **Corpus sintético** (mínimo 8 documentos Markdown o TXT).
+3. **Configuración de base de datos PostgreSQL + `pgvector`** (`vector(768)` e índice HNSW).
+4. **Resultados ejecutados de la evaluación de 20 preguntas** (`X/14` respondibles y `Y/6` rechazos correctos, con el registro de fragmentos, puntuaciones, respuestas y fuentes por caso).
+5. **`README.md`** con las variables (`GEN_MODEL_ID`, `EMBEDDING_MODEL_ID`, `DATABASE_URL`, umbral calibrado), explicación de la escala y comandos exactos para reconstruir el índice y reproducir la evaluación.
 
-Además del flujo, la evaluación de veinte preguntas que escribáis vosotros: catorce con apoyo en vuestros documentos y seis sin respuesta posible. Definid la respuesta esperada o el motivo de rechazo antes de ejecutar. No reajustéis el sistema después de ver ese conjunto.
+_(Opcional: lectura de PDFs o interfaz gráfica; no se exige frontend ni despliegue en la nube)._
 
-Podéis hacerla con el medio que ya tengáis autorizado. Una suscripción a la nube no es obligatoria. No uséis la cuenta de Cloudflare del profesor ni sus claves. Si el medio es local, decidlo. Si no podéis ejecutar un modelo, dejad la medición de calidad en blanco y no inventéis aciertos, latencias ni costes. El laboratorio fixture no rellena esa tabla.
+---
 
-## 6. Qué no se pide
+## 4. Material de apoyo incluido en este repositorio
 
-- Desplegar en Cloudflare ni pagar un alojamiento.
-- Usar la cuenta o las claves del profesor.
-- Abrir, copiar o ejecutar el conjunto reservado del profesor.
-- Cambiar el temario de S9.
-- Tratar un pase de fixtures como medición de calidad.
-
-## 7. Ampliación opcional
-
-Preparad un documento sintético, etiquetado como tal, fuera del corpus del curso, y mostrad que reindexarlo no pisa una ficha real. No lo mezcléis con fechas ni con profesores.
-
-## 8. Entrega
-
-Código que se pueda ejecutar en local, un README corto con el comando, un ejemplo de cita, un ejemplo de rechazo y el estado de vuestra evaluación de veinte preguntas: ejecutada en vuestro medio, o preparada y todavía sin números. Indicad si el vector es de prueba o de un modelo, y no escribáis un coste desconocido como cero.
+- **Laboratorio de referencia (`lab/`):** implementación completa en TypeScript y PostgreSQL/pgvector (`lab/schema.sql`, `lab/docker-compose.yml`, 10 documentos ficticios de AetherCloud, `vector(768)`, índice HNSW, calibración con validación y evaluación ejecutada de 20 preguntas).
+- **Guía de apoyo del laboratorio y del demostrador web:** consulta [`laboratorio-apoyo.md`](laboratorio-apoyo.md) para los comandos locales y la relación con el demostrador de aula desplegado en Cloudflare.

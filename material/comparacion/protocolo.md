@@ -1,40 +1,28 @@
-# Protocolo de comparación · ejecutado
+# Protocolo de comparación entre RAG básico y CRAG
 
-Estado el 3 de octubre de 2026: **ejecutado**. Hay 40 respuestas reales, veinte por etapa, valoradas manualmente según `criterios.md`. Consulta [la tabla](resultados/tabla-resultados.md) y [la configuración congelada](resultados/configuracion-congelada.json).
+Este directorio documenta el protocolo de comparación justa entre **RAG básico (S10)** y **CRAG (S11)** sobre conjuntos cerrados de **20 preguntas (14 respondibles y 6 sin respuesta)** y separa tres artefactos con su procedencia exacta:
 
-Este lote no es la demo de clase. Necesita un presupuesto de lote autorizado, aparte del tope de una sesión de verificación. El tope de sesión no es un tope de toda la cuenta.
+1. **Evaluación ejecutada del laboratorio reproducible (`lab/eval/resultados-laboratorio.md`):**
+   - Ejecutada sobre el laboratorio de PostgreSQL + `pgvector` (`vector(768)` + índice HNSW, 10 documentos ficticios de AetherCloud, 20 fragmentos).
+   - **Resultados medidos (40 ejecuciones):**
+     - **RAG básico (S10):** `16/20` totales (`10/14` respondibles, `6/6` rechazos, **`1,00` recuperaciones medias**).
+     - **CRAG (S11, nodos `retrieve → rerank → assess` separados):** `17/20` totales (`11/14` respondibles, `6/6` rechazos, **`1,80` recuperaciones medias**, `0,80` reformulaciones medias).
 
-## Qué se compararía
+2. **Evaluación histórica en la nube del 3 de octubre de 2026 (`resultados/tabla-resultados.md` y `resultados/configuracion-congelada.json`):**
+   - Ejecutada el 3 de octubre de 2026 contra `https://rag-thepower.josenuevo.dev` con la configuración congelada de aquel día (`openai/gpt-6-luna`, razonamiento `none`, BGE-M3 `1024` dimensiones, perfil `p76509a5f9743`, umbral `0,50`).
+   - **Resultados históricos (40 respuestas reales):**
+     - **RAG básico:** `17/20` (`11/14` respondibles, `6/6` rechazos, **`0,95` recuperaciones medias**, mediana `1193 ms`).
+     - **CRAG:** `18/20` (`13/14` respondibles, `5/6` rechazos, **`1,55` recuperaciones medias**, `0,60` reformulaciones medias, mediana `4304 ms`).
+   - **Por qué es histórica:** con posterioridad a esa ejecución cambiaron los hashes de `apps/api/src/prompts.ts`, `apps/api/src/crag-real.ts` y `apps/api/src/model.ts` (paso a `claude-haiku-5-5` y separación de `rank` y `assess` con escala `[0, 1]`). Esos números no se atribuyen al código actual.
 
-El mismo asistente, dos etapas:
+3. **Nuevo conjunto reservado congelado para la referencia actual (`conjunto-reservado-referencia-actual-20.md` y `configuracion-referencia-actual.json`):**
+   - Preparado con 20 preguntas nuevas (14 respondibles y 6 sin apoyo, disjuntas del lote histórico del 3 de octubre, de la calibración y de los 6 guiones) y con los hashes SHA-256 vigentes de la referencia actual (`claude-haiku-5-5`, `RAG_CONTEXT_MODE=semantic`, `rank` + `assess` en `[0, 1]`).
+   - Listo para ejecutarse con `bun scripts/compare-live.ts --config material/comparacion/configuracion-referencia-actual.json --execute` cuando se autorice un presupuesto de lote en vivo.
 
-- RAG básico: una búsqueda.
-- CRAG: el grafo con sus límites.
+## Condiciones que deben mantenerse idénticas entre RAG básico y CRAG
 
-## Qué tiene que ser idéntico
-
-- Modelo de respuesta y parámetros, incluidos temperatura y tope de salida.
-- Modelo evaluador, si la etapa lo usa. En RAG básico no se llama.
-- Corpus, preparación `c3a59a406888b` o la preparación que esté congelada ese día, y el mismo perfil de índice.
-- Umbral ya calibrado para ese perfil. No se reutiliza 0,33 ni 0,55.
-- Conversación nueva en cada pregunta. Sin historial arrastrado.
-- El mismo reloj de medición para la latencia local. Una latencia local no cancela el cómputo que el proveedor ya hubiera aceptado.
-
-## Qué no entra
-
-- Los seis guiones de `corpus/fixtures/crag-development-cases.json`.
-- La pregunta de calibración «¿Cuándo es la clase de RAG S10?».
-- La beca interna de 1991, porque ya se usó como demo de dato ausente.
-- Cualquier pregunta cuyo texto se haya enseñado en S10 o S11 como ejemplo recorrido.
-- El índice lexical `fixture-token-hash-v1`. Una comparación de calidad no se hace con ese perfil.
-
-## Orden
-
-1. Congelar modelo, perfil, umbral y corpus por escrito.
-2. Ejecutar las veinte preguntas del conjunto reservado, primero en un sistema y luego en el otro, sin mirar para ajustar.
-3. Anotar corrección, apoyo de fuentes, rechazo, intentos de recuperación, latencia y uso o coste real. Si el proveedor no devuelve uso, queda desconocido.
-4. No cambiar prompts, umbral ni modelo después de ver una pregunta del conjunto.
-
-## Cierre de esta ejecución
-
-Se autorizaron hasta 5 USD para montar y verificar el servicio, sin recargas. Se midieron 1024 dimensiones, se ingirieron 69 fragmentos y se calibró el umbral 0,50 con desarrollo. Modelo GPT-6 Luna priority, razonamiento none, corpus c3a59a406888b, perfil p76509a5f9743. La comparación quedó congelada; no se modificaron prompts, modelo ni umbral después de ella. La calidad de este conjunto no se extrapola al curso ni a consultas distintas.
+- **Mismo corpus y mismo índice vectorial:** versión `c3a59a406888b` y perfil `p76509a5f9743` en el demostrador del curso, o versión `lab-689164ca81cd` (`vector(768)` + HNSW) en el laboratorio reproducible.
+- **Mismo modelo generativo, mismas instrucciones base de citas y mismos parámetros de salida.**
+- **Umbrales calibrados con validación previa, nunca con las 20 preguntas de test.**
+- **Conversación limpia en cada pregunta**, sin arrastrar historial de preguntas anteriores.
+- **Métricas obligatorias:** aciertos sobre 14 respondibles (`X/14`), rechazos correctos sobre 6 sin respuesta (`Y/6`), **recuperaciones medias por pregunta**, reformulaciones medias, latencia (mediana y media) y revisión manual del apoyo en las fuentes citadas.

@@ -63,10 +63,11 @@ export type DemoScenarioId = z.infer<typeof demoScenarioSchema>;
 export const cragStepSchema = z.object({
   // Ejecución a la que pertenece el paso.
   runId: z.string().min(1).max(128),
-  // Qué hizo el grafo: buscar, ordenar, reformular, conservar, descartar, responder, rechazar…
+  // Qué hizo el grafo: buscar, ordenar, valorar suficiencia, reformular, conservar, descartar, responder, rechazar…
   kind: z.enum([
     "retrieve",
     "rank",
+    "assess",
     "reformulate",
     "retain",
     "discard",
@@ -141,13 +142,13 @@ export const cragSummarySchema = z.object({
   terminal: z.enum(["answer", "refuse", "clarify", "error", "aborted"]),
   // Motivo legible del final.
   reason: z.string().min(1).max(240),
-  // Fragmentos que respaldan la respuesta, con su motivo y puntuación.
+  // Fragmentos que respaldan la respuesta, con su motivo y puntuación en la escala [0, 1].
   retained: z
     .array(
       z.object({
         chunkId: z.string().min(1).max(128),
         reason: z.string().min(1).max(240),
-        score: z.number().finite().nullable(),
+        score: z.number().min(0).max(1).nullable(),
       }),
     )
     .max(6),

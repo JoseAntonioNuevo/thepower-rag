@@ -77,6 +77,7 @@ Modos de ejecución (`APP_MODE`):
 │   ├── prepared/corpus.json          Corpus preparado y troceado (lo genera prepare-corpus; lo empaqueta el Worker)
 │   └── COVERAGE.md                   Cobertura generada (temario, calendarios, ejercicios)
 ├── docs/                             Arquitectura, decisiones, fases, despliegue y evidencias
+├── lab/                              Laboratorio reproducible S10/S11 (PostgreSQL + pgvector 768 + HNSW, 10 docs ficticios, CRAG y evaluación 14+6)
 ├── material/                         Paquete docente de S10/S11 (guiones, ejercicios, presentaciones, comparación)
 └── prompts/                          Encargos históricos con los que se construyó cada fase (solo lectura)
 ```
@@ -129,9 +130,10 @@ Una llamada `streamText` con `SIN_RAG_PROMPT` (`prompts.ts`). No hay fuentes ni 
 ### RAG básico
 
 - Corpus: `bun run prepare-corpus` lee `corpus/sources`, valida la cabecera de cada Markdown, trocea en fragmentos de 900 caracteres con 80 de solapamiento (`packages/rag/src/chunk.ts`) y calcula ids estables a partir del contenido (`ids.ts`, `hash.ts`). Preparación actual `c3a59a406888b`.
-- Publicado: `RAG_CONTEXT_MODE=complete`. El corpus (unos 23 000 caracteres) cabe entero: se leen de D1 todos los fragmentos del programa más el calendario del grupo y se comprueba que coinciden exactamente con el manifiesto (máximo 200 fragmentos y 32 000 caracteres). Si no coinciden: error, nunca truncado. Razón: el coseno del calendario (0,446) quedaba bajo el umbral 0,50 y se confundía «no recuperado» con «no existe» (`docs/rag-contexto-completo.md`).
-- Variante semántica (`RAG_CONTEXT_MODE=semantic`): embedding BGE-M3 de la pregunta, vecinos en Vectorize filtrados por versión, perfil y grupo, texto de D1 y umbral `MIN_RETRIEVAL_SCORE` (0,5 calibrado con preguntas de desarrollo en `scripts/calibrate-live.ts`).
+- Referencia principal de S10 (`RAG_CONTEXT_MODE=semantic` en `apps/web/wrangler.jsonc`): embedding BGE-M3 de la pregunta, vecinos en Vectorize filtrados por versión, perfil y grupo, texto de D1 y umbral `MIN_RETRIEVAL_SCORE` (`0,5` calibrado con preguntas de desarrollo en `scripts/calibrate-live.ts`). Si ningún fragmento supera el corte, rechaza antes de llamar al modelo generativo.
+- Variante de contexto completo (`RAG_CONTEXT_MODE=complete`): el corpus del curso (unos 23 000 caracteres) cabe entero en D1; lee todos los fragmentos del programa más el calendario del grupo y comprueba que coinciden con el manifiesto (máximo 200 fragmentos y 32 000 caracteres). Se enseña después del recorrido semántico como variante para corpus pequeños (`docs/rag-contexto-completo.md`).
 - El perfil de índice tiene que estar `ready`, ser el mismo modelo, dimensión y métrica `cosine`. Si no: 409, sin embeber.
+- Laboratorio del ejercicio (`lab/`): implementa el stack literal de los enunciados publicados (10 documentos ficticios de AetherCloud, PostgreSQL + `pgvector` en `lab/schema.sql` y `lab/docker-compose.yml` con `vector(768)` e índice HNSW, `GEN_MODEL_ID`, `EMBEDDING_MODEL_ID`, reconstrucción desde índice vacío y evaluación ejecutada de 20 preguntas en `lab/eval/resultados-laboratorio.md`), sin añadir paquetes de PostgreSQL al Worker de Cloudflare.
 
 ### CRAG (RAG correctivo)
 
@@ -140,14 +142,14 @@ Grafo `StateGraph` de LangGraph por turno, sin checkpointer (`crag-graph.ts`, di
 ```text
 validar ─┬─ calendario sin grupo → aclarar → fin
          ├─ cancelado o sin tiempo → error → fin
-         └─ buscar → ordenar y evaluar (una llamada estructurada)
-                      ├─ suficiente → responder → fin
-                      ├─ parcial → conservar útiles → reformular → buscar
-                      ├─ insuficiente → descartar → reformular → buscar
-                      └─ límite, sin progreso o salida inválida → rechazo o error → fin
+         └─ recuperar (retrieve) → reordenar en [0, 1] (rank) → valorar suficiencia (assess)
+              ├─ suficiente → responder → fin
+              ├─ parcial → conservar útiles → reformular → buscar
+              ├─ insuficiente → descartar → reformular → buscar
+              └─ límite, sin progreso o salida inválida → rechazo o error → fin
 ```
 
-Límites por turno (`packages/rag/src/crag.ts`, `limits.ts`): 3 búsquedas, 2 reformulaciones, 10 candidatos, 6 fragmentos útiles y **un único plazo de 20 s** (cada llamada recibe el tiempo restante; un resultado tardío no se acepta). `maxRetries` es 0. La ordenación validada manda el orden; `usefulIds` solo decide pertenencia; un empate conserva la posición devuelta. Los validadores rechazan ids inventados, de otro grupo, corpus o perfil. Inspiración: Yan et al., _Corrective Retrieval Augmented Generation_, arXiv:2401.15884 (adaptación, no reproducción).
+Límites por turno (`packages/rag/src/crag.ts`, `limits.ts`): 3 búsquedas, 2 reformulaciones, 10 candidatos, 6 fragmentos útiles, escala de puntuación cerrada `[0, 1]` con umbrales calibrados (`CRAG_SCORE_THRESHOLDS`: relevancia individual `>= 0,50`, cobertura parcial `>= 0,40`, cobertura suficiente `>= 0,75`) y **un único plazo de 20 s** (cada llamada recibe el tiempo restante; un resultado tardío no se acepta). `maxRetries` es 0. La ordenación validada manda el orden; `usefulIds` solo decide pertenencia; un empate conserva la posición devuelta. Los validadores rechazan ids inventados, puntuaciones fuera de `[0, 1]`, de otro grupo, corpus o perfil. Inspiración: Yan et al., _Corrective Retrieval Augmented Generation_, arXiv:2401.15884 (adaptación, no reproducción).
 
 Puertos (`CragPorts` en `packages/rag/src/crag.ts`): `retrieve`, `rankAndAssess`, `reformulate`, `generate`, `reserve`. Implementaciones: `crag-real.ts` (Vectorize + evaluador + generador con plazo y reserva), `crag-demo.ts` (guiones S5/S6/S16 sin modelo), `local-crag-ports.ts` (índice emulado para el puente).
 
@@ -306,6 +308,9 @@ bun run ingest-plan
 bun run activate
 bun run activate -- status --read
 bun run test:entrypoint
+bun run lab:rebuild
+bun run lab:demo
+bun run lab:eval
 ```
 
 `bun run preview` sirve el build en local y tampoco despliega. `bun run dev:research` abre la investigación durable en `http://127.0.0.1:5191/` con D1, Workflows y el R2 local de medios en `apps/web/.wrangler/research-state`. No usa el D1 remoto del curso. La evidencia de las fases anteriores se conserva. La de la fase 7 está en `docs/phase-7-verification.md`. La de la investigación durable está en `docs/s12-research-phase2.md` y la multimodal en `docs/s12-research-phase3.md`. El plan de recursos está en `docs/cloud-activation-plan.md`.

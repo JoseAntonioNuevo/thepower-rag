@@ -7,9 +7,10 @@ import { refusedByModel } from "./model";
 import { providerCost, type CostPricing } from "./provider-cost";
 // Límites de plazos, salida y reintentos.
 import { LIMITS } from "@thepower-rag/contracts";
-// Cotas de CRAG y tipos del grafo del núcleo.
+// Cotas de CRAG, escala de puntuaciones y tipos del grafo del núcleo.
 import {
   CRAG_BOUNDS,
+  CRAG_SCORE_THRESHOLDS,
   OPERATION_BOUNDS,
   type AllowanceLedger,
   type CragChunk,
@@ -27,14 +28,14 @@ import { queryVectorize, readChunk, type SqlDatabase, type VectorIndex } from ".
 // Embeddings con Workers AI.
 import { embedWithWorkersAi, type EmbeddingRunner } from "./vectors";
 
-// Esquema del evaluador: ranking de fragmentos, estado, motivo, lagunas e ids útiles.
+// Esquema del evaluador: ranking de fragmentos en [0, 1], estado, motivo, lagunas e ids útiles.
 const evidenceSchema = z.object({
-  // Un elemento por fragmento recibido, con su puntuación y motivo.
+  // Un elemento por fragmento recibido, con su puntuación en [0, 1] y motivo.
   ranking: z
     .array(
       z.object({
         chunkId: z.string().min(1).max(CRAG_BOUNDS.maxIdChars),
-        score: z.number().finite(),
+        score: z.number().min(CRAG_SCORE_THRESHOLDS.minScore).max(CRAG_SCORE_THRESHOLDS.maxScore),
         reason: z.string().min(1).max(CRAG_BOUNDS.maxReasonChars),
       }),
     )
@@ -52,16 +53,17 @@ const rewriteSchema = z.object({
   query: z.string().min(1).max(CRAG_BOUNDS.maxQueryChars),
 });
 
-// Instrucciones del evaluador: ordenar todos los fragmentos y decidir si bastan.
+// Instrucciones del evaluador: reordenar en [0, 1] y valorar por separado la cobertura de la pregunta.
 const EVALUATOR_PROMPT = [
   "Eres el evaluador del corpus privado del programa AI Engineer.",
-  "ranking debe incluir EXACTAMENTE TODOS los fragmentos recibidos, cada id una sola vez, también los irrelevantes. Copia sus ids completos.",
-  "Ordena esos fragmentos y decide si bastan para la pregunta original.",
-  "sufficient: usefulIds contiene de 1 a 6 ids con texto que responde; gaps es [].",
-  "partial: usefulIds conserva de 1 a 6 ids útiles y gaps nombra lo que falta.",
-  "insufficient: usefulIds es [] Y gaps es []. El reason explica qué falta.",
-  "sufficient exige texto útil. partial conserva esos ids y nombra la laguna. insufficient deja usefulIds vacío.",
-  "No inventes ids ni hechos. La puntuación es relevancia, no una probabilidad. No respondas al alumno ni busques fuera del corpus.",
+  "Paso 1 (reordenamiento): ranking debe incluir EXACTAMENTE TODOS los fragmentos recibidos, cada id una sola vez, también los irrelevantes. Copia sus ids completos.",
+  "Asigna a cada fragmento una puntuación score en la escala cerrada [0.00, 1.00]: 0.00 = irrelevante; 0.50 = corte mínimo de fragmento útil; 0.75–1.00 = evidencia directa sobre un aspecto de la pregunta.",
+  "Paso 2 (valoración de suficiencia): distingue la relevancia de un fragmento individual de la cobertura de toda la pregunta original.",
+  "Un fragmento con score alto (>= 0.75) puede cubrir solo una parte de una pregunta compuesta: en ese caso la decisión global es partial (cobertura 0.40–0.74), nunca sufficient.",
+  "sufficient (cobertura >= 0.75 sin lagunas): usefulIds contiene de 1 a 6 ids con texto que cubre todas las partes de la pregunta; gaps es [].",
+  "partial (cobertura 0.40–0.74 con laguna): usefulIds conserva de 1 a 6 ids útiles (score >= 0.50) y gaps nombra exactamente qué parte falta.",
+  "insufficient (cobertura < 0.40 o ningún fragmento >= 0.50): usefulIds es [] Y gaps es []. El reason explica qué falta.",
+  "No inventes ids ni hechos. La puntuación mide relevancia documental en [0, 1], no una probabilidad de verdad. No respondas al alumno ni busques fuera del corpus.",
 ].join("\n");
 
 // Instrucciones de la reformulación: nueva consulta para cubrir la laguna.

@@ -5,9 +5,13 @@
 import { describe, expect, it } from "vite-plus/test";
 // Funciones y tipos de CRAG que se prueban.
 import {
+  CRAG_SCORE_THRESHOLDS,
+  assessCoverageByThresholds,
   orderByRanking,
   retainEvidence,
   routeAfterAssessment,
+  validateAssessment,
+  validateRanking,
   validateRankingAndAssessment,
   validateReformulation,
   type CragChunk,
@@ -143,5 +147,58 @@ describe("decisiones de CRAG", () => {
     expect(
       routeAfterAssessment({ status: "partial", retrievalCount: 1, reformulationCount: 0 }),
     ).toBe("retain");
+  });
+
+  // Escala [0, 1] y distinción entre relevancia de un fragmento y cobertura de toda la pregunta.
+  it("valida la escala [0, 1] y separa relevancia individual de cobertura de la pregunta", () => {
+    // Candidatos de prueba.
+    const candidates = [chunk("s5"), chunk("s6")];
+    // Fuera de la escala (> 1): rechazado en validateRanking y validateRankingAndAssessment.
+    expect(
+      validateRanking(candidates, [
+        { chunkId: "s5", score: 1.2, reason: "fuera de escala" },
+        { chunkId: "s6", score: 0.4, reason: "dentro" },
+      ]).ok,
+    ).toBe(false);
+    // Fuera de la escala (< 0): rechazado.
+    expect(
+      validateRankingAndAssessment(candidates, {
+        ranking: [
+          { chunkId: "s5", score: -0.1, reason: "negativa" },
+          { chunkId: "s6", score: 0.4, reason: "dentro" },
+        ],
+        status: "partial",
+        reason: "parcial",
+        gaps: ["falta algo"],
+        usefulIds: ["s6"],
+      }).ok,
+    ).toBe(false);
+    // Relevancia alta en un fragmento (0,85 >= 0,50) pero cobertura global incompleta (0,50 < 0,75): partial.
+    const partial = assessCoverageByThresholds({
+      ranking: [
+        { chunkId: "s5", score: 0.85, reason: "cubre estado y nodos" },
+        { chunkId: "s6", score: 0.2, reason: "no cubre observabilidad aquí" },
+      ],
+      coverageScore: 0.5,
+      gaps: ["Falta cómo observar la ejecución con Langfuse y LangSmith."],
+    });
+    // Conserva s5 como útil pero declara la cobertura parcial.
+    expect(partial.status).toBe("partial");
+    expect(partial.usefulIds).toEqual(["s5"]);
+    expect(partial.gaps).toEqual(["Falta cómo observar la ejecución con Langfuse y LangSmith."]);
+    // Cuando ambos fragmentos superan 0,50 y la cobertura llega a >= 0,75 sin lagunas: sufficient.
+    const sufficient = assessCoverageByThresholds({
+      ranking: [
+        { chunkId: "s5", score: 0.85, reason: "cubre estado" },
+        { chunkId: "s6", score: 0.88, reason: "cubre observabilidad" },
+      ],
+      coverageScore: CRAG_SCORE_THRESHOLDS.sufficientCoverageMin,
+      gaps: [],
+    });
+    // Suficiente con ambos fragmentos.
+    expect(sufficient.status).toBe("sufficient");
+    expect(sufficient.usefulIds).toEqual(["s5", "s6"]);
+    // También pasa validateAssessment por separado.
+    expect(validateAssessment(candidates, sufficient).ok).toBe(true);
   });
 });

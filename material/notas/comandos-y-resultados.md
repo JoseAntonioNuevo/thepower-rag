@@ -1,50 +1,36 @@
-# Comandos y resultados
+# Comandos y resultados verificados
 
-Medidos el 3 de octubre de 2026 en este Mac, dentro de `/Users/jose/Documents/the-power/3-rag`. El servidor de la demo ya estaba en marcha cuando se cronometraron las peticiones HTTP. No son tiempos de un aula llena.
+Comandos locales de verificación, demostración y laboratorio medidos en `/Users/jose/Documents/the-power/3-rag` sin llamadas de pago.
 
-## Antes de la demo
+## 1. Diagnóstico, calidad de código y batería de tests
 
-| Comando                                     | Código | Tiempo | Qué salió                                                                                                                                            |
-| ------------------------------------------- | ------ | ------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
-| `bun run preflight`                         | 0      | 0,14 s | `APP_MODE efectivo: demo`. Sin RAG `offline-demo`. RAG y CRAG `offline-fixture`. `verificado remotamente: no`. Bun 1.4.2. Node del sistema v24.16.0. |
-| `bun run preflight -- --capability sin-rag` | 0      | 0,09 s | Añade `capacidad pedida: sin-rag`. Sigue en demo.                                                                                                    |
-| `bun run preflight -- --capability rag`     | 0      | 0,09 s | `capacidad pedida: rag`.                                                                                                                             |
-| `bun run preflight -- --capability crag`    | 0      | 0,09 s | `capacidad pedida: crag`.                                                                                                                            |
-| `bun run activate`                          | 0      | 0,05 s | Plan. `comando plan: simulación, sin red`.                                                                                                           |
-| `bun run activate -- plan`                  | 0      | 0,04 s | El mismo plan, sin red.                                                                                                                              |
-| `bun run ingest-plan`                       | 0      | 0,03 s | Imprime el plan de activación. No embebe ni crea recursos.                                                                                           |
+| Comando             | Código | Resultado verificado                                                                                                                                                                             |
+| ------------------- | -----: | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| `bun run check`     |    `0` | Formato (`vp fmt`), lint con tipos y comprobación estricta de TypeScript en `apps/`, `packages/`, `scripts/` y `lab/`.                                                                           |
+| `bun run test`      |    `0` | Batería completa de pruebas unitarias y de grafos en verde (incluidos los validadores de escala `[0, 1]`, los nodos separados `rank` y `assess` y el laboratorio `pgvector` de 768 dimensiones). |
+| `bun run preflight` |    `0` | `APP_MODE efectivo: demo`, sin RAG `offline-demo`, RAG y CRAG `offline-fixture`.                                                                                                                 |
+| `bun run build`     |    `0` | Compila el frontend React y el bundle del Worker de Cloudflare sin errores.                                                                                                                      |
 
-`bun run dev` anunció `http://localhost:5173/`. No se usó `--host`.
+## 2. Comandos del laboratorio reproducible S10 y S11 (`lab/`)
 
-## Salud
+| Comando               | Código | Qué ejecuta y qué imprime                                                                                                                                                                                                                                                                                                                                                                                      |
+| --------------------- | -----: | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| `bun run lab:rebuild` |    `0` | Vacía el índice y lo reconstruye desde los **10 documentos ficticios de AetherCloud** (`lab/corpus/sources/`): versión `lab-689164ca81cd`, `10` documentos, `20` fragmentos (`900/80`), `768` dimensiones e índice HNSW `lab_chunks_embedding_hnsw_idx (vector_cosine_ops)`.                                                                                                                                   |
+| `bun run lab:demo`    |    `0` | Ejecuta 5 casos: 1) S10 respuesta con cita `04-almacenamiento-y-cifrado-kms:00`; 2) S10 rechazo previo sobre Windows Server (`gen=false`); 3) S11 CRAG suficiente tras `rerank` sobre `top-10`; 4) S11 CRAG parcial con 2 búsquedas y 1 reformulación (`retrieve->rerank->assess->retain->reformulate->retrieve->rerank->assess->answer`); 5) S11 CRAG agotando 3 búsquedas y 2 reformulaciones (`gen=false`). |
+| `bun run lab:eval`    |    `0` | Ejecuta las **20 preguntas nuevas de test (14 respondibles + 6 sin respuesta)** en RAG básico y CRAG y escribe `lab/eval/resultados-laboratorio.md`: **RAG `16/20` (`10/14` respondibles, `6/6` rechazos, `1,00` búsquedas medias)** frente a **CRAG `17/20` (`11/14` respondibles, `6/6` rechazos, `1,80` búsquedas medias)**.                                                                                |
 
-`GET http://localhost:5173/api/health` respondió 200 en 0,033 s.
+## 3. Comandos del demostrador web en modo `demo` (`bun run dev`)
 
-Campos útiles: `phase` `crag`, `execution` `demo`, corpus `c3a59a406888b`, contenido `cc037ef0bb1f7`, perfil `p9e8e8e03627e`, familia `fixture`, embedding `fixture-token-hash-v1`, 128 dimensiones, `remoteRevision` null, cobertura de ejercicios `partial`, remoto `not-verified`.
+Con `bun run dev` levantado en `http://localhost:5173/`:
 
-La línea de estado traduce el perfil a demo (fixture) y el temario a completo. Detalle del corpus muestra calendarios completos, ejercicios parcial y remoto no verificado.
-
-## Preguntas de la demo
-
-Todas `POST /api/chat`, HTTP 200. El cuerpo lleva `mode`, `audience` y `messages` con `parts: [{ type: "text", text }]`. En CRAG con guion se añade `demoScenario`.
-
-| Caso                                        | Tiempo  | Texto que hay que reconocer                                                                                                                                  |
-| ------------------------------------------- | ------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| Sin RAG, pregunta de LangGraph              | 0,196 s | `Demostración local sin modelo.` Origen `offline-demo`. Uso y coste no medidos.                                                                              |
-| RAG básico, misma pregunta, General         | 0,011 s | Empieza por `Respuesta de la canalización local de prueba.` Cita `c3a59a406888b:s05-langgraph:00` y, en esta pasada, también `c3a59a406888b:s14-agentes:00`. |
-| RAG, beca de 1991, General                  | 0,004 s | `No hay contexto utilizable en el corpus seleccionado.`                                                                                                      |
-| RAG, «¿Cuándo es la clase de RAG?», General | 0,004 s | Pide elegir L/X o M/J.                                                                                                                                       |
-| RAG, «¿Cuándo es la clase de RAG S10?», M/J | 0,003 s | Cita `c3a59a406888b:calendario-mj:10` y `2026-10-22`. No apareció `2026-10-26`.                                                                              |
-| CRAG `sufficient-s5`                        | 0,009 s | Cita S5. Prefijo `Respuesta de prueba del grafo CRAG.`                                                                                                       |
-| CRAG `partial-s5-s6`                        | 0,008 s | Cita S5 y S6.                                                                                                                                                |
-| CRAG `irrelevant-then-s6`                   | 0,007 s | Cita S6.                                                                                                                                                     |
-| CRAG `missing-info`                         | 0,006 s | Rechazo. Búsquedas 3, reformulaciones 2, generación 0.                                                                                                       |
-| CRAG `clarify-cohort`                       | 0,004 s | Pide cohorte. Búsquedas 0.                                                                                                                                   |
-| CRAG `evaluator-error`                      | 0,004 s | `El evaluador devolvió una salida que no se puede usar. No se reintenta.`                                                                                    |
-| CRAG libre, modelos abiertos, General       | 0,004 s | Cita `c3a59a406888b:s07-modelos-abiertos:00`. Sigue siendo canalización de prueba.                                                                           |
-
-El rechazo CRAG de la beca trajo `origin` `offline-fixture`, `completion` `refused`, `usage` null y `cost` null. El escenario era `missing-info` y `fixture` true.
-
-## Comandos que no se lanzaron
-
-No se ejecutó `activate --execute`, ni `status --read`, ni la sonda, ni la ingesta, ni `test`, ni `test:entrypoint`. Esos últimos ya constan en `docs/phase-7-verification.md` y el código no cambió en este paquete.
+| Etapa y caso                                                             | Audiencia | Resultado en el demostrador local                                                                              |
+| ------------------------------------------------------------------------ | --------- | -------------------------------------------------------------------------------------------------------------- |
+| **Sin RAG** · _«¿Cómo modela LangGraph un agente con estado y nodos?»_   | `program` | Stream `offline-demo` sin fuentes; uso y coste `no medido`.                                                    |
+| **RAG básico** · _«¿Cuándo es la clase de RAG?»_                         | `program` | `clarify`: pide elegir el grupo `L/X` o `M/J` sin buscar ni llamar al modelo.                                  |
+| **RAG básico** · _«¿Cuándo es la clase de RAG S10?»_                     | `M/J`     | Cita `c3a59a406888b:calendario-mj:10` y devuelve `2026-10-22`.                                                 |
+| **RAG básico** · _«¿Qué beca interna del año 1991 cubre este programa?»_ | `program` | `refuse`: no supera el umbral y rechaza sin llamar al modelo.                                                  |
+| **CRAG** · `sufficient-s5`                                               | `program` | 1 búsqueda, pasos `retrieve → rank → assess → answer`, cita `s05-langgraph:00`.                                |
+| **CRAG** · `partial-s5-s6`                                               | `program` | 2 búsquedas, 1 reformulación, conserva S5 (`0,800`), une S6 (`0,860`) sin duplicar y responde con ambas citas. |
+| **CRAG** · `irrelevant-then-s6`                                          | `program` | 2 búsquedas, 1 reformulación, descarta S16 (`0,200`) en el intento 1 y responde solo con S6 (`0,880`).         |
+| **CRAG** · `missing-info` (beca de 1991)                                 | `program` | 3 búsquedas, 2 reformulaciones, generación `0` y final `refuse`.                                               |
+| **CRAG** · `evaluator-error`                                             | `program` | Salida inválida detectada por `validateRanking` / `validateAssessment`; termina en `error` sin reintentos.     |

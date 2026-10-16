@@ -1,38 +1,31 @@
-# Referencia de corrección · S10
+# Referencia de corrección para el profesor · S10
 
-No es un solucionario para repartir antes de la entrega. El proyecto de referencia es `/Users/jose/Documents/the-power/3-rag` en el estado de la fase 7, demo local. Una práctica del alumno puede usar otro corpus ficticio si cumple el encargo original. No exijáis los ids de este repositorio salvo que hayan partido de él.
+No es un documento para repartir antes de la entrega. Reúne los criterios de corrección del ejercicio publicado de **S10 (Chatbot con RAG básico, fuentes y rechazo)** y señala cómo se relaciona con el laboratorio reproducible de referencia (`lab/`) y con el demostrador de aula (`apps/`).
 
-## Cuatro planos, al corregir
+## Distinción entre el ejercicio publicado y el demostrador de aula
 
-- El encargo original incluye su evaluación de veinte preguntas, catorce con apoyo y seis sin respuesta. No se da por cumplida porque la activación del profesor esté pendiente, ni porque la demo fixture responda.
-- La adaptación de aula (Vectorize, D1, R2 y el corpus del programa) es la demostración. No reescribe S9 ni el encargo enviado.
-- El laboratorio fixture demuestra control. No es una medición de calidad. No aceptéis 0,33 ni 128 como evidencia de BGE-M3.
-- `material/comparacion/conjunto-reservado-20.md` es del profesor, está congelado y no se ha ejecutado. No lo entreguéis, no pidáis que lo ejecuten y no cambiéis sus preguntas. El alumno escribe las suyas, en un medio que pueda usar sin una suscripción obligatoria. Si no hay ejecución, la tabla queda vacía. No inventéis una rúbrica, una aprobación ni un plazo que la fuente no trae.
+- **El ejercicio exigible al alumno** es el del documento enviado (`material/ejercicios/S10-enunciado.md`): al menos 8 documentos ficticios, reconstrucción desde archivos en bruto e índice vacío, PostgreSQL con `pgvector`, columna `vector(768)` e índice HNSW, modelos configurados por variables (`GEN_MODEL_ID`, `EMBEDDING_MODEL_ID`), escala explicada, umbral calibrado con validación separada del test, rechazo previo sin llamar al generador y **evaluación ejecutada de 20 preguntas (14 respondibles y 6 sin respuesta) presentando resultados**.
+- **El laboratorio de referencia (`lab/`)** cumple todos esos puntos con los 10 documentos ficticios de AetherCloud (`lab/schema.sql`, `lab/src/rag-basic.ts`, `lab/eval/resultados-laboratorio.md`).
+- **El demostrador web de aula (`apps/`)** usa Cloudflare Vectorize (BGE-M3 de 1024 dimensiones), D1 y R2 sobre el temario real S1–S20. Si un alumno entrega una práctica basada en el modo `demo` lexical (`fixture-token-hash-v1`, 128 dimensiones, umbral `0,33`) sin base vectorial ni evaluación ejecutada, solo ha recorrido el material de apoyo offline y **no ha completado los requisitos del ejercicio**.
 
-## Criterios
+## Rúbrica de verificación por criterio
 
-| Criterio               | Hecho                                                                  | A medias                                           | No                                       |
-| ---------------------- | ---------------------------------------------------------------------- | -------------------------------------------------- | ---------------------------------------- |
-| Corpus reproducible    | Hay documentos, una identidad de versión y el comando que los prepara  | Hay textos sueltos sin versión                     | No se puede repetir la búsqueda          |
-| Fragmento e id         | El id cabe en la cita y no cambia entre ejecuciones con el mismo texto | El id depende de un reloj o de un aleatorio        | No hay id                                |
-| Vector con procedencia | Dice si es hash de prueba o un modelo, con dimensión                   | Dice «embedding» sin origen                        | Presenta el hash de prueba como BGE-M3   |
-| Una búsqueda           | Una consulta por pregunta, con filtro si hay audiencias                | Busca y además reformula, y llama a eso RAG básico | No filtra y mezcla cohortes              |
-| Umbral                 | El número está en la configuración y se puede leer                     | El número está escondido en un `if`                | Genera aunque la puntuación no pase      |
-| Cita resoluble         | `[cite:id]` o equivalente abre el fragmento usado                      | Cita un título que no está en el contexto          | Inventa la fuente                        |
-| Rechazo                | Sin contexto útil no llama al generador                                | Llama y luego pide perdón                          | Inventa el dato ausente                  |
-| Calendario             | Sin cohorte, pide la cohorte                                           | Muestra las dos fechas a la vez                    | Se inventa el día                        |
-| Coste                  | Desconocido queda desconocido                                          | —                                                  | Escribe 0 sin medición                   |
-| Alcance                | No exige despliegue de pago                                            | —                                                  | La rúbrica pide una cuenta de Cloudflare |
+| Criterio                                           | Hecho (completo)                                                                                                                                                                     | A medias (incompleto)                                                                                                                                  | No (incorrecto o ausente)                                                                               |
+| -------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------ | ------------------------------------------------------------------------------------------------------- |
+| **Corpus e ingesta desde cero**                    | 8 o más documentos ficticios Markdown/TXT; script que limpia, trocea con solapamiento, genera embeddings y reconstruye desde índice vacío con versión e IDs estables                 | Documentos cargados manualmente sin script reproducible de reconstrucción o sin versión/IDs estables                                                   | Menos de 8 documentos o sin proceso de ingesta reproducible                                             |
+| **PostgreSQL + `pgvector` (`vector(768)` + HNSW)** | Esquema con `CREATE EXTENSION vector`, columna `vector(768)` e índice `USING hnsw (embedding vector_cosine_ops)`; mismo modelo y dimensión (`768`) en ingesta y consulta             | Usa `pgvector` pero omite el índice HNSW, fija dimensiones distintas sin justificar o no comprueba coincidencia de modelo                              | No usa almacén vectorial o presenta el hash de prueba de 128 d como si fuera `pgvector`                 |
+| **Variables de configuración**                     | `GEN_MODEL_ID`, `EMBEDDING_MODEL_ID`, `DATABASE_URL` y umbral leídos por configuración, sin secretos en el repositorio                                                               | Nombres de modelos codificados en duro dentro de las funciones                                                                                         | Claves privadas incluidas en el código entregado                                                        |
+| **Escala y umbral previo a generar**               | Explica qué mide la distancia/similitud (en `<=>` menor es más próximo), calibra el umbral con validación separada del test y rechaza antes de llamar al generador                   | Tiene umbral en código pero no explica la escala o lo ajusta mirando las preguntas de test                                                             | Confía solo en un prompt de «si no sabes, dilo» y llama siempre al generador                            |
+| **Datos no fiables y citas**                       | Trata los fragmentos como datos (no instrucciones), responde solo con el contexto seleccionado y cita IDs reales resolubles                                                          | Cita documentos de forma genérica sin ID de fragmento verificable                                                                                      | Inventa fuentes o permite que instrucciones del texto cambien el rol del sistema                        |
+| **Evaluación de 20 preguntas (14 + 6)**            | **Ejecutada y con resultados presentados:** guarda fragmentos, puntuaciones, respuesta y fuentes de los 20 casos; informa aciertos `X/14` y rechazos `Y/6` con versiones registradas | **Preparada pero sin ejecutar (sin números):** define las 20 preguntas y respuestas esperadas con honestidad pero deja la tabla pendiente de ejecución | No incluye las 20 preguntas, reajusta el sistema con el test o inventa cifras sin registro de ejecución |
 
-## Qué hace el proyecto de referencia
+## Valores de referencia en el repositorio
 
-- Sin RAG en demo: stream `offline-demo`, sin fuentes. Texto fijo de transporte. No es un modelo.
-- RAG básico: `retrieveBasic` con `fixture-token-hash-v1` y umbral 0,33. Respuesta prefijada `Respuesta de la canalización local de prueba.`
-- Cita de la pregunta de LangGraph: `c3a59a406888b:s05-langgraph:00`. También puede entrar `c3a59a406888b:s14-agentes:00` por el índice lexical. Eso no se penaliza en la demo. Sí se penaliza si el alumno dice que es semántica.
-- Rechazo de la beca de 1991: `No hay contexto utilizable en el corpus seleccionado.`
-- M/J y «¿Cuándo es la clase de RAG S10?»: `c3a59a406888b:calendario-mj:10`, fecha `2026-10-22`.
-- El fragmento sintético está en `corpus/fixtures/fragmento-sintetico.json` y no forma parte del corpus preparado.
-
-## No puntúa como logro remoto ni como evaluación original
-
-Pasar `bun run preflight` en demo, ni tener `APP_MODE=real` escrito en un archivo, ni un tope de gasto guardado. La dimensión observada y el umbral calibrado no existen todavía. Un pase del laboratorio fixture no cierra las veinte preguntas del encargo original.
+1. **En el laboratorio reproducible (`lab/`, referencia directa del ejercicio):**
+   - Corpus: `lab-689164ca81cd` (10 documentos ficticios de AetherCloud, 20 fragmentos, `900` caracteres y `80` de solapamiento).
+   - Esquema: `lab/schema.sql` con `vector(768)` e índice HNSW `lab_chunks_embedding_hnsw_idx` (`m = 16, ef_construction = 64`).
+   - Calibración en validación (`LAB_VALIDATION_SET`, 6 casos): negativo más cercano `similitud = 0,148` (`distancia = 0,852`); positivo más bajo `similitud = 0,250` (`distancia = 0,750`); corte fijado en `similitud >= 0,25` (`distancia <= 0,75`).
+   - Resultado en las 20 preguntas de test (`LAB_TEST_SET_20`): **16/20** totales (**10/14** respondibles y **6/6** rechazos correctos sin llamar al generador).
+2. **En el demostrador de aula (`apps/`, demostración del curso AI Engineer):**
+   - Recorrido semántico principal (`RAG_CONTEXT_MODE=semantic`): BGE-M3 `1024` dimensiones (`p76509a5f9743`), umbral `0,50` calibrado en `scripts/calibrate-live.ts`, generación con `claude-haiku-5-5`.
+   - Evaluación histórica vectorial (3 de octubre de 2026, `openai/gpt-6-luna`): **17/20** (**11/14** respondibles, **6/6** rechazos, `0,95` búsquedas medias, mediana `1193 ms`).

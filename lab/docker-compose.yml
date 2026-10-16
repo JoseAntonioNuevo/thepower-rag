@@ -1,0 +1,20 @@
+# GUÍA DE LECTURA · lab/docker-compose.yml
+# Servicio PostgreSQL 17 con pgvector para el laboratorio reproducible de S10 y S11.
+services:
+  pgvector:
+    image: pgvector/pgvector:pg17
+    container_name: thepower-rag-lab-pgvector
+    restart: unless-stopped
+    environment:
+      POSTGRES_USER: aether
+      POSTGRES_PASSWORD: aether_lab_2026
+      POSTGRES_DB: aether_rag
+    ports:
+      - "54329:5432"
+    volumes:
+      - ./schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U aether -d aether_rag"]
+      interval: 5s
+      timeout: 3s
+      retries: 10

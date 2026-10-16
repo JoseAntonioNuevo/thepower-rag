@@ -1,8 +1,9 @@
 // GUÍA DE LECTURA · apps/api/src/compat.ts
 // Comprobación de compatibilidad que publica /api/health: LangGraph ejecuta un grafo mínimo y el
 // SDK de Anthropic carga. No llama a ningún proveedor ni es una activación remota.
-// Piezas de LangGraph para construir un grafo.
+// Piezas de LangGraph para construir un grafo (reexportadas también para el laboratorio local).
 import { Annotation, END, START, StateGraph } from "@langchain/langgraph";
+export { Annotation, END, START, StateGraph };
 // Comprueba que la fábrica de Anthropic se cargó.
 import { anthropicFactoryLoaded } from "./model";
 

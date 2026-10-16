@@ -18,10 +18,19 @@ if (!process.argv.includes("--execute")) {
   // Sale.
   process.exit(0);
 }
-// Configuración congelada: origen y hashes.
-const frozen = JSON.parse(
-  readFileSync(path.join(resultDir, "configuracion-congelada.json"), "utf8"),
-) as { origin: string; sha256: Record<string, string> };
+// Índice de argumento --config opcional.
+const configFlagIndex = process.argv.indexOf("--config");
+// Ruta al archivo de configuración congelada (por defecto la referencia actual).
+const configPath =
+  configFlagIndex >= 0 && process.argv[configFlagIndex + 1]
+    ? path.resolve(root, process.argv[configFlagIndex + 1]!)
+    : path.join(root, "material/comparacion/configuracion-referencia-actual.json");
+// Configuración congelada: origen, archivo de preguntas y hashes.
+const frozen = JSON.parse(readFileSync(configPath, "utf8")) as {
+  origin: string;
+  questionsFile?: string;
+  sha256: Record<string, string>;
+};
 // Cada archivo congelado debe tener su hash; si no, error.
 for (const [file, hash] of Object.entries(frozen.sha256))
   if (
@@ -30,9 +39,12 @@ for (const [file, hash] of Object.entries(frozen.sha256))
       .digest("hex") !== hash
   )
     throw new Error("Configuración congelada cambiada: " + file);
-// Preguntas reservadas.
+// Preguntas reservadas de la configuración elegida.
 const source = readFileSync(
-  path.join(root, "material/comparacion/conjunto-reservado-20.md"),
+  path.join(
+    root,
+    frozen.questionsFile ?? "material/comparacion/conjunto-reservado-referencia-actual-20.md",
+  ),
   "utf8",
 );
 // Casos numerados.

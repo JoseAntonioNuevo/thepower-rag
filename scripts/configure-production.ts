@@ -76,8 +76,8 @@ const config = {
       vars: {
         // Modo real.
         APP_MODE: "real",
-        // RAG con el contexto completo del curso.
-        RAG_CONTEXT_MODE: "complete",
+        // Referencia principal de S10: recuperación semántica (variante alternativa: "complete").
+        RAG_CONTEXT_MODE: "semantic",
         // Producción usa siempre Claude por la API de Anthropic.
         LLM_PROVIDER: "anthropic",
         // Modelo generador.

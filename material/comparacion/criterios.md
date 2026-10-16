@@ -1,47 +1,28 @@
-# Criterios manuales de la comparación
+# Criterios manuales de la comparación (S10 y S11)
 
-Criterios definidos antes de la ejecución. El 3 de octubre de 2026 se aplicaron manualmente a las 40 respuestas de `resultados/resultados.json`.
+Criterios definidos antes de ejecutar cualquier lote de 20 preguntas (14 respondibles y 6 sin respuesta), aplicables tanto al laboratorio reproducible (`lab/eval/resultados-laboratorio.md`) como a los lotes reales del demostrador (`resultados/tabla-resultados.md`).
 
-Cada pregunta del conjunto reservado se puntúa por separado en RAG básico y en CRAG. No se suma un porcentaje global hasta que las veinte existan.
+Cada pregunta se puntúa por separado en **RAG básico** y en **CRAG**. Una evaluación preparada pero sin ejecutar puede declararse con honestidad, pero no equivale a una evaluación completada.
 
-## Corrección
+## 1. Corrección de la respuesta (`X/14` y `Y/6`)
 
-- Respondible: la respuesta contiene el dato esperado y no lo contradice. Parafrasear está bien. Añadir un hecho que no está en la fuente citada está mal.
-- No respondible: la respuesta rechaza o dice que no consta. Dar un aula, un precio, un correo o una versión que no está en el corpus está mal, aunque suene plausible.
+- **Pregunta respondible (14 casos):** la respuesta contiene los datos esperados y no los contradice. Parafrasear es válido; inventar un dato que no figura en los fragmentos citados anula el punto.
+- **Pregunta no respondible (6 casos):** el sistema rechaza la pregunta o indica explícitamente que no consta en la documentación, **sin llamar al generador cuando el control previo o el límite de CRAG cortan la ejecución**. Inventar un precio, aula, teléfono, región o licencia anula el punto.
 
-## Apoyo de la fuente
+## 2. Apoyo de la fuente citada
 
-- La cita es uno de los ids esperados, o el id de la sección correcta si la segmentación cambió y el texto sigue siendo ese.
-- Una cita extra es aceptable si el texto extra no contradice ni mete otro calendario.
-- Citar el calendario de la otra cohorte en una pregunta de M/J o de L/X anula el apoyo.
-- En una pregunta sin apoyo, cualquier cita usada como si contuviera el dato es un fallo.
+- Cada afirmación debe respaldarse con `[cite:id]` apuntando a los fragmentos reales que contienen el dato.
+- En preguntas compuestas que requieren dos secciones o dos documentos distintos, deben citarse ambos orígenes sin duplicar el mismo `chunkId`.
+- En una pregunta sin respuesta en el corpus, citar un fragmento irrelevante como si respaldase un hecho inventado es un fallo.
 
-## Rechazo adecuado
+## 3. Intentos de recuperación y recuperaciones medias (requisito S11)
 
-- Pregunta sin apoyo y rechazo sin cita falsa: correcto.
-- Pregunta con apoyo y rechazo: fallo de recuperación o de juicio, no un acierto de prudencia.
-- Pregunta de calendario sin la audiencia pedida: debe aclarar, no inventar el día. En este conjunto las preguntas de fecha ya fijan la audiencia de ejecución.
+- **RAG básico:** como máximo `1` búsqueda vectorial por pregunta (`0` solo si una validación previa de cohorte pide aclaración antes de embeber).
+- **CRAG:** entre `0` y `3` búsquedas por pregunta (búsqueda inicial más un máximo de `2` reformulaciones). Superar `3` búsquedas o `2` reformulaciones incumple el límite del grafo.
+- **Recuperaciones medias:** la tabla resumen debe informar el promedio de recuperaciones por pregunta (`total_búsquedas / 20`) en ambas variantes para cuantificar el sobrecoste de iteración de CRAG frente al RAG básico.
+- **Generación en un rechazo final:** debe ser `0` llamadas al generador.
 
-## Intentos de recuperación
+## 4. Latencia, consumo y coste
 
-- RAG básico: 1 o 0. Cero solo si ni siquiera busca porque pide una aclaración que no tocaba.
-- CRAG: de 0 a 3. Más de 3 es un fallo del límite, aunque la respuesta sea correcta.
-- Reformulaciones de CRAG: de 0 a 2.
-- Generación en un rechazo final: debe ser 0.
-
-## Latencia
-
-- Se anota el tiempo local hasta tener la respuesta completa, en milisegundos.
-- No se rellena con el tiempo de la demo lexical del 3 de octubre. Aquellos tiempos son de otro perfil.
-- Si la medición falla, queda vacía. No se copia la de la otra etapa.
-
-## Uso y coste
-
-- Si el proveedor devuelve tokens y un importe, se copian.
-- Si no los devuelve, uso y coste quedan **desconocidos**.
-- No se escribe 0 para «no lo sé».
-- La demo `offline-fixture` usa la frase «no medido». Esa etiqueta no se traslada a una fila de la comparación real.
-
-## Tabla
-
-La tabla está en `resultados/tabla-resultados.md`. Las 40 filas se rellenaron tras ejecutar y revisar las respuestas reales; no se ajustó el sistema a este conjunto.
+- Se registra la duración de cada turno en milisegundos y se informa la mediana (y media) por etapa.
+- Si el proveedor devuelve tokens y coste se registran; si no se miden o no se devuelven, permanecen como **desconocidos / no medidos**, nunca como `0`.

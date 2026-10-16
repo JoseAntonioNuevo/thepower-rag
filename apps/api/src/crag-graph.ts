@@ -23,8 +23,9 @@ import {
   remainingBudgetMs,
   retainEvidence,
   routeAfterAssessment,
-  // Validadores estrictos de las salidas del modelo.
-  validateRankingAndAssessment,
+  // Validadores estrictos de las salidas del modelo (reordenamiento, suficiencia y reformulación).
+  validateAssessment,
+  validateRanking,
   validateReformulation,
   // Tipos de la evaluación, fragmento, puertos, alcance y resultado ordenado.
   type CragAssessment,
@@ -107,6 +108,8 @@ interface GraphState {
   shown: CragChunk[];
   // Orden del evaluador.
   ranking: RankedHit[];
+  // Salida bruta de una llamada unificada rankAndAssess pendiente de valorar en assess.
+  rawEvaluation: unknown;
   // Decisión del evaluador.
   decision: CragAssessment | null;
   // Estado final o pending.
@@ -143,8 +146,9 @@ const CragGraphState = Annotation.Root({
   retained: Annotation<CragChunk[]>,
   discarded: Annotation<Discarded[]>,
   shown: Annotation<CragChunk[]>,
-  // Orden validado y última decisión del evaluador.
+  // Orden validado, salida bruta pendiente y última decisión del evaluador.
   ranking: Annotation<RankedHit[]>,
+  rawEvaluation: Annotation<unknown>,
   decision: Annotation<CragAssessment | null>,
   // Final del recorrido, motivo, texto de la respuesta y evidencia usada.
   terminal: Annotation<Terminal>,
@@ -478,6 +482,7 @@ export async function runCragTurn(input: CragTurnInput): Promise<CragTurnResult>
     discarded: [],
     shown: [],
     ranking: [],
+    rawEvaluation: null,
     decision: null,
     // «pending»: aún sin final.
     terminal: "pending",
@@ -638,7 +643,7 @@ export async function runCragTurn(input: CragTurnInput): Promise<CragTurnResult>
         terminal: "pending" as const,
       };
     })
-    // Nodo rank: el evaluador ordena y decide si la evidencia basta.
+    // Nodo rank: reordena los fragmentos mostrados y valida la escala [0, 1].
     .addNode("rank", async (state) => {
       // Evidencia conservada más candidatos, sin duplicados.
       const shown = dedupeChunks([...state.retained, ...state.candidates]).slice(
@@ -647,22 +652,20 @@ export async function runCragTurn(input: CragTurnInput): Promise<CragTurnResult>
       );
       // Sin fragmentos.
       if (shown.length === 0) {
-        // Insuficiente sin llamar al evaluador.
-        const decision: CragAssessment = {
-          status: "insufficient",
-          reason: "No hay fragmentos utilizables en esta búsqueda.",
-          gaps: [],
-          usefulIds: [],
-        };
-        // Paso rank.
+        // Paso rank sin fragmentos.
         emitStep(state, emit, {
           kind: "rank",
-          status: "Sin fragmentos. No se llama al evaluador.",
-          evidenceStatus: "insufficient",
+          status: "Sin fragmentos para reordenar.",
+          evidenceStatus: null,
           discardedIds: [],
         });
-        // Decisión.
-        return { shown, decision, terminal: "pending" as const };
+        // Deja el veredicto vacío para que assess cierre sin llamar al proveedor.
+        return {
+          shown,
+          ranking: [],
+          rawEvaluation: null,
+          terminal: "pending" as const,
+        };
       }
       // Parada.
       const stop = blocked(state, input.ports, emit);
@@ -692,18 +695,28 @@ export async function runCragTurn(input: CragTurnInput): Promise<CragTurnResult>
       }
       // Inicio.
       const started = input.ports.now();
+      // Si el puerto ofrece rerank dedicado, se usa; si no, rankAndAssess unificado.
+      const useDedicatedRerank = typeof input.ports.rerank === "function";
       // Resultado.
       let result: Awaited<ReturnType<CragPorts["rankAndAssess"]>>;
       // Un fallo se convierte en resultado.
       try {
-        // Evalúa.
-        result = await input.ports.rankAndAssess({
-          question: state.originalQuestion,
-          query: state.currentQuery,
-          chunks: shown,
-          attempt: state.retrievalCount,
-          remainingMs: callBudget(state, input.ports).remainingMs,
-        });
+        // Reordena (o reordena y evalúa en una sola llamada estructurada).
+        result = useDedicatedRerank
+          ? await input.ports.rerank!({
+              question: state.originalQuestion,
+              query: state.currentQuery,
+              chunks: shown,
+              attempt: state.retrievalCount,
+              remainingMs: callBudget(state, input.ports).remainingMs,
+            })
+          : await input.ports.rankAndAssess({
+              question: state.originalQuestion,
+              query: state.currentQuery,
+              chunks: shown,
+              attempt: state.retrievalCount,
+              remainingMs: callBudget(state, input.ports).remainingMs,
+            });
       } catch {
         // Fallo.
         result = { ok: false, reason: "El evaluador ha fallado.", providerCall: true };
@@ -743,8 +756,8 @@ export async function runCragTurn(input: CragTurnInput): Promise<CragTurnResult>
             "El evaluador no ha completado la decisión. No se reintenta ni se cambia de etapa.",
         };
       }
-      // Valida ranking y decisión contra lo enseñado.
-      const parsed = validateRankingAndAssessment(shown, result.raw);
+      // Valida únicamente el reordenamiento en la escala [0, 1].
+      const parsed = validateRanking(shown, result.raw);
       // Inválido.
       if (!parsed.ok) {
         // Paso error.
@@ -763,8 +776,138 @@ export async function runCragTurn(input: CragTurnInput): Promise<CragTurnResult>
           answerText: "El evaluador devolvió una salida que no se puede usar. No se reintenta.",
         };
       }
-      // Orden de los útiles con su puntuación.
+      // Orden de todos los fragmentos reordenados con su puntuación en [0, 1].
       const order = parsed.ranking
+        .map((hit) => `${hit.chunkId} ${hit.score.toFixed(3)}`)
+        .join(", ");
+      // Paso rank.
+      emitStep({ ...state, ledger }, emit, {
+        kind: "rank",
+        status: `Orden: ${order || "sin fragmentos"}.`.slice(0, CRAG_BOUNDS.maxReasonChars),
+        evidenceStatus: null,
+        discardedIds: [],
+      });
+      // Pasa el ranking validado y la salida bruta al nodo assess.
+      return {
+        shown,
+        ranking: parsed.ranking,
+        rawEvaluation: useDedicatedRerank ? null : result.raw,
+        ledger,
+        terminal: "pending" as const,
+      };
+    })
+    // Nodo assess: valora la suficiencia de los fragmentos ya reordenados.
+    .addNode("assess", async (state) => {
+      // Sin fragmentos mostrados: insuficiente sin llamar al proveedor.
+      if (state.shown.length === 0) {
+        // Decisión insuficiente.
+        const decision: CragAssessment = {
+          status: "insufficient",
+          reason: "No hay fragmentos utilizables en esta búsqueda.",
+          gaps: [],
+          usefulIds: [],
+        };
+        // Paso assess.
+        emitStep(state, emit, {
+          kind: "assess",
+          status: "Sin fragmentos. No se llama al evaluador.",
+          evidenceStatus: "insufficient",
+          discardedIds: [],
+        });
+        // Decisión.
+        return { decision, terminal: "pending" as const };
+      }
+      // Parada.
+      const stop = blocked(state, input.ports, emit);
+      // Si toca.
+      if (stop) {
+        // Devuelve.
+        return stop;
+      }
+      // Salida bruta a validar: de rankAndAssess o de una llamada dedicada a ports.assess.
+      let raw = state.rawEvaluation;
+      // Libro actual.
+      let ledger = state.ledger;
+      // Si no vino de rankAndAssess y existe ports.assess, se ejecuta ahora.
+      if (raw === null && typeof input.ports.assess === "function") {
+        // Inicio.
+        const started = input.ports.now();
+        // Resultado.
+        let result: Awaited<ReturnType<NonNullable<CragPorts["assess"]>>>;
+        // try/catch.
+        try {
+          // Valora suficiencia.
+          result = await input.ports.assess({
+            question: state.originalQuestion,
+            query: state.currentQuery,
+            chunks: state.shown,
+            ranking: state.ranking,
+            attempt: state.retrievalCount,
+            remainingMs: callBudget(state, input.ports).remainingMs,
+          });
+        } catch {
+          // Fallo.
+          result = { ok: false, reason: "El evaluador ha fallado.", providerCall: true };
+        }
+        // Si hubo llamada de pago adicional en assess, anota su duración.
+        if (input.ports.measured && result.providerCall) {
+          // Duración.
+          const elapsed = Math.max(0, Math.round(input.ports.now() - started));
+          // Suma milisegundos de evaluación.
+          ledger = {
+            ...ledger,
+            evaluationMs: (ledger.evaluationMs ?? 0) + elapsed,
+          };
+        }
+        // ¿Cancelado o tarde?
+        const late = finishedLate(state, input.ports, emit, ledger);
+        // Si es así.
+        if (late) {
+          // Final.
+          return late;
+        }
+        // Fallo.
+        if (!result.ok) {
+          // Paso error.
+          emitStep({ ...state, ledger }, emit, {
+            kind: "error",
+            status: "El evaluador ha fallado. No se reintenta.",
+            evidenceStatus: null,
+            discardedIds: [],
+          });
+          // Final error.
+          return {
+            ledger,
+            terminal: "error" as const,
+            terminalReason: "El evaluador ha fallado.",
+            answerText:
+              "El evaluador no ha completado la decisión. No se reintenta ni se cambia de etapa.",
+          };
+        }
+        // Salida bruta.
+        raw = result.raw;
+      }
+      // Valida la valoración de suficiencia contra los fragmentos mostrados.
+      const parsed = validateAssessment(state.shown, raw);
+      // Inválida.
+      if (!parsed.ok) {
+        // Paso error.
+        emitStep({ ...state, ledger }, emit, {
+          kind: "error",
+          status: parsed.reason,
+          evidenceStatus: null,
+          discardedIds: [],
+        });
+        // Final error.
+        return {
+          ledger,
+          terminal: "error" as const,
+          terminalReason: parsed.reason,
+          answerText: "El evaluador devolvió una salida que no se puede usar. No se reintenta.",
+        };
+      }
+      // Orden de los útiles con su puntuación.
+      const order = state.ranking
         .filter((hit) => parsed.assessment.usefulIds.includes(hit.chunkId))
         .map((hit) => `${hit.chunkId} ${hit.score.toFixed(3)}`)
         .join(", ");
@@ -773,19 +916,18 @@ export async function runCragTurn(input: CragTurnInput): Promise<CragTurnResult>
         0,
         CRAG_BOUNDS.maxReasonChars,
       );
-      // Paso rank.
+      // Paso assess.
       emitStep({ ...state, ledger, decision: parsed.assessment }, emit, {
-        kind: "rank",
+        kind: "assess",
         status,
         evidenceStatus: parsed.assessment.status,
         discardedIds: [],
         retainedIds: parsed.assessment.usefulIds,
       });
-      // Ranking y decisión.
+      // Decisión validada.
       return {
-        shown,
-        ranking: parsed.ranking,
         ledger,
+        rawEvaluation: null,
         decision: parsed.assessment,
         terminal: "pending" as const,
       };
@@ -1154,11 +1296,12 @@ export async function runCragTurn(input: CragTurnInput): Promise<CragTurnResult>
         evidence: [],
       };
     })
-    // Aristas: validate → retrieve → rank y, según la decisión, retain/discard/answer/refuse.
+    // Aristas: validate → retrieve → rank → assess y, según la decisión, retain/discard/answer/refuse.
     .addEdge(START, "validate")
     .addConditionalEdges("validate", (state) => (state.terminal === "pending" ? "retrieve" : END))
     .addConditionalEdges("retrieve", (state) => (state.terminal === "pending" ? "rank" : END))
-    .addConditionalEdges("rank", (state) => {
+    .addConditionalEdges("rank", (state) => (state.terminal === "pending" ? "assess" : END))
+    .addConditionalEdges("assess", (state) => {
       // Ya terminó.
       if (state.terminal !== "pending") {
         // Fin.
@@ -1196,7 +1339,7 @@ export async function runCragTurn(input: CragTurnInput): Promise<CragTurnResult>
   // Un fallo interno del grafo da un error controlado.
   try {
     // Ejecuta el grafo con un límite de pasos.
-    finalState = await graph.compile().invoke(initial, { recursionLimit: 20 });
+    finalState = await graph.compile().invoke(initial, { recursionLimit: 30 });
   } catch {
     // Paso error.
     emit({

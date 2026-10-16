@@ -1,49 +1,35 @@
-# Referencia de corrección · S11
+# Referencia de corrección para el profesor · S11
 
-El RAG básico de S10 tiene que seguir funcionando. El grafo no lo sustituye.
+No es un documento para repartir antes de la entrega. Reúne los criterios de corrección del ejercicio publicado de **S11 (Corrective RAG y comparación con RAG básico)** y los valores de referencia tanto del laboratorio reproducible (`lab/`) como del demostrador de aula (`apps/`).
 
-## Cuatro planos, al corregir
+## Requisitos clave al corregir S11
 
-- El encargo original pide comparar el RAG básico y el CRAG con veinte preguntas nuevas del alumno. Esa comparación no se anula porque falte la activación del profesor.
-- La demo de clase es la adaptación sobre este asistente. No es una reproducción de arXiv:2401.15884 ni una victoria medida.
-- Los seis guiones y el índice lexical demuestran rutas, orden y límites. Un acierto de guion no es calidad de modelo.
-- El conjunto reservado del profesor sigue sin ejecutarse. No se reparte y no se usa para puntuar al alumno. Si el alumno no pudo ejecutar su propia comparación, la tabla vacía es correcta y una tabla inventada no lo es. No inventéis rúbrica, aprobación ni plazo.
+1. **Reconstrucción desde índice vacío y conservación del RAG básico:** el proyecto debe seguir pudiendo reconstruir su índice `vector(768)` con HNSW en PostgreSQL/pgvector desde los 8 o más documentos ficticios en bruto, y **debe mantener disponible el RAG básico de S10** para ejecutar la comparación en igualdad de condiciones.
+2. **Separación real entre `retrieve`, `rerank` y `assess`:** el grafo en LangGraph debe distinguir la recuperación inicial (hasta 10 candidatos), el reordenamiento con puntuación en una escala explícita (`[0, 1]`, pudiendo usar opcionalmente `Qwen3-Reranker-0.6B` con su formato oficial) y la valoración de suficiencia con umbrales calibrados. **Relevancia de un fragmento aislado ≠ cobertura de toda la pregunta.**
+3. **Tres rutas y límite estricto:** `sufficient` → `answer`; `partial` (ambigua) → `retain` (sin duplicados) → `reformulate` → `retrieve`; `insufficient` → `discard` → `reformulate` → `retrieve`. Máximo **2 reformulaciones tras la búsqueda inicial (3 recuperaciones internas en total)**; si sigue faltando evidencia, `refuse` sin llamar al generador.
+4. **Comparación de 20 preguntas nuevas ejecutada:** una tabla preparada pero en blanco puede describirse honestamente si hubo un bloqueo, pero **no equivale a completar la comparación ejecutada** que pide el documento enviado (`X/14` respondibles, `Y/6` rechazos, **recuperaciones medias**, latencia y revisión manual de fuentes).
 
-## Criterios
+## Rúbrica de verificación por criterio
 
-| Criterio       | Hecho                                                   | A medias                                             | No                                           |
-| -------------- | ------------------------------------------------------- | ---------------------------------------------------- | -------------------------------------------- |
-| Misma base     | La etapa de una búsqueda sigue disponible               | El código está, pero la interfaz lo esconde          | Se borró el RAG básico                       |
-| Orden aplicado | El contexto final sigue el ranking validado             | Ordena solo por puntuación y deshace empates al azar | `usefulIds` se usa como si ya fuera el orden |
-| Suficiente     | Hay texto útil y no queda laguna                        | Acepta un JSON sin texto                             | —                                            |
-| Parcial        | Conserva ids y busca la laguna, sin duplicar            | Vuelve a meter todo el contexto anterior             | Pierde lo ya conservado                      |
-| Insuficiente   | Ese contexto no llega a la respuesta                    | Lo cita «por si acaso»                               | —                                            |
-| Descarte       | Fila con id, motivo e intento                           | Solo el último intento                               | Borra el historial de descarte               |
-| Reformulación  | No sustituye la pregunta original                       | La respuesta olvida la pregunta                      | Reformulación vacía y sigue                  |
-| Límites        | 3 búsquedas, 2 reformulaciones, un plazo, fallo contado | El plazo se reinicia en cada nodo                    | Una cuarta búsqueda o un reintento oculto    |
-| Traza          | Se ven pregunta, consulta, orden y listas               | Solo el texto final                                  | La traza dice que es real cuando es un guion |
-| Comparación    | Protocolo escrito y números vacíos si no se ejecutó     | —                                                    | Tabla de aciertos inventada                  |
-| Coste          | Llamadas no medidas siguen como no medidas              | —                                                    | Suma un cero                                 |
+| Criterio                                          | Hecho (completo)                                                                                                                                                        | A medias (incompleto)                                                                                                                 | No (incorrecto o ausente)                                                                               |
+| ------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------- |
+| **Base S10 e índice vacío**                       | Reconstruye desde 8+ documentos e índice vacío en PostgreSQL/pgvector (`vector(768)` + HNSW) y conserva el RAG básico ejecutable                                        | Conserva el RAG básico pero no permite reconstruir el índice desde cero                                                               | Sustituye o borra el RAG básico, o no tiene almacén vectorial                                           |
+| **Reordenamiento (`rerank`) y escala**            | Nodo `rerank` sobre hasta 10 candidatos, explica la escala (p. ej. `[0, 1]` o `Qwen3-Reranker-0.6B`) y aplica el orden validado al contexto                             | Reordena pero no define la escala ni actualiza el orden del contexto final                                                            | No reordena o trata la puntuación como probabilidad de verdad absoluta                                  |
+| **Valoración (`assess`) y umbrales**              | Nodo `assess` separado de `rerank`, con umbrales calibrados en validación que distinguen relevancia de un fragmento y cobertura total de la pregunta                    | Une `rerank` y `assess` sin criterios ni umbrales explícitos para decidir `sufficient`, `partial` o `insufficient`                    | Decide al azar o acepta cualquier etiqueta sin comprobar que haya fragmentos útiles                     |
+| **Rutas `sufficient`, `partial`, `insufficient`** | `partial` conserva útiles y deduplica entre búsquedas; `insufficient` descarta el contexto rechazado; `sufficient` responde solo con evidencia aceptada                 | `partial` pierde fragmentos previos o los duplica; `insufficient` arrastra fragmentos rechazados al prompt final                      | Alimenta al generador con fragmentos descartados                                                        |
+| **Límites (3 búsquedas, 2 reformulaciones)**      | Corta exactamente a las 3 recuperaciones (1 inicial + 2 reformulaciones) o ante consulta repetida/vacía, y rechaza sin llamar al generador                              | Tiene contador pero permite una cuarta búsqueda o llama al generador al agotar intentos                                               | Bucle sin tope en código                                                                                |
+| **Trazas verificables**                           | Registra consultas, puntuaciones, conservados/descartados por intento y ruta final; enseña las 3 rutas, un rechazo y el límite                                          | Muestra solo la respuesta final sin el recorrido de intentos ni descartes                                                             | Traza inventada o que oculta llamadas                                                                   |
+| **Comparación ejecutada (20 preguntas nuevas)**   | **Ejecutada en ambos sistemas con condiciones congeladas:** informa `X/14`, `Y/6`, **recuperaciones medias**, latencia y revisión manual de fuentes, conservando fallos | **Preparada pero sin números ejecutados:** redacta las 20 preguntas nuevas y el protocolo con honestidad, pero sin resultados medidos | Inventa porcentajes/latencias, usa los 6 guiones de demo como test o reajusta el grafo tras ver el test |
 
-## Qué hace el proyecto de referencia en demo
+## Valores de referencia en el repositorio
 
-Los seis guiones de `corpus/fixtures/crag-development-cases.json` producen, con audiencia General:
-
-| Guion                | Señal visible                                                                                  |
-| -------------------- | ---------------------------------------------------------------------------------------------- |
-| `sufficient-s5`      | Cita S5. Una búsqueda.                                                                         |
-| `partial-s5-s6`      | Cita S5 y S6, sin duplicar el id.                                                              |
-| `irrelevant-then-s6` | La respuesta cita S6. El panel puede descartar S16.                                            |
-| `missing-info`       | Rechazo, 3 búsquedas, 2 reformulaciones, generación 0. El id de S16 sale en los tres intentos. |
-| `clarify-cohort`     | Pide cohorte. Cero búsquedas.                                                                  |
-| `evaluator-error`    | `No se reintenta.`                                                                             |
-
-El prefijo de esas respuestas es `Respuesta de prueba del grafo CRAG. El guion no mide calidad ni llama a un modelo.` El panel dice `Guion de prueba.`
-
-La pregunta libre sobre modelos abiertos, sin guion, citó en la pasada del 3 de octubre `c3a59a406888b:s07-modelos-abiertos:00` por el índice lexical. No se usa como nota de calidad.
-
-Límites de código: `CRAG_BOUNDS` en `packages/rag/src/crag.ts`. Plazo 20000 ms de una sola vez. Autores del artículo en `docs/crag-graph.md`.
-
-## No se acepta como comparación
-
-Un cuadro con porcentajes, latencias o dólares si no hay una ejecución autorizada. El conjunto reservado del profesor está en `material/comparacion/` y no se ha ejecutado: no es la comparación que el alumno debe entregar. La comparación del encargo original, si el alumno la hizo, tiene que ser la suya y estar etiquetada con el medio real que usó. Una fila fixture no cuenta como esa medición.
+1. **En el laboratorio reproducible (`lab/`, referencia directa del ejercicio):**
+   - Nodos del `StateGraph` (`lab/src/crag-graph.ts`): `retrieve` (top 10) → `rerank` (escala `[0, 1]`) → `assess` (`minChunkRelevance = 0,50`, `partialCoverageMin = 0,40`, `sufficientCoverageMin = 0,75`) → `retain` / `discard` → `reformulate` (máx. 2, 3 búsquedas) → `answer` / `refuse`.
+   - Comparación ejecutada sobre 20 preguntas nuevas (`lab/eval/resultados-laboratorio.md`):
+     - **RAG básico (S10):** `16/20` totales (`10/14` respondibles, `6/6` rechazos correctos, **`1,00` recuperaciones medias**, `0,00` reformulaciones medias).
+     - **CRAG (S11):** `17/20` totales (`11/14` respondibles, `6/6` rechazos correctos, **`1,80` recuperaciones medias**, `0,80` reformulaciones medias).
+2. **En el demostrador de aula (`apps/`, corpus real S1–S20):**
+   - Grafo (`apps/api/src/crag-graph.ts`): `validate → retrieve → rank → assess → (answer | retain | discard | refuse)` con escala `[0, 1]` (`CRAG_SCORE_THRESHOLDS` en `packages/rag/src/crag.ts`).
+   - Comparación histórica congelada del 3 de octubre de 2026 (`material/comparacion/resultados/tabla-resultados.md`, modelo `openai/gpt-6-luna` + BGE-M3 1024 d):
+     - **RAG básico:** `17/20` (`11/14` respondibles, `6/6` rechazos, **`0,95` recuperaciones medias**, mediana `1193 ms`).
+     - **CRAG:** `18/20` (`13/14` respondibles, `5/6` rechazos, **`1,55` recuperaciones medias**, `0,60` reformulaciones medias, mediana `4304 ms`).

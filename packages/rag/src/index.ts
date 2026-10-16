@@ -96,8 +96,10 @@ export { activeSelectionSql, assertProfileId, assertVersionId, sqlLiteral } from
 export type { ProfileIdentity } from "./ids";
 // Lógica pura del grafo CRAG: validación, orden y evidencia.
 export {
-  // Topes del grafo, presupuesto, alcance y duplicados.
+  // Topes del grafo, escala de puntuaciones, presupuesto, alcance y duplicados.
   CRAG_BOUNDS,
+  CRAG_SCORE_THRESHOLDS,
+  assessCoverageByThresholds,
   budgetOpen,
   chunkInScope,
   dedupeChunks,
@@ -109,7 +111,9 @@ export {
   remainingBudgetMs,
   retainEvidence,
   routeAfterAssessment,
-  // Validadores de las salidas del modelo.
+  // Validadores de las salidas del modelo (reordenamiento, suficiencia y reformulación).
+  validateAssessment,
+  validateRanking,
   validateRankingAndAssessment,
   validateReformulation,
 } from "./crag";

@@ -1,8 +1,13 @@
 # Decisiones
 
-## Vectorize en lugar de pgvector
+## Demostrador en Vectorize y laboratorio reproducible en PostgreSQL/pgvector
 
-El ejercicio anterior pedía PostgreSQL con pgvector y documentos de una empresa ficticia. Para este demostrador se autorizó Cloudflare: Vectorize, D1, R2 y Workers AI, con el curso real como corpus futuro. No hay una segunda implementación con Neon, Supabase ni pgvector. Los documentos históricos del directorio padre no se reescriben.
+El ejercicio publicado de S10 y S11 pide al menos ocho documentos ficticios, PostgreSQL con `pgvector`, columna `vector(768)` e índice HNSW, reconstrucción desde índice vacío, separación entre reordenamiento y valoración de suficiencia en CRAG y una evaluación ejecutada de 20 preguntas (14 respondibles y 6 sin respuesta).
+
+Para cubrir tanto la demostración del curso como el ejercicio publicado sin contaminar el Worker de Cloudflare:
+
+1. **Demostrador del curso (`apps/api`, `apps/web`):** mantiene Cloudflare Vectorize (`1024` dimensiones con BGE-M3), D1, R2 y Workers AI sobre el temario real S1–S20 y los calendarios L/X y M/J, con `RAG_CONTEXT_MODE=semantic` como referencia principal de S10 (y `RAG_CONTEXT_MODE=complete` como variante para corpus pequeños) y el grafo CRAG con nodos `rank` y `assess` separados y escala `[0, 1]` (`CRAG_SCORE_THRESHOLDS`).
+2. **Laboratorio reproducible del ejercicio (`lab/`):** acompaña al demostrador con 10 documentos ficticios de AetherCloud (`lab/corpus/sources/`), `lab/schema.sql` (`CREATE EXTENSION IF NOT EXISTS vector`, `embedding vector(768) NOT NULL`, `USING hnsw (embedding vector_cosine_ops) WITH (m = 16, ef_construction = 64)`), `lab/docker-compose.yml` (`pgvector/pgvector:pg17`), `lab/src/rag-basic.ts`, `lab/src/crag-graph.ts` (LangGraph.js con `retrieve → rerank → assess` separados y plantilla opcional `Qwen3-Reranker-0.6B`) y la evaluación ejecutada de 20 preguntas en `lab/eval/resultados-laboratorio.md`, usando el driver SQL nativo de Bun sin añadir paquetes de PostgreSQL a `package.json`.
 
 ## Un Worker y el AI SDK
 
