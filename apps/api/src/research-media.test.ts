@@ -72,21 +72,26 @@ function envFor(
     RESEARCH_DB: database,
     RESEARCH_MEDIA: bucket,
     RESEARCH_WORKFLOW: {
+      // Doble de prueba: crea o representa una instancia del Workflow de investigación.
       async create(options: { id: string }) {
         // Instancia creada.
         return { id: options.id };
       },
+      // Doble de prueba: obtiene el recurso solicitado mediante el adaptador de almacenamiento o Workflow.
       async get() {
         // Instancia simulada.
         return {
+          // Doble de prueba: entrega el estado observable de la instancia del Workflow.
           async status() {
             // Siempre completa.
             return { status: "complete" };
           },
+          // Doble de prueba: representa la terminación de la instancia de Workflow solicitada por el consumidor.
           async terminate() {
             // Nada.
             return undefined;
           },
+          // Doble de prueba: representa el reinicio de la instancia de Workflow solicitado por el consumidor.
           async restart() {
             // Nada.
             return undefined;
@@ -143,7 +148,9 @@ describe("medios de la investigación", () => {
     // Existen.
     expect(prices).not.toBeNull();
     // Si no, termina.
-    if (!prices) return;
+    if (!prices)
+      // Termina esta rama sin ejecutar los pasos siguientes del recorrido.
+      return;
     // Reserva de visión.
     expect(reservationFor("vision", prices)).toBeGreaterThan(0);
     // Reserva de transcripción.
@@ -428,7 +435,9 @@ describe("medios de la investigación", () => {
     // Existe.
     expect(row).not.toBeNull();
     // Si no, termina.
-    if (!row) return;
+    if (!row)
+      // Termina esta rama sin ejecutar los pasos siguientes del recorrido.
+      return;
     // Paso en demo con el bucket.
     const tick = await runResearchTick(database, job.jobId, row.owner_id, undefined, {
       mode: "demo",
@@ -548,7 +557,9 @@ describe("medios de la investigación", () => {
     // Existen.
     expect(prices).not.toBeNull();
     // Si no, termina.
-    if (!prices) return;
+    if (!prices)
+      // Termina esta rama sin ejecutar los pasos siguientes del recorrido.
+      return;
     // Conversación.
     const conversationId = crypto.randomUUID();
     // La inserta.
@@ -587,7 +598,9 @@ describe("medios de la investigación", () => {
     // Admitido.
     expect(admitted.ok).toBe(true);
     // Si no, termina.
-    if (!admitted.ok) return;
+    if (!admitted.ok)
+      // Termina esta rama sin ejecutar los pasos siguientes del recorrido.
+      return;
     // Reclama el trabajo.
     const claimed = await claimJob(
       database,
@@ -600,7 +613,9 @@ describe("medios de la investigación", () => {
     // Reclamado.
     expect(claimed).not.toBeNull();
     // Si no, termina.
-    if (!claimed) return;
+    if (!claimed)
+      // Termina esta rama sin ejecutar los pasos siguientes del recorrido.
+      return;
     // Contador de llamadas.
     let calls = 0;
     // Primera visión.
@@ -608,6 +623,7 @@ describe("medios de la investigación", () => {
       kind: "vision",
       payload: { hash: "sha256:abc" },
       signal: new AbortController().signal,
+      // Doble de prueba: ejecuta el puerto de percepción o investigación con la entrada de este recorrido.
       invoke: async () => {
         // Cuenta.
         calls += 1;
@@ -624,6 +640,7 @@ describe("medios de la investigación", () => {
       kind: "vision",
       payload: { hash: "sha256:abc" },
       signal: new AbortController().signal,
+      // Doble de prueba: ejecuta el puerto de percepción o investigación con la entrada de este recorrido.
       invoke: async () => {
         // Cuenta.
         calls += 1;
@@ -644,7 +661,9 @@ describe("medios de la investigación", () => {
     // Existe.
     expect(operation).toBeDefined();
     // Si no, termina.
-    if (!operation) return;
+    if (!operation)
+      // Termina esta rama sin ejecutar los pasos siguientes del recorrido.
+      return;
     // La marca como enviada sin resultado.
     await database
       .prepare(
@@ -658,6 +677,7 @@ describe("medios de la investigación", () => {
         kind: "vision",
         payload: { hash: "sha256:abc" },
         signal: new AbortController().signal,
+        // Doble de prueba: ejecuta el puerto de percepción o investigación con la entrada de este recorrido.
         invoke: async () => {
           // Cuenta.
           calls += 1;
@@ -692,7 +712,9 @@ describe("medios de la investigación", () => {
     // Existe.
     expect(expired).not.toBeNull();
     // Si no, termina.
-    if (!expired) return;
+    if (!expired)
+      // Termina esta rama sin ejecutar los pasos siguientes del recorrido.
+      return;
     // Marca enviada.
     await markDispatched(database, operation.id, claimed.lease_token);
     // La voz pide atención.
@@ -702,6 +724,7 @@ describe("medios de la investigación", () => {
         speechChars: 20,
         payload: { digest: "otro" },
         signal: new AbortController().signal,
+        // Doble de prueba: ejecuta el puerto de percepción o investigación con la entrada de este recorrido.
         invoke: async () => {
           // Cuenta.
           calls += 1;
@@ -736,13 +759,17 @@ describe("medios de la investigación", () => {
     // Existen.
     expect(prices).not.toBeNull();
     // Si no, termina.
-    if (!prices) return;
+    if (!prices)
+      // Termina esta rama sin ejecutar los pasos siguientes del recorrido.
+      return;
     // Reserva con voz.
     const hold = holdForJob(prices, { image: false, audioDurationMs: null, voice: true });
     // Existe.
     expect(hold).not.toBeNull();
     // Si no, termina.
-    if (hold === null) return;
+    if (hold === null)
+      // Termina esta rama sin ejecutar los pasos siguientes del recorrido.
+      return;
     // Conversación.
     const conversationId = crypto.randomUUID();
     // Pregunta.
@@ -778,7 +805,9 @@ describe("medios de la investigación", () => {
     // Admitido.
     expect(admitted.ok).toBe(true);
     // Si no, termina.
-    if (!admitted.ok) return;
+    if (!admitted.ok)
+      // Termina esta rama sin ejecutar los pasos siguientes del recorrido.
+      return;
     // Percepción.
     const perceived = await perceiveJob(database, admitted.job, prices, {
       mode: "demo",
@@ -793,7 +822,9 @@ describe("medios de la investigación", () => {
     // Lista.
     expect(perceived.kind).toBe("ready");
     // Si no, termina.
-    if (perceived.kind !== "ready") return;
+    if (perceived.kind !== "ready")
+      // Termina esta rama sin ejecutar los pasos siguientes del recorrido.
+      return;
     // Puede seguir.
     expect(perceived.proceed).toBe(true);
     // Pregunta con memoria.
@@ -899,13 +930,17 @@ describe("medios de la investigación", () => {
     // Existen.
     expect(prices).not.toBeNull();
     // Si no, termina.
-    if (!prices) return;
+    if (!prices)
+      // Termina esta rama sin ejecutar los pasos siguientes del recorrido.
+      return;
     // Reserva con imagen y voz.
     const hold = holdForJob(prices, { image: true, audioDurationMs: null, voice: true });
     // Existe.
     expect(hold).not.toBeNull();
     // Si no, termina.
-    if (hold === null) return;
+    if (hold === null)
+      // Termina esta rama sin ejecutar los pasos siguientes del recorrido.
+      return;
     // Imagen.
     const image = await readFixtureBytes("dimension-mismatch.png");
     // Hash.
@@ -985,7 +1020,9 @@ describe("medios de la investigación", () => {
     // Admitido.
     expect(admitted.ok).toBe(true);
     // Si no, termina.
-    if (!admitted.ok) return;
+    if (!admitted.ok)
+      // Termina esta rama sin ejecutar los pasos siguientes del recorrido.
+      return;
     // Paso.
     const tick = await runResearchTick(database, admitted.job.id, "owner-a", undefined, {
       mode: "demo",

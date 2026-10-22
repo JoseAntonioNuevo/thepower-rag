@@ -1,0 +1,111 @@
+{
+  "backend": "postgresql-pgvector",
+  "generator": "claude-sonnet-5-5",
+  "generationProvider": "anthropic",
+  "embedding": "openrouter:google/gemini-embedding-2:768",
+  "dimensions": 768,
+  "profile": "5a2d65a60a2c9f4bc43bbbd7e7a9be89a6275411dc6b10ca13f76c49edbb542c",
+  "result": {
+    "question": "¿Con qué algoritmo se cifran los volúmenes en reposo y qué periodo de enfriamiento exige destruir una CMK?",
+    "corpusVersion": "lab-689164ca81cd",
+    "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+    "genModelId": "claude-sonnet-5-5",
+    "minSimilarity": 0.724767,
+    "maxCosineDistance": 0.27523299999999995,
+    "retrieved": [
+      {
+        "chunkId": "lab-689164ca81cd:04-almacenamiento-y-cifrado-kms:00",
+        "corpusVersion": "lab-689164ca81cd",
+        "documentId": "04-almacenamiento-y-cifrado-kms",
+        "ordinal": 0,
+        "title": "Almacenamiento persistente y cifrado KMS",
+        "section": "Cifrado en reposo y jerarquía de claves",
+        "content": "## Cifrado en reposo y jerarquía de claves\n\nTodos los volúmenes de bloques, bases de datos y copias de seguridad de AetherCloud se cifran en reposo con `AES-256-GCM`. Cada organización dispone de una clave maestra dedicada (`CMK`) custodiada en módulos de seguridad hardware (`HSM` FIPS 140-3 Nivel 3) dentro de `eu-mad-1` y replicada en `eu-fra-1`.\n\nLas claves de datos (`DEK`) se renuevan automáticamente cada 30 días sin tiempo de inactividad. Si una organización solicita la destrucción criptográfica de su `CMK`, existe un periodo de enfriamiento obligatorio de 72 horas antes del borrado irreversible.",
+        "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+        "embeddingDimensions": 768,
+        "cosineDistance": 0.185575,
+        "similarity": 0.814425
+      },
+      {
+        "chunkId": "lab-689164ca81cd:04-almacenamiento-y-cifrado-kms:01",
+        "corpusVersion": "lab-689164ca81cd",
+        "documentId": "04-almacenamiento-y-cifrado-kms",
+        "ordinal": 1,
+        "title": "Almacenamiento persistente y cifrado KMS",
+        "section": "Instantáneas y retención de copias",
+        "content": "## Instantáneas y retención de copias\n\nEl sistema realiza instantáneas incrementales cada 6 horas y una copia completa diaria a las `02:00 UTC`. La retención estándar de instantáneas es de 35 días naturales. Las pruebas de restauración verificada se ejecutan de forma automática una vez por semana en un entorno aislado.",
+        "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+        "embeddingDimensions": 768,
+        "cosineDistance": 0.312765,
+        "similarity": 0.687235
+      },
+      {
+        "chunkId": "lab-689164ca81cd:08-residencia-datos-y-rgpd:01",
+        "corpusVersion": "lab-689164ca81cd",
+        "documentId": "08-residencia-datos-y-rgpd",
+        "ordinal": 1,
+        "title": "Residencia de datos, privacidad y cumplimiento RGPD",
+        "section": "Enmascaramiento y retención de auditoría",
+        "content": "## Enmascaramiento y retención de auditoría\n\nAntes de indexar documentos o enviar trazas al subsistema de observabilidad, el filtro de ingesta aplica enmascaramiento automático de correos electrónicos, números IBAN y documentos de identidad mediante tokens irreversibles `HMAC-SHA256`. Los registros de auditoría de acceso administrativo se conservan en almacenamiento inmutable (`WORM`) durante **2 años** (730 días).",
+        "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+        "embeddingDimensions": 768,
+        "cosineDistance": 0.367692,
+        "similarity": 0.632308
+      },
+      {
+        "chunkId": "lab-689164ca81cd:02-autenticacion-mtls-tokens:01",
+        "corpusVersion": "lab-689164ca81cd",
+        "documentId": "02-autenticacion-mtls-tokens",
+        "ordinal": 1,
+        "title": "Autenticación mTLS y gestión de tokens",
+        "section": "Caducidad y revocación de credenciales",
+        "content": "## Caducidad y revocación de credenciales\n\nLos tokens de acceso tienen una vida máxima de 24 horas (86400 segundos) y los certificados de trabajo rotan automáticamente cada 7 días. La revocación de emergencia se propaga a todas las pasarelas de `eu-mad-1` y `eu-fra-1` en menos de 90 segundos mediante listas CRL distribuidas en memoria.",
+        "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+        "embeddingDimensions": 768,
+        "cosineDistance": 0.37366,
+        "similarity": 0.62634
+      }
+    ],
+    "selected": [
+      {
+        "chunkId": "lab-689164ca81cd:04-almacenamiento-y-cifrado-kms:00",
+        "corpusVersion": "lab-689164ca81cd",
+        "documentId": "04-almacenamiento-y-cifrado-kms",
+        "ordinal": 0,
+        "title": "Almacenamiento persistente y cifrado KMS",
+        "section": "Cifrado en reposo y jerarquía de claves",
+        "content": "## Cifrado en reposo y jerarquía de claves\n\nTodos los volúmenes de bloques, bases de datos y copias de seguridad de AetherCloud se cifran en reposo con `AES-256-GCM`. Cada organización dispone de una clave maestra dedicada (`CMK`) custodiada en módulos de seguridad hardware (`HSM` FIPS 140-3 Nivel 3) dentro de `eu-mad-1` y replicada en `eu-fra-1`.\n\nLas claves de datos (`DEK`) se renuevan automáticamente cada 30 días sin tiempo de inactividad. Si una organización solicita la destrucción criptográfica de su `CMK`, existe un periodo de enfriamiento obligatorio de 72 horas antes del borrado irreversible.",
+        "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+        "embeddingDimensions": 768,
+        "cosineDistance": 0.185575,
+        "similarity": 0.814425
+      }
+    ],
+    "decision": "answer",
+    "generationCalled": true,
+    "retrievalCount": 1,
+    "answer": "Los volúmenes de bloques, las bases de datos y las copias de seguridad se cifran en reposo con `AES-256-GCM` [cite:lab-689164ca81cd:04-almacenamiento-y-cifrado-kms:00].\n\nSi una organización solicita la destrucción criptográfica de su `CMK`, se exige un periodo de enfriamiento obligatorio de 72 horas antes del borrado irreversible [cite:lab-689164ca81cd:04-almacenamiento-y-cifrado-kms:00].",
+    "citations": ["lab-689164ca81cd:04-almacenamiento-y-cifrado-kms:00"],
+    "latencyMs": 2953
+  },
+  "operations": [
+    {
+      "kind": "embedding",
+      "model": "openrouter:google/gemini-embedding-2:768",
+      "inputTokens": 24,
+      "outputTokens": null
+    },
+    {
+      "kind": "generation",
+      "model": "claude-sonnet-5-5",
+      "inputTokens": 690,
+      "outputTokens": 182
+    }
+  ],
+  "budget": {
+    "limitUsd": 1,
+    "reservedUsd": 0.02695,
+    "calls": 9,
+    "actualProviderUsd": null
+  }
+}

@@ -74,6 +74,7 @@ export function offlineDemoResponse(signal: AbortSignal): Response {
   const runId = crypto.randomUUID();
   // Stream de mensajes.
   const stream = createUIMessageStream<CourseUIMessage>({
+    // Produce las partes del stream dentro del ciclo de ejecución del protocolo de mensajes.
     execute: async ({ writer }) => {
       // Inicio con metadatos.
       writer.write({ type: "start", messageMetadata: metadata("streaming", runId) });

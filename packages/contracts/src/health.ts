@@ -59,6 +59,19 @@ export const healthResponseSchema = z.object({
   }),
   /** True cuando hay base y flujo durable. No autoriza gasto real. */
   durableResearch: z.boolean(),
+  /** Identidad pública de modelos y plazo. No contiene claves ni acredita inferencia. */
+  modelConfiguration: z
+    .object({
+      provider: z.string().nullable(),
+      generator: z.string().nullable(),
+      evaluator: z.string().nullable(),
+      research: z.string().nullable(),
+      cragExecutionBudgetMs: z.number().int().min(1_000).max(120_000).nullable(),
+      generationTimeoutMs: z.number().int().min(1_000).max(60_000).nullable().optional(),
+      ragContextMode: z.enum(["semantic", "complete", "fixture"]).optional(),
+      retrievalMinScore: z.number().nullable().optional(),
+    })
+    .optional(),
   /** Presencia de almacenamiento y modelos. Inspeccionar no llama al proveedor. */
   media: z
     .object({

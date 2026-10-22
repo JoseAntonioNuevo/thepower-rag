@@ -25,7 +25,9 @@ export async function readCourseContext(
   signal: AbortSignal,
 ): Promise<IndexedChunk[]> {
   // Cancelado antes de empezar.
-  if (signal.aborted) throw new DOMException("Aborted", "AbortError");
+  if (signal.aborted)
+    // Interrumpe esta rama y propaga el motivo al manejador de errores del recorrido.
+    throw new DOMException("Aborted", "AbortError");
   // Consulta los fragmentos del programa y del grupo, en orden.
   const statement = database
     .prepare(`SELECT chunks.chunk_id AS chunkId, chunks.document_id AS documentId,
@@ -38,7 +40,9 @@ export async function readCourseContext(
   // Ejecuta la consulta.
   const result = await statement.all<Omit<IndexedChunk, "vector">>();
   // Cancelado durante la consulta.
-  if (signal.aborted) throw new DOMException("Aborted", "AbortError");
+  if (signal.aborted)
+    // Interrumpe esta rama y propaga el motivo al manejador de errores del recorrido.
+    throw new DOMException("Aborted", "AbortError");
   // Filas leídas.
   const rows = result.results;
   // Debe haber filas, como mucho el máximo, todas válidas y sin pasar de los caracteres.
@@ -59,11 +63,13 @@ export async function readCourseContext(
     // Y el total de caracteres no puede pasar del máximo.
     rows.reduce((n, row) => n + row.text.length, 0) > MAX_CHARS
   )
+    // Interrumpe esta rama y propaga el motivo al manejador de errores del recorrido.
     throw new CourseContextError(
       "El contexto completo no está validado o excede el límite. No se trunca silenciosamente.",
     );
   // La versión debe ser la del manifiesto desplegado.
   if (corpusVersion !== prepared.preparationId)
+    // Detiene el recorrido con el diagnóstico: El corpus no coincide con el manifiesto desplegado.
     throw new CourseContextError("El corpus no coincide con el manifiesto desplegado.");
   // Fragmentos esperados según el manifiesto.
   const expected = new Map(
@@ -89,6 +95,7 @@ export async function readCourseContext(
       );
     })
   )
+    // Interrumpe esta rama y propaga el motivo al manejador de errores del recorrido.
     throw new CourseContextError(
       "El catálogo no tiene todo el contexto autorizado del manifiesto.",
     );

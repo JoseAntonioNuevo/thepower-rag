@@ -79,7 +79,9 @@ async function classroomJob(
   },
 ) {
   // Sin tarifas: error.
-  if (!prices) throw new Error("sin tarifas");
+  if (!prices)
+    // Detiene el recorrido con el diagnóstico: sin tarifas.
+    throw new Error("sin tarifas");
   // Propietario.
   const ownerId = input.ownerId ?? "review-owner";
   // Conversación.
@@ -107,9 +109,13 @@ async function classroomJob(
   // Datos del audio.
   const audioFacts = audio ? await inspectMedia(audio) : null;
   // Imagen inválida.
-  if (image && (!imageFacts?.ok || imageFacts.facts.role !== "image")) throw new Error("imagen");
+  if (image && (!imageFacts?.ok || imageFacts.facts.role !== "image"))
+    // Detiene el recorrido con el diagnóstico: imagen.
+    throw new Error("imagen");
   // Audio inválido.
-  if (audio && (!audioFacts?.ok || audioFacts.facts.role !== "audio")) throw new Error("audio");
+  if (audio && (!audioFacts?.ok || audioFacts.facts.role !== "audio"))
+    // Detiene el recorrido con el diagnóstico: audio.
+    throw new Error("audio");
   // Id de la imagen.
   const imageId = crypto.randomUUID();
   // Id del audio.
@@ -200,7 +206,9 @@ async function classroomJob(
     voice: input.voice === true,
   });
   // Sin reserva: error.
-  if (hold === null) throw new Error("reserva");
+  if (hold === null)
+    // Detiene el recorrido con el diagnóstico: reserva.
+    throw new Error("reserva");
   // Admite el trabajo.
   const admitted = await admitJob(database, {
     // Dueño, conversación, clave y huella fijas de la revisión.
@@ -228,7 +236,9 @@ async function classroomJob(
     },
   });
   // Rechazado: error.
-  if (!admitted.ok) throw new Error(admitted.reason);
+  if (!admitted.ok)
+    // Interrumpe esta rama y propaga el motivo al manejador de errores del recorrido.
+    throw new Error(admitted.reason);
   // Datos del trabajo.
   return { database, bucket, admitted: admitted.job, ownerId, conversationId, imageId, audioId };
 }
@@ -342,7 +352,9 @@ describe("correcciones de la revisión de la fase 3", () => {
     // Trabajo.
     const claimed = await getJob(database, job.ownerId, job.admitted.id);
     // Sin trabajo.
-    if (!claimed) throw new Error("sin trabajo");
+    if (!claimed)
+      // Detiene el recorrido con el diagnóstico: sin trabajo.
+      throw new Error("sin trabajo");
     // Percibe otra vez.
     await perceiveJob(database, claimed, prices!, {
       mode: "demo",
@@ -428,7 +440,9 @@ describe("correcciones de la revisión de la fase 3", () => {
     // Lista.
     expect(perceived.kind).toBe("ready");
     // Si no, termina.
-    if (perceived.kind !== "ready") return;
+    if (perceived.kind !== "ready")
+      // Termina esta rama sin ejecutar los pasos siguientes del recorrido.
+      return;
     // Sigue.
     expect(perceived.proceed).toBe(true);
     // Imagen.
@@ -484,7 +498,9 @@ describe("correcciones de la revisión de la fase 3", () => {
     // Lista.
     expect(perceived.kind).toBe("ready");
     // Si no, termina.
-    if (perceived.kind !== "ready") return;
+    if (perceived.kind !== "ready")
+      // Termina esta rama sin ejecutar los pasos siguientes del recorrido.
+      return;
     // Sigue.
     expect(perceived.proceed).toBe(true);
     // Sin aclaración.
@@ -545,6 +561,7 @@ describe("correcciones de la revisión de la fase 3", () => {
           ...ports,
           model: {
             ...ports.model,
+            // Doble de prueba: construye el plan de investigación que consumen los nodos posteriores.
             plan: (input, context) => {
               // Cuenta.
               plans += 1;
@@ -553,6 +570,7 @@ describe("correcciones de la revisión de la fase 3", () => {
             },
           },
           search: {
+            // Doble de prueba: busca candidatos para la consulta con los límites y el transporte de este adaptador.
             search: async (input, context) => {
               // Cuenta.
               searches += 1;
@@ -712,6 +730,7 @@ describe("correcciones de la revisión de la fase 3", () => {
         return {
           ...ports,
           search: {
+            // Doble de prueba: busca candidatos para la consulta con los límites y el transporte de este adaptador.
             search: async (input, context) => {
               // Cuenta.
               searches += 1;
@@ -725,6 +744,7 @@ describe("correcciones de la revisión de la fase 3", () => {
         mode: "real",
         bucket: job.bucket,
         ai: {
+          // Doble de prueba: ejecuta la operación del puerto y devuelve su resultado al llamador.
           run: async () => {
             // Cuenta.
             calls += 1;
@@ -798,6 +818,7 @@ describe("correcciones de la revisión de la fase 3", () => {
         mode: "real",
         bucket: job.bucket,
         ai: {
+          // Doble de prueba: ejecuta la operación del puerto y devuelve su resultado al llamador.
           run: async () => {
             // Cuenta.
             calls += 1;
@@ -853,7 +874,9 @@ describe("correcciones de la revisión de la fase 3", () => {
       media: { voice: true, image: null, audio: null },
     });
     // Rechazado: error.
-    if (!admitted.ok) throw new Error(admitted.reason);
+    if (!admitted.ok)
+      // Interrumpe esta rama y propaga el motivo al manejador de errores del recorrido.
+      throw new Error(admitted.reason);
     // Reclama.
     const claimed = await claimJob(
       database,
@@ -864,7 +887,9 @@ describe("correcciones de la revisión de la fase 3", () => {
       180_000,
     );
     // Sin arrendamiento: error.
-    if (!claimed) throw new Error("sin arrendamiento");
+    if (!claimed)
+      // Detiene el recorrido con el diagnóstico: sin arrendamiento.
+      throw new Error("sin arrendamiento");
     // Inicio.
     const started = Date.now();
     // Voz que nunca acaba con plazo de 120 ms.
@@ -874,6 +899,7 @@ describe("correcciones de la revisión de la fase 3", () => {
         speechChars: 40,
         payload: { digest: "hang" },
         signal: new AbortController().signal,
+        // Doble de prueba: ejecuta el puerto de percepción o investigación con la entrada de este recorrido.
         invoke: () => new Promise(() => undefined),
       }),
     ).rejects.toBeInstanceOf(ResearchAttention);
@@ -895,6 +921,7 @@ describe("correcciones de la revisión de la fase 3", () => {
       speechChars: 40,
       payload: { digest: "late" },
       signal: controller.signal,
+      // Doble de prueba: ejecuta el puerto de percepción o investigación con la entrada de este recorrido.
       invoke: async () => {
         // Espera.
         await new Promise((resolve) => setTimeout(resolve, 400));
@@ -964,6 +991,7 @@ describe("correcciones de la revisión de la fase 3", () => {
         return {
           ...ports,
           search: {
+            // Doble de prueba: busca candidatos para la consulta con los límites y el transporte de este adaptador.
             search: async (input, context) => {
               // Cuenta.
               searches += 1;
@@ -977,6 +1005,7 @@ describe("correcciones de la revisión de la fase 3", () => {
         mode: "real",
         bucket: job.bucket,
         ai: {
+          // Doble de prueba: ejecuta la operación del puerto y devuelve su resultado al llamador.
           run: async () => {
             // Cuenta.
             calls += 1;

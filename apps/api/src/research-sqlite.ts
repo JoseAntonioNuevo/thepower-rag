@@ -109,10 +109,12 @@ export async function openResearchSqlite(filename = ":memory:"): Promise<
   // Base con la interfaz de D1.
   return {
     research: true,
+    // Prepara una sentencia y devuelve el objeto que permitirá enlazar valores y ejecutarla.
     prepare(sql: string) {
       // Sentencia sin parámetros.
       return statement(sql, []);
     },
+    // Ejecuta texto SQL para preparar o actualizar el esquema del adaptador.
     exec(sql: string) {
       // SQL encolado.
       return enqueue(() => {
@@ -120,6 +122,7 @@ export async function openResearchSqlite(filename = ":memory:"): Promise<
         db.exec(sql);
       });
     },
+    // Ejecuta el lote de sentencias según el contrato del adaptador de base de datos.
     batch(statements: ResearchStatement[]) {
       // Lote encolado dentro de una transacción.
       return enqueue(() => {
@@ -156,6 +159,7 @@ export async function openResearchSqlite(filename = ":memory:"): Promise<
         }
       });
     },
+    // Cierra la conexión SQLite y libera el recurso del adaptador local.
     close() {
       // Cierra.
       db.close();

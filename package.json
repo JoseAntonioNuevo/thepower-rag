@@ -23,6 +23,7 @@
     "dev:research": "CLOUDFLARE_ENV=research vp -C apps/web dev",
     "preflight:real": "bun scripts/preflight.ts --env local --capability crag",
     "preflight:research": "bun scripts/preflight.ts --env research --capability research",
+    "lab:real": "bun scripts/lab-real.ts",
     "lab:rebuild": "bun scripts/lab-cli.ts rebuild",
     "lab:demo": "bun scripts/lab-cli.ts demo",
     "lab:eval": "bun scripts/lab-cli.ts eval"

@@ -79,6 +79,7 @@ describe("adaptadores reales simulados", () => {
     let calls = 0;
     // Modelo que siempre lanza un 429.
     const model = new MockLanguageModelV4({
+      // Implementa la respuesta del modelo de prueba compatible con el contrato del AI SDK.
       doGenerate: async () => {
         // Cuenta.
         calls += 1;
@@ -116,6 +117,7 @@ describe("adaptadores reales simulados", () => {
     let calls = 0;
     // Modelo que corta el JSON por max_tokens.
     const model = new MockLanguageModelV4({
+      // Implementa la respuesta del modelo de prueba compatible con el contrato del AI SDK.
       doGenerate: async () => {
         // Cuenta.
         calls += 1;
@@ -154,6 +156,7 @@ describe("adaptadores reales simulados", () => {
     const seen: unknown[] = [];
     // Índice simulado con un resultado alto y uno bajo.
     const index: VectorIndex = {
+      // Doble de prueba: ejecuta una consulta con sus parámetros y entrega las filas mediante el contrato del almacén.
       query: async (vector, options) => {
         // Guarda la consulta.
         seen.push({ vector, options });
@@ -165,12 +168,16 @@ describe("adaptadores reales simulados", () => {
           ],
         };
       },
+      // Doble de prueba: inserta o actualiza el lote de vectores por sus identificadores.
       upsert: async () => ({}),
     };
     // D1 simulado: solo existe el fragmento :00.
     const database: SqlDatabase = {
+      // Doble de prueba: prepara una sentencia y devuelve el objeto que permitirá enlazar valores y ejecutarla.
       prepare: () => ({
+        // Doble de prueba: asocia los parámetros a la sentencia sin concatenarlos al texto SQL.
         bind: (...values: unknown[]) => ({
+          // Doble de prueba: resuelve la primera fila o el valor de ausencia que define este adaptador.
           first: async <T>(): Promise<T | null> => {
             // Id enlazado.
             const id = String(values[1]);
@@ -182,7 +189,10 @@ describe("adaptadores reales simulados", () => {
     };
     // Puerto del curso.
     const course = createVectorCoursePort({
-      embedder: { run: async () => ({ data: [[0.1, 0.2, 0.3, 0.4]] }) },
+      embedder: {
+        // Doble de prueba: ejecuta la operación del puerto y devuelve su resultado al llamador.
+        run: async () => ({ data: [[0.1, 0.2, 0.3, 0.4]] }),
+      },
       index,
       database,
       retrieval,
@@ -212,9 +222,26 @@ describe("adaptadores reales simulados", () => {
     controller.abort();
     // Puerto del curso.
     const course = createVectorCoursePort({
-      embedder: { run: async () => ({ data: [[0.1, 0.2, 0.3, 0.4]] }) },
-      index: { query: async () => ({ matches: [] }), upsert: async () => ({}) },
-      database: { prepare: () => ({ bind: () => ({ first: async () => null }) }) },
+      embedder: {
+        // Doble de prueba: ejecuta la operación del puerto y devuelve su resultado al llamador.
+        run: async () => ({ data: [[0.1, 0.2, 0.3, 0.4]] }),
+      },
+      index: {
+        // Doble de prueba: ejecuta una consulta con sus parámetros y entrega las filas mediante el contrato del almacén.
+        query: async () => ({ matches: [] }),
+        // Doble de prueba: inserta o actualiza el lote de vectores por sus identificadores.
+        upsert: async () => ({}),
+      },
+      database: {
+        // Doble de prueba: prepara una sentencia y devuelve el objeto que permitirá enlazar valores y ejecutarla.
+        prepare: () => ({
+          // Doble de prueba: asocia los parámetros a la sentencia sin concatenarlos al texto SQL.
+          bind: () => ({
+            // Doble de prueba: resuelve la primera fila o el valor de ausencia que define este adaptador.
+            first: async () => null,
+          }),
+        }),
+      },
       retrieval,
     });
     // Busca con la señal cancelada.
@@ -232,6 +259,7 @@ describe("adaptadores reales simulados", () => {
     const tool = createCourseSessionTool({
       corpusVersion: corpus,
       audience: "M/J",
+      // Doble de prueba: lee el recurso solicitado y devuelve el resultado de este adaptador al consumidor.
       read: async (_version, id) =>
         id.includes("calendario") ? null : (library.find((item) => item.chunkId === id) ?? null),
     });
@@ -257,6 +285,7 @@ describe("adaptadores reales simulados", () => {
     const tool = createCourseSessionTool({
       corpusVersion: corpus,
       audience: "M/J",
+      // Doble de prueba: lee el recurso solicitado y devuelve el resultado de este adaptador al consumidor.
       read: async () => {
         // Error simulado.
         throw new Error("catalog unavailable");
@@ -294,6 +323,7 @@ describe("adaptadores reales simulados", () => {
     };
     // Modelo que devuelve el plan en JSON.
     const model = new MockLanguageModelV4({
+      // Implementa la respuesta del modelo de prueba compatible con el contrato del AI SDK.
       doGenerate: async () => {
         // Cuenta.
         calls += 1;
@@ -357,9 +387,27 @@ describe("adaptadores reales simulados", () => {
       retrieval,
       planner: new MockLanguageModelV4({}),
       generator: new MockLanguageModelV4({}),
-      embedder: { run: async () => ({ data: [] }) },
-      index: { query: async () => ({ matches: [] }), upsert: async () => ({}) },
-      database: { prepare: () => ({ bind: () => ({ first: async () => null }) }) },
+      embedder: {
+        // Doble de prueba: ejecuta la operación del puerto y devuelve su resultado al llamador.
+        run: async () => ({ data: [] }),
+      },
+      index: {
+        // Doble de prueba: ejecuta una consulta con sus parámetros y entrega las filas mediante el contrato del almacén.
+        query: async () => ({ matches: [] }),
+        // Doble de prueba: inserta o actualiza el lote de vectores por sus identificadores.
+        upsert: async () => ({}),
+      },
+      database: {
+        // Doble de prueba: prepara una sentencia y devuelve el objeto que permitirá enlazar valores y ejecutarla.
+        prepare: () => ({
+          // Doble de prueba: asocia los parámetros a la sentencia sin concatenarlos al texto SQL.
+          bind: () => ({
+            // Doble de prueba: resuelve la primera fila o el valor de ausencia que define este adaptador.
+            first: async () => null,
+          }),
+        }),
+      },
+      // Doble de prueba: atiende la petición HTTP con el adaptador y el entorno de este recorrido.
       fetch: async () => {
         // Cuenta.
         calls += 1;

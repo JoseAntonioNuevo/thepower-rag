@@ -1,0 +1,11 @@
+{
+  "backend": "postgresql-pgvector",
+  "generator": "claude-sonnet-5-5",
+  "generationProvider": "anthropic",
+  "embedding": "openrouter:google/gemini-embedding-2:768",
+  "dimensions": 768,
+  "database": "localhost:54329/aether_rag",
+  "missing": [],
+  "providerCalls": 0,
+  "next": "docker compose -f lab/docker-compose.yml up -d; después status"
+}

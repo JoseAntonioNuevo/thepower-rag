@@ -1,0 +1,2072 @@
+{
+  "frozen": {
+    "backend": "postgresql-pgvector",
+    "generator": "claude-sonnet-5-5",
+    "generationProvider": "anthropic",
+    "embedding": "openrouter:google/gemini-embedding-2:768",
+    "dimensions": 768,
+    "profile": "5a2d65a60a2c9f4bc43bbbd7e7a9be89a6275411dc6b10ca13f76c49edbb542c",
+    "threshold": 0.724767,
+    "testHash": "4626a65bfa1864d4724cfea4ef8082e08991e217c9c7a5647c971dfa70ad781c",
+    "startedAt": "2026-10-20T21:36:19.937Z"
+  },
+  "status": "complete",
+  "results": [
+    {
+      "id": 1,
+      "answerable": true,
+      "expectedDocuments": ["01-arquitectura-aethercloud"],
+      "expectedFacts": ["eu-mad-1", "eu-fra-1", "tres zonas"],
+      "result": {
+        "question": "¿Qué identificadores tienen las regiones primaria y de contingencia y cuántas zonas tiene cada una?",
+        "corpusVersion": "lab-689164ca81cd",
+        "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+        "genModelId": "claude-sonnet-5-5",
+        "minSimilarity": 0.724767,
+        "maxCosineDistance": 0.27523299999999995,
+        "retrieved": [
+          {
+            "chunkId": "lab-689164ca81cd:01-arquitectura-aethercloud:00",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "01-arquitectura-aethercloud",
+            "ordinal": 0,
+            "title": "Arquitectura general de AetherCloud",
+            "section": "Regiones y topología",
+            "content": "## Regiones y topología\n\nAetherCloud opera exclusivamente en dos regiones europeas de producción: `eu-mad-1` (Madrid, región primaria) y `eu-fra-1` (Fráncfort, región secundaria de contingencia). Cada región despliega tres zonas de disponibilidad independientes interconectadas mediante fibra dedicada con latencia inferior a 1,8 milisegundos.\n\nEl tráfico entrante atraviesa pasarelas perimetrales Anycast con terminación TLS 1.3 obligatoria. Ningún servicio de aplicación expone puertos directamente a internet pública sin pasar por la pasarela regional.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.267622,
+            "similarity": 0.732378
+          },
+          {
+            "chunkId": "lab-689164ca81cd:01-arquitectura-aethercloud:01",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "01-arquitectura-aethercloud",
+            "ordinal": 1,
+            "title": "Arquitectura general de AetherCloud",
+            "section": "Separación entre plano de control y plano de datos",
+            "content": "## Separación entre plano de control y plano de datos\n\nEl plano de control (`control-plane`) gestiona altas de organizaciones, políticas de acceso, rotación de claves y despliegues en `eu-mad-1`, con réplica síncrona del catálogo en PostgreSQL 17. El plano de datos (`data-plane`) procesa las peticiones operativas de cada cliente dentro de la región contratada y puede seguir funcionando durante al menos 6 horas aunque el plano de control esté en mantenimiento.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.344641,
+            "similarity": 0.655359
+          },
+          {
+            "chunkId": "lab-689164ca81cd:06-respuesta-a-incidentes:00",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "06-respuesta-a-incidentes",
+            "ordinal": 0,
+            "title": "Respuesta a incidentes y clasificación de severidades",
+            "section": "Niveles de severidad y tiempos de respuesta",
+            "content": "## Niveles de severidad y tiempos de respuesta\n\nEl centro de operaciones de AetherCloud clasifica los incidentes en tres niveles:\n\n- **SEV-1 (Crítico):** caída total del plano de datos o pérdida de aislamiento entre organizaciones. Tiempo máximo de primera respuesta: **15 minutos**, con actualizaciones cada 30 minutos (24x7).\n- **SEV-2 (Alto):** degradación severa de latencia o fallo de una función principal sin alternativa directa. Tiempo máximo de primera respuesta: **60 minutos**, con actualizaciones cada 2 horas.\n- **SEV-3 (Moderado):** incidencia menor o consulta operativa con alternativa disponible. Tiempo máximo de primera respuesta: **8 horas hábiles**.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.37662,
+            "similarity": 0.62338
+          },
+          {
+            "chunkId": "lab-689164ca81cd:10-despliegues-canary-y-rollback:00",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "10-despliegues-canary-y-rollback",
+            "ordinal": 0,
+            "title": "Despliegues progresivos canary y política de rollback",
+            "section": "Fases del despliegue canary",
+            "content": "## Fases del despliegue canary\n\nTodo cambio en servicios del plano de datos de AetherCloud se despliega mediante una secuencia canary obligatoria de tres etapas:\n\n1. **Etapa 1:** envío del `10 %` del tráfico regional durante una ventana mínima de observación de **10 minutos**.\n2. **Etapa 2:** ampliación al `50 %` del tráfico durante otros **10 minutos**.\n3. **Etapa 3:** promoción al `100 %` de las instancias de la región una vez superadas las comprobaciones de salud.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.378691,
+            "similarity": 0.621309
+          }
+        ],
+        "selected": [
+          {
+            "chunkId": "lab-689164ca81cd:01-arquitectura-aethercloud:00",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "01-arquitectura-aethercloud",
+            "ordinal": 0,
+            "title": "Arquitectura general de AetherCloud",
+            "section": "Regiones y topología",
+            "content": "## Regiones y topología\n\nAetherCloud opera exclusivamente en dos regiones europeas de producción: `eu-mad-1` (Madrid, región primaria) y `eu-fra-1` (Fráncfort, región secundaria de contingencia). Cada región despliega tres zonas de disponibilidad independientes interconectadas mediante fibra dedicada con latencia inferior a 1,8 milisegundos.\n\nEl tráfico entrante atraviesa pasarelas perimetrales Anycast con terminación TLS 1.3 obligatoria. Ningún servicio de aplicación expone puertos directamente a internet pública sin pasar por la pasarela regional.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.267622,
+            "similarity": 0.732378
+          }
+        ],
+        "decision": "answer",
+        "generationCalled": true,
+        "retrievalCount": 1,
+        "answer": "La región primaria es `eu-mad-1` (Madrid) y la región secundaria de contingencia es `eu-fra-1` (Fráncfort). Cada una despliega tres zonas de disponibilidad independientes, es decir, tres zonas en la primaria y tres en la de contingencia [cite:lab-689164ca81cd:01-arquitectura-aethercloud:00].",
+        "citations": ["lab-689164ca81cd:01-arquitectura-aethercloud:00"],
+        "latencyMs": 4269
+      },
+      "manualReview": {
+        "correct": true,
+        "sourceSupported": true,
+        "reason": "Respuesta completa respaldada por los fragmentos citados.",
+        "reviewer": "assistant-source-review"
+      }
+    },
+    {
+      "id": 2,
+      "answerable": true,
+      "expectedDocuments": ["01-arquitectura-aethercloud"],
+      "expectedFacts": ["6 horas"],
+      "result": {
+        "question": "Si el plano de control entra en mantenimiento, ¿durante cuánto tiempo mínimo sigue funcionando el de datos?",
+        "corpusVersion": "lab-689164ca81cd",
+        "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+        "genModelId": "claude-sonnet-5-5",
+        "minSimilarity": 0.724767,
+        "maxCosineDistance": 0.27523299999999995,
+        "retrieved": [
+          {
+            "chunkId": "lab-689164ca81cd:01-arquitectura-aethercloud:01",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "01-arquitectura-aethercloud",
+            "ordinal": 1,
+            "title": "Arquitectura general de AetherCloud",
+            "section": "Separación entre plano de control y plano de datos",
+            "content": "## Separación entre plano de control y plano de datos\n\nEl plano de control (`control-plane`) gestiona altas de organizaciones, políticas de acceso, rotación de claves y despliegues en `eu-mad-1`, con réplica síncrona del catálogo en PostgreSQL 17. El plano de datos (`data-plane`) procesa las peticiones operativas de cada cliente dentro de la región contratada y puede seguir funcionando durante al menos 6 horas aunque el plano de control esté en mantenimiento.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.204031,
+            "similarity": 0.795969
+          },
+          {
+            "chunkId": "lab-689164ca81cd:05-sla-y-creditos-servicio:00",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "05-sla-y-creditos-servicio",
+            "ordinal": 0,
+            "title": "Acuerdo de nivel de servicio (SLA) y créditos",
+            "section": "Disponibilidad mensual comprometida",
+            "content": "## Disponibilidad mensual comprometida\n\nAetherCloud garantiza una disponibilidad mensual de al menos el `99,95 %` para los servicios del plano de datos en producción. El cálculo excluye las ventanas de mantenimiento programado notificadas con al menos 7 días naturales de antelación y cuya duración no supere los 45 minutos al mes.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.259287,
+            "similarity": 0.740713
+          },
+          {
+            "chunkId": "lab-689164ca81cd:06-respuesta-a-incidentes:00",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "06-respuesta-a-incidentes",
+            "ordinal": 0,
+            "title": "Respuesta a incidentes y clasificación de severidades",
+            "section": "Niveles de severidad y tiempos de respuesta",
+            "content": "## Niveles de severidad y tiempos de respuesta\n\nEl centro de operaciones de AetherCloud clasifica los incidentes en tres niveles:\n\n- **SEV-1 (Crítico):** caída total del plano de datos o pérdida de aislamiento entre organizaciones. Tiempo máximo de primera respuesta: **15 minutos**, con actualizaciones cada 30 minutos (24x7).\n- **SEV-2 (Alto):** degradación severa de latencia o fallo de una función principal sin alternativa directa. Tiempo máximo de primera respuesta: **60 minutos**, con actualizaciones cada 2 horas.\n- **SEV-3 (Moderado):** incidencia menor o consulta operativa con alternativa disponible. Tiempo máximo de primera respuesta: **8 horas hábiles**.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.313754,
+            "similarity": 0.686246
+          },
+          {
+            "chunkId": "lab-689164ca81cd:10-despliegues-canary-y-rollback:00",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "10-despliegues-canary-y-rollback",
+            "ordinal": 0,
+            "title": "Despliegues progresivos canary y política de rollback",
+            "section": "Fases del despliegue canary",
+            "content": "## Fases del despliegue canary\n\nTodo cambio en servicios del plano de datos de AetherCloud se despliega mediante una secuencia canary obligatoria de tres etapas:\n\n1. **Etapa 1:** envío del `10 %` del tráfico regional durante una ventana mínima de observación de **10 minutos**.\n2. **Etapa 2:** ampliación al `50 %` del tráfico durante otros **10 minutos**.\n3. **Etapa 3:** promoción al `100 %` de las instancias de la región una vez superadas las comprobaciones de salud.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.313997,
+            "similarity": 0.686003
+          }
+        ],
+        "selected": [
+          {
+            "chunkId": "lab-689164ca81cd:01-arquitectura-aethercloud:01",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "01-arquitectura-aethercloud",
+            "ordinal": 1,
+            "title": "Arquitectura general de AetherCloud",
+            "section": "Separación entre plano de control y plano de datos",
+            "content": "## Separación entre plano de control y plano de datos\n\nEl plano de control (`control-plane`) gestiona altas de organizaciones, políticas de acceso, rotación de claves y despliegues en `eu-mad-1`, con réplica síncrona del catálogo en PostgreSQL 17. El plano de datos (`data-plane`) procesa las peticiones operativas de cada cliente dentro de la región contratada y puede seguir funcionando durante al menos 6 horas aunque el plano de control esté en mantenimiento.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.204031,
+            "similarity": 0.795969
+          },
+          {
+            "chunkId": "lab-689164ca81cd:05-sla-y-creditos-servicio:00",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "05-sla-y-creditos-servicio",
+            "ordinal": 0,
+            "title": "Acuerdo de nivel de servicio (SLA) y créditos",
+            "section": "Disponibilidad mensual comprometida",
+            "content": "## Disponibilidad mensual comprometida\n\nAetherCloud garantiza una disponibilidad mensual de al menos el `99,95 %` para los servicios del plano de datos en producción. El cálculo excluye las ventanas de mantenimiento programado notificadas con al menos 7 días naturales de antelación y cuya duración no supere los 45 minutos al mes.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.259287,
+            "similarity": 0.740713
+          }
+        ],
+        "decision": "answer",
+        "generationCalled": true,
+        "retrievalCount": 1,
+        "answer": "El plano de datos puede seguir funcionando durante al menos 6 horas aunque el plano de control esté en mantenimiento [cite:lab-689164ca81cd:01-arquitectura-aethercloud:01].",
+        "citations": ["lab-689164ca81cd:01-arquitectura-aethercloud:01"],
+        "latencyMs": 1560
+      },
+      "manualReview": {
+        "correct": true,
+        "sourceSupported": true,
+        "reason": "Respuesta completa respaldada por los fragmentos citados.",
+        "reviewer": "assistant-source-review"
+      }
+    },
+    {
+      "id": 3,
+      "answerable": true,
+      "expectedDocuments": ["02-autenticacion-mtls-tokens"],
+      "expectedFacts": ["24 horas", "7 días"],
+      "result": {
+        "question": "Compara la caducidad de un token de acceso con el intervalo de rotación de los certificados de trabajo.",
+        "corpusVersion": "lab-689164ca81cd",
+        "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+        "genModelId": "claude-sonnet-5-5",
+        "minSimilarity": 0.724767,
+        "maxCosineDistance": 0.27523299999999995,
+        "retrieved": [
+          {
+            "chunkId": "lab-689164ca81cd:02-autenticacion-mtls-tokens:01",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "02-autenticacion-mtls-tokens",
+            "ordinal": 1,
+            "title": "Autenticación mTLS y gestión de tokens",
+            "section": "Caducidad y revocación de credenciales",
+            "content": "## Caducidad y revocación de credenciales\n\nLos tokens de acceso tienen una vida máxima de 24 horas (86400 segundos) y los certificados de trabajo rotan automáticamente cada 7 días. La revocación de emergencia se propaga a todas las pasarelas de `eu-mad-1` y `eu-fra-1` en menos de 90 segundos mediante listas CRL distribuidas en memoria.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.252421,
+            "similarity": 0.747579
+          },
+          {
+            "chunkId": "lab-689164ca81cd:02-autenticacion-mtls-tokens:00",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "02-autenticacion-mtls-tokens",
+            "ordinal": 0,
+            "title": "Autenticación mTLS y gestión de tokens",
+            "section": "Certificados de cliente y cabecera de organización",
+            "content": "## Certificados de cliente y cabecera de organización\n\nTodas las llamadas máquina a máquina hacia la API de AetherCloud exigen autenticación mutua TLS (`mTLS`) con certificados X.509 emitidos por la autoridad interna `AetherCA-G2`, junto con un token firmado `EdDSA` en la cabecera `Authorization: Bearer <token>` y el identificador de organización en `X-Aether-Tenant`.\n\nSi la cabecera `X-Aether-Tenant` no coincide con el atributo `ou` del certificado cliente, la pasarela rechaza la petición con código HTTP `403` y error `TENANT_MISMATCH`.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.345095,
+            "similarity": 0.654905
+          },
+          {
+            "chunkId": "lab-689164ca81cd:08-residencia-datos-y-rgpd:01",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "08-residencia-datos-y-rgpd",
+            "ordinal": 1,
+            "title": "Residencia de datos, privacidad y cumplimiento RGPD",
+            "section": "Enmascaramiento y retención de auditoría",
+            "content": "## Enmascaramiento y retención de auditoría\n\nAntes de indexar documentos o enviar trazas al subsistema de observabilidad, el filtro de ingesta aplica enmascaramiento automático de correos electrónicos, números IBAN y documentos de identidad mediante tokens irreversibles `HMAC-SHA256`. Los registros de auditoría de acceso administrativo se conservan en almacenamiento inmutable (`WORM`) durante **2 años** (730 días).",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.37184,
+            "similarity": 0.62816
+          },
+          {
+            "chunkId": "lab-689164ca81cd:09-observabilidad-opentelemetry:01",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "09-observabilidad-opentelemetry",
+            "ordinal": 1,
+            "title": "Observabilidad, métricas y exportación OpenTelemetry",
+            "section": "Muestreo y ventanas de retención",
+            "content": "## Muestreo y ventanas de retención\n\nEl colector aplica muestreo en origen (`head-based sampling`) del `10 %` para peticiones exitosas (`HTTP 2xx`) y conserva el `100 %` de las trazas que contengan errores (`HTTP 4xx/5xx`) o cuya latencia total supere los `1500 milisegundos`. Las trazas se retienen durante **14 días** y los logs estructurados JSON durante **30 días**.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.37549,
+            "similarity": 0.62451
+          }
+        ],
+        "selected": [
+          {
+            "chunkId": "lab-689164ca81cd:02-autenticacion-mtls-tokens:01",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "02-autenticacion-mtls-tokens",
+            "ordinal": 1,
+            "title": "Autenticación mTLS y gestión de tokens",
+            "section": "Caducidad y revocación de credenciales",
+            "content": "## Caducidad y revocación de credenciales\n\nLos tokens de acceso tienen una vida máxima de 24 horas (86400 segundos) y los certificados de trabajo rotan automáticamente cada 7 días. La revocación de emergencia se propaga a todas las pasarelas de `eu-mad-1` y `eu-fra-1` en menos de 90 segundos mediante listas CRL distribuidas en memoria.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.252421,
+            "similarity": 0.747579
+          }
+        ],
+        "decision": "answer",
+        "generationCalled": true,
+        "retrievalCount": 1,
+        "answer": "Según la documentación, los tokens de acceso tienen una vida máxima de 24 horas (86400 segundos), mientras que los certificados de trabajo rotan automáticamente cada 7 días [cite:lab-689164ca81cd:02-autenticacion-mtls-tokens:01].\n\nEn la comparación, el intervalo de rotación de los certificados (7 días) es siete veces mayor que la caducidad máxima del token (24 horas), es decir, un token caduca mucho antes de que el certificado se rote [cite:lab-689164ca81cd:02-autenticacion-mtls-tokens:01].\n\nUna precisión: el fragmento habla de una \"vida máxima\" para los tokens y de una rotación automática para los certificados, por lo que no indica si los tokens pueden caducar antes de las 24 horas ni si la rotación puede ser más frecuente en algún caso.",
+        "citations": ["lab-689164ca81cd:02-autenticacion-mtls-tokens:01"],
+        "latencyMs": 3176
+      },
+      "manualReview": {
+        "correct": true,
+        "sourceSupported": true,
+        "reason": "Respuesta completa respaldada por los fragmentos citados.",
+        "reviewer": "assistant-source-review"
+      }
+    },
+    {
+      "id": 4,
+      "answerable": true,
+      "expectedDocuments": ["02-autenticacion-mtls-tokens"],
+      "expectedFacts": ["90 segundos"],
+      "result": {
+        "question": "¿En cuántos segundos como máximo se propaga una revocación de emergencia a las pasarelas europeas?",
+        "corpusVersion": "lab-689164ca81cd",
+        "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+        "genModelId": "claude-sonnet-5-5",
+        "minSimilarity": 0.724767,
+        "maxCosineDistance": 0.27523299999999995,
+        "retrieved": [
+          {
+            "chunkId": "lab-689164ca81cd:02-autenticacion-mtls-tokens:01",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "02-autenticacion-mtls-tokens",
+            "ordinal": 1,
+            "title": "Autenticación mTLS y gestión de tokens",
+            "section": "Caducidad y revocación de credenciales",
+            "content": "## Caducidad y revocación de credenciales\n\nLos tokens de acceso tienen una vida máxima de 24 horas (86400 segundos) y los certificados de trabajo rotan automáticamente cada 7 días. La revocación de emergencia se propaga a todas las pasarelas de `eu-mad-1` y `eu-fra-1` en menos de 90 segundos mediante listas CRL distribuidas en memoria.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.321042,
+            "similarity": 0.678958
+          },
+          {
+            "chunkId": "lab-689164ca81cd:10-despliegues-canary-y-rollback:01",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "10-despliegues-canary-y-rollback",
+            "ordinal": 1,
+            "title": "Despliegues progresivos canary y política de rollback",
+            "section": "Condiciones de rollback automático",
+            "content": "## Condiciones de rollback automático\n\nEl controlador de despliegue ejecuta un rollback automático a la imagen inmutable anterior (`sha256` verificado) en menos de 45 segundos si durante cualquier ventana de observación la tasa de errores `HTTP 5xx` supera el `2,0 %` o si el percentil `p95` de latencia supera los `800 milisegundos` durante tres minutos consecutivos.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.377357,
+            "similarity": 0.622643
+          },
+          {
+            "chunkId": "lab-689164ca81cd:10-despliegues-canary-y-rollback:00",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "10-despliegues-canary-y-rollback",
+            "ordinal": 0,
+            "title": "Despliegues progresivos canary y política de rollback",
+            "section": "Fases del despliegue canary",
+            "content": "## Fases del despliegue canary\n\nTodo cambio en servicios del plano de datos de AetherCloud se despliega mediante una secuencia canary obligatoria de tres etapas:\n\n1. **Etapa 1:** envío del `10 %` del tráfico regional durante una ventana mínima de observación de **10 minutos**.\n2. **Etapa 2:** ampliación al `50 %` del tráfico durante otros **10 minutos**.\n3. **Etapa 3:** promoción al `100 %` de las instancias de la región una vez superadas las comprobaciones de salud.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.396892,
+            "similarity": 0.603108
+          },
+          {
+            "chunkId": "lab-689164ca81cd:01-arquitectura-aethercloud:00",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "01-arquitectura-aethercloud",
+            "ordinal": 0,
+            "title": "Arquitectura general de AetherCloud",
+            "section": "Regiones y topología",
+            "content": "## Regiones y topología\n\nAetherCloud opera exclusivamente en dos regiones europeas de producción: `eu-mad-1` (Madrid, región primaria) y `eu-fra-1` (Fráncfort, región secundaria de contingencia). Cada región despliega tres zonas de disponibilidad independientes interconectadas mediante fibra dedicada con latencia inferior a 1,8 milisegundos.\n\nEl tráfico entrante atraviesa pasarelas perimetrales Anycast con terminación TLS 1.3 obligatoria. Ningún servicio de aplicación expone puertos directamente a internet pública sin pasar por la pasarela regional.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.399891,
+            "similarity": 0.600109
+          }
+        ],
+        "selected": [],
+        "decision": "refuse",
+        "generationCalled": false,
+        "retrievalCount": 1,
+        "answer": "No consta información suficiente en la documentación de AetherCloud para responder a esta consulta (ningún fragmento superó el umbral calibrado previo a la generación).",
+        "citations": [],
+        "latencyMs": 517
+      },
+      "manualReview": {
+        "correct": false,
+        "sourceSupported": false,
+        "reason": "Abstención incorrecta: el fragmento de revocación existe pero quedó por debajo del corte.",
+        "reviewer": "assistant-source-review"
+      }
+    },
+    {
+      "id": 5,
+      "answerable": true,
+      "expectedDocuments": ["03-limites-y-cuotas-api"],
+      "expectedFacts": ["600", "50", "4 MiB"],
+      "result": {
+        "question": "Para el plan Empresa, indica el cupo por minuto, la concurrencia y el tamaño límite de un POST.",
+        "corpusVersion": "lab-689164ca81cd",
+        "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+        "genModelId": "claude-sonnet-5-5",
+        "minSimilarity": 0.724767,
+        "maxCosineDistance": 0.27523299999999995,
+        "retrieved": [
+          {
+            "chunkId": "lab-689164ca81cd:03-limites-y-cuotas-api:00",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "03-limites-y-cuotas-api",
+            "ordinal": 0,
+            "title": "Límites de tráfico y cuotas de API",
+            "section": "Cuotas por plan de suscripción",
+            "content": "## Cuotas por plan de suscripción\n\nLa pasarela aplica control de tasa por ventana deslizante de 60 segundos a cada organización (`X-Aether-Tenant`):\n\n- **Plan Estándar:** hasta 120 peticiones por minuto y un máximo de 10 peticiones concurrentes.\n- **Plan Empresa:** hasta 600 peticiones por minuto y un máximo de 50 peticiones concurrentes.\n\nLas peticiones de lectura sobre `/v2/status` no descuentan del cupo por minuto, pero sí respetan el límite de concurrencia.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.255165,
+            "similarity": 0.744835
+          },
+          {
+            "chunkId": "lab-689164ca81cd:03-limites-y-cuotas-api:01",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "03-limites-y-cuotas-api",
+            "ordinal": 1,
+            "title": "Límites de tráfico y cuotas de API",
+            "section": "Respuesta ante exceso de cuota",
+            "content": "## Respuesta ante exceso de cuota\n\nCuando una organización supera su límite por minuto, la API responde con estado HTTP `429 Too Many Requests`, cuerpo JSON con `error_code: \"RATE_LIMIT_EXCEEDED\"` y la cabecera `Retry-After` expresada en segundos enteros. El tamaño máximo de cuerpo permitido en cualquier petición `POST` es de 4 MiB.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.290587,
+            "similarity": 0.709413
+          },
+          {
+            "chunkId": "lab-689164ca81cd:07-facturacion-y-planes:00",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "07-facturacion-y-planes",
+            "ordinal": 0,
+            "title": "Facturación, tarifas y planes comerciales",
+            "section": "Cuotas mensuales y franquicias incluidas",
+            "content": "## Cuotas mensuales y franquicias incluidas\n\nAetherCloud ofrece dos planes comerciales facturados en euros (`EUR`) a mes vencido:\n\n- **Plan Estándar:** cuota base de `190 EUR/mes`, incluye 2 millones de peticiones API, 100 GiB de almacenamiento cifrado y soporte en horario laboral europeo.\n- **Plan Empresa:** cuota base de `850 EUR/mes`, incluye 15 millones de peticiones API, 1 TiB de almacenamiento cifrado, soporte 24x7 para `SEV-1` y réplica activa en `eu-fra-1`.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.312588,
+            "similarity": 0.687412
+          },
+          {
+            "chunkId": "lab-689164ca81cd:06-respuesta-a-incidentes:01",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "06-respuesta-a-incidentes",
+            "ordinal": 1,
+            "title": "Respuesta a incidentes y clasificación de severidades",
+            "section": "Informe postmortem",
+            "content": "## Informe postmortem\n\nPara todo incidente `SEV-1` o `SEV-2`, el equipo de ingeniería entrega un informe postmortem preliminar en 48 horas y el análisis definitivo de causa raíz (`RCA`) con acciones preventivas en un plazo máximo de **5 días hábiles** tras la resolución.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.377986,
+            "similarity": 0.622014
+          }
+        ],
+        "selected": [
+          {
+            "chunkId": "lab-689164ca81cd:03-limites-y-cuotas-api:00",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "03-limites-y-cuotas-api",
+            "ordinal": 0,
+            "title": "Límites de tráfico y cuotas de API",
+            "section": "Cuotas por plan de suscripción",
+            "content": "## Cuotas por plan de suscripción\n\nLa pasarela aplica control de tasa por ventana deslizante de 60 segundos a cada organización (`X-Aether-Tenant`):\n\n- **Plan Estándar:** hasta 120 peticiones por minuto y un máximo de 10 peticiones concurrentes.\n- **Plan Empresa:** hasta 600 peticiones por minuto y un máximo de 50 peticiones concurrentes.\n\nLas peticiones de lectura sobre `/v2/status` no descuentan del cupo por minuto, pero sí respetan el límite de concurrencia.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.255165,
+            "similarity": 0.744835
+          }
+        ],
+        "decision": "answer",
+        "generationCalled": true,
+        "retrievalCount": 1,
+        "answer": "Para el plan Empresa:\n\n- **Cupo por minuto:** hasta 600 peticiones por minuto, aplicado por ventana deslizante de 60 segundos a cada organización [cite:lab-689164ca81cd:03-limites-y-cuotas-api:00].\n- **Concurrencia:** un máximo de 50 peticiones concurrentes [cite:lab-689164ca81cd:03-limites-y-cuotas-api:00].\n- **Tamaño límite de un POST:** los documentos suministrados no indican este dato, por lo que no puedo darlo.\n\nComo matiz, las peticiones de lectura sobre `/v2/status` no descuentan del cupo por minuto, pero sí respetan el límite de concurrencia [cite:lab-689164ca81cd:03-limites-y-cuotas-api:00].",
+        "citations": ["lab-689164ca81cd:03-limites-y-cuotas-api:00"],
+        "latencyMs": 2583
+      },
+      "manualReview": {
+        "correct": false,
+        "sourceSupported": true,
+        "reason": "Respuesta parcial: el corte excluyó el fragmento del tamaño máximo de POST.",
+        "reviewer": "assistant-source-review"
+      }
+    },
+    {
+      "id": 6,
+      "answerable": true,
+      "expectedDocuments": ["04-almacenamiento-y-cifrado-kms"],
+      "expectedFacts": ["30 días", "sin tiempo de inactividad"],
+      "result": {
+        "question": "¿Cada cuántos días se renuevan las DEK y provoca esa renovación una parada?",
+        "corpusVersion": "lab-689164ca81cd",
+        "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+        "genModelId": "claude-sonnet-5-5",
+        "minSimilarity": 0.724767,
+        "maxCosineDistance": 0.27523299999999995,
+        "retrieved": [
+          {
+            "chunkId": "lab-689164ca81cd:04-almacenamiento-y-cifrado-kms:00",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "04-almacenamiento-y-cifrado-kms",
+            "ordinal": 0,
+            "title": "Almacenamiento persistente y cifrado KMS",
+            "section": "Cifrado en reposo y jerarquía de claves",
+            "content": "## Cifrado en reposo y jerarquía de claves\n\nTodos los volúmenes de bloques, bases de datos y copias de seguridad de AetherCloud se cifran en reposo con `AES-256-GCM`. Cada organización dispone de una clave maestra dedicada (`CMK`) custodiada en módulos de seguridad hardware (`HSM` FIPS 140-3 Nivel 3) dentro de `eu-mad-1` y replicada en `eu-fra-1`.\n\nLas claves de datos (`DEK`) se renuevan automáticamente cada 30 días sin tiempo de inactividad. Si una organización solicita la destrucción criptográfica de su `CMK`, existe un periodo de enfriamiento obligatorio de 72 horas antes del borrado irreversible.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.322232,
+            "similarity": 0.677768
+          },
+          {
+            "chunkId": "lab-689164ca81cd:02-autenticacion-mtls-tokens:01",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "02-autenticacion-mtls-tokens",
+            "ordinal": 1,
+            "title": "Autenticación mTLS y gestión de tokens",
+            "section": "Caducidad y revocación de credenciales",
+            "content": "## Caducidad y revocación de credenciales\n\nLos tokens de acceso tienen una vida máxima de 24 horas (86400 segundos) y los certificados de trabajo rotan automáticamente cada 7 días. La revocación de emergencia se propaga a todas las pasarelas de `eu-mad-1` y `eu-fra-1` en menos de 90 segundos mediante listas CRL distribuidas en memoria.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.334154,
+            "similarity": 0.665846
+          },
+          {
+            "chunkId": "lab-689164ca81cd:04-almacenamiento-y-cifrado-kms:01",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "04-almacenamiento-y-cifrado-kms",
+            "ordinal": 1,
+            "title": "Almacenamiento persistente y cifrado KMS",
+            "section": "Instantáneas y retención de copias",
+            "content": "## Instantáneas y retención de copias\n\nEl sistema realiza instantáneas incrementales cada 6 horas y una copia completa diaria a las `02:00 UTC`. La retención estándar de instantáneas es de 35 días naturales. Las pruebas de restauración verificada se ejecutan de forma automática una vez por semana en un entorno aislado.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.360077,
+            "similarity": 0.639923
+          },
+          {
+            "chunkId": "lab-689164ca81cd:01-arquitectura-aethercloud:01",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "01-arquitectura-aethercloud",
+            "ordinal": 1,
+            "title": "Arquitectura general de AetherCloud",
+            "section": "Separación entre plano de control y plano de datos",
+            "content": "## Separación entre plano de control y plano de datos\n\nEl plano de control (`control-plane`) gestiona altas de organizaciones, políticas de acceso, rotación de claves y despliegues en `eu-mad-1`, con réplica síncrona del catálogo en PostgreSQL 17. El plano de datos (`data-plane`) procesa las peticiones operativas de cada cliente dentro de la región contratada y puede seguir funcionando durante al menos 6 horas aunque el plano de control esté en mantenimiento.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.386302,
+            "similarity": 0.613698
+          }
+        ],
+        "selected": [],
+        "decision": "refuse",
+        "generationCalled": false,
+        "retrievalCount": 1,
+        "answer": "No consta información suficiente en la documentación de AetherCloud para responder a esta consulta (ningún fragmento superó el umbral calibrado previo a la generación).",
+        "citations": [],
+        "latencyMs": 515
+      },
+      "manualReview": {
+        "correct": false,
+        "sourceSupported": false,
+        "reason": "Abstención incorrecta: la renovación de DEK existe en el corpus y no superó el corte.",
+        "reviewer": "assistant-source-review"
+      }
+    },
+    {
+      "id": 7,
+      "answerable": true,
+      "expectedDocuments": ["04-almacenamiento-y-cifrado-kms"],
+      "expectedFacts": ["6 horas", "35 días"],
+      "result": {
+        "question": "Explica la periodicidad de las instantáneas incrementales y cuánto tiempo se conservan.",
+        "corpusVersion": "lab-689164ca81cd",
+        "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+        "genModelId": "claude-sonnet-5-5",
+        "minSimilarity": 0.724767,
+        "maxCosineDistance": 0.27523299999999995,
+        "retrieved": [
+          {
+            "chunkId": "lab-689164ca81cd:04-almacenamiento-y-cifrado-kms:01",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "04-almacenamiento-y-cifrado-kms",
+            "ordinal": 1,
+            "title": "Almacenamiento persistente y cifrado KMS",
+            "section": "Instantáneas y retención de copias",
+            "content": "## Instantáneas y retención de copias\n\nEl sistema realiza instantáneas incrementales cada 6 horas y una copia completa diaria a las `02:00 UTC`. La retención estándar de instantáneas es de 35 días naturales. Las pruebas de restauración verificada se ejecutan de forma automática una vez por semana en un entorno aislado.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.217943,
+            "similarity": 0.782057
+          },
+          {
+            "chunkId": "lab-689164ca81cd:04-almacenamiento-y-cifrado-kms:00",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "04-almacenamiento-y-cifrado-kms",
+            "ordinal": 0,
+            "title": "Almacenamiento persistente y cifrado KMS",
+            "section": "Cifrado en reposo y jerarquía de claves",
+            "content": "## Cifrado en reposo y jerarquía de claves\n\nTodos los volúmenes de bloques, bases de datos y copias de seguridad de AetherCloud se cifran en reposo con `AES-256-GCM`. Cada organización dispone de una clave maestra dedicada (`CMK`) custodiada en módulos de seguridad hardware (`HSM` FIPS 140-3 Nivel 3) dentro de `eu-mad-1` y replicada en `eu-fra-1`.\n\nLas claves de datos (`DEK`) se renuevan automáticamente cada 30 días sin tiempo de inactividad. Si una organización solicita la destrucción criptográfica de su `CMK`, existe un periodo de enfriamiento obligatorio de 72 horas antes del borrado irreversible.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.337606,
+            "similarity": 0.662394
+          },
+          {
+            "chunkId": "lab-689164ca81cd:08-residencia-datos-y-rgpd:01",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "08-residencia-datos-y-rgpd",
+            "ordinal": 1,
+            "title": "Residencia de datos, privacidad y cumplimiento RGPD",
+            "section": "Enmascaramiento y retención de auditoría",
+            "content": "## Enmascaramiento y retención de auditoría\n\nAntes de indexar documentos o enviar trazas al subsistema de observabilidad, el filtro de ingesta aplica enmascaramiento automático de correos electrónicos, números IBAN y documentos de identidad mediante tokens irreversibles `HMAC-SHA256`. Los registros de auditoría de acceso administrativo se conservan en almacenamiento inmutable (`WORM`) durante **2 años** (730 días).",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.378138,
+            "similarity": 0.621862
+          },
+          {
+            "chunkId": "lab-689164ca81cd:09-observabilidad-opentelemetry:01",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "09-observabilidad-opentelemetry",
+            "ordinal": 1,
+            "title": "Observabilidad, métricas y exportación OpenTelemetry",
+            "section": "Muestreo y ventanas de retención",
+            "content": "## Muestreo y ventanas de retención\n\nEl colector aplica muestreo en origen (`head-based sampling`) del `10 %` para peticiones exitosas (`HTTP 2xx`) y conserva el `100 %` de las trazas que contengan errores (`HTTP 4xx/5xx`) o cuya latencia total supere los `1500 milisegundos`. Las trazas se retienen durante **14 días** y los logs estructurados JSON durante **30 días**.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.38456,
+            "similarity": 0.61544
+          }
+        ],
+        "selected": [
+          {
+            "chunkId": "lab-689164ca81cd:04-almacenamiento-y-cifrado-kms:01",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "04-almacenamiento-y-cifrado-kms",
+            "ordinal": 1,
+            "title": "Almacenamiento persistente y cifrado KMS",
+            "section": "Instantáneas y retención de copias",
+            "content": "## Instantáneas y retención de copias\n\nEl sistema realiza instantáneas incrementales cada 6 horas y una copia completa diaria a las `02:00 UTC`. La retención estándar de instantáneas es de 35 días naturales. Las pruebas de restauración verificada se ejecutan de forma automática una vez por semana en un entorno aislado.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.217943,
+            "similarity": 0.782057
+          }
+        ],
+        "decision": "answer",
+        "generationCalled": true,
+        "retrievalCount": 1,
+        "answer": "**Periodicidad:** las instantáneas incrementales se realizan cada 6 horas. Además, el sistema hace una copia completa diaria a las 02:00 UTC [cite:lab-689164ca81cd:04-almacenamiento-y-cifrado-kms:01].\n\n**Conservación:** la retención estándar de instantáneas es de 35 días naturales [cite:lab-689164ca81cd:04-almacenamiento-y-cifrado-kms:01].\n\n**Matiz:** el documento habla de \"instantáneas\" en general al indicar los 35 días y no especifica si ese plazo se aplica de forma distinta a las incrementales frente a las copias completas. Tampoco indica excepciones a la retención \"estándar\".",
+        "citations": ["lab-689164ca81cd:04-almacenamiento-y-cifrado-kms:01"],
+        "latencyMs": 3004
+      },
+      "manualReview": {
+        "correct": true,
+        "sourceSupported": true,
+        "reason": "Respuesta completa respaldada por los fragmentos citados.",
+        "reviewer": "assistant-source-review"
+      }
+    },
+    {
+      "id": 8,
+      "answerable": true,
+      "expectedDocuments": ["05-sla-y-creditos-servicio"],
+      "expectedFacts": ["99,95", "10 %"],
+      "result": {
+        "question": "¿Qué disponibilidad mensual se garantiza y qué crédito corresponde al intervalo de 99,00 a 99,94 por ciento?",
+        "corpusVersion": "lab-689164ca81cd",
+        "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+        "genModelId": "claude-sonnet-5-5",
+        "minSimilarity": 0.724767,
+        "maxCosineDistance": 0.27523299999999995,
+        "retrieved": [
+          {
+            "chunkId": "lab-689164ca81cd:05-sla-y-creditos-servicio:01",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "05-sla-y-creditos-servicio",
+            "ordinal": 1,
+            "title": "Acuerdo de nivel de servicio (SLA) y créditos",
+            "section": "Escala de créditos de servicio",
+            "content": "## Escala de créditos de servicio\n\nSi la disponibilidad mensual cae por debajo del umbral garantizado, la organización tiene derecho a solicitar créditos aplicables a la factura del mes siguiente:\n\n- Disponibilidad entre `99,00 %` y `99,94 %`: crédito del `10 %` de la cuota mensual fija.\n- Disponibilidad inferior al `99,00 %`: crédito del `25 %` de la cuota mensual fija.\n\nLa solicitud de crédito debe presentarse dentro de los 15 días hábiles posteriores al cierre del mes afectado, adjuntando los identificadores de incidencia emitidos por soporte.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.163602,
+            "similarity": 0.836398
+          },
+          {
+            "chunkId": "lab-689164ca81cd:05-sla-y-creditos-servicio:00",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "05-sla-y-creditos-servicio",
+            "ordinal": 0,
+            "title": "Acuerdo de nivel de servicio (SLA) y créditos",
+            "section": "Disponibilidad mensual comprometida",
+            "content": "## Disponibilidad mensual comprometida\n\nAetherCloud garantiza una disponibilidad mensual de al menos el `99,95 %` para los servicios del plano de datos en producción. El cálculo excluye las ventanas de mantenimiento programado notificadas con al menos 7 días naturales de antelación y cuya duración no supere los 45 minutos al mes.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.20369,
+            "similarity": 0.79631
+          },
+          {
+            "chunkId": "lab-689164ca81cd:07-facturacion-y-planes:00",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "07-facturacion-y-planes",
+            "ordinal": 0,
+            "title": "Facturación, tarifas y planes comerciales",
+            "section": "Cuotas mensuales y franquicias incluidas",
+            "content": "## Cuotas mensuales y franquicias incluidas\n\nAetherCloud ofrece dos planes comerciales facturados en euros (`EUR`) a mes vencido:\n\n- **Plan Estándar:** cuota base de `190 EUR/mes`, incluye 2 millones de peticiones API, 100 GiB de almacenamiento cifrado y soporte en horario laboral europeo.\n- **Plan Empresa:** cuota base de `850 EUR/mes`, incluye 15 millones de peticiones API, 1 TiB de almacenamiento cifrado, soporte 24x7 para `SEV-1` y réplica activa en `eu-fra-1`.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.346356,
+            "similarity": 0.653644
+          },
+          {
+            "chunkId": "lab-689164ca81cd:06-respuesta-a-incidentes:00",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "06-respuesta-a-incidentes",
+            "ordinal": 0,
+            "title": "Respuesta a incidentes y clasificación de severidades",
+            "section": "Niveles de severidad y tiempos de respuesta",
+            "content": "## Niveles de severidad y tiempos de respuesta\n\nEl centro de operaciones de AetherCloud clasifica los incidentes en tres niveles:\n\n- **SEV-1 (Crítico):** caída total del plano de datos o pérdida de aislamiento entre organizaciones. Tiempo máximo de primera respuesta: **15 minutos**, con actualizaciones cada 30 minutos (24x7).\n- **SEV-2 (Alto):** degradación severa de latencia o fallo de una función principal sin alternativa directa. Tiempo máximo de primera respuesta: **60 minutos**, con actualizaciones cada 2 horas.\n- **SEV-3 (Moderado):** incidencia menor o consulta operativa con alternativa disponible. Tiempo máximo de primera respuesta: **8 horas hábiles**.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.354289,
+            "similarity": 0.645711
+          }
+        ],
+        "selected": [
+          {
+            "chunkId": "lab-689164ca81cd:05-sla-y-creditos-servicio:01",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "05-sla-y-creditos-servicio",
+            "ordinal": 1,
+            "title": "Acuerdo de nivel de servicio (SLA) y créditos",
+            "section": "Escala de créditos de servicio",
+            "content": "## Escala de créditos de servicio\n\nSi la disponibilidad mensual cae por debajo del umbral garantizado, la organización tiene derecho a solicitar créditos aplicables a la factura del mes siguiente:\n\n- Disponibilidad entre `99,00 %` y `99,94 %`: crédito del `10 %` de la cuota mensual fija.\n- Disponibilidad inferior al `99,00 %`: crédito del `25 %` de la cuota mensual fija.\n\nLa solicitud de crédito debe presentarse dentro de los 15 días hábiles posteriores al cierre del mes afectado, adjuntando los identificadores de incidencia emitidos por soporte.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.163602,
+            "similarity": 0.836398
+          },
+          {
+            "chunkId": "lab-689164ca81cd:05-sla-y-creditos-servicio:00",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "05-sla-y-creditos-servicio",
+            "ordinal": 0,
+            "title": "Acuerdo de nivel de servicio (SLA) y créditos",
+            "section": "Disponibilidad mensual comprometida",
+            "content": "## Disponibilidad mensual comprometida\n\nAetherCloud garantiza una disponibilidad mensual de al menos el `99,95 %` para los servicios del plano de datos en producción. El cálculo excluye las ventanas de mantenimiento programado notificadas con al menos 7 días naturales de antelación y cuya duración no supere los 45 minutos al mes.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.20369,
+            "similarity": 0.79631
+          }
+        ],
+        "decision": "answer",
+        "generationCalled": true,
+        "retrievalCount": 1,
+        "answer": "**Disponibilidad garantizada:** AetherCloud garantiza una disponibilidad mensual de al menos el 99,95 % para los servicios del plano de datos en producción. El cálculo excluye las ventanas de mantenimiento programado notificadas con al menos 7 días naturales de antelación y cuya duración no supere los 45 minutos al mes. [cite:lab-689164ca81cd:05-sla-y-creditos-servicio:00]\n\n**Crédito para el intervalo de 99,00 % a 99,94 %:** corresponde un crédito del 10 % de la cuota mensual fija, aplicable a la factura del mes siguiente. [cite:lab-689164ca81cd:05-sla-y-creditos-servicio:01]\n\nAdemás, la solicitud debe presentarse dentro de los 15 días hábiles posteriores al cierre del mes afectado, adjuntando los identificadores de incidencia emitidos por soporte. [cite:lab-689164ca81cd:05-sla-y-creditos-servicio:01]",
+        "citations": [
+          "lab-689164ca81cd:05-sla-y-creditos-servicio:00",
+          "lab-689164ca81cd:05-sla-y-creditos-servicio:01"
+        ],
+        "latencyMs": 2761
+      },
+      "manualReview": {
+        "correct": true,
+        "sourceSupported": true,
+        "reason": "Respuesta completa respaldada por los fragmentos citados.",
+        "reviewer": "assistant-source-review"
+      }
+    },
+    {
+      "id": 9,
+      "answerable": true,
+      "expectedDocuments": ["06-respuesta-a-incidentes"],
+      "expectedFacts": ["15 minutos", "5 días hábiles"],
+      "result": {
+        "question": "Ante una caída total del plano de datos, ¿cuándo llega la primera respuesta y cuándo se entrega el RCA definitivo?",
+        "corpusVersion": "lab-689164ca81cd",
+        "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+        "genModelId": "claude-sonnet-5-5",
+        "minSimilarity": 0.724767,
+        "maxCosineDistance": 0.27523299999999995,
+        "retrieved": [
+          {
+            "chunkId": "lab-689164ca81cd:06-respuesta-a-incidentes:00",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "06-respuesta-a-incidentes",
+            "ordinal": 0,
+            "title": "Respuesta a incidentes y clasificación de severidades",
+            "section": "Niveles de severidad y tiempos de respuesta",
+            "content": "## Niveles de severidad y tiempos de respuesta\n\nEl centro de operaciones de AetherCloud clasifica los incidentes en tres niveles:\n\n- **SEV-1 (Crítico):** caída total del plano de datos o pérdida de aislamiento entre organizaciones. Tiempo máximo de primera respuesta: **15 minutos**, con actualizaciones cada 30 minutos (24x7).\n- **SEV-2 (Alto):** degradación severa de latencia o fallo de una función principal sin alternativa directa. Tiempo máximo de primera respuesta: **60 minutos**, con actualizaciones cada 2 horas.\n- **SEV-3 (Moderado):** incidencia menor o consulta operativa con alternativa disponible. Tiempo máximo de primera respuesta: **8 horas hábiles**.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.266206,
+            "similarity": 0.733794
+          },
+          {
+            "chunkId": "lab-689164ca81cd:06-respuesta-a-incidentes:01",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "06-respuesta-a-incidentes",
+            "ordinal": 1,
+            "title": "Respuesta a incidentes y clasificación de severidades",
+            "section": "Informe postmortem",
+            "content": "## Informe postmortem\n\nPara todo incidente `SEV-1` o `SEV-2`, el equipo de ingeniería entrega un informe postmortem preliminar en 48 horas y el análisis definitivo de causa raíz (`RCA`) con acciones preventivas en un plazo máximo de **5 días hábiles** tras la resolución.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.269008,
+            "similarity": 0.730992
+          },
+          {
+            "chunkId": "lab-689164ca81cd:01-arquitectura-aethercloud:01",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "01-arquitectura-aethercloud",
+            "ordinal": 1,
+            "title": "Arquitectura general de AetherCloud",
+            "section": "Separación entre plano de control y plano de datos",
+            "content": "## Separación entre plano de control y plano de datos\n\nEl plano de control (`control-plane`) gestiona altas de organizaciones, políticas de acceso, rotación de claves y despliegues en `eu-mad-1`, con réplica síncrona del catálogo en PostgreSQL 17. El plano de datos (`data-plane`) procesa las peticiones operativas de cada cliente dentro de la región contratada y puede seguir funcionando durante al menos 6 horas aunque el plano de control esté en mantenimiento.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.317079,
+            "similarity": 0.682921
+          },
+          {
+            "chunkId": "lab-689164ca81cd:10-despliegues-canary-y-rollback:00",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "10-despliegues-canary-y-rollback",
+            "ordinal": 0,
+            "title": "Despliegues progresivos canary y política de rollback",
+            "section": "Fases del despliegue canary",
+            "content": "## Fases del despliegue canary\n\nTodo cambio en servicios del plano de datos de AetherCloud se despliega mediante una secuencia canary obligatoria de tres etapas:\n\n1. **Etapa 1:** envío del `10 %` del tráfico regional durante una ventana mínima de observación de **10 minutos**.\n2. **Etapa 2:** ampliación al `50 %` del tráfico durante otros **10 minutos**.\n3. **Etapa 3:** promoción al `100 %` de las instancias de la región una vez superadas las comprobaciones de salud.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.32418,
+            "similarity": 0.67582
+          }
+        ],
+        "selected": [
+          {
+            "chunkId": "lab-689164ca81cd:06-respuesta-a-incidentes:00",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "06-respuesta-a-incidentes",
+            "ordinal": 0,
+            "title": "Respuesta a incidentes y clasificación de severidades",
+            "section": "Niveles de severidad y tiempos de respuesta",
+            "content": "## Niveles de severidad y tiempos de respuesta\n\nEl centro de operaciones de AetherCloud clasifica los incidentes en tres niveles:\n\n- **SEV-1 (Crítico):** caída total del plano de datos o pérdida de aislamiento entre organizaciones. Tiempo máximo de primera respuesta: **15 minutos**, con actualizaciones cada 30 minutos (24x7).\n- **SEV-2 (Alto):** degradación severa de latencia o fallo de una función principal sin alternativa directa. Tiempo máximo de primera respuesta: **60 minutos**, con actualizaciones cada 2 horas.\n- **SEV-3 (Moderado):** incidencia menor o consulta operativa con alternativa disponible. Tiempo máximo de primera respuesta: **8 horas hábiles**.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.266206,
+            "similarity": 0.733794
+          },
+          {
+            "chunkId": "lab-689164ca81cd:06-respuesta-a-incidentes:01",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "06-respuesta-a-incidentes",
+            "ordinal": 1,
+            "title": "Respuesta a incidentes y clasificación de severidades",
+            "section": "Informe postmortem",
+            "content": "## Informe postmortem\n\nPara todo incidente `SEV-1` o `SEV-2`, el equipo de ingeniería entrega un informe postmortem preliminar en 48 horas y el análisis definitivo de causa raíz (`RCA`) con acciones preventivas en un plazo máximo de **5 días hábiles** tras la resolución.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.269008,
+            "similarity": 0.730992
+          }
+        ],
+        "decision": "answer",
+        "generationCalled": true,
+        "retrievalCount": 1,
+        "answer": "Una caída total del plano de datos se clasifica como SEV-1 (Crítico) [cite:lab-689164ca81cd:06-respuesta-a-incidentes:00].\n\n- **Primera respuesta:** como máximo a los **15 minutos**, con actualizaciones cada 30 minutos (24x7) [cite:lab-689164ca81cd:06-respuesta-a-incidentes:00].\n- **RCA definitivo:** se entrega en un plazo máximo de **5 días hábiles tras la resolución** del incidente, junto con las acciones preventivas [cite:lab-689164ca81cd:06-respuesta-a-incidentes:01]. Antes de eso, se entrega un informe postmortem preliminar en 48 horas [cite:lab-689164ca81cd:06-respuesta-a-incidentes:01].",
+        "citations": [
+          "lab-689164ca81cd:06-respuesta-a-incidentes:00",
+          "lab-689164ca81cd:06-respuesta-a-incidentes:01"
+        ],
+        "latencyMs": 3334
+      },
+      "manualReview": {
+        "correct": true,
+        "sourceSupported": true,
+        "reason": "Respuesta completa respaldada por los fragmentos citados.",
+        "reviewer": "assistant-source-review"
+      }
+    },
+    {
+      "id": 10,
+      "answerable": true,
+      "expectedDocuments": ["07-facturacion-y-planes"],
+      "expectedFacts": ["850 EUR", "0,18 EUR"],
+      "result": {
+        "question": "¿Cuánto cuesta al mes el plan Empresa y qué precio tiene cada GiB-mes de almacenamiento adicional?",
+        "corpusVersion": "lab-689164ca81cd",
+        "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+        "genModelId": "claude-sonnet-5-5",
+        "minSimilarity": 0.724767,
+        "maxCosineDistance": 0.27523299999999995,
+        "retrieved": [
+          {
+            "chunkId": "lab-689164ca81cd:07-facturacion-y-planes:00",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "07-facturacion-y-planes",
+            "ordinal": 0,
+            "title": "Facturación, tarifas y planes comerciales",
+            "section": "Cuotas mensuales y franquicias incluidas",
+            "content": "## Cuotas mensuales y franquicias incluidas\n\nAetherCloud ofrece dos planes comerciales facturados en euros (`EUR`) a mes vencido:\n\n- **Plan Estándar:** cuota base de `190 EUR/mes`, incluye 2 millones de peticiones API, 100 GiB de almacenamiento cifrado y soporte en horario laboral europeo.\n- **Plan Empresa:** cuota base de `850 EUR/mes`, incluye 15 millones de peticiones API, 1 TiB de almacenamiento cifrado, soporte 24x7 para `SEV-1` y réplica activa en `eu-fra-1`.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.245214,
+            "similarity": 0.754786
+          },
+          {
+            "chunkId": "lab-689164ca81cd:07-facturacion-y-planes:01",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "07-facturacion-y-planes",
+            "ordinal": 1,
+            "title": "Facturación, tarifas y planes comerciales",
+            "section": "Cómputo bajo demanda y recargos",
+            "content": "## Cómputo bajo demanda y recargos\n\nLas tareas de ejecución asíncrona se facturan por segundo real de CPU/memoria con un mínimo facturable de **60 segundos** por trabajo iniciado. El exceso de almacenamiento sobre la franquicia contratada se tarifica a `0,18 EUR` por GiB-mes adicional. Las facturas se emiten el día 2 de cada mes con vencimiento a 30 días naturales.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.300887,
+            "similarity": 0.699113
+          },
+          {
+            "chunkId": "lab-689164ca81cd:04-almacenamiento-y-cifrado-kms:00",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "04-almacenamiento-y-cifrado-kms",
+            "ordinal": 0,
+            "title": "Almacenamiento persistente y cifrado KMS",
+            "section": "Cifrado en reposo y jerarquía de claves",
+            "content": "## Cifrado en reposo y jerarquía de claves\n\nTodos los volúmenes de bloques, bases de datos y copias de seguridad de AetherCloud se cifran en reposo con `AES-256-GCM`. Cada organización dispone de una clave maestra dedicada (`CMK`) custodiada en módulos de seguridad hardware (`HSM` FIPS 140-3 Nivel 3) dentro de `eu-mad-1` y replicada en `eu-fra-1`.\n\nLas claves de datos (`DEK`) se renuevan automáticamente cada 30 días sin tiempo de inactividad. Si una organización solicita la destrucción criptográfica de su `CMK`, existe un periodo de enfriamiento obligatorio de 72 horas antes del borrado irreversible.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.350123,
+            "similarity": 0.649877
+          },
+          {
+            "chunkId": "lab-689164ca81cd:01-arquitectura-aethercloud:01",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "01-arquitectura-aethercloud",
+            "ordinal": 1,
+            "title": "Arquitectura general de AetherCloud",
+            "section": "Separación entre plano de control y plano de datos",
+            "content": "## Separación entre plano de control y plano de datos\n\nEl plano de control (`control-plane`) gestiona altas de organizaciones, políticas de acceso, rotación de claves y despliegues en `eu-mad-1`, con réplica síncrona del catálogo en PostgreSQL 17. El plano de datos (`data-plane`) procesa las peticiones operativas de cada cliente dentro de la región contratada y puede seguir funcionando durante al menos 6 horas aunque el plano de control esté en mantenimiento.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.35741,
+            "similarity": 0.64259
+          }
+        ],
+        "selected": [
+          {
+            "chunkId": "lab-689164ca81cd:07-facturacion-y-planes:00",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "07-facturacion-y-planes",
+            "ordinal": 0,
+            "title": "Facturación, tarifas y planes comerciales",
+            "section": "Cuotas mensuales y franquicias incluidas",
+            "content": "## Cuotas mensuales y franquicias incluidas\n\nAetherCloud ofrece dos planes comerciales facturados en euros (`EUR`) a mes vencido:\n\n- **Plan Estándar:** cuota base de `190 EUR/mes`, incluye 2 millones de peticiones API, 100 GiB de almacenamiento cifrado y soporte en horario laboral europeo.\n- **Plan Empresa:** cuota base de `850 EUR/mes`, incluye 15 millones de peticiones API, 1 TiB de almacenamiento cifrado, soporte 24x7 para `SEV-1` y réplica activa en `eu-fra-1`.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.245214,
+            "similarity": 0.754786
+          }
+        ],
+        "decision": "answer",
+        "generationCalled": true,
+        "retrievalCount": 1,
+        "answer": "**Plan Empresa:** la cuota base es de 850 EUR/mes (facturada a mes vencido), e incluye 15 millones de peticiones API, 1 TiB de almacenamiento cifrado, soporte 24x7 para SEV-1 y réplica activa en `eu-fra-1` [cite:lab-689164ca81cd:07-facturacion-y-planes:00].\n\n**Precio por GiB-mes de almacenamiento adicional:** los datos suministrados no lo indican. El fragmento solo describe las cuotas base y las franquicias incluidas (por ejemplo, 1 TiB en el plan Empresa), pero no recoge ninguna tarifa para el almacenamiento que exceda esa franquicia, por lo que no puedo darte esa cifra.",
+        "citations": ["lab-689164ca81cd:07-facturacion-y-planes:00"],
+        "latencyMs": 2910
+      },
+      "manualReview": {
+        "correct": false,
+        "sourceSupported": true,
+        "reason": "Respuesta parcial: llegó la cuota base, pero el fragmento del recargo quedó por debajo del corte.",
+        "reviewer": "assistant-source-review"
+      }
+    },
+    {
+      "id": 11,
+      "answerable": true,
+      "expectedDocuments": ["08-residencia-datos-y-rgpd"],
+      "expectedFacts": ["2 años", "730 días"],
+      "result": {
+        "question": "¿Durante cuántos años o días se guardan los registros inmutables de acceso administrativo?",
+        "corpusVersion": "lab-689164ca81cd",
+        "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+        "genModelId": "claude-sonnet-5-5",
+        "minSimilarity": 0.724767,
+        "maxCosineDistance": 0.27523299999999995,
+        "retrieved": [
+          {
+            "chunkId": "lab-689164ca81cd:08-residencia-datos-y-rgpd:01",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "08-residencia-datos-y-rgpd",
+            "ordinal": 1,
+            "title": "Residencia de datos, privacidad y cumplimiento RGPD",
+            "section": "Enmascaramiento y retención de auditoría",
+            "content": "## Enmascaramiento y retención de auditoría\n\nAntes de indexar documentos o enviar trazas al subsistema de observabilidad, el filtro de ingesta aplica enmascaramiento automático de correos electrónicos, números IBAN y documentos de identidad mediante tokens irreversibles `HMAC-SHA256`. Los registros de auditoría de acceso administrativo se conservan en almacenamiento inmutable (`WORM`) durante **2 años** (730 días).",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.243499,
+            "similarity": 0.756501
+          },
+          {
+            "chunkId": "lab-689164ca81cd:04-almacenamiento-y-cifrado-kms:00",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "04-almacenamiento-y-cifrado-kms",
+            "ordinal": 0,
+            "title": "Almacenamiento persistente y cifrado KMS",
+            "section": "Cifrado en reposo y jerarquía de claves",
+            "content": "## Cifrado en reposo y jerarquía de claves\n\nTodos los volúmenes de bloques, bases de datos y copias de seguridad de AetherCloud se cifran en reposo con `AES-256-GCM`. Cada organización dispone de una clave maestra dedicada (`CMK`) custodiada en módulos de seguridad hardware (`HSM` FIPS 140-3 Nivel 3) dentro de `eu-mad-1` y replicada en `eu-fra-1`.\n\nLas claves de datos (`DEK`) se renuevan automáticamente cada 30 días sin tiempo de inactividad. Si una organización solicita la destrucción criptográfica de su `CMK`, existe un periodo de enfriamiento obligatorio de 72 horas antes del borrado irreversible.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.321748,
+            "similarity": 0.678252
+          },
+          {
+            "chunkId": "lab-689164ca81cd:04-almacenamiento-y-cifrado-kms:01",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "04-almacenamiento-y-cifrado-kms",
+            "ordinal": 1,
+            "title": "Almacenamiento persistente y cifrado KMS",
+            "section": "Instantáneas y retención de copias",
+            "content": "## Instantáneas y retención de copias\n\nEl sistema realiza instantáneas incrementales cada 6 horas y una copia completa diaria a las `02:00 UTC`. La retención estándar de instantáneas es de 35 días naturales. Las pruebas de restauración verificada se ejecutan de forma automática una vez por semana en un entorno aislado.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.32921,
+            "similarity": 0.67079
+          },
+          {
+            "chunkId": "lab-689164ca81cd:09-observabilidad-opentelemetry:01",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "09-observabilidad-opentelemetry",
+            "ordinal": 1,
+            "title": "Observabilidad, métricas y exportación OpenTelemetry",
+            "section": "Muestreo y ventanas de retención",
+            "content": "## Muestreo y ventanas de retención\n\nEl colector aplica muestreo en origen (`head-based sampling`) del `10 %` para peticiones exitosas (`HTTP 2xx`) y conserva el `100 %` de las trazas que contengan errores (`HTTP 4xx/5xx`) o cuya latencia total supere los `1500 milisegundos`. Las trazas se retienen durante **14 días** y los logs estructurados JSON durante **30 días**.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.331114,
+            "similarity": 0.668886
+          }
+        ],
+        "selected": [
+          {
+            "chunkId": "lab-689164ca81cd:08-residencia-datos-y-rgpd:01",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "08-residencia-datos-y-rgpd",
+            "ordinal": 1,
+            "title": "Residencia de datos, privacidad y cumplimiento RGPD",
+            "section": "Enmascaramiento y retención de auditoría",
+            "content": "## Enmascaramiento y retención de auditoría\n\nAntes de indexar documentos o enviar trazas al subsistema de observabilidad, el filtro de ingesta aplica enmascaramiento automático de correos electrónicos, números IBAN y documentos de identidad mediante tokens irreversibles `HMAC-SHA256`. Los registros de auditoría de acceso administrativo se conservan en almacenamiento inmutable (`WORM`) durante **2 años** (730 días).",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.243499,
+            "similarity": 0.756501
+          }
+        ],
+        "decision": "answer",
+        "generationCalled": true,
+        "retrievalCount": 1,
+        "answer": "Los registros de auditoría de acceso administrativo se conservan en almacenamiento inmutable (WORM) durante 2 años, es decir, 730 días [cite:lab-689164ca81cd:08-residencia-datos-y-rgpd:01].",
+        "citations": ["lab-689164ca81cd:08-residencia-datos-y-rgpd:01"],
+        "latencyMs": 1883
+      },
+      "manualReview": {
+        "correct": true,
+        "sourceSupported": true,
+        "reason": "Respuesta completa respaldada por los fragmentos citados.",
+        "reviewer": "assistant-source-review"
+      }
+    },
+    {
+      "id": 12,
+      "answerable": true,
+      "expectedDocuments": ["09-observabilidad-opentelemetry"],
+      "expectedFacts": ["4317", "4318", "14 días"],
+      "result": {
+        "question": "¿Qué puertos corresponden a OTLP por gRPC y por HTTP y cuántos días se conservan las trazas?",
+        "corpusVersion": "lab-689164ca81cd",
+        "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+        "genModelId": "claude-sonnet-5-5",
+        "minSimilarity": 0.724767,
+        "maxCosineDistance": 0.27523299999999995,
+        "retrieved": [
+          {
+            "chunkId": "lab-689164ca81cd:09-observabilidad-opentelemetry:01",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "09-observabilidad-opentelemetry",
+            "ordinal": 1,
+            "title": "Observabilidad, métricas y exportación OpenTelemetry",
+            "section": "Muestreo y ventanas de retención",
+            "content": "## Muestreo y ventanas de retención\n\nEl colector aplica muestreo en origen (`head-based sampling`) del `10 %` para peticiones exitosas (`HTTP 2xx`) y conserva el `100 %` de las trazas que contengan errores (`HTTP 4xx/5xx`) o cuya latencia total supere los `1500 milisegundos`. Las trazas se retienen durante **14 días** y los logs estructurados JSON durante **30 días**.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.171838,
+            "similarity": 0.828162
+          },
+          {
+            "chunkId": "lab-689164ca81cd:09-observabilidad-opentelemetry:00",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "09-observabilidad-opentelemetry",
+            "ordinal": 0,
+            "title": "Observabilidad, métricas y exportación OpenTelemetry",
+            "section": "Colector OTLP y formatos soportados",
+            "content": "## Colector OTLP y formatos soportados\n\nCada organización puede exportar métricas y trazas distribuidas desde sus servicios en AetherCloud mediante el protocolo `OpenTelemetry (OTLP)` sobre `gRPC` con mTLS en el puerto `4317`, o mediante `OTLP/HTTP` en el puerto `4318`. Cada span incluye de forma obligatoria los atributos `aether.tenant_id`, `aether.region` y `service.version`.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.191007,
+            "similarity": 0.808993
+          },
+          {
+            "chunkId": "lab-689164ca81cd:08-residencia-datos-y-rgpd:01",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "08-residencia-datos-y-rgpd",
+            "ordinal": 1,
+            "title": "Residencia de datos, privacidad y cumplimiento RGPD",
+            "section": "Enmascaramiento y retención de auditoría",
+            "content": "## Enmascaramiento y retención de auditoría\n\nAntes de indexar documentos o enviar trazas al subsistema de observabilidad, el filtro de ingesta aplica enmascaramiento automático de correos electrónicos, números IBAN y documentos de identidad mediante tokens irreversibles `HMAC-SHA256`. Los registros de auditoría de acceso administrativo se conservan en almacenamiento inmutable (`WORM`) durante **2 años** (730 días).",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.325123,
+            "similarity": 0.674877
+          },
+          {
+            "chunkId": "lab-689164ca81cd:01-arquitectura-aethercloud:00",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "01-arquitectura-aethercloud",
+            "ordinal": 0,
+            "title": "Arquitectura general de AetherCloud",
+            "section": "Regiones y topología",
+            "content": "## Regiones y topología\n\nAetherCloud opera exclusivamente en dos regiones europeas de producción: `eu-mad-1` (Madrid, región primaria) y `eu-fra-1` (Fráncfort, región secundaria de contingencia). Cada región despliega tres zonas de disponibilidad independientes interconectadas mediante fibra dedicada con latencia inferior a 1,8 milisegundos.\n\nEl tráfico entrante atraviesa pasarelas perimetrales Anycast con terminación TLS 1.3 obligatoria. Ningún servicio de aplicación expone puertos directamente a internet pública sin pasar por la pasarela regional.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.344315,
+            "similarity": 0.655685
+          }
+        ],
+        "selected": [
+          {
+            "chunkId": "lab-689164ca81cd:09-observabilidad-opentelemetry:01",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "09-observabilidad-opentelemetry",
+            "ordinal": 1,
+            "title": "Observabilidad, métricas y exportación OpenTelemetry",
+            "section": "Muestreo y ventanas de retención",
+            "content": "## Muestreo y ventanas de retención\n\nEl colector aplica muestreo en origen (`head-based sampling`) del `10 %` para peticiones exitosas (`HTTP 2xx`) y conserva el `100 %` de las trazas que contengan errores (`HTTP 4xx/5xx`) o cuya latencia total supere los `1500 milisegundos`. Las trazas se retienen durante **14 días** y los logs estructurados JSON durante **30 días**.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.171838,
+            "similarity": 0.828162
+          },
+          {
+            "chunkId": "lab-689164ca81cd:09-observabilidad-opentelemetry:00",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "09-observabilidad-opentelemetry",
+            "ordinal": 0,
+            "title": "Observabilidad, métricas y exportación OpenTelemetry",
+            "section": "Colector OTLP y formatos soportados",
+            "content": "## Colector OTLP y formatos soportados\n\nCada organización puede exportar métricas y trazas distribuidas desde sus servicios en AetherCloud mediante el protocolo `OpenTelemetry (OTLP)` sobre `gRPC` con mTLS en el puerto `4317`, o mediante `OTLP/HTTP` en el puerto `4318`. Cada span incluye de forma obligatoria los atributos `aether.tenant_id`, `aether.region` y `service.version`.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.191007,
+            "similarity": 0.808993
+          }
+        ],
+        "decision": "answer",
+        "generationCalled": true,
+        "retrievalCount": 1,
+        "answer": "- **OTLP por gRPC** (con mTLS): puerto `4317` [cite:lab-689164ca81cd:09-observabilidad-opentelemetry:00]\n- **OTLP por HTTP** (OTLP/HTTP): puerto `4318` [cite:lab-689164ca81cd:09-observabilidad-opentelemetry:00]\n- **Retención de trazas**: 14 días [cite:lab-689164ca81cd:09-observabilidad-opentelemetry:01]",
+        "citations": [
+          "lab-689164ca81cd:09-observabilidad-opentelemetry:00",
+          "lab-689164ca81cd:09-observabilidad-opentelemetry:01"
+        ],
+        "latencyMs": 2267
+      },
+      "manualReview": {
+        "correct": true,
+        "sourceSupported": true,
+        "reason": "Respuesta completa respaldada por los fragmentos citados.",
+        "reviewer": "assistant-source-review"
+      }
+    },
+    {
+      "id": 13,
+      "answerable": true,
+      "expectedDocuments": ["10-despliegues-canary-y-rollback"],
+      "expectedFacts": ["10 %", "50 %", "10 minutos", "2,0 %"],
+      "result": {
+        "question": "Describe los dos primeros porcentajes del canary, sus ventanas y el umbral de errores 5xx que dispara rollback.",
+        "corpusVersion": "lab-689164ca81cd",
+        "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+        "genModelId": "claude-sonnet-5-5",
+        "minSimilarity": 0.724767,
+        "maxCosineDistance": 0.27523299999999995,
+        "retrieved": [
+          {
+            "chunkId": "lab-689164ca81cd:10-despliegues-canary-y-rollback:00",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "10-despliegues-canary-y-rollback",
+            "ordinal": 0,
+            "title": "Despliegues progresivos canary y política de rollback",
+            "section": "Fases del despliegue canary",
+            "content": "## Fases del despliegue canary\n\nTodo cambio en servicios del plano de datos de AetherCloud se despliega mediante una secuencia canary obligatoria de tres etapas:\n\n1. **Etapa 1:** envío del `10 %` del tráfico regional durante una ventana mínima de observación de **10 minutos**.\n2. **Etapa 2:** ampliación al `50 %` del tráfico durante otros **10 minutos**.\n3. **Etapa 3:** promoción al `100 %` de las instancias de la región una vez superadas las comprobaciones de salud.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.189505,
+            "similarity": 0.810495
+          },
+          {
+            "chunkId": "lab-689164ca81cd:10-despliegues-canary-y-rollback:01",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "10-despliegues-canary-y-rollback",
+            "ordinal": 1,
+            "title": "Despliegues progresivos canary y política de rollback",
+            "section": "Condiciones de rollback automático",
+            "content": "## Condiciones de rollback automático\n\nEl controlador de despliegue ejecuta un rollback automático a la imagen inmutable anterior (`sha256` verificado) en menos de 45 segundos si durante cualquier ventana de observación la tasa de errores `HTTP 5xx` supera el `2,0 %` o si el percentil `p95` de latencia supera los `800 milisegundos` durante tres minutos consecutivos.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.206862,
+            "similarity": 0.793138
+          },
+          {
+            "chunkId": "lab-689164ca81cd:09-observabilidad-opentelemetry:01",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "09-observabilidad-opentelemetry",
+            "ordinal": 1,
+            "title": "Observabilidad, métricas y exportación OpenTelemetry",
+            "section": "Muestreo y ventanas de retención",
+            "content": "## Muestreo y ventanas de retención\n\nEl colector aplica muestreo en origen (`head-based sampling`) del `10 %` para peticiones exitosas (`HTTP 2xx`) y conserva el `100 %` de las trazas que contengan errores (`HTTP 4xx/5xx`) o cuya latencia total supere los `1500 milisegundos`. Las trazas se retienen durante **14 días** y los logs estructurados JSON durante **30 días**.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.343175,
+            "similarity": 0.656825
+          },
+          {
+            "chunkId": "lab-689164ca81cd:05-sla-y-creditos-servicio:01",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "05-sla-y-creditos-servicio",
+            "ordinal": 1,
+            "title": "Acuerdo de nivel de servicio (SLA) y créditos",
+            "section": "Escala de créditos de servicio",
+            "content": "## Escala de créditos de servicio\n\nSi la disponibilidad mensual cae por debajo del umbral garantizado, la organización tiene derecho a solicitar créditos aplicables a la factura del mes siguiente:\n\n- Disponibilidad entre `99,00 %` y `99,94 %`: crédito del `10 %` de la cuota mensual fija.\n- Disponibilidad inferior al `99,00 %`: crédito del `25 %` de la cuota mensual fija.\n\nLa solicitud de crédito debe presentarse dentro de los 15 días hábiles posteriores al cierre del mes afectado, adjuntando los identificadores de incidencia emitidos por soporte.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.378203,
+            "similarity": 0.621797
+          }
+        ],
+        "selected": [
+          {
+            "chunkId": "lab-689164ca81cd:10-despliegues-canary-y-rollback:00",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "10-despliegues-canary-y-rollback",
+            "ordinal": 0,
+            "title": "Despliegues progresivos canary y política de rollback",
+            "section": "Fases del despliegue canary",
+            "content": "## Fases del despliegue canary\n\nTodo cambio en servicios del plano de datos de AetherCloud se despliega mediante una secuencia canary obligatoria de tres etapas:\n\n1. **Etapa 1:** envío del `10 %` del tráfico regional durante una ventana mínima de observación de **10 minutos**.\n2. **Etapa 2:** ampliación al `50 %` del tráfico durante otros **10 minutos**.\n3. **Etapa 3:** promoción al `100 %` de las instancias de la región una vez superadas las comprobaciones de salud.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.189505,
+            "similarity": 0.810495
+          },
+          {
+            "chunkId": "lab-689164ca81cd:10-despliegues-canary-y-rollback:01",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "10-despliegues-canary-y-rollback",
+            "ordinal": 1,
+            "title": "Despliegues progresivos canary y política de rollback",
+            "section": "Condiciones de rollback automático",
+            "content": "## Condiciones de rollback automático\n\nEl controlador de despliegue ejecuta un rollback automático a la imagen inmutable anterior (`sha256` verificado) en menos de 45 segundos si durante cualquier ventana de observación la tasa de errores `HTTP 5xx` supera el `2,0 %` o si el percentil `p95` de latencia supera los `800 milisegundos` durante tres minutos consecutivos.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.206862,
+            "similarity": 0.793138
+          }
+        ],
+        "decision": "answer",
+        "generationCalled": true,
+        "retrievalCount": 1,
+        "answer": "**Primeros dos porcentajes y ventanas del canary:**\n\n- **Etapa 1:** el `10 %` del tráfico regional, con una ventana mínima de observación de 10 minutos [cite:lab-689164ca81cd:10-despliegues-canary-y-rollback:00].\n- **Etapa 2:** ampliación al `50 %` del tráfico durante otros 10 minutos [cite:lab-689164ca81cd:10-despliegues-canary-y-rollback:00].\n\n**Umbral de errores 5xx para el rollback:** el controlador ejecuta un rollback automático a la imagen inmutable anterior si, durante cualquier ventana de observación, la tasa de errores `HTTP 5xx` supera el `2,0 %` [cite:lab-689164ca81cd:10-despliegues-canary-y-rollback:01]. El rollback se realiza en menos de 45 segundos [cite:lab-689164ca81cd:10-despliegues-canary-y-rollback:01].\n\nLos documentos mencionan además otra condición independiente de rollback, basada en la latencia p95 (más de `800 milisegundos` durante tres minutos consecutivos), pero no forma parte del umbral de errores 5xx que preguntabas [cite:lab-689164ca81cd:10-despliegues-canary-y-rollback:01].",
+        "citations": [
+          "lab-689164ca81cd:10-despliegues-canary-y-rollback:00",
+          "lab-689164ca81cd:10-despliegues-canary-y-rollback:01"
+        ],
+        "latencyMs": 3793
+      },
+      "manualReview": {
+        "correct": true,
+        "sourceSupported": true,
+        "reason": "Respuesta completa respaldada por los fragmentos citados.",
+        "reviewer": "assistant-source-review"
+      }
+    },
+    {
+      "id": 14,
+      "answerable": true,
+      "expectedDocuments": ["02-autenticacion-mtls-tokens", "06-respuesta-a-incidentes"],
+      "expectedFacts": ["AetherCA-G2", "30 minutos"],
+      "result": {
+        "question": "Une el nombre de la autoridad que emite los certificados mTLS con la frecuencia de actualizaciones de un incidente crítico.",
+        "corpusVersion": "lab-689164ca81cd",
+        "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+        "genModelId": "claude-sonnet-5-5",
+        "minSimilarity": 0.724767,
+        "maxCosineDistance": 0.27523299999999995,
+        "retrieved": [
+          {
+            "chunkId": "lab-689164ca81cd:02-autenticacion-mtls-tokens:01",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "02-autenticacion-mtls-tokens",
+            "ordinal": 1,
+            "title": "Autenticación mTLS y gestión de tokens",
+            "section": "Caducidad y revocación de credenciales",
+            "content": "## Caducidad y revocación de credenciales\n\nLos tokens de acceso tienen una vida máxima de 24 horas (86400 segundos) y los certificados de trabajo rotan automáticamente cada 7 días. La revocación de emergencia se propaga a todas las pasarelas de `eu-mad-1` y `eu-fra-1` en menos de 90 segundos mediante listas CRL distribuidas en memoria.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.296593,
+            "similarity": 0.703407
+          },
+          {
+            "chunkId": "lab-689164ca81cd:02-autenticacion-mtls-tokens:00",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "02-autenticacion-mtls-tokens",
+            "ordinal": 0,
+            "title": "Autenticación mTLS y gestión de tokens",
+            "section": "Certificados de cliente y cabecera de organización",
+            "content": "## Certificados de cliente y cabecera de organización\n\nTodas las llamadas máquina a máquina hacia la API de AetherCloud exigen autenticación mutua TLS (`mTLS`) con certificados X.509 emitidos por la autoridad interna `AetherCA-G2`, junto con un token firmado `EdDSA` en la cabecera `Authorization: Bearer <token>` y el identificador de organización en `X-Aether-Tenant`.\n\nSi la cabecera `X-Aether-Tenant` no coincide con el atributo `ou` del certificado cliente, la pasarela rechaza la petición con código HTTP `403` y error `TENANT_MISMATCH`.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.319339,
+            "similarity": 0.680661
+          },
+          {
+            "chunkId": "lab-689164ca81cd:06-respuesta-a-incidentes:00",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "06-respuesta-a-incidentes",
+            "ordinal": 0,
+            "title": "Respuesta a incidentes y clasificación de severidades",
+            "section": "Niveles de severidad y tiempos de respuesta",
+            "content": "## Niveles de severidad y tiempos de respuesta\n\nEl centro de operaciones de AetherCloud clasifica los incidentes en tres niveles:\n\n- **SEV-1 (Crítico):** caída total del plano de datos o pérdida de aislamiento entre organizaciones. Tiempo máximo de primera respuesta: **15 minutos**, con actualizaciones cada 30 minutos (24x7).\n- **SEV-2 (Alto):** degradación severa de latencia o fallo de una función principal sin alternativa directa. Tiempo máximo de primera respuesta: **60 minutos**, con actualizaciones cada 2 horas.\n- **SEV-3 (Moderado):** incidencia menor o consulta operativa con alternativa disponible. Tiempo máximo de primera respuesta: **8 horas hábiles**.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.332193,
+            "similarity": 0.667807
+          },
+          {
+            "chunkId": "lab-689164ca81cd:06-respuesta-a-incidentes:01",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "06-respuesta-a-incidentes",
+            "ordinal": 1,
+            "title": "Respuesta a incidentes y clasificación de severidades",
+            "section": "Informe postmortem",
+            "content": "## Informe postmortem\n\nPara todo incidente `SEV-1` o `SEV-2`, el equipo de ingeniería entrega un informe postmortem preliminar en 48 horas y el análisis definitivo de causa raíz (`RCA`) con acciones preventivas en un plazo máximo de **5 días hábiles** tras la resolución.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.343826,
+            "similarity": 0.656174
+          }
+        ],
+        "selected": [],
+        "decision": "refuse",
+        "generationCalled": false,
+        "retrievalCount": 1,
+        "answer": "No consta información suficiente en la documentación de AetherCloud para responder a esta consulta (ningún fragmento superó el umbral calibrado previo a la generación).",
+        "citations": [],
+        "latencyMs": 567
+      },
+      "manualReview": {
+        "correct": false,
+        "sourceSupported": false,
+        "reason": "Abstención incorrecta en pregunta compuesta; la evidencia existe en dos documentos.",
+        "reviewer": "assistant-source-review"
+      }
+    },
+    {
+      "id": 15,
+      "answerable": false,
+      "expectedDocuments": [],
+      "expectedFacts": ["El corpus no contiene teléfonos ni contactos personales."],
+      "result": {
+        "question": "¿Cuál es el número de teléfono personal del responsable comercial en Madrid?",
+        "corpusVersion": "lab-689164ca81cd",
+        "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+        "genModelId": "claude-sonnet-5-5",
+        "minSimilarity": 0.724767,
+        "maxCosineDistance": 0.27523299999999995,
+        "retrieved": [
+          {
+            "chunkId": "lab-689164ca81cd:07-facturacion-y-planes:00",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "07-facturacion-y-planes",
+            "ordinal": 0,
+            "title": "Facturación, tarifas y planes comerciales",
+            "section": "Cuotas mensuales y franquicias incluidas",
+            "content": "## Cuotas mensuales y franquicias incluidas\n\nAetherCloud ofrece dos planes comerciales facturados en euros (`EUR`) a mes vencido:\n\n- **Plan Estándar:** cuota base de `190 EUR/mes`, incluye 2 millones de peticiones API, 100 GiB de almacenamiento cifrado y soporte en horario laboral europeo.\n- **Plan Empresa:** cuota base de `850 EUR/mes`, incluye 15 millones de peticiones API, 1 TiB de almacenamiento cifrado, soporte 24x7 para `SEV-1` y réplica activa en `eu-fra-1`.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.400198,
+            "similarity": 0.599802
+          },
+          {
+            "chunkId": "lab-689164ca81cd:08-residencia-datos-y-rgpd:00",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "08-residencia-datos-y-rgpd",
+            "ordinal": 0,
+            "title": "Residencia de datos, privacidad y cumplimiento RGPD",
+            "section": "Garantía de residencia en la Unión Europea",
+            "content": "## Garantía de residencia en la Unión Europea\n\nTodos los datos de clientes, índices vectoriales, registros de auditoría y copias de seguridad de AetherCloud permanecen íntegramente dentro del Espacio Económico Europeo (`eu-mad-1` y `eu-fra-1`). Está prohibido transferir cargas útiles o telemetría con datos personales (`PII`) hacia regiones o subencargados fuera de la Unión Europea.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.409811,
+            "similarity": 0.590189
+          },
+          {
+            "chunkId": "lab-689164ca81cd:01-arquitectura-aethercloud:01",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "01-arquitectura-aethercloud",
+            "ordinal": 1,
+            "title": "Arquitectura general de AetherCloud",
+            "section": "Separación entre plano de control y plano de datos",
+            "content": "## Separación entre plano de control y plano de datos\n\nEl plano de control (`control-plane`) gestiona altas de organizaciones, políticas de acceso, rotación de claves y despliegues en `eu-mad-1`, con réplica síncrona del catálogo en PostgreSQL 17. El plano de datos (`data-plane`) procesa las peticiones operativas de cada cliente dentro de la región contratada y puede seguir funcionando durante al menos 6 horas aunque el plano de control esté en mantenimiento.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.412829,
+            "similarity": 0.587171
+          },
+          {
+            "chunkId": "lab-689164ca81cd:01-arquitectura-aethercloud:00",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "01-arquitectura-aethercloud",
+            "ordinal": 0,
+            "title": "Arquitectura general de AetherCloud",
+            "section": "Regiones y topología",
+            "content": "## Regiones y topología\n\nAetherCloud opera exclusivamente en dos regiones europeas de producción: `eu-mad-1` (Madrid, región primaria) y `eu-fra-1` (Fráncfort, región secundaria de contingencia). Cada región despliega tres zonas de disponibilidad independientes interconectadas mediante fibra dedicada con latencia inferior a 1,8 milisegundos.\n\nEl tráfico entrante atraviesa pasarelas perimetrales Anycast con terminación TLS 1.3 obligatoria. Ningún servicio de aplicación expone puertos directamente a internet pública sin pasar por la pasarela regional.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.413039,
+            "similarity": 0.586961
+          }
+        ],
+        "selected": [],
+        "decision": "refuse",
+        "generationCalled": false,
+        "retrievalCount": 1,
+        "answer": "No consta información suficiente en la documentación de AetherCloud para responder a esta consulta (ningún fragmento superó el umbral calibrado previo a la generación).",
+        "citations": [],
+        "latencyMs": 568
+      },
+      "manualReview": {
+        "correct": true,
+        "sourceSupported": true,
+        "reason": "Rechazo correcto: el dato solicitado no consta en el corpus.",
+        "reviewer": "assistant-source-review"
+      }
+    },
+    {
+      "id": 16,
+      "answerable": false,
+      "expectedDocuments": [],
+      "expectedFacts": ["No se especifican distribución ni kernel."],
+      "result": {
+        "question": "¿Qué distribución Linux y versión de kernel instalan las máquinas de los clientes?",
+        "corpusVersion": "lab-689164ca81cd",
+        "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+        "genModelId": "claude-sonnet-5-5",
+        "minSimilarity": 0.724767,
+        "maxCosineDistance": 0.27523299999999995,
+        "retrieved": [
+          {
+            "chunkId": "lab-689164ca81cd:02-autenticacion-mtls-tokens:00",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "02-autenticacion-mtls-tokens",
+            "ordinal": 0,
+            "title": "Autenticación mTLS y gestión de tokens",
+            "section": "Certificados de cliente y cabecera de organización",
+            "content": "## Certificados de cliente y cabecera de organización\n\nTodas las llamadas máquina a máquina hacia la API de AetherCloud exigen autenticación mutua TLS (`mTLS`) con certificados X.509 emitidos por la autoridad interna `AetherCA-G2`, junto con un token firmado `EdDSA` en la cabecera `Authorization: Bearer <token>` y el identificador de organización en `X-Aether-Tenant`.\n\nSi la cabecera `X-Aether-Tenant` no coincide con el atributo `ou` del certificado cliente, la pasarela rechaza la petición con código HTTP `403` y error `TENANT_MISMATCH`.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.405811,
+            "similarity": 0.594189
+          },
+          {
+            "chunkId": "lab-689164ca81cd:01-arquitectura-aethercloud:00",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "01-arquitectura-aethercloud",
+            "ordinal": 0,
+            "title": "Arquitectura general de AetherCloud",
+            "section": "Regiones y topología",
+            "content": "## Regiones y topología\n\nAetherCloud opera exclusivamente en dos regiones europeas de producción: `eu-mad-1` (Madrid, región primaria) y `eu-fra-1` (Fráncfort, región secundaria de contingencia). Cada región despliega tres zonas de disponibilidad independientes interconectadas mediante fibra dedicada con latencia inferior a 1,8 milisegundos.\n\nEl tráfico entrante atraviesa pasarelas perimetrales Anycast con terminación TLS 1.3 obligatoria. Ningún servicio de aplicación expone puertos directamente a internet pública sin pasar por la pasarela regional.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.408642,
+            "similarity": 0.591358
+          },
+          {
+            "chunkId": "lab-689164ca81cd:09-observabilidad-opentelemetry:00",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "09-observabilidad-opentelemetry",
+            "ordinal": 0,
+            "title": "Observabilidad, métricas y exportación OpenTelemetry",
+            "section": "Colector OTLP y formatos soportados",
+            "content": "## Colector OTLP y formatos soportados\n\nCada organización puede exportar métricas y trazas distribuidas desde sus servicios en AetherCloud mediante el protocolo `OpenTelemetry (OTLP)` sobre `gRPC` con mTLS en el puerto `4317`, o mediante `OTLP/HTTP` en el puerto `4318`. Cada span incluye de forma obligatoria los atributos `aether.tenant_id`, `aether.region` y `service.version`.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.41772,
+            "similarity": 0.58228
+          },
+          {
+            "chunkId": "lab-689164ca81cd:01-arquitectura-aethercloud:01",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "01-arquitectura-aethercloud",
+            "ordinal": 1,
+            "title": "Arquitectura general de AetherCloud",
+            "section": "Separación entre plano de control y plano de datos",
+            "content": "## Separación entre plano de control y plano de datos\n\nEl plano de control (`control-plane`) gestiona altas de organizaciones, políticas de acceso, rotación de claves y despliegues en `eu-mad-1`, con réplica síncrona del catálogo en PostgreSQL 17. El plano de datos (`data-plane`) procesa las peticiones operativas de cada cliente dentro de la región contratada y puede seguir funcionando durante al menos 6 horas aunque el plano de control esté en mantenimiento.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.425317,
+            "similarity": 0.574683
+          }
+        ],
+        "selected": [],
+        "decision": "refuse",
+        "generationCalled": false,
+        "retrievalCount": 1,
+        "answer": "No consta información suficiente en la documentación de AetherCloud para responder a esta consulta (ningún fragmento superó el umbral calibrado previo a la generación).",
+        "citations": [],
+        "latencyMs": 555
+      },
+      "manualReview": {
+        "correct": true,
+        "sourceSupported": true,
+        "reason": "Rechazo correcto: el dato solicitado no consta en el corpus.",
+        "reviewer": "assistant-source-review"
+      }
+    },
+    {
+      "id": 17,
+      "answerable": false,
+      "expectedDocuments": [],
+      "expectedFacts": ["No consta identidad fiscal de la sociedad."],
+      "result": {
+        "question": "¿Cuál es el NIF de la sociedad que opera AetherCloud?",
+        "corpusVersion": "lab-689164ca81cd",
+        "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+        "genModelId": "claude-sonnet-5-5",
+        "minSimilarity": 0.724767,
+        "maxCosineDistance": 0.27523299999999995,
+        "retrieved": [
+          {
+            "chunkId": "lab-689164ca81cd:07-facturacion-y-planes:00",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "07-facturacion-y-planes",
+            "ordinal": 0,
+            "title": "Facturación, tarifas y planes comerciales",
+            "section": "Cuotas mensuales y franquicias incluidas",
+            "content": "## Cuotas mensuales y franquicias incluidas\n\nAetherCloud ofrece dos planes comerciales facturados en euros (`EUR`) a mes vencido:\n\n- **Plan Estándar:** cuota base de `190 EUR/mes`, incluye 2 millones de peticiones API, 100 GiB de almacenamiento cifrado y soporte en horario laboral europeo.\n- **Plan Empresa:** cuota base de `850 EUR/mes`, incluye 15 millones de peticiones API, 1 TiB de almacenamiento cifrado, soporte 24x7 para `SEV-1` y réplica activa en `eu-fra-1`.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.287682,
+            "similarity": 0.712318
+          },
+          {
+            "chunkId": "lab-689164ca81cd:01-arquitectura-aethercloud:00",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "01-arquitectura-aethercloud",
+            "ordinal": 0,
+            "title": "Arquitectura general de AetherCloud",
+            "section": "Regiones y topología",
+            "content": "## Regiones y topología\n\nAetherCloud opera exclusivamente en dos regiones europeas de producción: `eu-mad-1` (Madrid, región primaria) y `eu-fra-1` (Fráncfort, región secundaria de contingencia). Cada región despliega tres zonas de disponibilidad independientes interconectadas mediante fibra dedicada con latencia inferior a 1,8 milisegundos.\n\nEl tráfico entrante atraviesa pasarelas perimetrales Anycast con terminación TLS 1.3 obligatoria. Ningún servicio de aplicación expone puertos directamente a internet pública sin pasar por la pasarela regional.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.295385,
+            "similarity": 0.704615
+          },
+          {
+            "chunkId": "lab-689164ca81cd:08-residencia-datos-y-rgpd:00",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "08-residencia-datos-y-rgpd",
+            "ordinal": 0,
+            "title": "Residencia de datos, privacidad y cumplimiento RGPD",
+            "section": "Garantía de residencia en la Unión Europea",
+            "content": "## Garantía de residencia en la Unión Europea\n\nTodos los datos de clientes, índices vectoriales, registros de auditoría y copias de seguridad de AetherCloud permanecen íntegramente dentro del Espacio Económico Europeo (`eu-mad-1` y `eu-fra-1`). Está prohibido transferir cargas útiles o telemetría con datos personales (`PII`) hacia regiones o subencargados fuera de la Unión Europea.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.29908,
+            "similarity": 0.70092
+          },
+          {
+            "chunkId": "lab-689164ca81cd:05-sla-y-creditos-servicio:00",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "05-sla-y-creditos-servicio",
+            "ordinal": 0,
+            "title": "Acuerdo de nivel de servicio (SLA) y créditos",
+            "section": "Disponibilidad mensual comprometida",
+            "content": "## Disponibilidad mensual comprometida\n\nAetherCloud garantiza una disponibilidad mensual de al menos el `99,95 %` para los servicios del plano de datos en producción. El cálculo excluye las ventanas de mantenimiento programado notificadas con al menos 7 días naturales de antelación y cuya duración no supere los 45 minutos al mes.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.319486,
+            "similarity": 0.680514
+          }
+        ],
+        "selected": [],
+        "decision": "refuse",
+        "generationCalled": false,
+        "retrievalCount": 1,
+        "answer": "No consta información suficiente en la documentación de AetherCloud para responder a esta consulta (ningún fragmento superó el umbral calibrado previo a la generación).",
+        "citations": [],
+        "latencyMs": 488
+      },
+      "manualReview": {
+        "correct": true,
+        "sourceSupported": true,
+        "reason": "Rechazo correcto: el dato solicitado no consta en el corpus.",
+        "reviewer": "assistant-source-review"
+      }
+    },
+    {
+      "id": 18,
+      "answerable": false,
+      "expectedDocuments": [],
+      "expectedFacts": ["No existe política de becas en el corpus."],
+      "result": {
+        "question": "¿Qué beca educativa de 2027 paga la cuota del plan Empresa?",
+        "corpusVersion": "lab-689164ca81cd",
+        "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+        "genModelId": "claude-sonnet-5-5",
+        "minSimilarity": 0.724767,
+        "maxCosineDistance": 0.27523299999999995,
+        "retrieved": [
+          {
+            "chunkId": "lab-689164ca81cd:07-facturacion-y-planes:00",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "07-facturacion-y-planes",
+            "ordinal": 0,
+            "title": "Facturación, tarifas y planes comerciales",
+            "section": "Cuotas mensuales y franquicias incluidas",
+            "content": "## Cuotas mensuales y franquicias incluidas\n\nAetherCloud ofrece dos planes comerciales facturados en euros (`EUR`) a mes vencido:\n\n- **Plan Estándar:** cuota base de `190 EUR/mes`, incluye 2 millones de peticiones API, 100 GiB de almacenamiento cifrado y soporte en horario laboral europeo.\n- **Plan Empresa:** cuota base de `850 EUR/mes`, incluye 15 millones de peticiones API, 1 TiB de almacenamiento cifrado, soporte 24x7 para `SEV-1` y réplica activa en `eu-fra-1`.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.393642,
+            "similarity": 0.606358
+          },
+          {
+            "chunkId": "lab-689164ca81cd:05-sla-y-creditos-servicio:01",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "05-sla-y-creditos-servicio",
+            "ordinal": 1,
+            "title": "Acuerdo de nivel de servicio (SLA) y créditos",
+            "section": "Escala de créditos de servicio",
+            "content": "## Escala de créditos de servicio\n\nSi la disponibilidad mensual cae por debajo del umbral garantizado, la organización tiene derecho a solicitar créditos aplicables a la factura del mes siguiente:\n\n- Disponibilidad entre `99,00 %` y `99,94 %`: crédito del `10 %` de la cuota mensual fija.\n- Disponibilidad inferior al `99,00 %`: crédito del `25 %` de la cuota mensual fija.\n\nLa solicitud de crédito debe presentarse dentro de los 15 días hábiles posteriores al cierre del mes afectado, adjuntando los identificadores de incidencia emitidos por soporte.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.442842,
+            "similarity": 0.557158
+          },
+          {
+            "chunkId": "lab-689164ca81cd:03-limites-y-cuotas-api:00",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "03-limites-y-cuotas-api",
+            "ordinal": 0,
+            "title": "Límites de tráfico y cuotas de API",
+            "section": "Cuotas por plan de suscripción",
+            "content": "## Cuotas por plan de suscripción\n\nLa pasarela aplica control de tasa por ventana deslizante de 60 segundos a cada organización (`X-Aether-Tenant`):\n\n- **Plan Estándar:** hasta 120 peticiones por minuto y un máximo de 10 peticiones concurrentes.\n- **Plan Empresa:** hasta 600 peticiones por minuto y un máximo de 50 peticiones concurrentes.\n\nLas peticiones de lectura sobre `/v2/status` no descuentan del cupo por minuto, pero sí respetan el límite de concurrencia.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.453205,
+            "similarity": 0.546795
+          },
+          {
+            "chunkId": "lab-689164ca81cd:05-sla-y-creditos-servicio:00",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "05-sla-y-creditos-servicio",
+            "ordinal": 0,
+            "title": "Acuerdo de nivel de servicio (SLA) y créditos",
+            "section": "Disponibilidad mensual comprometida",
+            "content": "## Disponibilidad mensual comprometida\n\nAetherCloud garantiza una disponibilidad mensual de al menos el `99,95 %` para los servicios del plano de datos en producción. El cálculo excluye las ventanas de mantenimiento programado notificadas con al menos 7 días naturales de antelación y cuya duración no supere los 45 minutos al mes.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.470994,
+            "similarity": 0.529006
+          }
+        ],
+        "selected": [],
+        "decision": "refuse",
+        "generationCalled": false,
+        "retrievalCount": 1,
+        "answer": "No consta información suficiente en la documentación de AetherCloud para responder a esta consulta (ningún fragmento superó el umbral calibrado previo a la generación).",
+        "citations": [],
+        "latencyMs": 479
+      },
+      "manualReview": {
+        "correct": true,
+        "sourceSupported": true,
+        "reason": "Rechazo correcto: el dato solicitado no consta en el corpus.",
+        "reviewer": "assistant-source-review"
+      }
+    },
+    {
+      "id": 19,
+      "answerable": false,
+      "expectedDocuments": [],
+      "expectedFacts": ["No consta información laboral ni salarial."],
+      "result": {
+        "question": "¿Qué salario anual recibe una persona de guardia del centro de operaciones?",
+        "corpusVersion": "lab-689164ca81cd",
+        "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+        "genModelId": "claude-sonnet-5-5",
+        "minSimilarity": 0.724767,
+        "maxCosineDistance": 0.27523299999999995,
+        "retrieved": [
+          {
+            "chunkId": "lab-689164ca81cd:01-arquitectura-aethercloud:01",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "01-arquitectura-aethercloud",
+            "ordinal": 1,
+            "title": "Arquitectura general de AetherCloud",
+            "section": "Separación entre plano de control y plano de datos",
+            "content": "## Separación entre plano de control y plano de datos\n\nEl plano de control (`control-plane`) gestiona altas de organizaciones, políticas de acceso, rotación de claves y despliegues en `eu-mad-1`, con réplica síncrona del catálogo en PostgreSQL 17. El plano de datos (`data-plane`) procesa las peticiones operativas de cada cliente dentro de la región contratada y puede seguir funcionando durante al menos 6 horas aunque el plano de control esté en mantenimiento.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.447194,
+            "similarity": 0.552806
+          },
+          {
+            "chunkId": "lab-689164ca81cd:05-sla-y-creditos-servicio:01",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "05-sla-y-creditos-servicio",
+            "ordinal": 1,
+            "title": "Acuerdo de nivel de servicio (SLA) y créditos",
+            "section": "Escala de créditos de servicio",
+            "content": "## Escala de créditos de servicio\n\nSi la disponibilidad mensual cae por debajo del umbral garantizado, la organización tiene derecho a solicitar créditos aplicables a la factura del mes siguiente:\n\n- Disponibilidad entre `99,00 %` y `99,94 %`: crédito del `10 %` de la cuota mensual fija.\n- Disponibilidad inferior al `99,00 %`: crédito del `25 %` de la cuota mensual fija.\n\nLa solicitud de crédito debe presentarse dentro de los 15 días hábiles posteriores al cierre del mes afectado, adjuntando los identificadores de incidencia emitidos por soporte.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.451472,
+            "similarity": 0.548528
+          },
+          {
+            "chunkId": "lab-689164ca81cd:07-facturacion-y-planes:00",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "07-facturacion-y-planes",
+            "ordinal": 0,
+            "title": "Facturación, tarifas y planes comerciales",
+            "section": "Cuotas mensuales y franquicias incluidas",
+            "content": "## Cuotas mensuales y franquicias incluidas\n\nAetherCloud ofrece dos planes comerciales facturados en euros (`EUR`) a mes vencido:\n\n- **Plan Estándar:** cuota base de `190 EUR/mes`, incluye 2 millones de peticiones API, 100 GiB de almacenamiento cifrado y soporte en horario laboral europeo.\n- **Plan Empresa:** cuota base de `850 EUR/mes`, incluye 15 millones de peticiones API, 1 TiB de almacenamiento cifrado, soporte 24x7 para `SEV-1` y réplica activa en `eu-fra-1`.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.454976,
+            "similarity": 0.545024
+          },
+          {
+            "chunkId": "lab-689164ca81cd:07-facturacion-y-planes:01",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "07-facturacion-y-planes",
+            "ordinal": 1,
+            "title": "Facturación, tarifas y planes comerciales",
+            "section": "Cómputo bajo demanda y recargos",
+            "content": "## Cómputo bajo demanda y recargos\n\nLas tareas de ejecución asíncrona se facturan por segundo real de CPU/memoria con un mínimo facturable de **60 segundos** por trabajo iniciado. El exceso de almacenamiento sobre la franquicia contratada se tarifica a `0,18 EUR` por GiB-mes adicional. Las facturas se emiten el día 2 de cada mes con vencimiento a 30 días naturales.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.460007,
+            "similarity": 0.539993
+          }
+        ],
+        "selected": [],
+        "decision": "refuse",
+        "generationCalled": false,
+        "retrievalCount": 1,
+        "answer": "No consta información suficiente en la documentación de AetherCloud para responder a esta consulta (ningún fragmento superó el umbral calibrado previo a la generación).",
+        "citations": [],
+        "latencyMs": 545
+      },
+      "manualReview": {
+        "correct": true,
+        "sourceSupported": true,
+        "reason": "Rechazo correcto: el dato solicitado no consta en el corpus.",
+        "reviewer": "assistant-source-review"
+      }
+    },
+    {
+      "id": 20,
+      "answerable": false,
+      "expectedDocuments": [],
+      "expectedFacts": ["No constan patentes."],
+      "result": {
+        "question": "¿Qué número de patente protege el algoritmo de facturación de AetherCloud?",
+        "corpusVersion": "lab-689164ca81cd",
+        "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+        "genModelId": "claude-sonnet-5-5",
+        "minSimilarity": 0.724767,
+        "maxCosineDistance": 0.27523299999999995,
+        "retrieved": [
+          {
+            "chunkId": "lab-689164ca81cd:07-facturacion-y-planes:00",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "07-facturacion-y-planes",
+            "ordinal": 0,
+            "title": "Facturación, tarifas y planes comerciales",
+            "section": "Cuotas mensuales y franquicias incluidas",
+            "content": "## Cuotas mensuales y franquicias incluidas\n\nAetherCloud ofrece dos planes comerciales facturados en euros (`EUR`) a mes vencido:\n\n- **Plan Estándar:** cuota base de `190 EUR/mes`, incluye 2 millones de peticiones API, 100 GiB de almacenamiento cifrado y soporte en horario laboral europeo.\n- **Plan Empresa:** cuota base de `850 EUR/mes`, incluye 15 millones de peticiones API, 1 TiB de almacenamiento cifrado, soporte 24x7 para `SEV-1` y réplica activa en `eu-fra-1`.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.317411,
+            "similarity": 0.682589
+          },
+          {
+            "chunkId": "lab-689164ca81cd:05-sla-y-creditos-servicio:00",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "05-sla-y-creditos-servicio",
+            "ordinal": 0,
+            "title": "Acuerdo de nivel de servicio (SLA) y créditos",
+            "section": "Disponibilidad mensual comprometida",
+            "content": "## Disponibilidad mensual comprometida\n\nAetherCloud garantiza una disponibilidad mensual de al menos el `99,95 %` para los servicios del plano de datos en producción. El cálculo excluye las ventanas de mantenimiento programado notificadas con al menos 7 días naturales de antelación y cuya duración no supere los 45 minutos al mes.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.359889,
+            "similarity": 0.640111
+          },
+          {
+            "chunkId": "lab-689164ca81cd:08-residencia-datos-y-rgpd:00",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "08-residencia-datos-y-rgpd",
+            "ordinal": 0,
+            "title": "Residencia de datos, privacidad y cumplimiento RGPD",
+            "section": "Garantía de residencia en la Unión Europea",
+            "content": "## Garantía de residencia en la Unión Europea\n\nTodos los datos de clientes, índices vectoriales, registros de auditoría y copias de seguridad de AetherCloud permanecen íntegramente dentro del Espacio Económico Europeo (`eu-mad-1` y `eu-fra-1`). Está prohibido transferir cargas útiles o telemetría con datos personales (`PII`) hacia regiones o subencargados fuera de la Unión Europea.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.362378,
+            "similarity": 0.637622
+          },
+          {
+            "chunkId": "lab-689164ca81cd:01-arquitectura-aethercloud:00",
+            "corpusVersion": "lab-689164ca81cd",
+            "documentId": "01-arquitectura-aethercloud",
+            "ordinal": 0,
+            "title": "Arquitectura general de AetherCloud",
+            "section": "Regiones y topología",
+            "content": "## Regiones y topología\n\nAetherCloud opera exclusivamente en dos regiones europeas de producción: `eu-mad-1` (Madrid, región primaria) y `eu-fra-1` (Fráncfort, región secundaria de contingencia). Cada región despliega tres zonas de disponibilidad independientes interconectadas mediante fibra dedicada con latencia inferior a 1,8 milisegundos.\n\nEl tráfico entrante atraviesa pasarelas perimetrales Anycast con terminación TLS 1.3 obligatoria. Ningún servicio de aplicación expone puertos directamente a internet pública sin pasar por la pasarela regional.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.3631,
+            "similarity": 0.6369
+          }
+        ],
+        "selected": [],
+        "decision": "refuse",
+        "generationCalled": false,
+        "retrievalCount": 1,
+        "answer": "No consta información suficiente en la documentación de AetherCloud para responder a esta consulta (ningún fragmento superó el umbral calibrado previo a la generación).",
+        "citations": [],
+        "latencyMs": 660
+      },
+      "manualReview": {
+        "correct": true,
+        "sourceSupported": true,
+        "reason": "Rechazo correcto: el dato solicitado no consta en el corpus.",
+        "reviewer": "assistant-source-review"
+      }
+    }
+  ],
+  "operations": [
+    {
+      "kind": "embedding",
+      "model": "openrouter:google/gemini-embedding-2:768",
+      "inputTokens": 20,
+      "outputTokens": null
+    },
+    {
+      "kind": "generation",
+      "model": "claude-sonnet-5-5",
+      "inputTokens": 619,
+      "outputTokens": 131
+    },
+    {
+      "kind": "embedding",
+      "model": "openrouter:google/gemini-embedding-2:768",
+      "inputTokens": 20,
+      "outputTokens": null
+    },
+    {
+      "kind": "generation",
+      "model": "claude-sonnet-5-5",
+      "inputTokens": 839,
+      "outputTokens": 75
+    },
+    {
+      "kind": "embedding",
+      "model": "openrouter:google/gemini-embedding-2:768",
+      "inputTokens": 22,
+      "outputTokens": null
+    },
+    {
+      "kind": "generation",
+      "model": "claude-sonnet-5-5",
+      "inputTokens": 540,
+      "outputTokens": 298
+    },
+    {
+      "kind": "embedding",
+      "model": "openrouter:google/gemini-embedding-2:768",
+      "inputTokens": 24,
+      "outputTokens": null
+    },
+    {
+      "kind": "embedding",
+      "model": "openrouter:google/gemini-embedding-2:768",
+      "inputTokens": 23,
+      "outputTokens": null
+    },
+    {
+      "kind": "generation",
+      "model": "claude-sonnet-5-5",
+      "inputTokens": 608,
+      "outputTokens": 284
+    },
+    {
+      "kind": "embedding",
+      "model": "openrouter:google/gemini-embedding-2:768",
+      "inputTokens": 19,
+      "outputTokens": null
+    },
+    {
+      "kind": "embedding",
+      "model": "openrouter:google/gemini-embedding-2:768",
+      "inputTokens": 18,
+      "outputTokens": null
+    },
+    {
+      "kind": "generation",
+      "model": "claude-sonnet-5-5",
+      "inputTokens": 517,
+      "outputTokens": 249
+    },
+    {
+      "kind": "embedding",
+      "model": "openrouter:google/gemini-embedding-2:768",
+      "inputTokens": 29,
+      "outputTokens": null
+    },
+    {
+      "kind": "generation",
+      "model": "claude-sonnet-5-5",
+      "inputTokens": 911,
+      "outputTokens": 354
+    },
+    {
+      "kind": "embedding",
+      "model": "openrouter:google/gemini-embedding-2:768",
+      "inputTokens": 24,
+      "outputTokens": null
+    },
+    {
+      "kind": "generation",
+      "model": "claude-sonnet-5-5",
+      "inputTokens": 945,
+      "outputTokens": 286
+    },
+    {
+      "kind": "embedding",
+      "model": "openrouter:google/gemini-embedding-2:768",
+      "inputTokens": 21,
+      "outputTokens": null
+    },
+    {
+      "kind": "generation",
+      "model": "claude-sonnet-5-5",
+      "inputTokens": 638,
+      "outputTokens": 267
+    },
+    {
+      "kind": "embedding",
+      "model": "openrouter:google/gemini-embedding-2:768",
+      "inputTokens": 19,
+      "outputTokens": null
+    },
+    {
+      "kind": "generation",
+      "model": "claude-sonnet-5-5",
+      "inputTokens": 565,
+      "outputTokens": 87
+    },
+    {
+      "kind": "embedding",
+      "model": "openrouter:google/gemini-embedding-2:768",
+      "inputTokens": 25,
+      "outputTokens": null
+    },
+    {
+      "kind": "generation",
+      "model": "claude-sonnet-5-5",
+      "inputTokens": 869,
+      "outputTokens": 171
+    },
+    {
+      "kind": "embedding",
+      "model": "openrouter:google/gemini-embedding-2:768",
+      "inputTokens": 25,
+      "outputTokens": null
+    },
+    {
+      "kind": "generation",
+      "model": "claude-sonnet-5-5",
+      "inputTokens": 873,
+      "outputTokens": 458
+    },
+    {
+      "kind": "embedding",
+      "model": "openrouter:google/gemini-embedding-2:768",
+      "inputTokens": 22,
+      "outputTokens": null
+    },
+    {
+      "kind": "embedding",
+      "model": "openrouter:google/gemini-embedding-2:768",
+      "inputTokens": 14,
+      "outputTokens": null
+    },
+    {
+      "kind": "embedding",
+      "model": "openrouter:google/gemini-embedding-2:768",
+      "inputTokens": 16,
+      "outputTokens": null
+    },
+    {
+      "kind": "embedding",
+      "model": "openrouter:google/gemini-embedding-2:768",
+      "inputTokens": 14,
+      "outputTokens": null
+    },
+    {
+      "kind": "embedding",
+      "model": "openrouter:google/gemini-embedding-2:768",
+      "inputTokens": 17,
+      "outputTokens": null
+    },
+    {
+      "kind": "embedding",
+      "model": "openrouter:google/gemini-embedding-2:768",
+      "inputTokens": 14,
+      "outputTokens": null
+    },
+    {
+      "kind": "embedding",
+      "model": "openrouter:google/gemini-embedding-2:768",
+      "inputTokens": 15,
+      "outputTokens": null
+    }
+  ],
+  "budget": {
+    "limitUsd": 1,
+    "reservedUsd": 0.2634426,
+    "calls": 42,
+    "actualProviderUsd": null
+  },
+  "summary": {
+    "answerableCorrect": 9,
+    "answerableTotal": 14,
+    "refusalCorrect": 6,
+    "refusalTotal": 6,
+    "totalCorrect": 15,
+    "total": 20,
+    "averageRetrievals": 1,
+    "medianLatencyMs": 1721.5,
+    "testRetuned": false
+  }
+}

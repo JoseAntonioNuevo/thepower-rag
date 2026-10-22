@@ -7,6 +7,8 @@ import type { RunMetadata } from "@thepower-rag/contracts";
 import type { Consumption } from "@thepower-rag/research";
 // Tipos de ajustes y tarifas.
 import type { GenerationSettings, TokenPrices } from "./env";
+// Tarifas comprobadas de los perfiles de calidad y comparación del curso.
+import { COURSE_MODEL_PROFILES } from "./course-models";
 // Tarifas publicadas de Haiku y nombres de proveedor.
 import {
   HAIKU_INPUT_USD_PER_MILLION,
@@ -48,7 +50,7 @@ const HAIKU_PRICING: CostPricing = {
 
 /**
  * Tarifa del coste mostrado para una ruta generativa. Primero la de MODEL_*_USD_PER_MILLION;
- * sin ella, solo Claude Haiku 5.5 por Anthropic tiene una tarifa publicada en el código.
+ * sin ella se usan solo las tarifas publicadas de los perfiles Anthropic conocidos.
  * Cualquier otro modelo sin tarifa deja el coste en null: desconocido, no gratis.
  */
 export function generationPricing(settings: GenerationSettings): CostPricing | null {
@@ -64,8 +66,22 @@ export function generationPricing(settings: GenerationSettings): CostPricing | n
         "MODEL_INPUT_USD_PER_MILLION and MODEL_OUTPUT_USD_PER_MILLION configured rates; excludes retrieval",
     };
   }
-  // Sin tarifa: solo Haiku por Anthropic tiene la publicada; el resto, null.
-  return provider === "anthropic" && settings.modelId === HAIKU_MODEL_ID ? HAIKU_PRICING : null;
+  // Sin tarifa explícita se comprueba el catálogo acotado; un modelo ajeno queda desconocido.
+  if (provider === "anthropic" && settings.modelId === HAIKU_MODEL_ID) return HAIKU_PRICING;
+  // Sonnet/Opus usan sus propias tarifas, nunca las de Haiku por omisión.
+  const known = [COURSE_MODEL_PROFILES.sonnet, COURSE_MODEL_PROFILES.opus].find(
+    (profile) => profile.modelId === settings.modelId,
+  );
+  return provider === "anthropic" && known
+    ? {
+        prices: {
+          inputUsdPerMillion: known.inputUsdPerMillion,
+          outputUsdPerMillion: known.outputUsdPerMillion,
+        },
+        source: "Anthropic",
+        method: `Published ${known.modelId} rates checked 2026-10-18; excludes retrieval`,
+      }
+    : null;
 }
 
 // ¿Es un número de tokens válido?

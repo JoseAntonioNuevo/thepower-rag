@@ -1,55 +1,74 @@
-# Laboratorio reproducible S10 y S11 · PostgreSQL + pgvector (`vector(768)` + HNSW)
+# Laboratorio de RAG para S10
 
-Este directorio acompaña al demostrador de aula (`apps/api`, `apps/web`) con un **laboratorio mínimo y completamente reproducible** que cumple literalmente todos los requisitos técnicos de los ejercicios publicados para **S10 (RAG básico)** y **S11 (Corrective RAG)**:
+La ruta principal de S10 usa **PostgreSQL real con pgvector**, **Gemini Embedding 2 a 768 dimensiones** y un **modelo generativo real**. La configuración ensayada utiliza OpenRouter para embeddings y Anthropic Sonnet para generación. El enunciado da Gemini como referencia generativa: registra el proveedor y el modelo que realmente ejecutes.
 
-| Requisito del ejercicio publicado                                                  | Implementación en `lab/`                                                                                                                                                                                                                                                                                                                       |
-| ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Ocho o más documentos ficticios en Markdown/TXT                                    | **10 documentos ficticios** de la plataforma sintética **AetherCloud** en `lab/corpus/sources/` (20 fragmentos con `maxChars = 900`, `overlapChars = 80`)                                                                                                                                                                                      |
-| PostgreSQL con `pgvector`, columna `vector(768)` e índice HNSW                     | `lab/schema.sql` (`CREATE EXTENSION IF NOT EXISTS vector`, `embedding vector(768) NOT NULL`, `USING hnsw (embedding vector_cosine_ops) WITH (m = 16, ef_construction = 64)`) y `lab/docker-compose.yml`                                                                                                                                        |
-| Variables de configuración de modelos y base de datos                              | `GEN_MODEL_ID` (por defecto `gemini-3.8-flash`), `EMBEDDING_MODEL_ID` (por defecto `gemini-embedding-2`, `768` dim.), `RERANKER_MODEL_ID` (`Qwen/Qwen3-Reranker-0.6B`), `EVALUATOR_MODEL_ID`, `DATABASE_URL`, `RAG_MIN_SIMILARITY`                                                                                                             |
-| Reconstrucción completa desde documentos en bruto e índice vacío                   | `rebuildFromEmptyIndex()` en `lab/src/pgvector-store.ts`: ejecuta `TRUNCATE`, lee y limpia los 10 Markdown, trocea con solapamiento, genera vectores de 768 dimensiones, inserta y verifica el conteo de vuelta                                                                                                                                |
-| S10: control de puntuación previo a generar y rechazo sin modelo                   | `runLabBasicRag()` en `lab/src/rag-basic.ts`: filtra por distancia coseno `<=> <= 0,75` (`similitud >= 0,25`, calibrado con los 6 casos de `LAB_VALIDATION_SET`); si no supera el corte, rechaza sin llamar al generador (`generationCalled: false`)                                                                                           |
-| S11: grafo LangGraph con nodos separados y RAG básico conservado                   | `runLabCrag()` en `lab/src/crag-graph.ts`: `retrieve` (hasta 10 candidatos) → `rerank` (escala `[0, 1]`) → `assess` (suficiencia `sufficient` / `partial` / `insufficient` separando relevancia de un fragmento y cobertura total) → `retain` / `discard` → `reformulate` (máx. 2 reformulaciones, 3 búsquedas en total) → `answer` / `refuse` |
-| Evaluación ejecutada sobre 20 preguntas nuevas (14 respondibles + 6 sin respuesta) | `runLabComparison20()` en `lab/src/evaluation.ts` y resultados guardados en `lab/eval/resultados-laboratorio.md`                                                                                                                                                                                                                               |
+La guía para seguir el directo es [S10-guion-profesor.md](../material/guiones/S10-guion-profesor.md). La guía autónoma del alumno es [laboratorio-apoyo.md](../material/ejercicios/laboratorio-apoyo.md).
 
-## Comandos rápidos
+## Preparación
 
-Desde la raíz del repositorio (`/Users/jose/Documents/the-power/3-rag`):
+Desde la raíz del clon, con Bun y Docker disponibles:
 
 ```bash
-# 1. Reconstruir el índice de 768 dimensiones desde los 10 documentos en bruto (modo en memoria sin Docker)
-bun run lab:rebuild
-
-# 2. Recorrer la demostración de S10 (respuesta + rechazo) y S11 (parcial->suficiente + agotamiento de límite)
-bun run lab:demo
-
-# 3. Ejecutar la evaluación de 20 preguntas (14 respondibles + 6 sin respuesta) en RAG básico y CRAG
-bun run lab:eval
-
-# 4. Ejecutar los tests unitarios y de integración del laboratorio
-bun run test scripts/lab-pgvector.test.ts
+bun install --frozen-lockfile
+cp lab/.env.example lab/.env
 ```
 
-## Ejecución contra PostgreSQL 17 + `pgvector` real con Docker
-
-Si dispones de Docker activo en tu máquina, puedes levantar la instancia PostgreSQL con `pgvector` y ejecutar exactamente el mismo flujo contra la tabla `lab_chunks` con columna `vector(768)` e índice HNSW:
+Edita `lab/.env` localmente con tus credenciales. El archivo está ignorado por Git y tiene prioridad sobre las variables de la terminal. Para los valores de referencia necesitas `ANTHROPIC_API_KEY` y `OPENROUTER_API_KEY`; nunca imprimas ni compartas sus valores.
 
 ```bash
 docker compose -f lab/docker-compose.yml up -d
-DATABASE_URL="postgresql://aether:aether_lab_2026@127.0.0.1:54329/aether_rag" bun scripts/lab-cli.ts rebuild --postgres
-DATABASE_URL="postgresql://aether:aether_lab_2026@127.0.0.1:54329/aether_rag" bun scripts/lab-cli.ts demo --postgres
-DATABASE_URL="postgresql://aether:aether_lab_2026@127.0.0.1:54329/aether_rag" bun scripts/lab-cli.ts eval --postgres
+bun run lab:real preflight
+bun run lab:real status
 ```
 
-## Escala de puntuaciones y calibración de umbrales
+`preflight` no llama a los modelos. `status` lee la base local. Docker expone PostgreSQL solo en `127.0.0.1:54329`; el CLI rechaza otra base, puerto o host para no truncar datos ajenos al laboratorio.
 
-1. **Distancia coseno (`<=>`) frente a similitud coseno en `pgvector`:**
-   - En PostgreSQL con `pgvector`, el operador `<=>` devuelve **distancia coseno** en \([0, 2]\), donde **menor valor significa mayor proximidad** (`0` = vectores idénticos).
-   - La consulta SQL calcula tanto `cosine_distance = (embedding <=> $1::vector(768))` como `similarity = (1 - (embedding <=> $1::vector(768)))`.
-   - Sobre el conjunto de validación (`LAB_VALIDATION_SET`, 6 preguntas disjuntas del test de 20), la pregunta sin respuesta más cercana alcanzó `similitud = 0,148` (`distancia = 0,852`) y la respondible más baja `similitud = 0,250` (`distancia = 0,750`). El corte previo a generar quedó fijado en **`similitud >= 0,25` (`distancia <= 0,75`)**.
+## Recorrido real
 
-2. **Reordenamiento (`rerank`) frente a valoración de suficiencia (`assess`) en S11:**
-   - El nodo `rerank` ordena hasta **10 candidatos** y les asigna `rerankScore` en la **escala cerrada `[0, 1]`** (incluye también `formatQwen3RerankerPrompt` con la plantilla oficial `yes`/`no` de `Qwen3-Reranker-0.6B`).
-   - El nodo `assess` aplica dos criterios distintos:
-     - **Relevancia individual del fragmento:** `rerankScore >= 0,50` para entrar en `usefulIds` (máximo 6 fragmentos).
-     - **Cobertura global de la pregunta:** `coverageScore >= 0,75` sin lagunas → `sufficient`; `0,40 <= coverageScore < 0,75` o con laguna en `gaps` → `partial` (conserva útiles y reformula); `< 0,40` o sin fragmentos útiles → `insufficient` (descarta y reformula).
+Los comandos con `--execute` consumen APIs. El tope debe estar autorizado por quien opera la cuenta. El ensayo de esta preparación utilizó 1 USD como límite acumulativo de reservas conservadoras.
+
+```bash
+bun run lab:real rebuild --execute --max-spend-usd 1
+bun run lab:real calibrate --execute --max-spend-usd 1
+bun run lab:real query --question '¿Con qué algoritmo se cifran los volúmenes en reposo y qué periodo de enfriamiento exige destruir una CMK?' --execute --max-spend-usd 1 --brief
+bun run lab:real query --question '¿Qué coste mensual tienen las licencias de Windows Server 2025 en AetherCloud?' --execute --max-spend-usd 1 --brief
+```
+
+- `rebuild`: lee 10 documentos, prepara 20 fragmentos, obtiene los embeddings y reemplaza el índice en una transacción. Un fallo del proveedor conserva el índice anterior. Verifica conteos, dimensión y definición HNSW leyendo PostgreSQL.
+- `calibrate`: consulta seis ejemplos de validación distintos del test. Para si las clases se solapan. Guarda el umbral y la identidad del índice; no permite reutilizar una calibración de otro corpus o modelo.
+- `query`: consulta pgvector, aplica el umbral **antes** de generar y guarda todos los candidatos, puntuaciones, selección, respuesta y citas en `lab/.local/last-query.json`.
+- `baseline --question '…'`: consulta al mismo generador sin documentos, sin recuperación, para comparar el contexto suministrado.
+- `eval`: ejecuta una vez el conjunto nuevo de 20 preguntas de `lab/eval/s10-real-test-20.json`, 14 respondibles y seis sin respuesta. Conserva el recibo y bloquea la sobrescritura automática. Revisa manualmente la completitud y el apoyo de las fuentes; la presencia de citas no basta.
+
+```bash
+bun run lab:real eval --execute --max-spend-usd 1
+```
+
+Los resultados reales de preparación están en [material/S10/evidencias](../material/S10/evidencias/evaluacion-real-resumen.md): **9/14 respondibles completas y 6/6 rechazos correctos**. No se reajustó el sistema después del test. Son una muestra pequeña de esta configuración.
+
+## Índice, puntuaciones y modelos
+
+`schema.sql` crea `vector(768)` y HNSW con `vector_cosine_ops`, `m=16` y `ef_construction=64`. `<=>` devuelve distancia coseno: menor significa más próximo. La similitud usada es `1 - distancia`; no es una probabilidad. La consulta ordena por el operador y usa `LIMIT`; con 20 filas PostgreSQL puede preferir un escaneo exacto al índice.
+
+El corte real del ensayo fue **0,724767**, obtenido con validación. El `0,25` anterior pertenece al embedding léxico del respaldo y el `0,50` de la web pertenece a BGE-M3 de 1024 dimensiones. No son transferibles.
+
+Puedes elegir `LAB_EMBEDDING_PROVIDER=gemini` para usar `GEMINI_API_KEY` directamente, con `EMBEDDING_MODEL_ID=gemini-embedding-2`. Para generar con Gemini u OpenRouter, configura `LAB_GEN_PROVIDER`, `GEN_MODEL_ID`, su clave y tarifas positivas `LAB_GEN_INPUT_USD_PER_MILLION` / `LAB_GEN_OUTPUT_USD_PER_MILLION`. No hay sustituciones automáticas entre proveedores.
+
+## Consumo y recuperación ante errores
+
+`lab/.local/budget.json` acumula reservas antes de enviar cada llamada. Un timeout conserva su reserva; el importe facturado sigue siendo desconocido salvo evidencia del proveedor. El diario no se reinicia entre comandos ni acepta ampliar su tope automáticamente. No lo borres para aparentar saldo disponible. Se usa un bloqueo entre procesos y no hay reintentos de pago.
+
+Si falta configuración, se para antes de consumir APIs. Si falla la red, abre los recibos reales ya guardados e identifica su fecha. Para trabajar sin red usa explícitamente el respaldo siguiente.
+
+## Respaldo offline de S10/S11
+
+```bash
+bun run lab:demo
+bun run lab:eval
+```
+
+Estos comandos usan vectores léxicos deterministas, respuestas extractivas y reordenamiento por reglas. El CLI imprime ese hecho y utiliza identidades `fixture-*`. El almacén predeterminado es memoria. Sus resultados históricos 16/20 RAG y 17/20 CRAG **no son mediciones de Gemini, Sonnet ni Qwen**. El CRAG real de la web pertenece a otra ruta; S10 no acredita aquí una comparación CRAG real.
+
+## Fuentes
+
+[pgvector](https://github.com/pgvector/pgvector) · [AI SDK: Google](https://ai-sdk.dev/providers/ai-sdk-providers/google) · [Embeddings con AI SDK](https://ai-sdk.dev/docs/ai-sdk-core/embeddings).

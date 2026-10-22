@@ -36,14 +36,18 @@ export function createSubmitGate(): SubmitGate {
   let held = false;
   // Métodos.
   return {
+    // Adquiere la exclusión de envío para impedir dos peticiones simultáneas de la misma conversación.
     enter() {
       // Ocupado: no entra.
-      if (held) return false;
+      if (held)
+        // Rechaza esta condición y comunica el resultado negativo al llamador.
+        return false;
       // Marca ocupado.
       held = true;
       // Entró.
       return true;
     },
+    // Libera la exclusión de envío cuando finaliza el recorrido de la conversación.
     leave() {
       // Libera.
       held = false;
@@ -181,7 +185,9 @@ export async function submitResearch(input: ResearchSubmission): Promise<Submiss
           };
         }
         // Error de verificación: se propaga.
-        if (verificationError(error)) throw error;
+        if (verificationError(error))
+          // Propaga el error original para que el llamador no confunda el fallo con un resultado válido.
+          throw error;
         // Fallo de subida.
         return {
           ok: false,
@@ -216,7 +222,9 @@ export async function submitResearch(input: ResearchSubmission): Promise<Submiss
           };
         }
         // Error de verificación.
-        if (verificationError(error)) throw error;
+        if (verificationError(error))
+          // Propaga el error original para que el llamador no confunda el fallo con un resultado válido.
+          throw error;
         // Fallo de subida.
         return {
           ok: false,

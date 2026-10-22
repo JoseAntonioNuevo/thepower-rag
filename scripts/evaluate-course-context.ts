@@ -51,6 +51,7 @@ if (
   !auth.allowOpenRouter ||
   auth.maxSpendUsd !== 5
 )
+  // Detiene el recorrido con el diagnóstico: Falta autorización del curso.
   throw new Error("Falta autorización del curso.");
 // Carpeta de evidencias.
 const out = path.join(root, "docs/evidence/course-context");
@@ -59,11 +60,15 @@ mkdirSync(out, { recursive: true });
 // Archivo de resultados.
 const file = path.join(out, "directed-results.json");
 // Ya existe: no se repite.
-if (existsSync(file)) throw new Error("La prueba ya está guardada; no se repite automáticamente.");
+if (existsSync(file))
+  // Detiene el recorrido con el diagnóstico: La prueba ya está guardada; no se repite automáticamente.
+  throw new Error("La prueba ya está guardada; no se repite automáticamente.");
 // Clave.
 const secret = readRepoAnthropicKey(root);
 // Sin clave: error.
-if (!secret) throw new Error("Falta ANTHROPIC_API_KEY en .env.");
+if (!secret)
+  // Detiene el recorrido con el diagnóstico: Falta ANTHROPIC_API_KEY en .env.
+  throw new Error("Falta ANTHROPIC_API_KEY en .env.");
 // Tope de gasto.
 const maxSpend = 0.25;
 // Sesión de gasto con la tarifa de Haiku.
@@ -104,7 +109,9 @@ const read = await runner.run(
   scopedWranglerEnv(process.env, COURSE_DESTINATION.accountId),
 );
 // Fallo.
-if (read.code !== 0) throw new Error("No se leyó el catálogo real.");
+if (read.code !== 0)
+  // Detiene el recorrido con el diagnóstico: No se leyó el catálogo real.
+  throw new Error("No se leyó el catálogo real.");
 // Filas.
 const all = (parseJsonText(read.stdout) as { results: unknown[] }[])[0]!.results;
 // Contexto por grupo.
@@ -113,8 +120,11 @@ const contexts = new Map<Audience, Awaited<ReturnType<typeof readCourseContext>>
 for (const group of ["program", "L/X", "M/J"] as const) {
   // D1 falsa con las filas de ese grupo.
   const db = {
+    // Prepara una sentencia y devuelve el objeto que permitirá enlazar valores y ejecutarla.
     prepare: () => ({
+      // Asocia los parámetros a la sentencia sin concatenarlos al texto SQL.
       bind: () => ({
+        // Resuelve el conjunto de filas en el formato que espera el consumidor SQL.
         all: async () => ({
           results: all.filter((row) => {
             // Audiencia.
@@ -226,7 +236,9 @@ for (const [id, group, question, expected] of cases) {
     maxOutputTokens: 1200,
   });
   // Sin reserva: error.
-  if (!reserve.ok) throw new Error(reserve.reason);
+  if (!reserve.ok)
+    // Interrumpe esta rama y propaga el motivo al manejador de errores del recorrido.
+    throw new Error(reserve.reason);
   // Turno anterior para el seguimiento.
   const previous = id === "follow-up" ? results.find((r) => r.id === "langchain") : null;
   // Mensajes.

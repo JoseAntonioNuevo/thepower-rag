@@ -103,6 +103,7 @@ describe("activación", () => {
       read: false,
       authorization: auth({ allowWorkersAi: true, maxSpendUsd: 2, observedDimensions: 32 }),
       executor: executor({
+        // Doble de prueba: ejecuta el recorrido de ingesta con los puertos y el alcance de esta sesión.
         ingest: async () => {
           // Cuenta.
           calls += 1;
@@ -124,6 +125,7 @@ describe("activación", () => {
       read: false,
       authorization: auth({ maxSpendUsd: 2 }),
       executor: executor({
+        // Doble de prueba: representa la creación de recursos que solicita el plan de activación.
         provision: async () => {
           // Espera un tick.
           await Promise.resolve();
@@ -317,6 +319,7 @@ describe("ejecutor", () => {
       migrationsDir: path.join(root, "apps/api/migrations"),
       corpusPath: path.join(root, "corpus/prepared/corpus.json"),
       runner: {
+        // Doble de prueba: ejecuta la operación del puerto y devuelve su resultado al llamador.
         run: async (args) => {
           // Guarda.
           seen.push([...args]);
@@ -366,6 +369,7 @@ describe("ejecutor", () => {
       migrationsDir: path.join(root, "apps/api/migrations"),
       corpusPath: path.join(root, "corpus/prepared/corpus.json"),
       runner: {
+        // Doble de prueba: ejecuta la operación del puerto y devuelve su resultado al llamador.
         run: async (args) => {
           // Guarda.
           seen.push([...args]);
@@ -441,6 +445,7 @@ describe("ejecutor", () => {
       migrationsDir: path.join(root, "apps/api/migrations"),
       corpusPath: path.join(root, "corpus/prepared/corpus.json"),
       runner: {
+        // Doble de prueba: ejecuta la operación del puerto y devuelve su resultado al llamador.
         run: async (args, env) => {
           // Guarda.
           seen.push([...args]);

@@ -45,6 +45,7 @@ describe("RAG básico", () => {
       question: "¿Cómo modela LangGraph un agente?",
       audience: "L/X",
       chunks,
+      // Doble de prueba: convierte los textos en vectores mediante el proveedor que implementa este puerto.
       embed: (text) => {
         // Cuenta la llamada.
         embeddings += 1;
@@ -94,6 +95,7 @@ describe("RAG básico", () => {
       question: "¿Cuándo es la clase?",
       audience: "program",
       chunks,
+      // Doble de prueba: convierte los textos en vectores mediante el proveedor que implementa este puerto.
       embed: () => {
         // Cuenta la llamada.
         embeddings += 1;

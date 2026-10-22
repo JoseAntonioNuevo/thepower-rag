@@ -194,6 +194,7 @@ describe("entrypoint offline", () => {
         timeoutMs: 60_000,
         command: wrangler,
         spawn: spawnWranglerBridge(wrangler, root, COURSE_DESTINATION.accountId),
+        // Atiende la petición HTTP con el adaptador y el entorno de este recorrido.
         fetch: async (url, init) => {
           // Petición.
           const response = await fetch(url, init);

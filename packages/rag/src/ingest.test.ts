@@ -110,7 +110,9 @@ function ports(options?: {
   return {
     objects,
     persisted,
+    // Doble de prueba: lee el objeto del corpus que necesita la ingesta o su comprobación posterior.
     getObject: async (key) => objects.get(key) ?? null,
+    // Doble de prueba: escribe un objeto del corpus y entrega el resultado de almacenamiento a la ingesta.
     putObject: async (key, body) => {
       // Fallo provocado al escribir el documento.
       if (options?.fail === true && key.endsWith("nota.md")) {
@@ -120,6 +122,7 @@ function ports(options?: {
       // Guarda el objeto.
       objects.set(key, body);
     },
+    // Doble de prueba: guarda en el catálogo los documentos y fragmentos de esta versión del corpus.
     writeCatalog: async (written) => {
       // Guarda el catálogo tal como lo devolvería D1.
       catalog = {
@@ -144,8 +147,11 @@ function ports(options?: {
         })),
       };
     },
+    // Doble de prueba: lee el catálogo para comprobar que los datos escritos coinciden con lo esperado.
     readCatalog: async () => catalog,
+    // Doble de prueba: entrega los índices de metadatos para comprobar los filtros disponibles.
     listMetadataIndexes: async () => options?.indexes ?? ["corpusVersion", "audience", "profileId"],
+    // Doble de prueba: inserta o actualiza vectores por identificador durante la ingesta.
     upsertVectors: async (batch) => {
       // Avisa de la inserción.
       options?.onUpsert?.();
@@ -159,6 +165,7 @@ function ports(options?: {
       // Id de mutación.
       return { mutationId: `mut-${String(mutations)}` };
     },
+    // Doble de prueba: lee de vuelta los vectores para verificar su presencia e identidad después de escribirlos.
     readVectors: async (ids) => {
       // Avisa de la lectura.
       options?.onRead?.();
@@ -177,6 +184,7 @@ function ports(options?: {
         .filter((id) => stored.has(id))
         .map((id) => ({ id, metadata: stored.get(id) ?? null }));
     },
+    // Doble de prueba: entrega la descripción del índice que usa la comprobación de compatibilidad.
     describeIndex: async () => ({
       // Configuración del índice: nombre, dimensión y métrica, ajustables por cada prueba.
       name: "thepower-ai-course-rag-0123456789ab",
@@ -190,10 +198,12 @@ function ports(options?: {
             : stored.size
           : options.vectorCount,
     }),
+    // Doble de prueba: guarda el progreso de ingesta para poder reanudar sin repetir pasos ya confirmados.
     persistJournal: async (item) => {
       // Guarda la anotación.
       persisted.push(item);
     },
+    // Doble de prueba: registra la fase alcanzada para explicar el progreso y los fallos de la ingesta.
     recordPhase: async () => undefined,
   };
 }
@@ -309,6 +319,7 @@ describe("ingesta", () => {
       metric: null,
       dimensions: null,
       vectorCount: 0,
+      // Observa la escritura del lote de vectores en el punto que comprueba esta prueba.
       onUpsert: () => {
         // Cuenta la inserción.
         upserts += 1;
@@ -348,6 +359,7 @@ describe("ingesta", () => {
       journal: waiting.journal,
       ports: {
         ...memory,
+        // Doble de prueba: lee de vuelta los vectores para verificar su presencia e identidad después de escribirlos.
         readVectors: async (ids) => {
           // Solo se lee cuando ya son visibles.
           expect(visible).toBe(true);
@@ -411,10 +423,12 @@ describe("ingesta", () => {
       // Escribir en R2 no debe ocurrir: el perfil activo no se toca.
       ports: {
         ...memory,
+        // Doble de prueba: escribe un objeto del corpus y entrega el resultado de almacenamiento a la ingesta.
         putObject: async () => {
           // Cuenta escrituras.
           writes += 1;
         },
+        // Doble de prueba: registra la fase alcanzada para explicar el progreso y los fallos de la ingesta.
         recordPhase: async () => {
           // Cuenta fases.
           phases += 1;
@@ -474,6 +488,7 @@ describe("ingesta", () => {
     // Puertos sin índices.
     const memory = ports({
       indexes: [],
+      // Observa la escritura del lote de vectores en el punto que comprueba esta prueba.
       onUpsert: () => {
         // Cuenta inserciones.
         upserts += 1;

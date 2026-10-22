@@ -46,7 +46,14 @@ import { dependencyCompatibility } from "./compat";
 // Respuesta HTTP del modo CRAG.
 import { cragHttpResponse } from "./crag-http";
 // Lectura de configuración y capacidades.
-import { assessWorker, durableResearchConfigured, mediaReadiness, type WorkerEnv } from "./env";
+import {
+  assessWorker,
+  cragExecutionBudgetMs,
+  durableResearchConfigured,
+  mediaReadiness,
+  modelTimeoutMs,
+  type WorkerEnv,
+} from "./env";
 // Respuesta HTTP del modo investigación sin trabajo durable.
 import { researchHttpResponse } from "./research-http";
 // Rutas del trabajo durable de investigación.
@@ -234,6 +241,21 @@ export function createApp(deps: AppDeps = {}) {
       // Compatibilidad de dependencias, investigación durable y medios de S12.
       compatibility,
       durableResearch: durableResearchConfigured(context.env),
+      // Lectura de configuración para verificar un despliegue sin invocar modelos ni revelar claves.
+      modelConfiguration: {
+        provider: assessment.generation?.provider ?? null,
+        generator: assessment.generation?.modelId ?? null,
+        evaluator: context.env.EVALUATOR_MODEL_ID?.trim() || null,
+        research: context.env.RESEARCH_MODEL_ID?.trim() || null,
+        cragExecutionBudgetMs: cragExecutionBudgetMs(context.env),
+        generationTimeoutMs: assessment.generation?.timeoutMs ?? null,
+        ragContextMode: demoCorpus
+          ? "fixture"
+          : context.env.RAG_CONTEXT_MODE === "complete"
+            ? "complete"
+            : "semantic",
+        retrievalMinScore: assessment.retrieval?.minScore ?? null,
+      },
       media: mediaReadiness(context.env),
     };
     // En real con D1, comprueba el perfil del índice.
@@ -365,6 +387,23 @@ export function createApp(deps: AppDeps = {}) {
       return research;
     }
 
+    // Un plazo inválido no puede consumir una reserva pública antes de devolver el error.
+    const invalidTimeouts = [
+      ...(modelTimeoutMs(context.env) === null ? ["MODEL_TIMEOUT_MS"] : []),
+      ...(parsed.data.mode === "crag" && cragExecutionBudgetMs(context.env) === null
+        ? ["CRAG_EXECUTION_BUDGET_MS"]
+        : []),
+    ];
+    if (assessment.execution === "real" && invalidTimeouts.length) {
+      return jsonError(
+        {
+          error: "configuration",
+          message: "Los plazos del modelo no son válidos.",
+          missing: invalidTimeouts,
+        },
+        409,
+      );
+    }
     // ¿Hay presupuesto público en real?
     const publicBudget =
       assessment.execution === "real" && context.env.PUBLIC_BUDGET_USD !== undefined;
@@ -454,6 +493,7 @@ export function createApp(deps: AppDeps = {}) {
           // Metadatos (proveedor, modelo, prompt) y tarifas para el coste mostrado.
           metadata: metadata("provider", settings.modelId, SIN_RAG_PROMPT.id, "complete"),
           costPricing: generationPricing(settings),
+          timeoutMs: settings.timeoutMs,
           // Sin RAG no hay fuentes, así que no se validan citas.
           validateCitations: false,
           // Traza mínima: deja claro que no hubo recuperación.
@@ -833,6 +873,7 @@ export function createApp(deps: AppDeps = {}) {
         maxOutputTokens: context.env.RAG_CONTEXT_MODE === "complete" ? 1200 : undefined,
         // Tarifas para el coste estimado.
         costPricing: generationPricing(settings),
+        timeoutMs: settings.timeoutMs,
       });
     } catch {
       // 502.

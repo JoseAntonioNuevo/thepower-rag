@@ -123,11 +123,15 @@ async function readOwned(
   // Fila del archivo.
   const row = await assetById(database, ownerId, assetId);
   // Otra conversación o inexistente: null.
-  if (!row || row.conversation_id !== conversationId) return null;
+  if (!row || row.conversation_id !== conversationId)
+    // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+    return null;
   // Objeto de R2.
   const object = await readMediaObject(bucket, row.object_key);
   // Sin objeto: null.
-  if (!object) return null;
+  if (!object)
+    // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+    return null;
   // Fila y bytes.
   return { row, bytes: object.body };
 }
@@ -531,6 +535,7 @@ export async function speakAnswer(input: {
       speechChars: text.length,
       payload: { digest, speaker: "aquila", model: input.context.ttsModelId, chars: text.length },
       signal: input.context.signal,
+      // Ejecuta el puerto de percepción o investigación con la entrada de este recorrido.
       invoke: async (signal) => {
         // Audio real o tono local de prueba.
         const produced =

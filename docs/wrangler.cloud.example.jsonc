@@ -1,31 +1,48 @@
+// GUÍA DE LECTURA · docs/wrangler.cloud.example.jsonc
 // Plantilla NO usada por el desarrollo ni por el build.
 // El id de cuenta es el destino ya elegido. Los ids de D1, R2 y Vectorize siguen sin existir.
 // No la copies a apps/web/wrangler.jsonc ni pongas remote: true hasta autorizar esa ruta.
 // EMBEDDING_MODEL cita el candidato documentado. La dimensión no está medida.
 {
+  // Nombre propuesto para el Worker, no una operación de creación.
   "name": "thepower-rag",
+  // Identidad del destino de la plantilla, independiente del estado de autenticación actual.
   "account_id": "9c1493e94ba21f2c6872a9dd17ba19f7",
+  // Fecha que fija el comportamiento de compatibilidad del runtime Workers.
   "compatibility_date": "2026-10-02",
+  // Habilita las APIs de Node que necesita el paquete compilado para Workers.
   "compatibility_flags": ["nodejs_compat"],
+  // Entrada TypeScript de la API, resuelta con relación a esta plantilla.
   "main": "../../apps/api/src/worker.ts",
+  // Variables públicas de configuración: aquí no se escriben claves del proveedor.
   "vars": {
+    // La ruta real falla si faltan recursos; no cambia por sí sola a una simulación.
     "APP_MODE": "real",
+    // Candidato de embeddings cuya dimensión debe observarse antes de crear el perfil.
     "EMBEDDING_MODEL": "@cf/baai/bge-m3",
+    // Sustituir por la dimensión medida, que debe coincidir con la del índice.
     "EMBEDDING_DIMENSIONS": "REPLACE_AFTER_OBSERVING_BGE_M3",
+    // La versión identifica los documentos que se han preparado para la ingesta.
     "CORPUS_VERSION": "REPLACE_WITH_PREPARED_VERSION",
+    // El perfil vincula corpus, embedding, dimensión, métrica y fragmentación.
     "INDEX_PROFILE": "REPLACE_WITH_OBSERVED_PROFILE",
+    // Métrica que deben compartir el índice remoto y la comprobación del perfil.
     "VECTOR_METRIC": "cosine",
+    // Corte que se elige con validación y se aplica antes de generar la respuesta.
     "MIN_RETRIEVAL_SCORE": "REPLACE_AFTER_CALIBRATION",
   },
+  // Binding del servicio que calcula embeddings, no un identificador de modelo generativo.
   "ai": {
     "binding": "AI",
   },
+  // Índice de vecinos cuyos nombres reales deben obtenerse del recurso verificado.
   "vectorize": [
     {
       "binding": "VECTORIZE",
       "index_name": "REPLACE_WITH_REAL_INDEX",
     },
   ],
+  // Catálogo relacional del texto y la procedencia de los fragmentos del corpus.
   "d1_databases": [
     {
       "binding": "DB",
@@ -33,6 +50,7 @@
       "database_id": "REPLACE_WITH_REAL_DATABASE_ID",
     },
   ],
+  // Almacenamiento de los objetos documentales y manifiestos de ingesta.
   "r2_buckets": [
     {
       "binding": "CORPUS",

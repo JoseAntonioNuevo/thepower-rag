@@ -175,6 +175,16 @@ export function createRealCragPorts(input: {
   allowance?: AllowanceLedger;
   /** Tarifa del coste mostrado de la respuesta final; sin valor, la de Claude Haiku 5.5. */
   costPricing?: CostPricing | null;
+  // Tope por llamada, siempre recortado al tiempo restante del turno.
+  generationTimeoutMs?: number;
+  // Observación opcional para comparaciones dirigidas: tokens medidos, nunca factura ni secretos.
+  onUsage?: (
+    kind: "evaluation" | "reformulation" | "generation",
+    usage: {
+      inputTokens?: number;
+      outputTokens?: number;
+    },
+  ) => void;
 }): CragPorts {
   // Reserva abierta por tipo de operación.
   const open = new Map<string, string>();
@@ -222,6 +232,7 @@ export function createRealCragPorts(input: {
     now: Date.now,
     signal: input.signal,
     reserve: reserveKind,
+    // Recupera candidatos documentales dentro del ámbito de corpus y consulta del recorrido.
     async retrieve({ query, scope, limit, remainingMs }) {
       // Otro ámbito: rechazado.
       if (!sameScope(scope, input.scope)) {
@@ -298,6 +309,7 @@ export function createRealCragPorts(input: {
       // Fragmentos recuperados.
       return { ok: true, providerCall: true, chunks };
     },
+    // Ordena los fragmentos y evalúa si aportan evidencia suficiente para la pregunta.
     async rankAndAssess({ question, query, chunks, remainingMs }) {
       // Cancelada: no evalúa.
       if (input.signal.aborted) {
@@ -318,7 +330,7 @@ export function createRealCragPorts(input: {
           // Señal, tiempo restante y plazo propio de la evaluación.
           input.signal,
           remainingMs,
-          LIMITS.generationTimeoutMs,
+          input.generationTimeoutMs ?? LIMITS.generationTimeoutMs,
           (signal) =>
             generateObject({
               // Modelo evaluador con el esquema y un ranking de exactamente tantos elementos como
@@ -339,6 +351,8 @@ export function createRealCragPorts(input: {
         );
         // Cierra la reserva.
         settle("evaluation", null);
+        // Comunica los tokens observados del papel actual para calcular su estimación de coste.
+        input.onUsage?.("evaluation", result.usage);
         // Objeto sin validar todavía; el núcleo lo comprueba.
         return { ok: true, providerCall: true, raw: result.object };
       } catch (error) {
@@ -355,6 +369,7 @@ export function createRealCragPorts(input: {
         throw error;
       }
     },
+    // Propone otra consulta a partir de la pregunta y las carencias detectadas.
     async reformulate({ question, query, gaps, remainingMs }) {
       // Cancelada: no reformula.
       if (input.signal.aborted) {
@@ -368,7 +383,7 @@ export function createRealCragPorts(input: {
           // Señal, tiempo restante y plazo propio.
           input.signal,
           remainingMs,
-          LIMITS.generationTimeoutMs,
+          input.generationTimeoutMs ?? LIMITS.generationTimeoutMs,
           (signal) =>
             generateObject({
               // Reformulación con su esquema: una consulta nueva.
@@ -386,6 +401,8 @@ export function createRealCragPorts(input: {
         );
         // Cierra la reserva.
         settle("reformulation", null);
+        // Comunica los tokens observados del papel actual para calcular su estimación de coste.
+        input.onUsage?.("reformulation", result.usage);
         // Objeto con la nueva consulta.
         return { ok: true, providerCall: true, raw: result.object };
       } catch (error) {
@@ -395,6 +412,7 @@ export function createRealCragPorts(input: {
         throw error;
       }
     },
+    // Produce la respuesta final con los fragmentos que este recorrido ha seleccionado.
     async generate({ question, evidence, remainingMs }) {
       // Cancelada: no genera.
       if (input.signal.aborted) {
@@ -410,7 +428,7 @@ export function createRealCragPorts(input: {
           // Señal, tiempo restante y plazo propio de la generación.
           input.signal,
           remainingMs,
-          LIMITS.generationTimeoutMs,
+          input.generationTimeoutMs ?? LIMITS.generationTimeoutMs,
           (signal, timeoutMs) =>
             generateText({
               // Generador con la evidencia en las instrucciones.
@@ -443,6 +461,8 @@ export function createRealCragPorts(input: {
       }
       // Consumo total.
       const usage = result.totalUsage;
+      // Comunica los tokens observados del papel actual para calcular su estimación de coste.
+      input.onUsage?.("generation", usage);
       // Tokens de entrada o null.
       const inputTokens = typeof usage.inputTokens === "number" ? usage.inputTokens : null;
       // Tokens de salida o null.

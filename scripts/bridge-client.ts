@@ -128,7 +128,9 @@ export async function createBridgePlane(input: {
   // Plano de datos.
   return {
     management,
+    // Construye los adaptadores de datos que utilizará el comando de activación.
     adapters: () => adapters,
+    // Convierte los textos en vectores mediante el proveedor que implementa este puerto.
     async embed(texts, reservationId) {
       // Embeddings.
       const result = await post(
@@ -149,6 +151,7 @@ export async function createBridgePlane(input: {
         adapter: result.adapter,
       };
     },
+    // Ejecuta el recorrido de ingesta con los puertos y el alcance de esta sesión.
     async ingest(request: { manifest: CorpusManifest; vectors: number[][] }) {
       // Ingesta con los textos de los documentos.
       const result = await post(
@@ -181,6 +184,7 @@ export async function createBridgePlane(input: {
         adapter: result.adapter,
       };
     },
+    // Selecciona el perfil del índice que usarán las consultas posteriores del curso.
     async selectActive(profileId) {
       // Selección del perfil activo.
       const result = await post(

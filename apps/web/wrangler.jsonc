@@ -63,9 +63,13 @@
         "RAG_CONTEXT_MODE": "semantic",
         // Proveedor fijo de producción: no cambiarlo sin petición expresa del usuario.
         "LLM_PROVIDER": "anthropic",
-        // Modelos de cada papel: chat y RAG, evaluador de CRAG e investigación.
-        "MODEL_ID": "claude-haiku-5-5",
-        "EVALUATOR_MODEL_ID": "claude-haiku-5-5",
+        // Perfil de calidad preparado: mismo generador Sonnet para RAG y CRAG.
+        "MODEL_ID": "claude-sonnet-5-5",
+        "EVALUATOR_MODEL_ID": "claude-sonnet-5-5",
+        // Plazo único, sin reiniciarlo en cada ronda. Las llamadas individuales se acotan a 30 s.
+        "CRAG_EXECUTION_BUDGET_MS": "60000",
+        "MODEL_TIMEOUT_MS": "30000",
+        // S12 conserva su modelo, sus tarifas y su presupuesto independientes.
         "RESEARCH_MODEL_ID": "claude-haiku-5-5",
         // Buscador web de la investigación y su precio por crédito en USD.
         "RESEARCH_SEARCH_PROVIDER": "tavily",
@@ -96,10 +100,10 @@
         // Tope del presupuesto público del chat (tabla public_budget).
         "PUBLIC_BUDGET_USD": "4.3",
         // Tarifas del generador y del evaluador, para el coste mostrado y la reserva.
-        "MODEL_INPUT_USD_PER_MILLION": "0.1",
-        "MODEL_OUTPUT_USD_PER_MILLION": "0.5",
-        "EVALUATOR_INPUT_USD_PER_MILLION": "0.1",
-        "EVALUATOR_OUTPUT_USD_PER_MILLION": "0.5",
+        "MODEL_INPUT_USD_PER_MILLION": "2",
+        "MODEL_OUTPUT_USD_PER_MILLION": "10",
+        "EVALUATOR_INPUT_USD_PER_MILLION": "2",
+        "EVALUATOR_OUTPUT_USD_PER_MILLION": "10",
         // Origen permitido para las peticiones del navegador.
         "PUBLIC_ORIGIN": "https://rag-thepower.josenuevo.dev",
         // Clave pública del widget de Turnstile (la secreta va como secreto).
@@ -226,8 +230,10 @@
       "vars": {
         "APP_MODE": "real",
         "RAG_CONTEXT_MODE": "semantic",
-        "MODEL_ID": "claude-haiku-5-5",
-        "EVALUATOR_MODEL_ID": "claude-haiku-5-5",
+        "MODEL_ID": "claude-sonnet-5-5",
+        "EVALUATOR_MODEL_ID": "claude-sonnet-5-5",
+        "CRAG_EXECUTION_BUDGET_MS": "60000",
+        "MODEL_TIMEOUT_MS": "30000",
         "RESEARCH_MODEL_ID": "claude-haiku-5-5",
         "EMBEDDING_MODEL": "@cf/baai/bge-m3",
         "EMBEDDING_DIMENSIONS": "1024",
@@ -235,10 +241,10 @@
         "INDEX_PROFILE": "p76509a5f9743",
         "VECTOR_METRIC": "cosine",
         "MIN_RETRIEVAL_SCORE": "0.5",
-        "MODEL_INPUT_USD_PER_MILLION": "0.1",
-        "MODEL_OUTPUT_USD_PER_MILLION": "0.5",
-        "EVALUATOR_INPUT_USD_PER_MILLION": "0.1",
-        "EVALUATOR_OUTPUT_USD_PER_MILLION": "0.5",
+        "MODEL_INPUT_USD_PER_MILLION": "2",
+        "MODEL_OUTPUT_USD_PER_MILLION": "10",
+        "EVALUATOR_INPUT_USD_PER_MILLION": "2",
+        "EVALUATOR_OUTPUT_USD_PER_MILLION": "10",
         // Tope del presupuesto de este perfil local.
         "LOCAL_BUDGET_USD": "4.3",
       },

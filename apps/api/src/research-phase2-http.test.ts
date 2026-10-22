@@ -66,23 +66,28 @@ function workflowMock(status = "complete") {
   let activity = status;
   // API mínima del Workflow.
   const workflow = {
+    // Doble de prueba: crea o representa una instancia del Workflow de investigación.
     async create(options: { id: string }) {
       // Registra.
       creates.push(options.id);
       // Instancia.
       return { id: options.id };
     },
+    // Doble de prueba: obtiene el recurso solicitado mediante el adaptador de almacenamiento o Workflow.
     async get(id: string) {
       // Instancia con status, terminate y restart.
       return {
+        // Doble de prueba: entrega el estado observable de la instancia del Workflow.
         async status() {
           // Estado actual.
           return { status: activity };
         },
+        // Doble de prueba: representa la terminación de la instancia de Workflow solicitada por el consumidor.
         async terminate() {
           // Nada.
           return undefined;
         },
+        // Doble de prueba: representa el reinicio de la instancia de Workflow solicitado por el consumidor.
         async restart() {
           // Registra.
           restarts.push(id);
@@ -95,6 +100,7 @@ function workflowMock(status = "complete") {
     workflow,
     creates,
     restarts,
+    // Doble de prueba: registra la actividad que permitirá comprobar el estado de la instancia simulada.
     setActivity(next: string) {
       // Cambia el estado.
       activity = next;
@@ -139,8 +145,14 @@ function realEnv(
     PUBLIC_BUDGET_USD: "1",
     TURNSTILE_SITE_KEY: "synthetic-site-key",
     TURNSTILE_SECRET_KEY: turnstileSecret,
-    CHAT_IP_LIMITER: { limit: async () => ({ success: true }) },
-    CHAT_SESSION_LIMITER: { limit: async () => ({ success: true }) },
+    CHAT_IP_LIMITER: {
+      // Doble de prueba: resuelve el control de cupo inyectado antes de permitir que avance la petición.
+      limit: async () => ({ success: true }),
+    },
+    CHAT_SESSION_LIMITER: {
+      // Doble de prueba: resuelve el control de cupo inyectado antes de permitir que avance la petición.
+      limit: async () => ({ success: true }),
+    },
     // Generación con clave de prueba.
     ANTHROPIC_API_KEY: "local-test-key",
     MODEL_ID: "example/generator",
@@ -731,7 +743,10 @@ describe("HTTP durable de investigación", () => {
     expect(verifies).toBe(1);
 
     // Límite por IP agotado.
-    env.CHAT_IP_LIMITER = { limit: async () => ({ success: false }) };
+    env.CHAT_IP_LIMITER = {
+      // Doble de prueba: resuelve el control de cupo inyectado antes de permitir que avance la petición.
+      limit: async () => ({ success: false }),
+    };
     // Petición.
     const limited = await send(env, `${publicOrigin}/api/research/conversations`, {
       method: "POST",
@@ -749,7 +764,10 @@ describe("HTTP durable de investigación", () => {
     // Sin verificar más.
     expect(verifies).toBe(1);
     // Restaura el límite.
-    env.CHAT_IP_LIMITER = { limit: async () => ({ success: true }) };
+    env.CHAT_IP_LIMITER = {
+      // Doble de prueba: resuelve el control de cupo inyectado antes de permitir que avance la petición.
+      limit: async () => ({ success: true }),
+    };
 
     // Sesión caducada.
     const expired = await send(env, `${publicOrigin}/api/research/conversations`, {

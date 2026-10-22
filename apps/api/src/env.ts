@@ -76,6 +76,10 @@ export interface WorkerEnv {
   MODEL_ID?: string;
   // Modelo evaluador de CRAG.
   EVALUATOR_MODEL_ID?: string;
+  // Plazo total de CRAG por turno, entre 1 y 120 segundos. Ausente conserva 20 segundos.
+  CRAG_EXECUTION_BUDGET_MS?: string;
+  // Mismo plazo por llamada para el generador de RAG y CRAG. Ausente conserva 20 segundos.
+  MODEL_TIMEOUT_MS?: string;
   // Modelo de embeddings de Workers AI.
   EMBEDDING_MODEL?: string;
   // Dimensión observada.
@@ -160,6 +164,34 @@ export interface TokenPrices {
   outputUsdPerMillion: number;
 }
 
+/** Plazo acotado del turno de CRAG. Un valor escrito pero inválido bloquea CRAG. */
+export function cragExecutionBudgetMs(env: WorkerEnv): number | null {
+  // Ausente: contrato previo, para no cambiar guiones ni experimentos históricos.
+  if (env.CRAG_EXECUTION_BUDGET_MS === undefined) return 20_000;
+  // Solo enteros decimales explícitos, sin notación científica o valores infinitos.
+  const raw = env.CRAG_EXECUTION_BUDGET_MS.trim();
+  if (!/^\d+$/.test(raw))
+    // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+    return null;
+  const milliseconds = Number(raw);
+  return Number.isSafeInteger(milliseconds) && milliseconds >= 1_000 && milliseconds <= 120_000
+    ? milliseconds
+    : null;
+}
+
+// Plazo por llamada generativa, acotado independientemente del plazo total de CRAG.
+export function modelTimeoutMs(env: WorkerEnv): number | null {
+  if (env.MODEL_TIMEOUT_MS === undefined) return 20_000;
+  const raw = env.MODEL_TIMEOUT_MS.trim();
+  if (!/^\d+$/.test(raw))
+    // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+    return null;
+  const milliseconds = Number(raw);
+  return Number.isSafeInteger(milliseconds) && milliseconds >= 1_000 && milliseconds <= 60_000
+    ? milliseconds
+    : null;
+}
+
 /**
  * Ruta generativa común a chat, RAG, CRAG, investigación y visión. Cada papel cambia solo
  * el modelo (MODEL_ID, EVALUATOR_MODEL_ID, RESEARCH_MODEL_ID…); proveedor y clave son los mismos.
@@ -179,6 +211,8 @@ export interface GenerationSettings {
   reasoning?: ReasoningEffort | null;
   /** Tarifa de MODEL_*_USD_PER_MILLION para el coste mostrado; null si no está configurada. */
   prices?: TokenPrices | null;
+  // Tope de la llamada al generador; CRAG lo recorta además al tiempo restante del turno.
+  timeoutMs?: number;
 }
 
 // Ajustes del RAG real.
@@ -264,13 +298,17 @@ export function researchSettings(
   // Buscador elegido (Firecrawl por defecto).
   const provider = env.RESEARCH_SEARCH_PROVIDER?.trim() || "firecrawl";
   // Buscador desconocido.
-  if (provider !== "firecrawl" && provider !== "tavily") missing.add("RESEARCH_SEARCH_PROVIDER");
+  if (provider !== "firecrawl" && provider !== "tavily")
+    // Añade el requisito ausente al diagnóstico para bloquear una capacidad incompleta.
+    missing.add("RESEARCH_SEARCH_PROVIDER");
   // Con Tavily.
   if (provider === "tavily") {
     // No hace falta la clave de Firecrawl.
     missing.delete("FIRECRAWL_API_KEY");
     // Pero sí la de Tavily.
-    if (!isConfiguredValue(env.TAVILY_API_KEY)) missing.add("TAVILY_API_KEY");
+    if (!isConfiguredValue(env.TAVILY_API_KEY))
+      // Añade el requisito ausente al diagnóstico para bloquear una capacidad incompleta.
+      missing.add("TAVILY_API_KEY");
   }
   // La autorización tiene que ser exactamente la de S12.
   if (
@@ -299,13 +337,20 @@ export function researchSettings(
       ? positiveNumber(env.TAVILY_USD_PER_CREDIT)
       : positiveNumber(env.FIRECRAWL_USD_PER_CREDIT);
   // Falta el presupuesto.
-  if (budgetUsd === null) missing.add("RESEARCH_BUDGET_USD");
+  if (budgetUsd === null)
+    // Añade el requisito ausente al diagnóstico para bloquear una capacidad incompleta.
+    missing.add("RESEARCH_BUDGET_USD");
   // Falta la tarifa de entrada.
-  if (inputUsdPerMillion === null) missing.add("RESEARCH_INPUT_USD_PER_MILLION");
+  if (inputUsdPerMillion === null)
+    // Añade el requisito ausente al diagnóstico para bloquear una capacidad incompleta.
+    missing.add("RESEARCH_INPUT_USD_PER_MILLION");
   // Falta la tarifa de salida.
-  if (outputUsdPerMillion === null) missing.add("RESEARCH_OUTPUT_USD_PER_MILLION");
+  if (outputUsdPerMillion === null)
+    // Añade el requisito ausente al diagnóstico para bloquear una capacidad incompleta.
+    missing.add("RESEARCH_OUTPUT_USD_PER_MILLION");
   // Falta el precio del crédito.
   if (firecrawlUsdPerCredit === null)
+    // Añade el requisito ausente al diagnóstico para bloquear una capacidad incompleta.
     missing.add(provider === "tavily" ? "TAVILY_USD_PER_CREDIT" : "FIRECRAWL_USD_PER_CREDIT");
   // Algo falta.
   if (
@@ -455,11 +500,15 @@ export function mediaMissing(
       missing.push("LLM_PROVIDER");
     } else {
       // Modelo de visión no admitido.
-      if (!visionModelAccepted(provider, visionId)) missing.push("RESEARCH_VISION_MODEL_ID");
+      if (!visionModelAccepted(provider, visionId))
+        // Añade el requisito ausente al diagnóstico para bloquear una capacidad incompleta.
+        missing.push("RESEARCH_VISION_MODEL_ID");
       // Credencial del proveedor.
       const credential = PROVIDER_CREDENTIAL[provider];
       // Sin credencial.
-      if (!isConfiguredValue(text(env, credential as keyof WorkerEnv))) missing.push(credential);
+      if (!isConfiguredValue(text(env, credential as keyof WorkerEnv)))
+        // Añade el requisito ausente al diagnóstico para bloquear una capacidad incompleta.
+        missing.push(credential);
     }
   }
   // Audio o voz sin Workers AI.
@@ -567,6 +616,10 @@ export function generationMissing(env: WorkerEnv): string[] {
   }
   // Credencial y modelo del proveedor.
   const missing = absent(env, generationVariables(provider));
+  // Un plazo inválido escrito no se ignora: bloquea antes de llamar al modelo.
+  if (modelTimeoutMs(env) === null)
+    // Añade el requisito ausente al diagnóstico para bloquear una capacidad incompleta.
+    missing.push("MODEL_TIMEOUT_MS");
   // Nivel de razonamiento inválido.
   if (reasoningEffort(env.LLM_REASONING_EFFORT, provider) === "invalid") {
     // Se informa.
@@ -601,7 +654,9 @@ export function compatibleUrlAllowed(value: string): boolean {
     return false;
   }
   // https siempre vale.
-  if (url.protocol === "https:") return true;
+  if (url.protocol === "https:")
+    // Confirma la condición de esta rama y comunica el resultado positivo al llamador.
+    return true;
   // http solo hacia este mismo equipo.
   return url.protocol === "http:" && ["localhost", "127.0.0.1", "[::1]"].includes(url.hostname);
 }
@@ -660,6 +715,7 @@ export function generationSettings(env: WorkerEnv): GenerationSettings | null {
       ? { reasoning }
       : {}),
     prices: tokenPrices(env.MODEL_INPUT_USD_PER_MILLION, env.MODEL_OUTPUT_USD_PER_MILLION),
+    timeoutMs: modelTimeoutMs(env) ?? undefined,
   };
 }
 
@@ -779,8 +835,18 @@ export function assessWorker(env: WorkerEnv): Assessment {
       rag: { status: retrieval ? "ready" : "blocked", missing: ragMissing },
       crag: {
         status:
-          retrieval !== null && absent(env, CRAG_VARIABLES).length === 0 ? "ready" : "blocked",
-        missing: [...new Set([...ragMissing, ...absent(env, CRAG_VARIABLES)])],
+          retrieval !== null &&
+          absent(env, CRAG_VARIABLES).length === 0 &&
+          cragExecutionBudgetMs(env) !== null
+            ? "ready"
+            : "blocked",
+        missing: [
+          ...new Set([
+            ...ragMissing,
+            ...absent(env, CRAG_VARIABLES),
+            ...(cragExecutionBudgetMs(env) === null ? ["CRAG_EXECUTION_BUDGET_MS"] : []),
+          ]),
+        ],
       },
       // La investigación tiene su propio diagnóstico.
       research: researchCapability(env, ragMissing),

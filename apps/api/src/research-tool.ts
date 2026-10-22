@@ -102,6 +102,7 @@ export function createCourseSessionTool(input: {
 }): CourseSessionToolPort {
   // Puerto de la herramienta.
   return {
+    // Resuelve una ficha del curso usando el ámbito y los filtros del recorrido.
     async getCourseSession(raw, context) {
       // Valida los argumentos del modelo.
       const args = validateSessionArgs(raw, input.audience);

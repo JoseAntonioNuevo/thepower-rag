@@ -117,13 +117,57 @@ async function capture(
     resetOpenRouterCatalog();
   }
   // Si no hubo petición, falla.
-  if (captured === null) throw new Error("no hubo petición");
+  if (captured === null)
+    // Detiene el recorrido con el diagnóstico: no hubo petición.
+    throw new Error("no hubo petición");
   // Petición capturada.
   return captured;
 }
 
 // Grupo: un proveedor para todos los papeles.
 describe("un proveedor para todos los papeles", () => {
+  // Compatibilidad del SDK instalado con el contrato de Sonnet y Opus, sin red real.
+  it("Sonnet 5.5 evita disabled y Opus 5.5 conserva adaptive sin cambiar de modelo", async () => {
+    const sonnet = await capture(
+      { provider: "anthropic", apiKey: SECRET, modelId: "claude-sonnet-5-5" },
+      "claude-sonnet-5-5",
+    );
+    // Contrasta el valor observado con el resultado exacto que define este caso.
+    expect(sonnet.body.model).toBe("claude-sonnet-5-5");
+    // Compara la estructura y los valores completos con la referencia de la prueba.
+    expect(sonnet.body.thinking).toEqual({ type: "between_tools" });
+    // Contrasta los campos relevantes sin exigir igualdad de los metadatos adicionales.
+    expect(sonnet.body.output_config).toMatchObject({ effort: "low" });
+    const opus = await capture(
+      { provider: "anthropic", apiKey: SECRET, modelId: "claude-opus-5-5", reasoning: "minimal" },
+      "claude-opus-5-5",
+    );
+    // Contrasta el valor observado con el resultado exacto que define este caso.
+    expect(opus.body.model).toBe("claude-opus-5-5");
+    // Compara la estructura y los valores completos con la referencia de la prueba.
+    expect(opus.body.thinking).toEqual({ type: "adaptive" });
+    // Contrasta los campos relevantes sin exigir igualdad de los metadatos adicionales.
+    expect(opus.body.output_config).toMatchObject({ effort: "low" });
+    const high = await capture(
+      { provider: "anthropic", apiKey: SECRET, modelId: "claude-sonnet-5-5", reasoning: "xhigh" },
+      "claude-sonnet-5-5",
+    );
+    // Compara la estructura y los valores completos con la referencia de la prueba.
+    expect(high.body.thinking).toEqual({ type: "adaptive" });
+  });
+
+  // Un cambio de modelo no puede seguir anunciando el coste de Haiku.
+  it("calcula Sonnet y Opus con su tarifa y deja desconocidos los modelos sin precio", () => {
+    const usage = { inputTokens: 1_000, outputTokens: 100 };
+    const sonnet = generationPricing({ apiKey: SECRET, modelId: "claude-sonnet-5-5" });
+    const opus = generationPricing({ apiKey: SECRET, modelId: "claude-opus-5-5" });
+    // Contrasta el cálculo numérico con el valor esperado admitiendo la precisión indicada.
+    expect(providerCost(usage, sonnet)?.amount).toBeCloseTo(0.003);
+    // Contrasta el cálculo numérico con el valor esperado admitiendo la precisión indicada.
+    expect(providerCost(usage, opus)?.amount).toBeCloseTo(0.006);
+    // Comprueba que la validación cierre el recorrido con ausencia de resultado.
+    expect(generationPricing({ apiKey: SECRET, modelId: "otro-modelo" })).toBeNull();
+  });
   // Anthropic: effort low y cabecera del espacio de trabajo.
   it("anthropic conserva la ruta publicada: effort low y espacio de trabajo", async () => {
     // Captura.

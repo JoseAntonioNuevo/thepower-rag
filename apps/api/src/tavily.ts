@@ -123,6 +123,7 @@ export function createTavilySearch(input: { apiKey: string; fetch?: FetchLike })
   const fetchImpl = input.fetch ?? ((url, init) => fetch(url, init));
   // Puerto de búsqueda.
   return {
+    // Busca candidatos para la consulta con los límites y el transporte de este adaptador.
     async search({ query, allowedDomains, limit }, context) {
       // Resultados pedidos entre 1 y el máximo.
       const bounded = Math.min(Math.max(1, limit), RESEARCH_LIMITS.maxResultsPerSearch);
@@ -194,6 +195,7 @@ export function createTavilyReader(input: {
   const now = input.now ?? Date.now;
   // Puerto de lectura.
   return {
+    // Lee el recurso solicitado y devuelve el resultado de este adaptador al consumidor.
     async read({ url }, context) {
       // URL fuera de la política: no se lee.
       if (!checkUrl(url, input.allowedDomains).ok)

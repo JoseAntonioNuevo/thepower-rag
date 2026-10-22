@@ -36,3 +36,6 @@ activation-receipts/
 .projects/vault/
 .projects/state.test.json
 .projects/state.local.test.json
+# Índice, reservas y recibos reales del laboratorio de esta máquina.
+lab/.local/
+material/S10/.build/

@@ -250,21 +250,36 @@ export function normalizeQuery(value: string): string {
   return value.trim().replace(/\s+/g, " ").toLowerCase();
 }
 
-// Milisegundos que quedan del plazo de 20 s.
-export function remainingBudgetMs(startedAt: number, now: number): number {
+// Milisegundos que quedan del plazo único; por defecto se conserva la referencia histórica de 20 s.
+export function remainingBudgetMs(
+  startedAt: number,
+  now: number,
+  executionBudgetMs: number = CRAG_BOUNDS.executionBudgetMs,
+): number {
   // Relojes inválidos o hacia atrás: no queda tiempo.
-  if (!Number.isFinite(startedAt) || !Number.isFinite(now) || now < startedAt) {
+  if (
+    !Number.isFinite(startedAt) ||
+    !Number.isFinite(now) ||
+    now < startedAt ||
+    !Number.isSafeInteger(executionBudgetMs) ||
+    executionBudgetMs < 1_000 ||
+    executionBudgetMs > 120_000
+  ) {
     // Cero.
     return 0;
   }
   // Plazo menos lo transcurrido, nunca negativo.
-  return Math.max(0, CRAG_BOUNDS.executionBudgetMs - (now - startedAt));
+  return Math.max(0, executionBudgetMs - (now - startedAt));
 }
 
 // ¿Queda tiempo?
-export function budgetOpen(startedAt: number, now: number): boolean {
+export function budgetOpen(
+  startedAt: number,
+  now: number,
+  executionBudgetMs: number = CRAG_BOUNDS.executionBudgetMs,
+): boolean {
   // Más de 0 ms.
-  return remainingBudgetMs(startedAt, now) > 0;
+  return remainingBudgetMs(startedAt, now, executionBudgetMs) > 0;
 }
 
 // ¿Pertenece el fragmento al alcance de esta ejecución?
@@ -511,7 +526,15 @@ export function validateAssessment(
         reason: "Una evidencia insuficiente no puede conservar fragmentos ni lagunas.",
       };
     }
-  } else if (usefulIds.length === 0 || usefulIds.some((id) => usefulText.get(id) === "")) {
+  }
+  // Comprueba cada id útil: una lista vacía o un fragmento sin texto no respaldan la valoración.
+  else if (
+    usefulIds.length === 0 ||
+    usefulIds.some(
+      // Un id marcado como útil debe conservar texto recuperado que pueda respaldar la respuesta.
+      (id) => usefulText.get(id) === "",
+    )
+  ) {
     // Útiles vacíos o sin texto.
     return { ok: false, reason: "La evidencia útil no tiene texto recuperado." };
   } else if (status === "partial" && gaps.length === 0) {

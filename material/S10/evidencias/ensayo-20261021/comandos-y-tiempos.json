@@ -1,0 +1,104 @@
+[
+  {
+    "step": "01-preparacion-rebuild",
+    "argv": ["bun", "run", "lab:real", "rebuild", "--execute", "--max-spend-usd", "1"],
+    "startedAt": "2026-10-21T13:30:39.204388+00:00",
+    "seconds": 1.462,
+    "exitCode": 0
+  },
+  {
+    "step": "02-preparacion-calibrate",
+    "argv": ["bun", "run", "lab:real", "calibrate", "--execute", "--max-spend-usd", "1"],
+    "startedAt": "2026-10-21T13:31:50.019128+00:00",
+    "seconds": 4.142,
+    "exitCode": 0
+  },
+  {
+    "step": "13-sin-documentos",
+    "argv": [
+      "bun",
+      "run",
+      "lab:real",
+      "baseline",
+      "--question",
+      "¿Con qué algoritmo se cifran los volúmenes en reposo y qué periodo de enfriamiento exige destruir una CMK?",
+      "--execute",
+      "--max-spend-usd",
+      "1"
+    ],
+    "startedAt": "2026-10-21T13:32:29.807768+00:00",
+    "seconds": 2.577,
+    "exitCode": 0
+  },
+  {
+    "step": "14-rebuild-en-directo",
+    "argv": ["bun", "run", "lab:real", "rebuild", "--execute", "--max-spend-usd", "1"],
+    "startedAt": "2026-10-21T13:34:05.097911+00:00",
+    "seconds": 1.38,
+    "exitCode": 0
+  },
+  {
+    "step": "14-status-en-directo",
+    "argv": ["bun", "run", "lab:real", "status"],
+    "startedAt": "2026-10-21T13:35:11.681636+00:00",
+    "seconds": 0.268,
+    "exitCode": 0
+  },
+  {
+    "step": "15-con-fuentes",
+    "argv": [
+      "bun",
+      "run",
+      "lab:real",
+      "query",
+      "--question",
+      "¿Con qué algoritmo se cifran los volúmenes en reposo y qué periodo de enfriamiento exige destruir una CMK?",
+      "--execute",
+      "--max-spend-usd",
+      "1",
+      "--brief"
+    ],
+    "startedAt": "2026-10-21T13:35:11.992151+00:00",
+    "seconds": 3.735,
+    "exitCode": 0
+  },
+  {
+    "step": "17-rechazo",
+    "argv": [
+      "bun",
+      "run",
+      "lab:real",
+      "query",
+      "--question",
+      "¿Qué coste mensual tienen las licencias de Windows Server 2025 en AetherCloud?",
+      "--execute",
+      "--max-spend-usd",
+      "1",
+      "--brief"
+    ],
+    "startedAt": "2026-10-21T13:36:09.579069+00:00",
+    "seconds": 1.156,
+    "exitCode": 0
+  },
+  {
+    "step": "final-preflight",
+    "argv": ["bun", "run", "lab:real", "preflight"],
+    "startedAt": "2026-10-21T13:39:23.143255+00:00",
+    "seconds": 0.173,
+    "exitCode": 0
+  },
+  {
+    "step": "final-status",
+    "argv": ["bun", "run", "lab:real", "status"],
+    "startedAt": "2026-10-21T13:39:23.343661+00:00",
+    "seconds": 0.169,
+    "exitCode": 0
+  },
+  {
+    "step": "respaldo-offline",
+    "argv": ["bun", "run", "lab:demo"],
+    "startedAt": "2026-10-21T13:38:28.093758+00:00",
+    "seconds": 0.263,
+    "exitCode": 0
+  }
+]

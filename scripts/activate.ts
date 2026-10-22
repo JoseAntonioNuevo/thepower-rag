@@ -195,6 +195,7 @@ if (!ACTIVATION_COMMANDS.includes(command)) {
               calibration.minScore < -1 ||
               calibration.minScore > 1
             )
+              // Detiene el recorrido con el diagnóstico: La calibración no coincide con el perfil remoto.
               throw new Error("La calibración no coincide con el perfil remoto.");
             // Umbral calibrado.
             minScore = calibration.minScore;
@@ -206,7 +207,9 @@ if (!ACTIVATION_COMMANDS.includes(command)) {
             // Clave.
             apiKey = readRepoAnthropicKey(root);
             // Sin clave: error.
-            if (!apiKey) throw new Error("Falta ANTHROPIC_API_KEY en .env.");
+            if (!apiKey)
+              // Detiene el recorrido con el diagnóstico: Falta ANTHROPIC_API_KEY en .env.
+              throw new Error("Falta ANTHROPIC_API_KEY en .env.");
             // Tarifas de Haiku.
             verifiedPrices = {
               embeddingUsdPerMillionInput: 0.0118,
@@ -296,6 +299,7 @@ if (!ACTIVATION_COMMANDS.includes(command)) {
           // Ejecutor del curso.
           return createCourseExecutor({
             runner: {
+              // Ejecuta la operación del puerto y devuelve su resultado al llamador.
               run: async () => {
                 // Las operaciones de datos no usan wrangler.
                 throw new Error("Esta operación de datos no usa Wrangler de gestión.");

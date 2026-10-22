@@ -22,7 +22,9 @@ import {
 
 // Raíz del repositorio y carpeta de fuentes del laboratorio.
 const root = path.resolve(import.meta.dirname, "..");
+// Restringe la preparación a los documentos ficticios incluidos con el laboratorio.
 const sourcesDir = path.join(root, "lab/corpus/sources");
+// Separa los informes del laboratorio de las fuentes documentales utilizadas para responder.
 const evalDir = path.join(root, "lab/eval");
 
 // Crea un ejecutor SQL para PostgreSQL usando el cliente nativo `SQL` de Bun cuando hay `DATABASE_URL`.
@@ -37,6 +39,7 @@ async function createBunPostgresExecutor(databaseUrl: string): Promise<PostgresS
   // Instancia de conexión a PostgreSQL.
   const client = new bunRuntime.SQL(databaseUrl);
   return {
+    // Ejecuta una consulta con sus parámetros y entrega las filas mediante el contrato del almacén.
     async query<Row extends Record<string, unknown> = Record<string, unknown>>(
       sqlText: string,
       params: readonly unknown[] = [],
@@ -102,38 +105,55 @@ async function main(): Promise<void> {
   // Subcomando (`demo`, `eval`, `rebuild`).
   const command = process.argv[2] ?? "demo";
   // Configuración del laboratorio.
-  const config = resolveLabConfig(process.env);
+  const config = resolveLabConfig({
+    GEN_MODEL_ID: "fixture-extractive-v1",
+    EMBEDDING_MODEL_ID: "fixture-token-hash-768-v1",
+    RERANKER_MODEL_ID: "fixture-lexical-reranker-v1",
+  });
   // Prepara los 10 documentos ficticios de AetherCloud.
   const corpus = prepareLabCorpusFromDirectory(sourcesDir);
   // Proveedor de embeddings de 768 dimensiones.
   const embedder = createDeterministic768EmbeddingProvider(config.embeddingModelId);
   // Elige PostgreSQL real si se pasa `--postgres` y `DATABASE_URL`, o el almacén pgvector en memoria.
   const usePostgres = process.argv.includes("--postgres") && config.databaseUrl !== null;
+  // Usa el doble en memoria de pgvector para recorrer el mismo contrato sin abrir PostgreSQL.
   const store: LabVectorStore = usePostgres
     ? new PgVectorDatabaseStore(await createBunPostgresExecutor(config.databaseUrl!))
     : new InMemoryPgVectorStore();
+  // Presenta el resultado de este paso en la terminal para que pueda contrastarse durante la demostración.
+  console.log(
+    "[lab] RESPALDO OFFLINE: embeddings léxicos y respuesta extractiva; no llama a Gemini ni a Qwen. Ruta real: bun run lab:real preflight",
+  );
 
   // Reconstruye desde índice vacío.
   const receipt = await store.rebuildFromEmptyIndex({ corpus, embedder });
+  // Presenta el resultado de este paso en la terminal para que pueda contrastarse durante la demostración.
   console.log(
     `[lab] Índice reconstruido desde cero (${store.backend}): versión=${receipt.corpusVersion}, docs=${String(receipt.documentCount)}, chunks=${String(receipt.chunkCount)}, dim=${String(receipt.embeddingDimensions)}, índice=${receipt.hnswIndex.indexName} (${receipt.hnswIndex.operatorClass})`,
   );
 
   // Si solo se pidió reconstruir, termina aquí.
   if (command === "rebuild") {
+    // Termina esta rama sin ejecutar los pasos siguientes del recorrido.
     return;
   }
 
   // Si se pidió evaluar las 20 preguntas (14+6), genera el informe Markdown y JSON.
   if (command === "eval") {
+    // Ejecuta los veinte casos de la comparación docente con parámetros idénticos entre etapas.
     const report = await runLabComparison20({ corpus, config, store, embedder });
+    // Crea el directorio de salida antes de persistir los resultados del recorrido.
     mkdirSync(evalDir, { recursive: true });
     const markdownPath = path.join(evalDir, "resultados-laboratorio.md");
+    // Persiste el resultado en la ruta del recorrido para poder revisarlo después.
     writeFileSync(markdownPath, formatLabEvaluationMarkdown(report), "utf8");
+    // Presenta el resultado de este paso en la terminal para que pueda contrastarse durante la demostración.
     console.log(
       `[lab] Evaluación 20 preguntas completada: RAG=${String(report.ragSummary.totalCorrect)}/20 (${String(report.ragSummary.answerableCorrect)}/14 respondibles, ${String(report.ragSummary.refusalCorrect)}/6 rechazos, ${report.ragSummary.averageRetrievals.toFixed(2)} búsquedas medias) | CRAG=${String(report.cragSummary.totalCorrect)}/20 (${String(report.cragSummary.answerableCorrect)}/14 respondibles, ${String(report.cragSummary.refusalCorrect)}/6 rechazos, ${report.cragSummary.averageRetrievals.toFixed(2)} búsquedas medias).`,
     );
+    // Presenta el resultado de este paso en la terminal para que pueda contrastarse durante la demostración.
     console.log(`[lab] Tabla guardada en ${markdownPath}`);
+    // Termina esta rama sin ejecutar los pasos siguientes del recorrido.
     return;
   }
 
@@ -146,10 +166,12 @@ async function main(): Promise<void> {
     store,
     embedder,
   });
+  // Presenta el resultado de este paso en la terminal para que pueda contrastarse durante la demostración.
   console.log(
     `[S10 RAG respuesta] decision=${s10Answer.decision}, gen=${String(s10Answer.generationCalled)}, citas=${s10Answer.citations.join(",")}`,
   );
 
+  // Ejecuta recuperación, corte de similitud y generación condicionada para este caso RAG.
   const s10Refuse = await runLabBasicRag({
     question: "¿Qué coste mensual tienen las licencias de Windows Server 2025 en AetherCloud?",
     corpusVersion: corpus.corpusVersion,
@@ -157,10 +179,12 @@ async function main(): Promise<void> {
     store,
     embedder,
   });
+  // Presenta el resultado de este paso en la terminal para que pueda contrastarse durante la demostración.
   console.log(
     `[S10 RAG rechazo] decision=${s10Refuse.decision}, gen=${String(s10Refuse.generationCalled)}, citas=${String(s10Refuse.citations.length)}`,
   );
 
+  // Ejecuta el recorrido correctivo con reranking, evaluación y límites de reformulación.
   const s11Rerank = await runLabCrag({
     question:
       "¿Cómo se autentican los clientes mTLS con X-Aether-Tenant y qué tiempo máximo de primera respuesta aplica si cae todo el plano de datos en un incidente SEV-1?",
@@ -169,10 +193,12 @@ async function main(): Promise<void> {
     store,
     embedder,
   });
+  // Presenta el resultado de este paso en la terminal para que pueda contrastarse durante la demostración.
   console.log(
     `[S11 CRAG suficiente tras rerank] decision=${s11Rerank.decision}, búsquedas=${String(s11Rerank.retrievalCount)}, reformulaciones=${String(s11Rerank.reformulationCount)}, nodos=${s11Rerank.visitedNodes.join("->")}, citas=${s11Rerank.citations.join(",")}`,
   );
 
+  // Ejecuta el recorrido correctivo con reranking, evaluación y límites de reformulación.
   const s11Partial = await runLabCrag({
     question:
       "¿Cómo se autentican los clientes mTLS con X-Aether-Tenant y qué tiempo máximo de primera respuesta aplica si cae todo el plano de datos en un incidente SEV-1?",
@@ -180,10 +206,13 @@ async function main(): Promise<void> {
     config,
     store,
     embedder,
+    // Simula la valoración de cobertura para mostrar la ruta parcial y la segunda recuperación.
     assessor: ({ reranked, attempt }) => {
+      // Busca el aspecto de autenticación dentro de la evidencia recuperada.
       const mtls = reranked.find((item) =>
         item.hit.documentId.includes("02-autenticacion-mtls-tokens"),
       );
+      // Busca el aspecto de incidentes que faltaba en el primer intento.
       const sev = reranked.find((item) =>
         item.hit.documentId.includes("06-respuesta-a-incidentes"),
       );
@@ -200,6 +229,7 @@ async function main(): Promise<void> {
           usefulIds: [mtls.hit.chunkId],
         };
       }
+      // Simula cobertura de ambos aspectos y excluye ids ausentes de la lista de evidencia útil.
       return {
         status: "sufficient",
         coverageScore: 0.9,
@@ -210,10 +240,12 @@ async function main(): Promise<void> {
       };
     },
   });
+  // Presenta el resultado de este paso en la terminal para que pueda contrastarse durante la demostración.
   console.log(
     `[S11 CRAG parcial->segunda búsqueda] decision=${s11Partial.decision}, búsquedas=${String(s11Partial.retrievalCount)}, reformulaciones=${String(s11Partial.reformulationCount)}, nodos=${s11Partial.visitedNodes.join("->")}, citas=${s11Partial.citations.join(",")}`,
   );
 
+  // Ejecuta el recorrido correctivo con reranking, evaluación y límites de reformulación.
   const s11Limit = await runLabCrag({
     question: "¿Qué descuento ofrece AetherCloud por pagar con criptomonedas?",
     corpusVersion: corpus.corpusVersion,
@@ -221,6 +253,7 @@ async function main(): Promise<void> {
     store,
     embedder,
   });
+  // Presenta el resultado de este paso en la terminal para que pueda contrastarse durante la demostración.
   console.log(
     `[S11 CRAG límite/rechazo] decision=${s11Limit.decision}, búsquedas=${String(s11Limit.retrievalCount)}, reformulaciones=${String(s11Limit.reformulationCount)}, gen=${String(s11Limit.generationCalled)}`,
   );

@@ -253,6 +253,7 @@ export function createFirecrawlSearch(input: {
   const fetchImpl = input.fetch ?? ((url, init) => fetch(url, init));
   // Puerto con el método search.
   return {
+    // Busca candidatos para la consulta con los límites y el transporte de este adaptador.
     async search({ query, allowedDomains, limit }, context): Promise<PortResult<SearchHit[]>> {
       // Sin clave no se llama.
       if (input.apiKey.trim().length === 0) {
@@ -332,6 +333,7 @@ export function createFirecrawlReader(input: {
   const now = input.now ?? Date.now;
   // Puerto con el método read.
   return {
+    // Lee el recurso solicitado y devuelve el resultado de este adaptador al consumidor.
     async read({ url }, context) {
       // Sin clave no se llama.
       if (input.apiKey.trim().length === 0) {

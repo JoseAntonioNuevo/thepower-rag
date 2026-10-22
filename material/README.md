@@ -1,13 +1,26 @@
 # Paquete docente y laboratorio reproducible · S10 (RAG básico) y S11 (CRAG)
 
+## S10 · versión para impartir el 22 de octubre
+
+La presentación canónica tiene **24 diapositivas**, el QR nuevo de Laura y notas alineadas con el [guion paso a paso](guiones/S10-guion-profesor.md): **30 + 50 + 10 minutos**. El [laboratorio real](../lab/README.md) usa PostgreSQL/pgvector y proveedores reales. El [ensayo de 20 preguntas](S10/evidencias/evaluacion-real-resumen.md) obtuvo **9/14 respondibles completas y 6/6 rechazos correctos**; sus fallos se conservan. La ruta offline se identifica expresamente. El [ensayo técnico paso a paso del 21/10](S10/evidencias/ensayo-paso-a-paso-20261021.md) contrasta los comandos reales, las rutas que abre el profesor y la paridad entre guion, notas y presentación. Los bloques de comandos ya son completos y copiables.
+
+## S12 · Deep Research y multimodal · 29 de octubre
+
+El [paquete de S12](S12/README.md) contiene la presentación editable y su PDF,
+el guion del profesor en Markdown y PDF, los tiempos de los 90 minutos y el
+respaldo de imagen y voz del ensayo real. La sesión explica primero los conceptos
+y termina con la aplicación, la evidencia guardada y el ejercicio. Los ZIP de
+S10/S11 conservan su contenido anterior; los archivos de S12 están en su carpeta.
+
 Material actualizado y sincronizado con el código del repositorio para las dos sesiones de RAG del programa AI Engineer (cohorte M/J, 18:30–20:00 `Europe/Madrid`).
 
 ## Resumen de entornos y referencias
 
-1. **Laboratorio reproducible del ejercicio (`lab/`):**
-   - Cumple punto por punto el stack de los enunciados publicados de S10 y S11: **10 documentos ficticios de AetherCloud** (`lab/corpus/sources/`), **PostgreSQL 17 con `pgvector`**, columna **`vector(768)`** e **índice HNSW** (`lab/schema.sql` y `lab/docker-compose.yml`), modelos por variables (`GEN_MODEL_ID`, `EMBEDDING_MODEL_ID`, `RERANKER_MODEL_ID`, `EVALUATOR_MODEL_ID`, `DATABASE_URL`), reconstrucción desde índice vacío (`bun run lab:rebuild`), RAG básico con control previo calibrado en validación (`similitud >= 0,25`, `distancia <=> <= 0,75`), grafo CRAG en LangGraph.js con nodos `retrieve → rerank → assess` separados en escala `[0, 1]` y **evaluación ejecutada de 20 preguntas nuevas (14 respondibles y 6 sin respuesta)** en [`../lab/eval/resultados-laboratorio.md`](../lab/eval/resultados-laboratorio.md).
+1. **Laboratorio del ejercicio (`lab/`):**
+   - S10 real: `bun run lab:real`, PostgreSQL local + pgvector, `vector(768)` e HNSW, Gemini Embedding 2 mediante OpenRouter y Sonnet generativo. Diez documentos, veinte fragmentos y calibración real con seis ejemplos: `0,724767` en este ensayo.
+   - `lab:demo`, `lab:rebuild` y `lab:eval` son respaldo determinista. Los resultados 16/20 RAG y 17/20 CRAG son de ese respaldo, no de llamadas a Gemini, Sonnet o Qwen. El CRAG real publicado se documenta por separado.
 2. **Demostrador del curso publicado (`https://rag-thepower.josenuevo.dev` y `apps/`):**
-   - Asistente sobre el programa real S1–S20 y los calendarios L/X y M/J en Cloudflare Workers, Vectorize (`@cf/baai/bge-m3`, `1024` dimensiones, perfil `p76509a5f9743`, 69 vectores), D1, R2 y `claude-haiku-5-5` (`LLM_PROVIDER=anthropic`).
+   - Asistente sobre el programa real S1–S20 y los calendarios L/X y M/J en Cloudflare Workers, Vectorize (`@cf/baai/bge-m3`, `1024` dimensiones, perfil `p76509a5f9743`, 69 vectores), D1, R2 y `claude-sonnet-5-5` (`LLM_PROVIDER=anthropic`).
    - La referencia principal de aula para S10 es el **recorrido semántico (`RAG_CONTEXT_MODE=semantic`)** con filtro de audiencia, puntuaciones y umbral `0,50` previo a generar; la carga de contexto completo desde D1 (`RAG_CONTEXT_MODE=complete`, [`../docs/rag-contexto-completo.md`](../docs/rag-contexto-completo.md)) se explica después como variante para corpus muy pequeños.
    - En S11, el grafo CRAG (`apps/api/src/crag-graph.ts`) separa los nodos `rank` (reordenamiento en `[0, 1]`) y `assess` (valoración de suficiencia con umbrales `CRAG_SCORE_THRESHOLDS`).
 3. **Respaldo offline de interfaz (`bun run dev`, `APP_MODE=demo`):**
@@ -27,9 +40,9 @@ S10 sigue a S9 del martes 20 de octubre (PostgreSQL y pgvector, Ignacio). S11 si
 | Pieza                                                      | Ruta                                                                                                                                                                                                                        |
 | ---------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Presentación S10 (editable)                                | [`presentaciones/S10-rag-basico.pptx`](presentaciones/S10-rag-basico.pptx)                                                                                                                                                  |
-| Presentación S10 (PDF con Inter y Fira Code)               | [`presentaciones/S10-rag-basico.pdf`](presentaciones/S10-rag-basico.pdf)                                                                                                                                                    |
+| Presentación S10 (PDF con Verdana y Courier New)           | [`presentaciones/S10-rag-basico.pdf`](presentaciones/S10-rag-basico.pdf)                                                                                                                                                    |
 | Presentación S11 (editable)                                | [`presentaciones/S11-crag.pptx`](presentaciones/S11-crag.pptx)                                                                                                                                                              |
-| Presentación S11 (PDF con Inter y Fira Code)               | [`presentaciones/S11-crag.pdf`](presentaciones/S11-crag.pdf)                                                                                                                                                                |
+| Presentación S11 (PDF, 16 diapositivas)                    | [`presentaciones/S11-crag.pdf`](presentaciones/S11-crag.pdf)                                                                                                                                                                |
 | Guion del profesor S10 (Markdown y PDF)                    | [`guiones/S10-guion-profesor.md`](guiones/S10-guion-profesor.md) · [`guiones/S10-guion-profesor.pdf`](guiones/S10-guion-profesor.pdf)                                                                                       |
 | Guion del profesor S11 (Markdown y PDF)                    | [`guiones/S11-guion-profesor.md`](guiones/S11-guion-profesor.md) · [`guiones/S11-guion-profesor.pdf`](guiones/S11-guion-profesor.pdf)                                                                                       |
 | Recorrido en vivo y laboratorio                            | [`guiones/recorrido-cloud.md`](guiones/recorrido-cloud.md)                                                                                                                                                                  |
@@ -55,12 +68,12 @@ S10 sigue a S9 del martes 20 de octubre (PostgreSQL y pgvector, Ignacio). S11 si
 | Paquete ZIP del profesor                                   | [`S10-S11-profesor.zip`](S10-S11-profesor.zip)                                                                                                                                                                              |
 | Paquete ZIP de código ejecutable (curso + `lab/`)          | [`S10-S11-demo-codigo.zip`](S10-S11-demo-codigo.zip)                                                                                                                                                                        |
 
-Las copias sincronizadas de las presentaciones con sufijo `-2026` están en `/Users/jose/Documents/the-power/presentaciones/` (`S10-rag-basico-2026.pptx`, `S10-rag-basico-2026.pdf`, `S11-crag-2026.pptx`, `S11-crag-2026.pdf`).
+Las copias con sufijo `-2026` del directorio padre corresponden a una versión anterior. Para S10 utiliza las rutas canónicas de esta tabla y el enlace compartido de Drive actualizado.
 
 ## Contenido de cada archivo ZIP
 
-| Archivo ZIP               | Destinatario                         | Qué incluye                                                                                                                                                                                          | Qué excluye                                                                                      |
-| ------------------------- | ------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
-| `S10-S11-alumno.zip`      | Alumnos                              | Enunciados completos S10 y S11 (MD y PDF), guía de apoyo del laboratorio (`laboratorio-apoyo.md` y PDF), QR y `LEEME.md`                                                                             | Soluciones del profesor, conjuntos reservados del profesor, secretos y otros ZIP                 |
-| `S10-S11-profesor.zip`    | Profesor                             | Todo `material/`, `lab/` y evidencias documentales sin ZIP anidados                                                                                                                                  | `node_modules`, secretos, `.dev.vars`, `.env`, `.activation.json`                                |
-| `S10-S11-demo-codigo.zip` | Ejecución local (alumnos y profesor) | Código actual sincronizado con `HEAD`, `lab/` (PostgreSQL/pgvector `vector(768)` + HNSW, 10 documentos ficticios y evaluación), `apps/`, `packages/`, `scripts/`, `corpus/`, `bun.lock` y `LEEME.md` | Soluciones del profesor, conjuntos reservados del profesor, secretos, `node_modules` y otros ZIP |
+| Archivo ZIP               | Destinatario                         | Qué incluye                                                                                                                                                                                  | Qué excluye                                                                                      |
+| ------------------------- | ------------------------------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------ |
+| `S10-S11-alumno.zip`      | Alumnos                              | Enunciados completos S10 y S11 (MD y PDF), guía de apoyo del laboratorio (`laboratorio-apoyo.md` y PDF), QR y `LEEME.md`                                                                     | Soluciones del profesor, conjuntos reservados del profesor, secretos y otros ZIP                 |
+| `S10-S11-profesor.zip`    | Profesor                             | Todo `material/`, `lab/` y evidencias documentales sin ZIP anidados                                                                                                                          | `node_modules`, secretos, `.dev.vars`, `.env`, `.activation.json`                                |
+| `S10-S11-demo-codigo.zip` | Ejecución local (alumnos y profesor) | Código del checkout preparado, `lab/` (PostgreSQL/pgvector `vector(768)` + HNSW, 10 documentos ficticios y evaluación), `apps/`, `packages/`, `scripts/`, `corpus/`, `bun.lock` y `LEEME.md` | Soluciones del profesor, conjuntos reservados del profesor, secretos, `node_modules` y otros ZIP |

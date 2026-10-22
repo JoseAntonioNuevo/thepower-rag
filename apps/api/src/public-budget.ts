@@ -4,7 +4,7 @@
 // Libro de cuentas del turno y su tipo.
 import { createAllowanceLedger, type AllowanceLedger } from "@thepower-rag/core";
 // Tipo de las variables del Worker.
-import type { WorkerEnv } from "./env";
+import { cragExecutionBudgetMs, modelTimeoutMs, type WorkerEnv } from "./env";
 // Tipo de la base de datos D1.
 import type { SqlDatabase } from "./stores";
 
@@ -14,6 +14,11 @@ export async function reservePublicTurn(
   env: WorkerEnv,
   mode: string,
 ): Promise<AllowanceLedger | null> {
+  // También se valida aquí: un consumidor distinto del router no puede reservar con plazos inválidos.
+  if (modelTimeoutMs(env) === null || (mode === "crag" && cragExecutionBudgetMs(env) === null)) {
+    // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+    return null;
+  }
   // Tope total del presupuesto público.
   const limit = Number(env.PUBLIC_BUDGET_USD);
   // Tarifa de entrada del modelo generador.
@@ -28,6 +33,7 @@ export async function reservePublicTurn(
     !(outputPrice > 0) ||
     ![limit, inputPrice, outputPrice].every(Number.isFinite)
   )
+    // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
     return null;
   // En CRAG con un evaluador distinto también hacen falta sus tarifas.
   if (mode === "crag" && env.EVALUATOR_MODEL_ID !== env.MODEL_ID) {
@@ -42,6 +48,7 @@ export async function reservePublicTurn(
       !Number.isFinite(evaluatorInput) ||
       !Number.isFinite(evaluatorOutput)
     )
+      // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
       return null;
     // La sesión de gasto tiene una sola tarifa: se usa la más alta para todas las llamadas, también
     // para la salida de razonamiento. Reserva de más a propósito en vez de quedarse corta.
@@ -69,7 +76,9 @@ export async function reservePublicTurn(
     .bind(quote, quote, limit)
     .first<{ id: string }>();
   // No cabía: sin reserva.
-  if (!result) return null;
+  if (!result)
+    // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+    return null;
   // Libro de cuentas limitado a esta reserva.
   return createAllowanceLedger({
     maxSpendUsd: quote,

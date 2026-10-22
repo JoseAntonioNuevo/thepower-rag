@@ -1,0 +1,34 @@
+{
+  "frozenAt": "2026-10-16T18:15:00.000Z",
+  "origin": "https://rag-thepower.josenuevo.dev",
+  "questionsFile": "material/comparacion/conjunto-reservado-referencia-actual-20.md",
+  "provider": "anthropic",
+  "model": "claude-haiku-5-5",
+  "evaluator": "claude-haiku-5-5",
+  "reasoningEffort": "low",
+  "ragContextMode": "semantic",
+  "corpus": "c3a59a406888b",
+  "profile": "p76509a5f9743",
+  "embedding": "@cf/baai/bge-m3",
+  "dimensions": 1024,
+  "minScore": 0.5,
+  "cragScoreScale": [0, 1],
+  "cragThresholds": {
+    "minChunkRelevance": 0.5,
+    "partialCoverageMin": 0.4,
+    "sufficientCoverageMin": 0.75
+  },
+  "maxOutputTokens": 1600,
+  "evaluatorMaxOutputTokens": 1600,
+  "maxRetrievals": 3,
+  "maxRewrites": 2,
+  "turnDeadlineMs": 20000,
+  "sha256": {
+    "apps/api/src/prompts.ts": "fb922412995cd0ebe9fc5eb2d402252c338366106a565264ccf307ac0cd18f06",
+    "apps/api/src/crag-real.ts": "267f3ac6d50d2d1d1a3a41363482588ac9f51a8c7ae0ae54eff80545cdcb3a47",
+    "apps/api/src/crag-graph.ts": "cd03e11b1886d2c876e3e6728986a790afb995ceba30f006d550ba18d82ea9b6",
+    "apps/api/src/model.ts": "e5be1e11a169841311912b06bdc2e646b60ce4c635c9a323f9008627ee23fc79",
+    "corpus/prepared/corpus.json": "79c0e2a1ff4230f79b29adf32ed192da66e0af024235e08c907d4be4ba9d99cc",
+    "material/comparacion/conjunto-reservado-referencia-actual-20.md": "d18b9c4e6b42096cb025733daf5309d7b382af29c10165d67731df912293e606"
+  }
+}

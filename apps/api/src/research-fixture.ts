@@ -758,7 +758,9 @@ export function createFixtureResearchPorts(
   // Si no hay escenario, lo deduce de la pregunta del aula.
   const noteFixtureQuestion = (question: string) => {
     // Ya hay uno.
-    if (scenario !== null) return;
+    if (scenario !== null)
+      // Termina esta rama sin ejecutar los pasos siguientes del recorrido.
+      return;
     // ¿Pregunta del aula?
     const classroom = classroomFixtureScenario(question);
     // Lo fija.
@@ -790,15 +792,19 @@ export function createFixtureResearchPorts(
   };
   // Modelo guionizado.
   const model: ResearchModelPort = {
+    // Construye el plan de investigación que consumen los nodos posteriores.
     plan: ({ question, audience }) => {
       // Deduce el escenario.
       noteFixtureQuestion(question);
       // Plan.
       return Promise.resolve(ok(planFor(scenario, question, audience)));
     },
+    // Valora la suficiencia de la evidencia y las carencias que quedan por cubrir.
     assess: ({ evidence, round, subquestions }) =>
       Promise.resolve(ok(assessFor(scenario, round, evidence, scores, subquestions))),
+    // Propone consultas adicionales a partir de las carencias del intento anterior.
     followUp: ({ gaps }) => Promise.resolve(ok(followUpFor(scenario, gaps))),
+    // Compone el informe a partir de la evidencia reunida y las subpreguntas del plan.
     synthesize: ({ evidence, subquestions }) =>
       Promise.resolve(ok(synthesizeFor(scenario, evidence, subquestions))),
   };
@@ -813,6 +819,7 @@ export function createFixtureResearchPorts(
     estimatedMaxUsd: null,
     model,
     course: {
+      // Recupera candidatos documentales dentro del ámbito de corpus y consulta del recorrido.
       retrieve({ query, audience, corpusVersion, limit }) {
         // Fragmentos guionizados.
         const scripted = courseIdsFor(scenario, query);
@@ -850,6 +857,7 @@ export function createFixtureResearchPorts(
     tool: createCourseSessionTool({
       corpusVersion: options.corpusVersion,
       audience: options.audience,
+      // Lee el recurso solicitado y devuelve el resultado de este adaptador al consumidor.
       read: (corpusVersion, chunkId) => {
         // Fragmento de esa versión.
         const chunk = library.find(
@@ -860,6 +868,7 @@ export function createFixtureResearchPorts(
       },
     }),
     search: {
+      // Busca candidatos para la consulta con los límites y el transporte de este adaptador.
       async search({ query }) {
         // Búsqueda lenta.
         if (requested === "slow-search") {
@@ -881,6 +890,7 @@ export function createFixtureResearchPorts(
       },
     },
     reader: {
+      // Lee el recurso solicitado y devuelve el resultado de este adaptador al consumidor.
       async read({ url }) {
         // Página simulada.
         const page = fixturePageByUrl(url);

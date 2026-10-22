@@ -1,0 +1,564 @@
+{
+  "title": "Deep Research y multimodal",
+  "date": "2026-10-29",
+  "start": "18:30",
+  "timezone": "Europe/Madrid",
+  "author": "José Antonio Nuevo",
+  "slides": [
+    {
+      "title": "Deep Research\ny multimodal",
+      "layout": "cover",
+      "minutes": 1,
+      "subtitle": "Imagen y audio en un agente que investiga con fuentes",
+      "rows": [
+        ["El caso de hoy", "Una captura de error y una nota de voz"],
+        ["El resultado", "Un informe con fuentes y voz opcional"]
+      ],
+      "explain": "Abre con una situación reconocible: alguien envía una captura y un audio a soporte. La captura muestra un error y el audio explica qué hizo antes. Leer la imagen, entender la petición e investigar la solución son trabajos diferentes. Hoy los conectaremos en un único agente. Venimos de recuperar documentos en S10 y corregir la recuperación en S11. Ahora añadimos entradas que no son solo texto y fuentes que todavía no están en nuestro corpus. El objetivo es que el alumno pueda explicar el recorrido y construir una versión pequeña, con límites y resultados comprobables.",
+      "action": "Presenta el caso sin abrir todavía la aplicación. Indica la fecha, el grupo M/J y el horario de 18:30 a 20:00.",
+      "question": "¿Qué información suele faltar cuando alguien solo nos manda una captura?",
+      "answer": "La intención y lo que ocurrió antes del error. El audio puede aportar ese contexto.",
+      "transition": "Antes de empezar, recogemos el feedback sobre CRAG.",
+      "sources": [
+        "corpus/sources/program/s12-deep-research.md",
+        "docs/sources/ai-engineer-curriculum-2026-07-17.txt"
+      ]
+    },
+    {
+      "title": "Evaluación de la clase anterior",
+      "layout": "qr",
+      "minutes": 2,
+      "subtitle": "S11 · RAG avanzado y CRAG · martes 27 de octubre",
+      "rows": [
+        [
+          "Encuesta AI Engineer",
+          "Escanea el QR y valora el ritmo, las explicaciones y la práctica"
+        ],
+        ["Mientras respondes", "Piensa en una pregunta que requiera información fuera del corpus"]
+      ],
+      "explain": "Deja dos minutos para la encuesta. El QR corresponde a AI Engineer y evalúa S11 del martes 27, la clase anterior. Mientras responden, pide que piensen en una consulta que el corpus no pueda resolver. Puede tratarse de un cambio reciente en una API o de un fallo cuyo contexto solo aparece en una captura. Recoge un ejemplo y úsalo para introducir la investigación externa. No alargues el feedback hasta consumir el bloque conceptual.",
+      "action": "Mantén el QR visible durante dos minutos. La misma imagen original se conserva en material/assets/qr-ai-engineer.jpg.",
+      "question": "¿Qué haría nuestro RAG si la solución depende de una página que nunca hemos indexado?",
+      "answer": "Podría reconocer la falta de evidencia y rechazar. Para buscar información nueva necesita otra capacidad.",
+      "transition": "Situamos esas capacidades dentro del agente que construiremos.",
+      "sources": ["material/assets/qr-origen.md", "material/guiones/S11-guion-profesor.md"]
+    },
+    {
+      "title": "Objetivo de la sesión",
+      "layout": "rows",
+      "minutes": 2,
+      "subtitle": "Un grafo de chatbot con memoria, herramientas e investigación",
+      "rows": [
+        ["Entrada", "Una imagen y un audio aportan información complementaria"],
+        ["Decisión", "El agente elige respuesta directa, herramienta o investigación"],
+        ["Salida", "Un informe distingue lo comprobado de lo que falta"],
+        ["Continuidad", "La conversación conserva contexto y puede producir voz"]
+      ],
+      "takeaway": "60 minutos de conceptos y 30 de aplicación, evidencia y ejercicio",
+      "explain": "Lee el objetivo como un comportamiento observable. El alumno no tiene que construir una interfaz web ni varios agentes. Puede entregar un terminal o notebook que recorra las capacidades. Durante la primera hora separaremos cada responsabilidad para que después resulte sencillo encontrar un fallo. La última media hora se dedica a la aplicación existente, un resultado real guardado y las condiciones del ejercicio. Distingue siempre el diseño del agente, el proveedor de modelos y la infraestructura que lo ejecuta.",
+      "action": "Señala los cuatro resultados que comprobarás al final. Relaciona memoria y herramientas con las sesiones previas de LangGraph.",
+      "question": "¿Qué prueba sencilla nos demostraría que el audio realmente ha influido en la respuesta?",
+      "answer": "Cambiar la intención del audio manteniendo la imagen y comprobar que cambia la pregunta o la ruta del agente.",
+      "transition": "Primero comparamos la investigación con lo que ya conocemos de RAG y CRAG.",
+      "sources": [
+        "docs/sources/ai-engineer-curriculum-2026-07-17.txt",
+        "corpus/sources/program/s12-deep-research.md"
+      ]
+    },
+    {
+      "title": "Respuesta directa, RAG, CRAG e investigación",
+      "layout": "table",
+      "minutes": 4,
+      "columns": ["Recorrido", "Información que utiliza", "Cuándo encaja"],
+      "rows": [
+        [
+          "Respuesta directa",
+          "La petición y el contexto disponible",
+          "La tarea no necesita nuevas fuentes"
+        ],
+        ["RAG", "Documentos de un corpus", "La respuesta está en la documentación propia"],
+        ["CRAG", "Corpus y evaluación de lo recuperado", "La primera recuperación es insuficiente"],
+        [
+          "Investigación",
+          "Subpreguntas y fuentes que se consultan",
+          "Hay que reunir información que falta"
+        ]
+      ],
+      "takeaway": "La política de búsqueda y sus límites forman parte del diseño",
+      "explain": "Usa cuatro ejemplos: reformular un texto, consultar una política interna, resolver una pregunta compuesta del curso e investigar una incompatibilidad reciente. RAG recupera documentos. CRAG evalúa si esa evidencia cubre la pregunta y puede corregir la búsqueda. Una investigación descompone la tarea, consulta fuentes y revisa las lagunas antes de redactar. Estas categorías se pueden combinar: una investigación también puede usar RAG. La multimodalidad describe las entradas o salidas, por lo que cualquiera de esos recorridos puede recibir una imagen. No presentes Deep Research como una garantía de exactitud ni como un nombre único de arquitectura.",
+      "action": "Pide al grupo que clasifique los cuatro ejemplos. Conserva uno ambiguo y explica por qué la ruta depende de la evidencia necesaria.",
+      "question": "Si una investigación consulta el corpus del curso, ¿deja de ser investigación?",
+      "answer": "Puede combinar recuperación interna con herramientas y fuentes externas. La decisión depende de la tarea.",
+      "transition": "Veamos qué cambia cuando la petición incluye archivos.",
+      "sources": [
+        "AGENTS.md#qué-hace-la-aplicación",
+        "apps/api/src/research-graph.ts",
+        "docs/s12-research-phase1.md"
+      ]
+    },
+    {
+      "title": "Multimodalidad",
+      "layout": "rows",
+      "minutes": 3,
+      "subtitle": "El sistema trabaja con más de un tipo de información",
+      "rows": [
+        ["Texto", "Pregunta, instrucciones y contexto de la conversación"],
+        ["Imagen", "Contenido visual, texto visible y relaciones espaciales"],
+        ["Audio", "Petición hablada que podemos transcribir"],
+        ["Voz de salida", "Lectura de una respuesta seleccionada"]
+      ],
+      "takeaway": "Cada modalidad conserva su origen y sus límites",
+      "explain": "Define modalidad como una forma de representar información. Un modelo puede admitir texto e imagen, mientras otro servicio se encarga de transcribir audio. Un sistema multimodal no necesita resolverlo todo con una única llamada. En nuestro recorrido, la visión convierte la captura en una observación y la transcripción convierte el audio en texto. Después fusionamos esas entradas. Conservar el origen permite comprobar un número mal leído o una palabra mal transcrita. Un MP3 al final es una salida de voz. No implica que el sistema mantenga una conversación de voz en tiempo real.",
+      "action": "Usa el mismo caso durante toda la clase. Evita cambiar a ejemplos de vídeo o voz en tiempo real que la demo no cubre.",
+      "question": "¿Necesitamos un único modelo que entienda todo para construir este sistema?",
+      "answer": "Podemos coordinar modelos especializados y unificar sus resultados en el estado del grafo.",
+      "transition": "La primera transformación será leer una captura.",
+      "sources": [
+        "apps/api/src/research-multimodal.ts",
+        "apps/api/src/research-perception-real.ts",
+        "packages/research/src/fusion.ts"
+      ]
+    },
+    {
+      "title": "Lectura de imagen y OCR",
+      "layout": "image",
+      "minutes": 3,
+      "subtitle": "La captura aporta una observación que todavía debemos interpretar",
+      "image": "../../apps/api/fixtures/media/dimension-mismatch.png",
+      "rows": [
+        ["Texto observado", "El sistema espera 1024 dimensiones y recibe 768"],
+        ["Pregunta abierta", "¿Qué configuración genera cada dimensión?"],
+        ["Comprobación", "Revisar el modelo y el índice antes de proponer cambios"]
+      ],
+      "takeaway": "Leer el error no identifica por sí solo la causa",
+      "explain": "Distingue OCR e interpretación visual. OCR extrae caracteres. Un modelo con visión también puede describir el contexto de una pantalla, pero puede equivocarse con cifras, unidades o etiquetas. Lee expected 1024, got 768 sin invertir los valores. La imagen permite formular una hipótesis de incompatibilidad de dimensiones. No demuestra qué modelo usa el alumno ni cuál debería conservar. Antes de recomendar reconstruir un índice necesitamos comprobar la configuración real. El ejemplo es una imagen sintética del aula, no una captura de una incidencia de un alumno.",
+      "action": "Pide a alguien que lea la captura y a otra persona que explique qué todavía no sabemos.",
+      "question": "¿Podemos concluir que hay que cambiar el modelo por uno de 1024 dimensiones?",
+      "answer": "Todavía falta saber qué índice y qué modelo se han configurado y qué datos se quieren conservar.",
+      "transition": "Antes de invocar visión, la aplicación comprueba el archivo.",
+      "sources": [
+        "apps/api/fixtures/media/manifest.json",
+        "apps/api/src/research-perception.ts",
+        "docs/s12-cloud-deployment.md"
+      ]
+    },
+    {
+      "title": "Procesamiento de archivos",
+      "layout": "rows",
+      "minutes": 3,
+      "subtitle": "La extensión del nombre no basta para aceptar una entrada",
+      "rows": [
+        ["Formato", "Comprobar el contenido y que se pueda decodificar"],
+        ["Tamaño", "Limitar bytes, dimensiones y duración antes de procesar"],
+        ["Almacenamiento", "Guardar el archivo por separado y conservar una referencia"],
+        ["Error", "Explicar el rechazo sin fingir una lectura correcta"]
+      ],
+      "takeaway": "En esta demo: PNG/JPEG y audio WAV de hasta 30 segundos",
+      "explain": "Recorre la admisión de un archivo. Primero se comprueban sus bytes y formato real, después límites como tamaño y duración, y solo entonces se guarda y se llama al proveedor. Renombrar un HTML a .png no lo convierte en una imagen. La demo acepta un conjunto estrecho de formatos para que el recorrido sea reproducible. PDF y otros tipos de archivo requieren un extractor y un diseño propios, por lo que quedan como ampliación. En el estado guardamos referencias, metadatos y texto acotado. Los binarios y el base64 hacen crecer checkpoints y no sirven como memoria conversacional.",
+      "action": "Contrasta un archivo mal formado con unknown-square.png, una imagen válida que el guion offline no reconoce. Son dos errores distintos.",
+      "question": "¿Por qué limitar dimensiones si el archivo ocupa pocos bytes?",
+      "answer": "Un archivo muy comprimido puede exigir mucha memoria al decodificarse. Bytes y tamaño descomprimido son límites distintos.",
+      "transition": "El audio tiene su propio proceso de admisión y lectura.",
+      "sources": [
+        "packages/contracts/src/media.ts",
+        "apps/api/src/media-bytes.ts",
+        "docs/s12-research-phase3.md#entrada-y-fusión"
+      ]
+    },
+    {
+      "title": "Audio a texto",
+      "layout": "rows",
+      "minutes": 3,
+      "subtitle": "La transcripción convierte el audio en una petición que podemos revisar",
+      "rows": [
+        ["Entrada", "Una nota de voz breve y comprensible"],
+        ["Transcripción", "Texto con el que trabajará el agente"],
+        ["Revisión", "Nombres, cifras y términos técnicos pueden fallar"],
+        ["Trazabilidad", "Conservar el original y la transcripción utilizada"]
+      ],
+      "takeaway": "El ensayo real transcribió «RAG» como «Rack»",
+      "explain": "Explica speech to text como transcripción de voz a texto. El agente usará esa transcripción, de modo que una palabra mal reconocida puede cambiar la intención. En el ensayo guardado aparece Rack donde el audio se refería a RAG. Conservamos esa observación, no reescribimos la evidencia para que parezca perfecta. Podemos pedir aclaración o utilizar el contexto con cuidado, dejando visible el texto original. La nota de voz del caso indica que el error apareció después de cambiar el modelo de embeddings. Ese dato no figura en la captura y será importante al construir la pregunta de investigación.",
+      "action": "Reproduce apps/api/fixtures/media/embedding-request.wav si el sonido compartido funciona. Después resume su intención sin atribuir una transcripción literal nueva.",
+      "question": "Si la transcripción cambia 768 por 786, ¿deberíamos seguir como si nada?",
+      "answer": "Hay una discrepancia relevante con la imagen. Conviene pedir aclaración y conservar ambas entradas.",
+      "transition": "Ahora unimos lo leído y lo escuchado.",
+      "sources": [
+        "apps/api/fixtures/media/manifest.json",
+        "apps/api/src/research-perception-real.ts",
+        "docs/s12-cloud-deployment.md#presupuesto-y-límites-de-la-evidencia"
+      ]
+    },
+    {
+      "title": "Fusión de entradas",
+      "layout": "rows",
+      "minutes": 4,
+      "subtitle": "Cada entrada aporta una parte distinta de la pregunta",
+      "rows": [
+        ["La imagen", "El índice espera 1024 y recibe 768"],
+        ["El audio", "El error apareció después de cambiar embeddings"],
+        ["La intención", "Investigar el significado y qué configuración revisar"],
+        ["La pregunta", "Qué relación deben tener modelo e índice y cómo comprobarla"]
+      ],
+      "takeaway": "Una contradicción o una entrada que no cabe exige aclaración",
+      "explain": "Construye la pregunta en voz alta utilizando las dos modalidades. La captura aporta cifras y el audio aporta el cambio que las precede. La fusión tiene que mantener la petición completa, incluidos matices y negaciones. Si las modalidades discrepan, el agente no debe elegir silenciosamente una. Si el contenido excede la capacidad admitida, pedimos acortar en lugar de recortar el final, donde podría estar la instrucción principal. Separa texto escrito, observación visual y transcripción. Esa separación permite volver a cada fuente al diagnosticar un fallo.",
+      "action": "Propón como contraste una imagen que diga 1024/768 y un audio que diga 768/1024. Pide al grupo que decida la salida antes de mostrar la respuesta esperada.",
+      "question": "¿Qué salida esperamos si la imagen y el audio se contradicen?",
+      "answer": "Una aclaración que señale la discrepancia, sin empezar una investigación sobre cifras elegidas al azar.",
+      "transition": "Con la pregunta formada, el agente decide qué capacidad utilizar.",
+      "sources": [
+        "packages/research/src/fusion.ts",
+        "apps/api/src/research-multimodal.ts",
+        "docs/s12-research-phase3.md"
+      ]
+    },
+    {
+      "title": "Herramientas y elección de ruta",
+      "layout": "rows",
+      "minutes": 3,
+      "subtitle": "Una herramienta es una función con un contrato y un alcance",
+      "rows": [
+        ["Consulta directa", "La respuesta necesita solo el contexto disponible"],
+        ["Herramienta", "Leer una ficha estructurada con argumentos validados"],
+        ["Investigación", "Buscar y leer fuentes para resolver una laguna"],
+        ["Ejemplo de aula", "get_course_session consulta la ficha S12 del grupo M/J"]
+      ],
+      "takeaway": "El programa valida permisos y argumentos antes de ejecutar",
+      "explain": "Recuerda que proponer una herramienta y ejecutarla son pasos distintos. El modelo puede sugerir una llamada, pero el programa comprueba el nombre permitido, los argumentos y los permisos. Nuestra herramienta de solo lectura consulta una ficha del curso. No necesita buscar en la web para recuperar un dato ya estructurado. La pregunta sobre dimensiones sí puede necesitar documentación externa. Una misma investigación puede usar ambas vías. El grupo de la conversación limita qué calendario puede consultar la herramienta. Un texto dentro de una captura nunca cambia esos permisos.",
+      "action": "Enseña el contrato conceptual get_course_session({sessionId: 'S12', audience: 'M/J'}). La implementación valida también la audiencia autorizada.",
+      "question": "¿Puede una página externa ordenar que la herramienta consulte el calendario de otro grupo?",
+      "answer": "La página es un dato. La autorización la impone el programa.",
+      "transition": "La elección de ruta también puede usar el contexto de la conversación.",
+      "sources": [
+        "apps/api/src/research-tool.ts",
+        "packages/research/src/plan.ts",
+        "apps/api/src/research-owner.ts"
+      ]
+    },
+    {
+      "title": "Memoria y conversaciones aisladas",
+      "layout": "rows",
+      "minutes": 3,
+      "subtitle": "La memoria permite entender «ese índice» en el siguiente turno",
+      "rows": [
+        ["Conversación", "Un identificador relaciona los turnos del mismo hilo"],
+        ["Checkpoint", "Conserva el estado necesario para continuar el grafo"],
+        ["Archivos", "Referencias y observaciones, con los bytes fuera del estado"],
+        ["Aislamiento", "Otro hilo o propietario no hereda esos datos"]
+      ],
+      "takeaway": "La memoria aporta contexto y las fuentes aportan evidencia",
+      "explain": "Distingue historial de conversación, checkpoint del grafo e informe guardado. El historial ayuda a interpretar ese índice en un turno posterior. El checkpoint conserva el estado de una ejecución. El informe es un resultado que debemos poder recuperar aunque el historial se recorte. thread_id identifica un hilo, pero por sí solo no autoriza el acceso. En nuestra app hay una conversación del propietario y cada trabajo tiene su propio checkpoint. El alumno puede implementar una versión más pequeña, pero debe demostrar dos conversaciones aisladas. Recordar una frase del usuario no la convierte en prueba de cómo funciona un proveedor.",
+      "action": "Anticipa la prueba de recarga y conversación nueva que se hará en la demo. No equipares cambiar de hilo con demostrar todos los controles de acceso.",
+      "question": "Si el usuario dijo que su índice tiene 1024 dimensiones, ¿ya hemos verificado su configuración?",
+      "answer": "Es contexto aportado por el usuario. La configuración necesita una comprobación independiente.",
+      "transition": "Veamos cómo se organiza una investigación en varias etapas.",
+      "sources": [
+        "apps/api/src/research-checkpointer.ts",
+        "apps/api/src/research-memory.ts",
+        "docs/s12-research-phase2.md"
+      ]
+    },
+    {
+      "title": "Deep Research",
+      "layout": "rows",
+      "minutes": 4,
+      "subtitle": "Una investigación reúne y revisa evidencia antes de redactar",
+      "rows": [
+        ["Planificar", "Dividir la pregunta y decidir qué falta comprobar"],
+        ["Reunir", "Consultar corpus, herramientas y páginas relevantes"],
+        ["Evaluar", "Comprobar qué subpreguntas siguen sin respuesta"],
+        ["Cerrar", "Redactar con fuentes o explicar los límites"]
+      ],
+      "takeaway": "Otra ronda solo se justifica si puede resolver una laguna",
+      "explain": "Define Deep Research por su recorrido: planificar, reunir evidencia, valorar cobertura y terminar con un informe. El nombre también lo usan productos concretos. Aquí nos interesa comprender el comportamiento antes de escoger proveedor. El plan del caso puede separar la regla general de dimensiones, la configuración que debe comprobarse y su relación con lo visto en el curso. Una búsqueda puede traer una página relevante y aun así dejar una subpregunta sin cubrir. La decisión de seguir depende de esa laguna y de los límites disponibles. Nuestro grafo permite una ronda inicial y una de seguimiento, no un bucle indefinido.",
+      "action": "Pide dos subpreguntas concretas para el caso. Rechaza planes vagos como investigar todo sobre embeddings.",
+      "question": "¿Cuándo merece la pena una segunda búsqueda?",
+      "answer": "Cuando sabemos qué falta, existe una consulta concreta para buscarlo y queda tiempo y presupuesto.",
+      "transition": "La calidad del informe depende de las fuentes que aceptamos.",
+      "sources": [
+        "apps/api/src/research-graph.ts",
+        "packages/research/src/plan.ts",
+        "packages/research/src/policy.ts",
+        "docs/s12-research-phase1.md"
+      ]
+    },
+    {
+      "title": "Búsqueda, lectura y evidencia",
+      "layout": "table",
+      "minutes": 3,
+      "columns": ["Pieza", "Qué aporta", "Qué hay que comprobar"],
+      "rows": [
+        ["Resultado del buscador", "Una página candidata", "Dominio, tema y versión"],
+        ["Página leída", "Contenido y contexto", "Que responda a la pregunta"],
+        ["Extracto", "Un tramo que respalda una afirmación", "Texto, cifras y procedencia"],
+        ["Adjunto del usuario", "Una observación del caso", "Su origen y sus limitaciones"]
+      ],
+      "takeaway": "Una URL citada tiene que respaldar la afirmación concreta",
+      "explain": "Separa buscar de leer. Un buscador devuelve candidatos y fragmentos resumidos, pero necesitamos leer el contenido relevante. Para una API, priorizamos documentación oficial y comprobamos versión y fecha. Un extracto debe estar relacionado con la subpregunta y conservar su procedencia. La captura de nuestro caso puede demostrar qué texto recibió el agente, pero no cómo está configurado un servicio remoto. Tampoco aceptamos instrucciones encontradas en una página como si fueran órdenes del usuario. La herramienta del curso y la web tienen ámbitos de autoridad diferentes.",
+      "action": "Da el ejemplo de una página que documenta una regla general y pregunta qué parte de la configuración del alumno sigue sin probar.",
+      "question": "¿Una cita real puede acompañar una conclusión que la fuente no permite?",
+      "answer": "Sí. Hay que revisar la relación entre la afirmación y el extracto, no solo que exista el enlace.",
+      "transition": "Esa relación es el centro de la verificación del informe.",
+      "sources": [
+        "apps/api/src/research-gather.ts",
+        "packages/research/src/evidence.ts",
+        "packages/research/src/url-policy.ts"
+      ]
+    },
+    {
+      "title": "Verificación e informes parciales",
+      "layout": "rows",
+      "minutes": 4,
+      "subtitle": "Un trabajo puede terminar correctamente y dejar preguntas abiertas",
+      "rows": [
+        ["Cobertura", "Qué subpreguntas tienen evidencia suficiente"],
+        ["Afirmaciones", "Qué fuente respalda cada frase factual"],
+        ["Resultado parcial", "Qué sabemos y qué falta comprobar"],
+        ["Límite", "Una cita literal tampoco garantiza que la fuente sea correcta"]
+      ],
+      "takeaway": "Ejecución terminada e informe completo son estados distintos",
+      "explain": "El programa puede haber completado todas sus llamadas y producir un informe parcial porque ninguna fuente permite confirmar la configuración concreta. Eso es una salida útil si explica la laguna. Nuestro verificador utiliza extractos admitidos y comprueba tramos de texto, cifras y negaciones. Es una elección conservadora que reduce ciertas invenciones, pero limita la síntesis libre y no certifica la verdad universal. Una fuente puede estar desactualizada o ser inadecuada. Mantén separadas la salud de la ejecución, la cobertura de la respuesta y la evaluación humana de su utilidad.",
+      "action": "Plantea dos salidas: una recomendación tajante de borrar el índice y un informe parcial que pide verificar dimensiones. Compara la evidencia necesaria para cada una.",
+      "question": "¿Es un fallo que el sistema diga que todavía no puede recomendar el cambio?",
+      "answer": "Puede ser el resultado correcto si faltan datos del caso. Un informe parcial debe indicar qué falta y cómo comprobarlo.",
+      "transition": "La investigación puede durar más que una petición normal.",
+      "sources": [
+        "packages/research/src/report.ts",
+        "packages/research/src/evidence.ts",
+        "docs/s12-cloud-deployment.md#ensayo-real-de-extremo-a-extremo"
+      ]
+    },
+    {
+      "title": "Ejecución asíncrona",
+      "layout": "rows",
+      "minutes": 3,
+      "subtitle": "El cliente inicia un trabajo y consulta su resultado después",
+      "rows": [
+        ["Crear", "Enviar la petición y obtener un identificador"],
+        ["Conservar", "Guardar ese identificador y el contexto autorizado"],
+        ["Consultar", "Leer el estado del mismo trabajo con una espera acotada"],
+        ["Recuperar", "Volver al resultado sin crear otra investigación"]
+      ],
+      "takeaway": "Cerrar la pestaña no tiene por qué detener el trabajo",
+      "explain": "Una operación asíncrona separa iniciar el trabajo de recibir el informe final. El cliente obtiene un ID, lo guarda y consulta ese mismo trabajo. Si se recarga la página, debe recuperar su estado. Volver a pulsar enviar sin identificar la operación puede duplicar trabajo y gasto. La app utiliza un ID de trabajo y una clave de idempotencia. Esta última permite reconocer un envío repetido de la misma petición. La persistencia y los permisos hacen posible recuperar el informe desde otra petición autorizada.",
+      "action": "Escribe en voz alta la secuencia crear una vez, guardar ID, consultar y recuperar. Evita un ejemplo con un bucle infinito de espera.",
+      "question": "Si perdemos la conexión, ¿debemos crear automáticamente otro trabajo?",
+      "answer": "Primero hay que recuperar el ID y el estado del trabajo que pudo haberse creado.",
+      "transition": "El enunciado propone una API concreta con este mismo ciclo.",
+      "sources": [
+        "apps/api/src/research-routes.ts",
+        "apps/api/src/research-dispatch.ts",
+        "docs/s12-research-phase2.md"
+      ]
+    },
+    {
+      "title": "Gemini Deep Research e Interactions API",
+      "layout": "rows",
+      "minutes": 3,
+      "subtitle": "El enunciado propone un agente gestionado en segundo plano",
+      "rows": [
+        ["Inicio", "interactions.create con agent y background=True"],
+        ["Identidad", "Guardar interaction.id antes de consultar"],
+        ["Seguimiento", "interactions.get del mismo ID hasta completar o fallar"],
+        ["Espera agotada", "Conservar el ID y explicar que el trabajo puede seguir"]
+      ],
+      "takeaway": "La demo de 3-rag usa un grafo propio y otro ID de trabajo",
+      "explain": "Contrasta la API gestionada de Gemini con la implementación didáctica. El SDK documenta crear la interacción con agent y background=True, conservar el id y consultar con interactions.get(id=...). El estado completed permite leer el resultado. failed y cancelled son finales de error o cancelación. En clase imponemos además un máximo de consultas y un plazo local, en lugar de copiar un while True sin límite. Si agotamos la espera local, no afirmamos que el proveedor haya cancelado. La API documenta cancelación explícita, pero hay que comprobar el estado final y no inferir la ausencia de coste. No se ha ejecutado una interacción Gemini nueva para preparar estos materiales.",
+      "action": "Señala el agente de referencia del enunciado, deep-research-preview-04-2026, en las notas de consulta. Confirma disponibilidad en la cuenta antes del ejercicio. La app utiliza LangGraph y no llama a esa API.",
+      "question": "¿El jobId de nuestra app se puede pasar como interaction_id a Gemini?",
+      "answer": "Son identificadores de sistemas distintos. Cada implementación guarda y consulta el suyo.",
+      "transition": "Tanto el agente gestionado como el grafo propio necesitan límites.",
+      "sources": [
+        "../GUIA-DE-CLASES-2026.md#ai-s12",
+        "https://github.com/googleapis/python-genai/blob/main/README.md",
+        "https://github.com/googleapis/python-genai/blob/main/google/genai/_gaos/interactions.py",
+        "apps/api/src/research-graph.ts"
+      ]
+    },
+    {
+      "title": "Límites de tiempo y coste",
+      "layout": "rows",
+      "minutes": 3,
+      "subtitle": "Los límites se comprueban antes de iniciar otra operación",
+      "rows": [
+        ["Tiempo", "120 segundos para el trabajo de investigación de esta app"],
+        ["Exploración", "Hasta 3 subpreguntas, 2 rondas, 4 búsquedas y 6 lecturas"],
+        ["Modelos", "Hasta 5 llamadas de investigación, con medios contados aparte"],
+        ["Dinero", "Presupuesto separado y consumo desconocido visible"]
+      ],
+      "takeaway": "Estos son límites del laboratorio, no garantías de rendimiento",
+      "explain": "Explica por qué una investigación autónoma necesita condiciones de parada. Los valores de la diapositiva proceden del contrato actual de la app, no son un estándar de Deep Research ni el límite universal de Gemini. Visión, transcripción y voz tienen su propia contabilidad y comparten el plazo global. Reservar un máximo antes de enviar permite rechazar una nueva llamada cuando no hay presupuesto. Tokens medidos, un precio estimado y un importe facturado son datos diferentes. Una petición enviada cuyo resultado se desconoce no debe repetirse a ciegas. En el aula principal usaremos el modo local sin gasto y evidencia real anterior.",
+      "action": "Pregunta qué límite debería detener una ronda con tiempo disponible pero sin presupuesto. No muestres claves ni pantallas de facturación durante el directo.",
+      "question": "Si se agota el tiempo local después de enviar una llamada, ¿podemos escribir coste cero?",
+      "answer": "El proveedor pudo procesarla. El consumo debe quedar como desconocido hasta poder conciliarlo.",
+      "transition": "La voz también es una operación con entrada, límites y resultado propio.",
+      "sources": [
+        "packages/contracts/src/research.ts#RESEARCH_LIMITS",
+        "packages/contracts/src/media.ts",
+        "apps/api/src/research-money.ts",
+        "docs/s12-cloud-deployment.md"
+      ]
+    },
+    {
+      "title": "Texto a voz",
+      "layout": "rows",
+      "minutes": 3,
+      "subtitle": "La locución parte de un texto que ya hemos seleccionado",
+      "rows": [
+        ["Selección", "Hasta 3 frases y 600 caracteres en esta app"],
+        ["Procedencia", "Frases verificadas y avisos claros sobre el resultado"],
+        ["Generación", "Un servicio TTS produce el archivo de audio"],
+        ["Reproducción", "El usuario pulsa reproducir y puede volver a escuchar"]
+      ],
+      "takeaway": "Un fallo de voz conserva el informe escrito",
+      "explain": "Define text to speech como síntesis de voz a partir de texto. En la app no pedimos al TTS que invente un resumen. Primero seleccionamos frases que han pasado la verificación y después generamos el audio. Esto facilita comparar lo escrito con lo hablado. Si el informe es parcial, la locución puede indicarlo. La generación y la reproducción son pasos distintos: un MP3 correcto no prueba que el alumno haya compartido el sonido de su ordenador. En el modo offline, la salida de prueba es un tono rotulado y no voz neural. El MP3 guardado del ensayo real sí permite escuchar una síntesis anterior.",
+      "action": "Recuerda ensayar la opción de compartir audio en la reunión. Si no funciona, muestra el texto de la locución y el archivo guardado.",
+      "question": "¿Por qué conservar el texto exacto que se convierte en voz?",
+      "answer": "Permite detectar una diferencia entre el informe, el guion hablado y el audio que finalmente se reproduce.",
+      "transition": "Reunimos ahora los fallos que conviene diseñar de antemano.",
+      "sources": [
+        "packages/research/src/speech-script.ts",
+        "apps/api/src/research-perception-real.ts",
+        "docs/s12-research-phase3.md#voz"
+      ]
+    },
+    {
+      "title": "Errores y respuestas útiles",
+      "layout": "table",
+      "minutes": 3,
+      "columns": ["Situación", "Respuesta del sistema"],
+      "rows": [
+        ["Archivo inválido", "Rechazo con una explicación del formato"],
+        ["Entradas contradictorias", "Aclaración antes de investigar"],
+        ["Fuentes insuficientes", "Informe parcial o rechazo"],
+        ["Espera agotada", "Estado e ID conservados para seguimiento"],
+        ["Fallo de TTS", "Informe disponible y aviso de voz fallida"]
+      ],
+      "takeaway": "Un error visible es preferible a una sustitución silenciosa",
+      "explain": "Pide al grupo una salida esperada para cada situación antes de leer la segunda columna. Una buena gestión de errores conserva lo que sí está disponible y explica qué operación falta. Una configuración real incompleta no se convierte silenciosamente en demo. Un modelo que falla no se sustituye por otro sin indicarlo. Si faltan fuentes, redactamos solo lo que puede sostenerse o rechazamos. El informe parcial y el fallo técnico requieren mensajes diferentes. En una espera agotada conservamos el identificador, porque el trabajo remoto podría seguir activo.",
+      "action": "Asigna a dos alumnos situaciones distintas y pide una frase de interfaz que explique el estado sin prometer un éxito.",
+      "question": "¿Qué sería engañoso si falla el proveedor de visión?",
+      "answer": "Mostrar una lectura del guion offline como si la hubiera producido el proveedor real.",
+      "transition": "Con estas piezas podemos diseñar un grafo pequeño y comprobable.",
+      "sources": [
+        "apps/api/src/research-multimodal.ts",
+        "apps/api/src/research-result.ts",
+        "docs/s12-research-phase2.md"
+      ]
+    },
+    {
+      "title": "El grafo del ejercicio",
+      "layout": "rows",
+      "minutes": 3,
+      "subtitle": "Cada nodo transforma una entrada y deja un resultado comprobable",
+      "rows": [
+        ["Admisión y percepción", "Archivo válido, observación visual y transcripción"],
+        ["Fusión y ruta", "Pregunta completa y decisión de capacidad"],
+        ["Investigación y memoria", "Fuentes, estado del trabajo y contexto por hilo"],
+        ["Verificación y salida", "Informe, puntos abiertos y voz opcional"]
+      ],
+      "takeaway": "Las pruebas deben observar cada transformación",
+      "explain": "Recorre el diseño como una lista de contratos. Un nodo recibe datos y devuelve campos concretos del estado. Las aristas condicionales deciden si pedir aclaración, responder, llamar a una herramienta o investigar. El estado debe permitir observar el resultado de la percepción y las fuentes aceptadas. Para el ejercicio basta una interfaz pequeña. La investigación gestionada puede aparecer como una herramienta que devuelve un ID y después un resultado. La aplicación que veremos usa un grafo de investigación propio para enseñar sus pasos internos. Ambos caminos deben declarar claramente qué implementan.",
+      "action": "Pide que identifiquen dónde probarían una contradicción entre imagen y audio, y dónde verificarían el aislamiento de dos conversaciones.",
+      "question": "¿Dónde pondrías una regla que impida investigar una entrada contradictoria?",
+      "answer": "En la validación o fusión, antes de crear el plan o enviar una llamada de investigación.",
+      "transition": "Pasamos de los conceptos a las decisiones concretas de nuestra aplicación.",
+      "sources": [
+        "apps/api/src/research-multimodal.ts",
+        "apps/api/src/research-graph.ts",
+        "apps/api/src/research-routes.ts"
+      ]
+    },
+    {
+      "title": "La aplicación que ya tenemos",
+      "layout": "table",
+      "minutes": 4,
+      "columns": ["Capacidad", "Implementación de la demo"],
+      "rows": [
+        ["Investigación", "Grafo propio con LangGraph y fuentes externas"],
+        ["Texto y visión", "Proveedor configurado · ensayo con Claude Haiku 5.5"],
+        ["Búsqueda y lectura", "Ensayo con Tavily y páginas de documentación"],
+        ["Audio y voz", "Whisper para STT y Aura-2 es para TTS"],
+        ["Persistencia", "D1, R2 y Workflows en Cloudflare"]
+      ],
+      "takeaway": "Gemini es la referencia del enunciado y la app muestra otra implementación",
+      "explain": "Presenta las decisiones de la app después de haber explicado las responsabilidades. LangGraph controla la investigación y consulta el curso, una herramienta y la web. El ensayo real se hizo con Claude para texto e imagen, Whisper para audio y Aura para voz. La fábrica actual permite configurar el proveedor generativo, pero no prometemos compatibilidad universal con cualquier modelo de visión. La persistencia utiliza servicios de Cloudflare. Estos nombres describen nuestra implementación y no requisitos conceptuales de multimodalidad. La ruta Gemini/Interactions del enunciado no queda implementada por el hecho de que esta app tenga un grafo equivalente.",
+      "action": "Abre la app local en 127.0.0.1:5191, grupo M/J y etapa Investigación. Mantén los secretos y las configuraciones operativas fuera de la pantalla compartida.",
+      "question": "Si cambiamos el proveedor, ¿desaparecen las necesidades de validar archivos y aislar conversaciones?",
+      "answer": "Esas responsabilidades siguen perteneciendo al sistema.",
+      "transition": "Vamos a observar cada parte con la captura y el audio del caso.",
+      "sources": [
+        "AGENTS.md#runtime",
+        "apps/api/src/model.ts",
+        "docs/s12-cloud-deployment.md#ensayo-real-de-extremo-a-extremo"
+      ]
+    },
+    {
+      "title": "Demostración del caso completo",
+      "layout": "demo",
+      "minutes": 15,
+      "subtitle": "La misma captura y el mismo audio durante todo el recorrido",
+      "rows": [
+        ["1 · Entradas", "Adjuntar la captura y la nota de voz"],
+        ["2 · Proceso", "Revisar observación, transcripción, plan y fuentes"],
+        ["3 · Resultado", "Leer el informe y el texto de voz"],
+        ["4 · Continuidad", "Recargar, preguntar «ese índice» y abrir otro hilo"]
+      ],
+      "takeaway": "Demo principal local sin gasto · ensayo real guardado a continuación",
+      "explain": "Usa el perfil local de investigación con sus guiones rotulados. Adjunta dimension-mismatch.png y embedding-request.wav, marca Generar voz y envía sin escribir la pregunta. Muestra que la observación y la intención se conservan por separado, que aparecen plan y fuentes y que el resultado se guarda. El tono offline es una prueba técnica, no una voz neural. Recarga y comprueba el mismo informe. Haz un seguimiento breve con ese índice y después abre otra conversación para mostrar aislamiento. El guion detallado y los tiempos de corte están en el apartado de demostración del documento del profesor. La consulta a get_course_session y las fuentes del caso real se pueden recorrer en el respaldo guardado.",
+      "action": "19:34–19:37 entradas y origen; 19:37–19:41 proceso e informe; 19:41–19:44 recarga y memoria; 19:44–19:47 archivo desconocido e hilo nuevo; 19:47–19:49 preguntas. Si un paso no responde en 90 segundos, pasa al respaldo.",
+      "question": "¿Qué parte del resultado procede de la imagen y cuál de una fuente leída?",
+      "answer": "Las cifras del error proceden de la imagen. La regla técnica debe apoyarse en una fuente admitida.",
+      "transition": "Ahora distinguimos esta demostración de los resultados reales ya conservados.",
+      "sources": [
+        "docs/s12-research-phase3.md#guía-de-clase-90-minutos",
+        "apps/api/fixtures/media/manifest.json",
+        "docs/s12-research-phase2.md"
+      ]
+    },
+    {
+      "title": "Lo observado en el ensayo real",
+      "layout": "evidence",
+      "minutes": 5,
+      "subtitle": "Ejecuciones guardadas del 11 de octubre de 2026",
+      "rows": [
+        ["48,712 s", "Informe completo con 7 afirmaciones verificadas"],
+        ["45,158 s", "Informe parcial con 8 afirmaciones verificadas"],
+        ["24,504 s", "Audio real recuperado y reproducido tras la recarga"]
+      ],
+      "takeaway": "Son ejemplos del recorrido y no una tasa general de precisión",
+      "explain": "Explica que estas cifras proceden del ensayo del 11 de octubre, no de la sesión que acabamos de ejecutar. Los dos trabajos recorrieron imagen, audio, herramienta del curso, búsqueda, lectura y voz. El segundo completó sus 18 operaciones y mantuvo un informe parcial porque faltaba evidencia sobre la configuración concreta. Reproduce el MP3 guardado y señala el texto de la voz. La recarga recuperó informe y audio, y se comprobó que no creó operaciones pagadas adicionales. No presentes las reservas de presupuesto como una factura ni uses dos ejemplos para afirmar una precisión general. El documento de despliegue contiene la identidad y los límites de esa evidencia histórica.",
+      "action": "Abre respaldo/informe-parcial-ensayo-20261011.png y reproduce respaldo/voz-ensayo-20261011.mp3. Si no puedes compartir sonido, lee el texto de la captura.",
+      "question": "¿Cómo puede haber 8 afirmaciones verificadas y seguir faltando una respuesta completa?",
+      "answer": "Las frases comprobadas no necesariamente cubren todas las subpreguntas del usuario.",
+      "transition": "Terminamos traduciendo lo aprendido a una entrega pequeña y comprobable.",
+      "sources": [
+        "docs/s12-cloud-deployment.md#ensayo-real-de-extremo-a-extremo",
+        "material/S12/respaldo/informe-parcial-ensayo-20261011.png",
+        "material/S12/respaldo/voz-ensayo-20261011.mp3"
+      ]
+    },
+    {
+      "title": "Ejercicio y preguntas finales",
+      "layout": "rows",
+      "minutes": 6,
+      "subtitle": "Un caso ficticio y una evidencia clara por capacidad",
+      "rows": [
+        ["Multimodalidad", "Imagen y audio influyen en la respuesta"],
+        ["Agente", "Memoria aislada y herramienta propia de solo lectura"],
+        ["Investigación", "Un trabajo real, su ID, sus fuentes y sus límites"],
+        ["Entrega", "Código, entradas, audio de salida, pruebas y limitaciones"]
+      ],
+      "takeaway": "Una simulación sirve para ensayar los fallos y debe identificarse",
+      "explain": "Recuerda que el ejercicio enviado propone Gemini para la entrada multimodal y el TTS, y Gemini Deep Research mediante Interactions API. Los identificadores se configuran y se comprueba su disponibilidad antes de gastar. Reutilizar el patrón de nuestra app ayuda a entender el diseño, pero no sustituye automáticamente esos requisitos. Pide un caso ficticio, una herramienta validada, dos conversaciones aisladas y una investigación real guardada con su ID y fuentes. El ejercicio permite terminal o notebook. No exige una web nueva, varios agentes ni voz en tiempo real. La dedicación orientativa ya comunicada es de 6 a 9 horas sin la espera remota. Reserva los últimos minutos para dudas y comprueba que distinguen una transcripción, una evidencia y una conclusión.",
+      "action": "Dedica dos minutos a la entrega y cuatro a preguntas. Cierra a las 20:00. Utiliza el enunciado ya publicado como autoridad para la evaluación.",
+      "question": "¿Qué entregarías para demostrar que no creaste otra investigación al volver a consultar?",
+      "answer": "El mismo identificador, el registro de consultas y el resultado guardado, distinguiendo creación y seguimiento.",
+      "transition": "Cierre de S12. Conservar las dudas del grupo para el siguiente directo.",
+      "sources": [
+        "../GUIA-DE-CLASES-2026.md#ai-s12",
+        "corpus/sources/program/s12-deep-research.md",
+        "https://github.com/googleapis/python-genai/blob/main/README.md"
+      ]
+    }
+  ]
+}

@@ -35,6 +35,7 @@ export function localEmulatedCragPorts(input: {
   // Puertos con la forma que espera el grafo.
   return {
     measured: false,
+    // Proporciona el reloj del recorrido para calcular plazos y tiempos transcurridos.
     now: () => Date.now(),
     signal: input.signal,
     // Reserva: según el presupuesto local.

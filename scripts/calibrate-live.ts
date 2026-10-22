@@ -39,6 +39,7 @@ const parsed = parseActivation(
 );
 // Sin autorización o sin dimensiones medidas: error.
 if (!parsed.ok || missingFor("ingest", parsed.auth, null).length || !parsed.auth.observedDimensions)
+  // Detiene el recorrido con el diagnóstico: Falta autorización de Workers AI e índice medido.
   throw new Error("Falta autorización de Workers AI e índice medido.");
 // Autorización.
 const auth = parsed.auth;
@@ -135,7 +136,9 @@ try {
     maxInputTokens: 2000,
   });
   // Sin reserva: error.
-  if (!reservation.ok) throw new Error(reservation.reason);
+  if (!reservation.ok)
+    // Interrumpe esta rama y propaga el motivo al manejador de errores del recorrido.
+    throw new Error(reservation.reason);
   // Embeddings de las 8 preguntas.
   const embedded = await plane.embed(
     cases.map((c) => c.text),
@@ -166,7 +169,9 @@ try {
       hits: { matches: { id: string; score: number }[] };
     };
     // Fallo.
-    if (!response.ok || !result.ok) throw new Error("No se pudo medir la recuperación.");
+    if (!response.ok || !result.ok)
+      // Detiene el recorrido con el diagnóstico: No se pudo medir la recuperación.
+      throw new Error("No se pudo medir la recuperación.");
     // Guarda las coincidencias.
     observations.push({
       ...cases[i]!,

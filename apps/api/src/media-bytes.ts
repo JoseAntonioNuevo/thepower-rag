@@ -200,7 +200,9 @@ function pngPlanes(
 // Bytes por fila: 1 de filtro más los píxeles.
 function pngStride(width: number, bitsPerPixel: number): number {
   // Sin ancho, nada.
-  if (width <= 0) return 0;
+  if (width <= 0)
+    // Usa cero como resultado de esta rama sin añadir coincidencias ni consumo adicional.
+    return 0;
   // Filtro y datos redondeados a bytes.
   return 1 + Math.ceil((width * bitsPerPixel) / 8);
 }
@@ -220,7 +222,9 @@ function pngImageBytes(
   // Cada pasada.
   for (const plane of pngPlanes(width, height, interlace)) {
     // Vacía: se salta.
-    if (plane.width === 0 || plane.height === 0) continue;
+    if (plane.width === 0 || plane.height === 0)
+      // Omite el resto de esta iteración y pasa al siguiente elemento.
+      continue;
     // Suma filas por bytes de fila.
     total += pngStride(plane.width, bits) * plane.height;
   }
@@ -244,13 +248,17 @@ function pngFiltersLegal(
   // Cada pasada.
   for (const plane of pngPlanes(width, height, interlace)) {
     // Vacía: se salta.
-    if (plane.width === 0 || plane.height === 0) continue;
+    if (plane.width === 0 || plane.height === 0)
+      // Omite el resto de esta iteración y pasa al siguiente elemento.
+      continue;
     // Bytes por fila.
     const stride = pngStride(plane.width, bits);
     // Cada fila.
     for (let row = 0; row < plane.height; row += 1) {
       // Filtro inválido.
-      if ((inflated[offset] ?? 99) > 4) return false;
+      if ((inflated[offset] ?? 99) > 4)
+        // Rechaza esta condición y comunica el resultado negativo al llamador.
+        return false;
       // Siguiente fila.
       offset += stride;
     }
@@ -262,17 +270,25 @@ function pngFiltersLegal(
 // Descomprime zlib con tope: si sale más o menos de lo esperado, null.
 async function inflateZlib(data: Uint8Array, expected: number): Promise<Uint8Array | null> {
   // Tamaño esperado fuera de rango.
-  if (expected < 1 || expected > PNG_DECODE_MAX) return null;
+  if (expected < 1 || expected > PNG_DECODE_MAX)
+    // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+    return null;
   // Datos demasiado cortos o grandes.
-  if (data.byteLength < 6 || data.byteLength > MEDIA_LIMITS.maxImageBytes) return null;
+  if (data.byteLength < 6 || data.byteLength > MEDIA_LIMITS.maxImageBytes)
+    // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+    return null;
   // Byte CMF.
   const cmf = data[0] ?? 0;
   // Byte FLG.
   const flg = data[1] ?? 0;
   // Método deflate, ventana válida y sin diccionario.
-  if ((cmf & 0x0f) !== 8 || cmf >> 4 > 7 || (flg & 0x20) !== 0) return null;
+  if ((cmf & 0x0f) !== 8 || cmf >> 4 > 7 || (flg & 0x20) !== 0)
+    // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+    return null;
   // Comprobación de la cabecera.
-  if (((cmf << 8) | flg) % 31 !== 0) return null;
+  if (((cmf << 8) | flg) % 31 !== 0)
+    // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+    return null;
   // Trozos descomprimidos.
   const parts: Uint8Array[] = [];
   // Total.
@@ -288,7 +304,9 @@ async function inflateZlib(data: Uint8Array, expected: number): Promise<Uint8Arr
       // Siguiente trozo.
       const step = await reader.read();
       // Fin.
-      if (step.done) break;
+      if (step.done)
+        // Detiene el bucle al alcanzar la condición de parada de esta rama.
+        break;
       // Suma.
       total += step.value.byteLength;
       // Se pasa: posible bomba de descompresión.
@@ -306,7 +324,9 @@ async function inflateZlib(data: Uint8Array, expected: number): Promise<Uint8Arr
     return null;
   }
   // Debe ser exacto.
-  if (total !== expected) return null;
+  if (total !== expected)
+    // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+    return null;
   // Une los trozos.
   const inflated = new Uint8Array(total);
   // Posición.
@@ -327,9 +347,13 @@ async function parsePng(bytes: Uint8Array): Promise<ImageFacts | null> {
   // Firma PNG.
   const signature = [137, 80, 78, 71, 13, 10, 26, 10];
   // Demasiado corto.
-  if (bytes.length < signature.length + 8 + 13 + 4 + 12) return null;
+  if (bytes.length < signature.length + 8 + 13 + 4 + 12)
+    // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+    return null;
   // Firma distinta.
-  if (signature.some((byte, index) => bytes[index] !== byte)) return null;
+  if (signature.some((byte, index) => bytes[index] !== byte))
+    // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+    return null;
   // Tras la firma.
   let offset = 8;
   // Ancho.
@@ -359,21 +383,29 @@ async function parsePng(bytes: Uint8Array): Promise<ImageFacts | null> {
     // Longitud del chunk.
     const length = u32(bytes, offset);
     // No cabe.
-    if (length > bytes.length - offset - 12) return null;
+    if (length > bytes.length - offset - 12)
+      // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+      return null;
     // Tipo de 4 letras.
     const type = new TextDecoder().decode(bytes.subarray(offset + 4, offset + 8));
     // Inválido.
-    if (!/^[A-Za-z]{4}$/.test(type)) return null;
+    if (!/^[A-Za-z]{4}$/.test(type))
+      // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+      return null;
     // CRC guardado.
     const actual = u32(bytes, offset + 8 + length);
     // CRC incorrecto.
-    if (pngCrc(bytes, offset + 4, 4 + length) !== actual) return null;
+    if (pngCrc(bytes, offset + 4, 4 + length) !== actual)
+      // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+      return null;
     // Inicio de los datos.
     const data = offset + 8;
     // El primero debe ser IHDR.
     if (!sawHeader) {
       // No lo es.
-      if (type !== "IHDR" || length !== 13) return null;
+      if (type !== "IHDR" || length !== 13)
+        // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+        return null;
       // Ancho.
       width = u32(bytes, data);
       // Alto.
@@ -403,11 +435,17 @@ async function parsePng(bytes: Uint8Array): Promise<ImageFacts | null> {
       sawHeader = true;
     } else if (type === "IHDR" || type === "IEND") {
       // IEND vacío y con datos previos.
-      if (type !== "IEND" || length !== 0 || !sawData || dataBytes === 0) return null;
+      if (type !== "IEND" || length !== 0 || !sawData || dataBytes === 0)
+        // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+        return null;
       // Paleta obligatoria.
-      if (color === 3 && !sawPalette) return null;
+      if (color === 3 && !sawPalette)
+        // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+        return null;
       // IEND debe ser el último.
-      if (offset + 12 !== bytes.length) return null;
+      if (offset + 12 !== bytes.length)
+        // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+        return null;
       // Une los IDAT.
       const idat = new Uint8Array(dataBytes);
       // Posición.
@@ -435,22 +473,32 @@ async function parsePng(bytes: Uint8Array): Promise<ImageFacts | null> {
       return { role: "image", mime: "image/png", width, height };
     } else if (type === "PLTE") {
       // Paleta en sitio y tamaño correctos.
-      if (sawData || dataOpen || length < 3 || length > 768 || length % 3 !== 0) return null;
+      if (sawData || dataOpen || length < 3 || length > 768 || length % 3 !== 0)
+        // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+        return null;
       // Gris no lleva paleta.
-      if (color === 0 || color === 4) return null;
+      if (color === 0 || color === 4)
+        // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+        return null;
       // Paleta vista.
       sawPalette = true;
     } else if (type === "IDAT") {
       // IDAT vacío o separado.
-      if (length === 0 || (sawData && !dataOpen)) return null;
+      if (length === 0 || (sawData && !dataOpen))
+        // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+        return null;
       // Falta la paleta.
-      if (color === 3 && !sawPalette) return null;
+      if (color === 3 && !sawPalette)
+        // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+        return null;
       // Guarda el trozo.
       idatParts.push(bytes.subarray(data, data + length));
       // Suma.
       dataBytes += length;
       // Demasiado grande.
-      if (dataBytes > MEDIA_LIMITS.maxImageBytes) return null;
+      if (dataBytes > MEDIA_LIMITS.maxImageBytes)
+        // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+        return null;
       // Datos vistos.
       sawData = true;
       // Bloque abierto.
@@ -537,12 +585,16 @@ function buildHuffman(counts: readonly number[], symbols: Uint8Array): HuffmanTa
     // Siguiente código.
     code += count;
     // Tabla imposible.
-    if (code > 0x10000) return null;
+    if (code > 0x10000)
+      // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+      return null;
     // Siguiente longitud.
     code <<= 1;
   }
   // Debe usar todos los símbolos.
-  if (index !== symbols.length) return null;
+  if (index !== symbols.length)
+    // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+    return null;
   // Tabla.
   return { maxCode, minCode, valPtr, symbols };
 }
@@ -550,9 +602,13 @@ function buildHuffman(counts: readonly number[], symbols: Uint8Array): HuffmanTa
 // Siguiente byte del escaneo; FF 00 vale FF y otro FF xx es un marcador.
 function pullByte(cursor: BitCursor): number | null {
   // Marcador pendiente.
-  if (cursor.marker !== null) return null;
+  if (cursor.marker !== null)
+    // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+    return null;
   // Fin de datos.
-  if (cursor.offset >= cursor.bytes.length) return null;
+  if (cursor.offset >= cursor.bytes.length)
+    // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+    return null;
   // Byte.
   const value = cursor.bytes[cursor.offset] ?? 0;
   // Avanza.
@@ -560,7 +616,9 @@ function pullByte(cursor: BitCursor): number | null {
   // Byte normal.
   if (value !== 0xff) return value;
   // Fin tras FF.
-  if (cursor.offset >= cursor.bytes.length) return null;
+  if (cursor.offset >= cursor.bytes.length)
+    // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+    return null;
   // Siguiente.
   const next = cursor.bytes[cursor.offset] ?? 0;
   // Avanza.
@@ -582,7 +640,9 @@ function readBit(cursor: BitCursor): number | null {
     // Siguiente byte.
     const value = pullByte(cursor);
     // Fin.
-    if (value === null) return null;
+    if (value === null)
+      // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+      return null;
     // Byte.
     cursor.bitBuffer = value;
     // 8 bits.
@@ -603,7 +663,9 @@ function readBits(cursor: BitCursor, count: number): number | null {
     // Bit.
     const bit = readBit(cursor);
     // Fin.
-    if (bit === null) return null;
+    if (bit === null)
+      // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+      return null;
     // Lo añade.
     value = (value << 1) | bit;
   }
@@ -620,7 +682,9 @@ function huffmanSymbol(cursor: BitCursor, table: HuffmanTable): number | null {
     // Bit.
     const bit = readBit(cursor);
     // Fin.
-    if (bit === null) return null;
+    if (bit === null)
+      // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+      return null;
     // Lo añade.
     code = (code << 1) | bit;
     // Máximo.
@@ -642,7 +706,9 @@ function huffmanSymbol(cursor: BitCursor, table: HuffmanTable): number | null {
 // Convierte un valor y su tamaño en el entero con signo de JPEG.
 function extendMagnitude(value: number, count: number): number {
   // Tamaño 0.
-  if (count === 0) return 0;
+  if (count === 0)
+    // Usa cero como resultado de esta rama sin añadir coincidencias ni consumo adicional.
+    return 0;
   // Umbral.
   const threshold = 1 << (count - 1);
   // Negativo o positivo.
@@ -659,11 +725,15 @@ function decodeBlock(
   // Categoría DC.
   const category = huffmanSymbol(cursor, dcTable);
   // Inválida.
-  if (category === null || category > 11) return false;
+  if (category === null || category > 11)
+    // Rechaza esta condición y comunica el resultado negativo al llamador.
+    return false;
   // Bits extra.
   const extra = category === 0 ? 0 : readBits(cursor, category);
   // Fin.
-  if (extra === null) return false;
+  if (extra === null)
+    // Rechaza esta condición y comunica el resultado negativo al llamador.
+    return false;
   // Actualiza la predicción DC.
   prediction.dc += extendMagnitude(extra, category);
   // Coeficiente actual.
@@ -673,9 +743,13 @@ function decodeBlock(
     // Símbolo.
     const symbol = huffmanSymbol(cursor, acTable);
     // Fin.
-    if (symbol === null) return false;
+    if (symbol === null)
+      // Rechaza esta condición y comunica el resultado negativo al llamador.
+      return false;
     // Fin de bloque.
-    if (symbol === 0) return true;
+    if (symbol === 0)
+      // Confirma la condición de esta rama y comunica el resultado positivo al llamador.
+      return true;
     // 16 ceros.
     if (symbol === 0xf0) {
       // Avanza.
@@ -688,15 +762,21 @@ function decodeBlock(
     // Tamaño.
     const size = symbol & 0x0f;
     // Inválido.
-    if (size === 0 || size > 10) return false;
+    if (size === 0 || size > 10)
+      // Rechaza esta condición y comunica el resultado negativo al llamador.
+      return false;
     // Salta ceros.
     index += run;
     // Se pasa.
-    if (index >= 64) return false;
+    if (index >= 64)
+      // Rechaza esta condición y comunica el resultado negativo al llamador.
+      return false;
     // Bits.
     const bits = readBits(cursor, size);
     // Fin.
-    if (bits === null) return false;
+    if (bits === null)
+      // Rechaza esta condición y comunica el resultado negativo al llamador.
+      return false;
     // Valor (solo se comprueba).
     extendMagnitude(bits, size);
     // Siguiente.
@@ -724,14 +804,18 @@ function takeMarker(cursor: BitCursor): number | null {
     return marker;
   }
   // Sin FF: null.
-  if (cursor.offset >= cursor.bytes.length || cursor.bytes[cursor.offset] !== 0xff) return null;
+  if (cursor.offset >= cursor.bytes.length || cursor.bytes[cursor.offset] !== 0xff)
+    // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+    return null;
   // Salta FF de relleno.
   while (cursor.offset < cursor.bytes.length && cursor.bytes[cursor.offset] === 0xff) {
     // Avanza.
     cursor.offset += 1;
   }
   // Fin.
-  if (cursor.offset >= cursor.bytes.length) return null;
+  if (cursor.offset >= cursor.bytes.length)
+    // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+    return null;
   // Marcador.
   const marker = cursor.bytes[cursor.offset] ?? 0;
   // Avanza.
@@ -743,9 +827,13 @@ function takeMarker(cursor: BitCursor): number | null {
 // Valida un JPEG baseline: segmentos, tablas, marco y escaneo completo hasta EOI.
 function parseJpeg(bytes: Uint8Array): ImageFacts | null {
   // Empieza por SOI.
-  if (bytes.length < 4 || bytes[0] !== 0xff || bytes[1] !== 0xd8) return null;
+  if (bytes.length < 4 || bytes[0] !== 0xff || bytes[1] !== 0xd8)
+    // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+    return null;
   // Termina por EOI.
-  if (bytes[bytes.length - 2] !== 0xff || bytes[bytes.length - 1] !== 0xd9) return null;
+  if (bytes[bytes.length - 2] !== 0xff || bytes[bytes.length - 1] !== 0xd9)
+    // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+    return null;
   // Tablas DC.
   const dcTables: Array<HuffmanTable | null> = [null, null, null, null];
   // Tablas AC.
@@ -765,7 +853,9 @@ function parseJpeg(bytes: Uint8Array): ImageFacts | null {
   // Recorre los segmentos.
   while (offset + 1 < bytes.length) {
     // Debe empezar por FF.
-    if (bytes[offset] !== 0xff) return null;
+    if (bytes[offset] !== 0xff)
+      // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+      return null;
     // Salta FF.
     while (offset < bytes.length && bytes[offset] === 0xff) offset += 1;
     // Marcador.
@@ -773,15 +863,23 @@ function parseJpeg(bytes: Uint8Array): ImageFacts | null {
     // Avanza.
     offset += 1;
     // EOI antes del escaneo.
-    if (marker === 0xd9) return null;
+    if (marker === 0xd9)
+      // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+      return null;
     // Marcadores sin segmento.
-    if (marker === 0x00 || (marker >= 0xd0 && marker <= 0xd7)) return null;
+    if (marker === 0x00 || (marker >= 0xd0 && marker <= 0xd7))
+      // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+      return null;
     // Fin.
-    if (offset + 1 >= bytes.length) return null;
+    if (offset + 1 >= bytes.length)
+      // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+      return null;
     // Longitud.
     const length = ((bytes[offset] ?? 0) << 8) | (bytes[offset + 1] ?? 0);
     // Inválida.
-    if (length < 2 || offset + length > bytes.length) return null;
+    if (length < 2 || offset + length > bytes.length)
+      // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+      return null;
     // Inicio de datos.
     const data = offset + 2;
     // Fin del segmento.
@@ -789,11 +887,15 @@ function parseJpeg(bytes: Uint8Array): ImageFacts | null {
     // SOS: inicio del escaneo.
     if (marker === 0xda) {
       // Sin marco.
-      if (frame === null) return null;
+      if (frame === null)
+        // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+        return null;
       // Componentes del escaneo.
       const count = bytes[data] ?? 0;
       // Número inválido.
-      if (count !== frame.length || length < 6 + count * 2) return null;
+      if (count !== frame.length || length < 6 + count * 2)
+        // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+        return null;
       // Componentes con sus tablas.
       const scanComponents: Array<JpegComponent & { dcId: number; acId: number }> = [];
       // Cada componente.
@@ -813,9 +915,13 @@ function parseJpeg(bytes: Uint8Array): ImageFacts | null {
         // AC.
         const acTable = acTables[acId];
         // Falta algo.
-        if (component === undefined || dcTable === undefined || acTable === undefined) return null;
+        if (component === undefined || dcTable === undefined || acTable === undefined)
+          // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+          return null;
         // Tabla vacía.
-        if (dcTable === null || acTable === null) return null;
+        if (dcTable === null || acTable === null)
+          // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+          return null;
         // Lo añade.
         scanComponents.push({ ...component, dcId, acId });
       }
@@ -836,7 +942,9 @@ function parseJpeg(bytes: Uint8Array): ImageFacts | null {
       // Número de MCU.
       const mcus = Math.ceil(width / (maxH * 8)) * Math.ceil(height / (maxV * 8));
       // Fuera de rango.
-      if (!Number.isSafeInteger(mcus) || mcus < 1 || mcus > 40_000) return null;
+      if (!Number.isSafeInteger(mcus) || mcus < 1 || mcus > 40_000)
+        // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+        return null;
       // Cursor tras la cabecera del escaneo.
       const cursor: BitCursor = {
         bytes,
@@ -854,7 +962,9 @@ function parseJpeg(bytes: Uint8Array): ImageFacts | null {
         // Toca reinicio.
         if (restartInterval > 0 && mcu > 0 && mcu % restartInterval === 0) {
           // Marcador RSTn correcto.
-          if (takeMarker(cursor) !== 0xd0 + restart) return null;
+          if (takeMarker(cursor) !== 0xd0 + restart)
+            // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+            return null;
           // Siguiente.
           restart = (restart + 1) & 7;
           // Reinicia predicciones.
@@ -882,12 +992,16 @@ function parseJpeg(bytes: Uint8Array): ImageFacts | null {
           // Bloques del componente.
           for (let block = 0; block < component.h * component.v; block += 1) {
             // Bloque inválido.
-            if (!decodeBlock(cursor, dcTable, acTable, prediction)) return null;
+            if (!decodeBlock(cursor, dcTable, acTable, prediction))
+              // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+              return null;
           }
         }
       }
       // Debe acabar en EOI.
-      if (takeMarker(cursor) !== 0xd9 || cursor.offset !== bytes.length) return null;
+      if (takeMarker(cursor) !== 0xd9 || cursor.offset !== bytes.length)
+        // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+        return null;
       // JPEG válido.
       return { role: "image", mime: "image/jpeg", width, height };
     }
@@ -902,9 +1016,13 @@ function parseJpeg(bytes: Uint8Array): ImageFacts | null {
       // Componentes.
       const count = bytes[data + 5] ?? 0;
       // Valores no admitidos.
-      if (precision !== 8 || count < 1 || count > 4 || length !== 8 + count * 3) return null;
+      if (precision !== 8 || count < 1 || count > 4 || length !== 8 + count * 3)
+        // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+        return null;
       // Lados fuera de rango.
-      if (!imageEdges(width, height)) return null;
+      if (!imageEdges(width, height))
+        // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+        return null;
       // Ids vistos.
       const seen = new Set<number>();
       // Componentes.
@@ -944,7 +1062,9 @@ function parseJpeg(bytes: Uint8Array): ImageFacts | null {
         frame.push({ id, h: horizontal, v: vertical, index });
       }
       // Demasiadas muestras.
-      if (samples < 1 || samples > 10) return null;
+      if (samples < 1 || samples > 10)
+        // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+        return null;
     } else if (marker === 0xdb) {
       // DQT: tablas de cuantización.
       let cursor = data;
@@ -959,14 +1079,18 @@ function parseJpeg(bytes: Uint8Array): ImageFacts | null {
         // Tamaño.
         const size = precision === 0 ? 64 : 128;
         // Inválida.
-        if (id > 3 || precision > 1 || cursor + 1 + size > end) return null;
+        if (id > 3 || precision > 1 || cursor + 1 + size > end)
+          // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+          return null;
         // Vista.
         quant[id] = true;
         // Siguiente.
         cursor += 1 + size;
       }
       // Debe cuadrar.
-      if (cursor !== end) return null;
+      if (cursor !== end)
+        // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+        return null;
     } else if (marker === 0xc4) {
       // DHT: tablas Huffman.
       let cursor = data;
@@ -979,7 +1103,9 @@ function parseJpeg(bytes: Uint8Array): ImageFacts | null {
         // Id.
         const id = info & 0x0f;
         // Inválida.
-        if ((kind !== 0 && kind !== 1) || id > 3 || cursor + 17 > end) return null;
+        if ((kind !== 0 && kind !== 1) || id > 3 || cursor + 17 > end)
+          // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+          return null;
         // Códigos por longitud.
         const counts = [0];
         // Lee las 16 cuentas.
@@ -987,21 +1113,29 @@ function parseJpeg(bytes: Uint8Array): ImageFacts | null {
         // Total de símbolos.
         const total = counts.reduce((sum, count) => sum + count, 0);
         // Demasiados.
-        if (total > 256 || cursor + 17 + total > end) return null;
+        if (total > 256 || cursor + 17 + total > end)
+          // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+          return null;
         // Construye la tabla.
         const table = buildHuffman(counts, bytes.subarray(cursor + 17, cursor + 17 + total));
         // Inválida.
-        if (table === null) return null;
+        if (table === null)
+          // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+          return null;
         // La guarda.
         (kind === 0 ? dcTables : acTables)[id] = table;
         // Siguiente.
         cursor += 17 + total;
       }
       // Debe cuadrar.
-      if (cursor !== end) return null;
+      if (cursor !== end)
+        // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+        return null;
     } else if (marker === 0xdd) {
       // DRI: longitud fija.
-      if (length !== 4) return null;
+      if (length !== 4)
+        // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+        return null;
       // Intervalo de reinicio.
       restartInterval = ((bytes[data] ?? 0) << 8) | (bytes[data + 1] ?? 0);
     } else if (marker >= 0xc1 && marker <= 0xcf && marker !== 0xc4 && marker !== 0xcc) {

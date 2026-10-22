@@ -1,0 +1,50 @@
+{
+  "date": "2026-10-21",
+  "scope": "Ensayo técnico S10, preparación, 23 diapositivas de directo y apéndice",
+  "budgetBefore": {
+    "limitUsd": 1,
+    "reservedUsd": 0.2634426,
+    "calls": 42
+  },
+  "budgetAfter": {
+    "limitUsd": 1,
+    "reservedUsd": 0.3106076,
+    "calls": 54
+  },
+  "reservedDeltaUsd": 0.047165,
+  "newProviderCalls": 12,
+  "actualProviderUsd": null,
+  "originalEvaluationSha256": "e348710a1b1d4810104792f1ebc38b9c53fa7c49f212aa1c1f6ada9145ae4966",
+  "originalEvaluationPreserved": true,
+  "testReexecuted": false,
+  "qrPayload": "https://kb.tools.thepower.education/feedback/feedback-form.html?form=ai-engineer",
+  "qrHttpStatus": 200,
+  "courseHealthHttpStatus": 200,
+  "courseHealthRagContextMode": "semantic",
+  "scheduledMinutes": {
+    "concepts": 30,
+    "practice": 50,
+    "closing": 10,
+    "appendix": 0
+  },
+  "validation": {
+    "slideCount": 24,
+    "speakerNotesMatchCanonicalContent": true,
+    "copiableSlideCommandsPreserveExecutedArgv": true,
+    "canonicalPdfPages": 24,
+    "teacherGuidePdfPages": 11,
+    "pdfOriginalFontsPreserved": ["Verdana", "Courier New"],
+    "check": "passed",
+    "unitTests": 316,
+    "testFiles": 52,
+    "applicationSourcesUnchanged": true
+  },
+  "artifactsSha256": {
+    "material/presentaciones/S10-rag-basico.pptx": "3a782a54bdc2c96374bc23f398f69f2c3f010704469dc9d2bb30dfa590c1a75f",
+    "material/presentaciones/S10-rag-basico.pdf": "d05932a0fc68db7d304db92838bd9ed863120768bea564dea1d676971a93b31d",
+    "material/guiones/S10-guion-profesor.md": "0005592607ecbc7cbbd70ed1127bb44c482db1280d99cf181fb234b3c5f51201",
+    "material/guiones/S10-guion-profesor.pdf": "4fe21b91b13cc4eac06f7fbe9fbf8f63ac966e53f25aa89051429158c17b81f7",
+    "material/notas/checklist-preclase.md": "2e95f0d354605a2a956d34bddcadb98dbca44970a5f1125d4e11871e7c6db79a",
+    "material/notas/checklist-preclase.pdf": "5b1c522b62437e58e0b9da1756e1c82b3ea8a1ec9ca5f66f48946ef284e14fc5"
+  }
+}

@@ -79,22 +79,34 @@ export function splitQuestionAspects(question: string): string[] {
 function aspectMatchScore(aspect: string, documentText: string): number {
   // Tokens del aspecto consultado.
   const queryTokens = tokenizeSpanish(aspect);
+  // Una pregunta sin términos útiles no puede compartir vocabulario con un documento.
   if (queryTokens.length === 0) {
+    // Representa esa ausencia de coincidencia con puntuación cero.
     return 0;
   }
   // Conjunto de tokens y raíces de 3 y 4 letras del documento.
   const docTokens = tokenizeSpanish(documentText);
+  // Usa un conjunto para comprobar coincidencias exactas sin repetir búsquedas por cada término.
   const docSet = new Set(docTokens);
+  // Construye prefijos de cuatro letras para admitir variantes léxicas de palabras suficientemente largas.
   const docPrefixes4 = new Set(docTokens.filter((t) => t.length >= 4).map((t) => t.slice(0, 4)));
+  // Prepara también prefijos de tres letras con una recompensa menor que la coincidencia exacta.
   const docPrefixes3 = new Set(docTokens.filter((t) => t.length >= 4).map((t) => t.slice(0, 3)));
   // Cuenta coincidencias exactas (1.0), de prefijo de 4 letras (0.85) y de raíz de 3 letras (0.70).
   let matched = 0;
+  // Evalúa cada término de la pregunta con los tres niveles de coincidencia del reranker docente.
   for (const token of queryTokens) {
+    // La palabra completa tiene prioridad sobre sus aproximaciones por prefijo.
     if (docSet.has(token)) {
+      // Una coincidencia exacta aporta la unidad completa al contador.
       matched += 1;
-    } else if (token.length >= 4 && docPrefixes4.has(token.slice(0, 4))) {
+    } else // Si no fue exacta, acepta el prefijo de cuatro letras cuando ambas palabras son suficientemente largas.
+    if (token.length >= 4 && docPrefixes4.has(token.slice(0, 4))) {
+      // Recompensa esta aproximación con 0,85 para situarla por debajo de una coincidencia exacta.
       matched += 0.85;
-    } else if (token.length >= 4 && docPrefixes3.has(token.slice(0, 3))) {
+    } else // La coincidencia de tres letras es una aproximación más débil y se comprueba al final.
+    if (token.length >= 4 && docPrefixes3.has(token.slice(0, 3))) {
+      // Añade 0,7 para que esta coincidencia pese menos que las anteriores.
       matched += 0.7;
     }
   }
@@ -121,6 +133,7 @@ export function rerankLabCandidates(input: {
     const questionCoverage = aspectMatchScore(input.question, fullText);
     // Máxima cobertura entre los subaspectos de la pregunta original.
     const aspects = splitQuestionAspects(input.question);
+    // Conserva el mejor aspecto cubierto sin perder la coincidencia global de la pregunta.
     const bestAspect = Math.max(
       ...aspects.map((aspect) => aspectMatchScore(aspect, fullText)),
       queryCoverage,
@@ -130,6 +143,7 @@ export function rerankLabCandidates(input: {
       0.55 * bestAspect +
       0.25 * Math.max(queryCoverage, questionCoverage) +
       0.2 * Math.max(0, hit.similarity);
+    // Combina los componentes de relevancia y mantiene la puntuación dentro de la escala prevista.
     const rerankScore = Math.max(
       LAB_CRAG_CONFIG.minScore,
       Math.min(LAB_CRAG_CONFIG.maxScore, Number(rawScore.toFixed(4))),
@@ -139,6 +153,7 @@ export function rerankLabCandidates(input: {
       rerankScore >= LAB_CRAG_CONFIG.minChunkRelevance
         ? `Relevante en escala [0, 1] (${rerankScore.toFixed(3)} >= ${LAB_CRAG_CONFIG.minChunkRelevance.toFixed(2)}) para «${hit.section}».`
         : `Descartable en escala [0, 1] (${rerankScore.toFixed(3)} < ${LAB_CRAG_CONFIG.minChunkRelevance.toFixed(2)}).`;
+    // Devuelve el fragmento con su nueva puntuación y la explicación del reordenamiento.
     return { hit, rerankScore, reason };
   });
   // Ordena de mayor a menor `rerankScore` conservando orden estable en caso de empate.
@@ -160,6 +175,7 @@ export function assessLabEvidence(input: {
   const maxChunkRelevance = input.reranked[0]?.rerankScore ?? 0;
   // Si ningún fragmento supera el corte individual de 0,50, la evidencia es insuficiente.
   if (useful.length === 0) {
+    // Sin evidencia útil, informa insuficiencia en lugar de fabricar cobertura.
     return {
       status: "insufficient",
       coverageScore: 0,
@@ -175,6 +191,7 @@ export function assessLabEvidence(input: {
     .join("\n");
   // Evalúa cada aspecto de la pregunta original contra el conjunto de fragmentos útiles.
   const aspects = splitQuestionAspects(input.question);
+  // Puntúa cada aspecto de la pregunta contra el texto combinado de los fragmentos útiles.
   const aspectScores = aspects.map((aspect) => ({
     aspect,
     score: aspectMatchScore(aspect, combinedUsefulText),
@@ -186,11 +203,13 @@ export function assessLabEvidence(input: {
   // Cobertura global de la pregunta en [0, 1]: media de los aspectos ponderada con el mejor fragmento.
   const meanAspectScore =
     aspectScores.reduce((sum, item) => sum + item.score, 0) / aspectScores.length;
+  // Calcula la cobertura conjunta con el redondeo que utiliza el contrato del laboratorio.
   const coverageScore = Number(
     Math.min(1, 0.65 * meanAspectScore + 0.35 * maxChunkRelevance).toFixed(4),
   );
   // Si la cobertura global no llega al mínimo parcial (0,40), se descarta como insuficiente.
   if (coverageScore < LAB_CRAG_CONFIG.partialCoverageMin) {
+    // Una cobertura completa permite responder con los fragmentos útiles seleccionados.
     return {
       status: "insufficient",
       coverageScore,
@@ -202,6 +221,7 @@ export function assessLabEvidence(input: {
   }
   // Si no hay lagunas y la cobertura global supera `sufficientCoverageMin` (0,75): suficiente.
   if (gaps.length === 0 && coverageScore >= LAB_CRAG_CONFIG.sufficientCoverageMin) {
+    // Devuelve carencias y cobertura parcial para que el grafo pueda decidir si reformula.
     return {
       status: "sufficient",
       coverageScore,
@@ -234,18 +254,25 @@ export function reformulateLabQuery(input: {
 }): string {
   // Si el evaluador nombró una laguna específica, centra la nueva consulta en esa laguna.
   const gapIndex = Math.min(input.attempt - 1, Math.max(0, input.gaps.length - 1));
+  // Extrae el aspecto pendiente quitando el prefijo explicativo de la carencia.
   const rawGap = input.gaps[gapIndex]?.replace(/^Falta evidencia documental sobre:\s*/i, "").trim();
+  // Usa una carencia explícita solo cuando todavía contiene texto tras limpiarla.
   if (rawGap && rawGap.length > 0) {
+    // Construye una consulta alternativa centrada en el aspecto que falta por documentar.
     const candidate =
       input.attempt === 1
         ? `${rawGap} especificaciones`
         : `${rawGap} documentación técnica intento ${String(input.attempt)}`;
+    // Evita repetir la consulta anterior aunque solo cambie su uso de mayúsculas.
     if (candidate.toLowerCase() !== input.previousQuery.toLowerCase()) {
+      // Entrega la nueva consulta al nodo de recuperación del siguiente intento.
       return candidate;
     }
   }
   // En caso de evidencia insuficiente sin laguna específica, amplía con términos técnicos clave de la pregunta.
   const tokens = tokenizeSpanish(input.originalQuestion);
+  // Como alternativa, toma la segunda mitad de los términos de la pregunta.
   const tail = tokens.slice(Math.max(0, Math.floor(tokens.length / 2))).join(" ");
+  // Forma una consulta de respaldo identificada por intento para no repetir una búsqueda idéntica.
   return `${tail || input.originalQuestion} política oficial intento ${String(input.attempt)}`;
 }

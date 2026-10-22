@@ -102,6 +102,7 @@ function withDefaults(
   // Middleware que completa los parámetros de cada llamada.
   const middleware: LanguageModelMiddleware = {
     specificationVersion: "v4",
+    // Ajusta los parámetros de la llamada mediante el middleware del modelo antes de enviarla.
     transformParams: async ({ params }) => {
       // Razonamiento de la llamada o el de por defecto.
       const reasoning = params.reasoning ?? defaults.reasoning;
@@ -158,7 +159,9 @@ function openRouterCatalog(): Promise<Map<string, CatalogEntry>> {
     // Petición con un plazo de 5 segundos.
     const response = await fetch(OPENROUTER_CATALOG_URL, { signal: AbortSignal.timeout(5_000) });
     // Error HTTP.
-    if (!response.ok) throw new Error(`openrouter-catalog-${String(response.status)}`);
+    if (!response.ok)
+      // Interrumpe esta rama y propaga el motivo al manejador de errores del recorrido.
+      throw new Error(`openrouter-catalog-${String(response.status)}`);
     // Cuerpo JSON.
     const body = (await response.json()) as { data?: unknown };
     // Mapa id → ficha.
@@ -219,7 +222,9 @@ export async function openRouterAutoReasoning(
   // Parámetros admitidos.
   const supported = Array.isArray(entry.supported_parameters) ? entry.supported_parameters : [];
   // Sin parámetro reasoning: no se envía nada.
-  if (!supported.includes("reasoning")) return undefined;
+  if (!supported.includes("reasoning"))
+    // Indica que esta rama no ha producido un valor disponible para el llamador.
+    return undefined;
   // Datos de razonamiento.
   const info =
     entry.reasoning !== null && typeof entry.reasoning === "object"
@@ -278,6 +283,35 @@ export function createLanguageModel(
       }).chat(modelId);
       // Sin razonamiento: modelo tal cual.
       if (effort === null) return model;
+      // Sonnet 5.5 rechaza thinking=disabled. Sin herramientas, between_tools evita pensamiento
+      // inicial y deja todo el tope de salida para el JSON o la respuesta. Los niveles altos usan adaptive.
+      if (modelId === "claude-sonnet-5-5") {
+        // none/minimal se traducen al mínimo admitido por este modelo, sin enviar disabled.
+        const nativeEffort = effort === "none" || effort === "minimal" ? "low" : effort;
+        return withDefaults(model, {
+          providerOptions: {
+            anthropic: {
+              effort: nativeEffort,
+              thinking: {
+                type: ["low", "medium", "high"].includes(nativeEffort)
+                  ? "between_tools"
+                  : "adaptive",
+              },
+            },
+          },
+        });
+      }
+      // Opus 5.5 exige pensamiento adaptativo. El esfuerzo bajo acota el comparador opcional.
+      if (modelId === "claude-opus-5-5") {
+        return withDefaults(model, {
+          providerOptions: {
+            anthropic: {
+              effort: effort === "none" || effort === "minimal" ? "low" : effort,
+              thinking: { type: "adaptive" },
+            },
+          },
+        });
+      }
       // effort nativo si Anthropic lo admite; si no, la opción común.
       return ANTHROPIC_EFFORTS.has(effort)
         ? withDefaults(model, { providerOptions: { anthropic: { effort } } })
@@ -324,6 +358,7 @@ export function createLanguageModel(
         // Sin nivel fijado, cada llamada consulta (una vez por instancia) la ficha del modelo.
         const middleware: LanguageModelMiddleware = {
           specificationVersion: "v4",
+          // Ajusta los parámetros de la llamada mediante el middleware del modelo antes de enviarla.
           transformParams: async ({ params }) => {
             // Razonamiento según la ficha.
             const reasoning = await openRouterAutoReasoning(modelId);

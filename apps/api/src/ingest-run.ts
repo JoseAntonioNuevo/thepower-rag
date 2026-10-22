@@ -112,16 +112,19 @@ export async function runBoundIngestion(
     expectedIndexName: observed.expectedIndexName,
     getBatchSize: 20,
     ports: {
+      // Lee el objeto del corpus que necesita la ingesta o su comprobación posterior.
       getObject: async (key) => {
         // Objeto de R2.
         const object = await bindings.CORPUS.get(key);
         // Texto o null.
         return object === null ? null : object.text();
       },
+      // Escribe un objeto del corpus y entrega el resultado de almacenamiento a la ingesta.
       putObject: async (key, body) => {
         // Escribe en R2.
         await bindings.CORPUS.put(key, body);
       },
+      // Guarda en el catálogo los documentos y fragmentos de esta versión del corpus.
       writeCatalog: async (current) => {
         // Versión, perfil, documentos, fragmentos y mapa de vectores en un lote.
         const statements = [
@@ -222,6 +225,7 @@ export async function runBoundIngestion(
         // Lote atómico.
         await bindings.DB.batch(statements);
       },
+      // Lee el catálogo para comprobar que los datos escritos coinciden con lo esperado.
       readCatalog: async (versionId, profileId) => {
         // Documentos de la versión.
         const documents = await bindings.DB.prepare(
@@ -251,19 +255,23 @@ export async function runBoundIngestion(
           mappings: mappings.results,
         };
       },
+      // Entrega los índices de metadatos para comprobar los filtros disponibles.
       listMetadataIndexes: () => bindings.listMetadataIndexes(),
+      // Inserta o actualiza vectores por identificador durante la ingesta.
       upsertVectors: async (batch) => {
         // Inserta en Vectorize.
         const result = await bindings.VECTORIZE.upsert([...batch]);
         // Id de la mutación.
         return { mutationId: result.mutationId ?? null };
       },
+      // Lee de vuelta los vectores para verificar su presencia e identidad después de escribirlos.
       readVectors: async (ids) => {
         // Lee por id.
         const found = await bindings.VECTORIZE.getByIds([...ids]);
         // Formato del núcleo.
         return found.map((vector) => visibleFromBinding(vector));
       },
+      // Entrega la descripción del índice que usa la comprobación de compatibilidad.
       describeIndex: async () => {
         // Describe el índice.
         const info = (await bindings.VECTORIZE.describe()) as {
@@ -287,6 +295,7 @@ export async function runBoundIngestion(
           vectorCount: typeof info.vectorCount === "number" ? info.vectorCount : null,
         };
       },
+      // Guarda el progreso de ingesta para poder reanudar sin repetir pasos ya confirmados.
       persistJournal: async (item) => {
         // Guarda la anotación en D1.
         // Upsert de la anotación: repetir la ingesta actualiza la fila en vez de duplicarla.
@@ -313,6 +322,7 @@ export async function runBoundIngestion(
           )
           .run();
       },
+      // Registra la fase alcanzada para explicar el progreso y los fallos de la ingesta.
       recordPhase: async (update) => {
         // Actualiza la fase de un perfil no activo.
         // Fase del perfil: solo si no está activo. La métrica solo cambia si se observó una.

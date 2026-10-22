@@ -28,7 +28,7 @@ import { createRealCragPorts } from "./crag-real";
 // Mensaje genérico de fallo.
 import { PUBLIC_PROVIDER_MESSAGE } from "./course-stream";
 // Tipos del entorno.
-import type { Assessment, WorkerEnv } from "./env";
+import { cragExecutionBudgetMs, type Assessment, type WorkerEnv } from "./env";
 // Corpus de la demo.
 import { fixtureCorpusVersion, fixtureProfile } from "./fixture";
 // Fábrica de modelos.
@@ -70,16 +70,20 @@ function inertPorts(signal: AbortSignal): CragPorts {
   return {
     // No mide llamadas de pago: no habrá ninguna.
     measured: false,
+    // Proporciona el reloj del recorrido para calcular plazos y tiempos transcurridos.
     now: () => Date.now(),
     signal,
     // Reserva siempre posible (nada se gastará).
     reserve: () => ({ ok: true }),
     // Cada paso falla con un motivo: la aclaración nunca debería llamarlos.
     retrieve: () => Promise.resolve({ ok: false, reason: "La aclaración no busca." }),
+    // Ordena los fragmentos y evalúa si aportan evidencia suficiente para la pregunta.
     rankAndAssess: () =>
       Promise.resolve({ ok: false, reason: "La aclaración no evalúa.", providerCall: false }),
+    // Propone otra consulta a partir de la pregunta y las carencias detectadas.
     reformulate: () =>
       Promise.resolve({ ok: false, reason: "La aclaración no reformula.", providerCall: false }),
+    // Produce la respuesta final con los fragmentos que este recorrido ha seleccionado.
     generate: () =>
       Promise.resolve({ ok: false, reason: "La aclaración no genera.", providerCall: false }),
   };
@@ -217,6 +221,11 @@ export async function cragHttpResponse(input: {
             embeddingModel: retrieval?.embeddingModel ?? "",
             dimensions: retrieval?.dimensions ?? 0,
             allowance: input.allowance,
+            // Mantiene un tope por llamada dentro del plazo único del perfil de CRAG.
+            generationTimeoutMs: Math.min(
+              input.assessment.generation?.timeoutMs ?? 20_000,
+              cragExecutionBudgetMs(input.env) ?? 20_000,
+            ),
           }));
 
   // Metadatos de la respuesta.
@@ -232,6 +241,7 @@ export async function cragHttpResponse(input: {
 
   // Stream de la respuesta.
   const stream = createUIMessageStream({
+    // Produce las partes del stream dentro del ciclo de ejecución del protocolo de mensajes.
     execute: async ({ writer }) => {
       // Inicio.
       writer.write({ type: "start", messageMetadata: metadata });
@@ -242,6 +252,9 @@ export async function cragHttpResponse(input: {
         ports,
         fixture: demo,
         scenarioId,
+        // La demo mantiene su contrato previo. En real el diagnóstico ya validó el plazo.
+        executionBudgetMs: demo ? undefined : (cragExecutionBudgetMs(input.env) ?? undefined),
+        // Publica el paso CRAG para que la interfaz pueda mostrar la traza mientras se ejecuta.
         onStep: (step: CragStep) => {
           // Paso transitorio.
           writer.write({ type: "data-step", data: step, transient: true });
@@ -315,6 +328,7 @@ export async function cragHttpResponse(input: {
         },
       });
     },
+    // Transforma el fallo del stream en el mensaje que recibirá el consumidor.
     onError: () => PUBLIC_PROVIDER_MESSAGE,
   });
   // Respuesta HTTP sin caché.

@@ -120,7 +120,9 @@ async function saveSpeechFailureDraft(
     now: Date.now(),
   });
   // Demasiado grande: no se guarda.
-  if (!draft) return;
+  if (!draft)
+    // Termina esta rama sin ejecutar los pasos siguientes del recorrido.
+    return;
   // Guarda el borrador.
   await saveResultDraft(database, {
     ownerId: input.ownerId,

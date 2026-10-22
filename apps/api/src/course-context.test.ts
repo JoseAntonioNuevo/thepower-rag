@@ -31,7 +31,14 @@ const rows = prepared.documents.flatMap((doc) =>
 function database(result: unknown[]): SqlDatabase {
   // Objeto con la forma mínima usada.
   return {
-    prepare: () => ({ bind: () => ({ all: async () => ({ results: result }) }) }),
+    // Doble de prueba: prepara una sentencia y devuelve el objeto que permitirá enlazar valores y ejecutarla.
+    prepare: () => ({
+      // Doble de prueba: asocia los parámetros a la sentencia sin concatenarlos al texto SQL.
+      bind: () => ({
+        // Doble de prueba: resuelve el conjunto de filas en el formato que espera el consumidor SQL.
+        all: async () => ({ results: result }),
+      }),
+    }),
   } as unknown as SqlDatabase;
 }
 // Cada grupo recibe el programa y su calendario, nada más.
@@ -74,6 +81,7 @@ it("contexto parcial, duplicado, alterado o fuera de ámbito se bloquea", async 
     // Fragmentos de otros grupos.
     rows,
   ])
+    // Comprueba que la entrada inválida produzca el error previsto antes de continuar.
     await expect(
       // Cada caso debe rechazarse: no se trunca ni se completa el contexto.
       readCourseContext(
@@ -94,6 +102,7 @@ it("el modelo recibe el curso completo y el historial, y se muestran solo fuente
   let prompt = "";
   // Modelo simulado que cita S5.
   const model = new MockLanguageModelV4({
+    // Implementa el stream del modelo de prueba para verificar eventos sin llamar a un proveedor.
     doStream: async (options) => {
       // Guarda la petición.
       prompt = JSON.stringify(options);

@@ -273,7 +273,9 @@ function validationPaths(error: unknown): string {
   // Baja hasta 4 niveles de causa.
   for (let depth = 0; depth < 4; depth += 1) {
     // No es objeto: termina.
-    if (typeof current !== "object" || current === null) break;
+    if (typeof current !== "object" || current === null)
+      // Detiene el bucle al alcanzar la condición de parada de esta rama.
+      break;
     // Si tiene issues de Zod.
     if ("issues" in current && Array.isArray(current.issues)) {
       // Rutas de los 3 primeros problemas.
@@ -285,6 +287,7 @@ function validationPaths(error: unknown): string {
           !("path" in issue) ||
           !Array.isArray(issue.path)
         )
+          // Entrega una colección vacía para representar que esta rama no aporta elementos.
           return [];
         // Ruta del problema.
         const path = issue.path;
@@ -296,6 +299,7 @@ function validationPaths(error: unknown): string {
               (typeof part === "string" && allowed.has(part)),
           )
         )
+          // Entrega una colección vacía para representar que esta rama no aporta elementos.
           return [];
         // Ruta unida por puntos.
         return [path.join(".")];
@@ -329,6 +333,7 @@ export function createResearchModelPort(input: {
 }): ResearchModelPort {
   // Métodos del puerto.
   return {
+    // Construye el plan de investigación que consumen los nodos posteriores.
     async plan({ question, audience }, context) {
       // try/catch: un fallo se convierte en resultado tipado.
       try {
@@ -361,6 +366,7 @@ export function createResearchModelPort(input: {
         return failed(context.signal, error, input.prices);
       }
     },
+    // Valora la suficiencia de la evidencia y las carencias que quedan por cubrir.
     async assess({ question, subquestions, evidence, priorCoverage, round }, context) {
       // Catálogo de extractos numerados por fuente.
       const catalog = evidence.map((item) => ({
@@ -431,6 +437,7 @@ export function createResearchModelPort(input: {
         return failed(context.signal, error, input.prices);
       }
     },
+    // Propone consultas adicionales a partir de las carencias del intento anterior.
     async followUp({ question, gaps, previousQueries }, context) {
       // try/catch.
       try {
@@ -462,6 +469,7 @@ export function createResearchModelPort(input: {
         return failed(context.signal, error, input.prices);
       }
     },
+    // Compone el informe a partir de la evidencia reunida y las subpreguntas del plan.
     async synthesize({ question, subquestions, coverage, contradictions, evidence }, context) {
       // try/catch.
       try {
@@ -539,6 +547,7 @@ export function createVectorCoursePort(input: {
 }): CourseEvidencePort {
   // Puerto con retrieve.
   return {
+    // Recupera candidatos documentales dentro del ámbito de corpus y consulta del recorrido.
     async retrieve({ query, audience, corpusVersion, limit }, context) {
       // try/catch: cualquier fallo se tipa.
       try {
@@ -668,6 +677,7 @@ export function createRealResearchPorts(input: RealResearchInput): ResearchPorts
     tool: createCourseSessionTool({
       corpusVersion: input.corpusVersion,
       audience: input.audience,
+      // Lee el recurso solicitado y devuelve el resultado de este adaptador al consumidor.
       read: (corpusVersion, chunkId) => readChunk(input.database, corpusVersion, chunkId),
     }),
     // Buscador web: Tavily o Firecrawl, según RESEARCH_SEARCH_PROVIDER.

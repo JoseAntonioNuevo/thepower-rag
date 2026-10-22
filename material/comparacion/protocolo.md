@@ -1,5 +1,14 @@
 # Protocolo de comparación entre RAG básico y CRAG
 
+**Actualización del 18/10/2026:** Sonnet 5.5 está publicado como generador y evaluador,
+con plazo de 60 s y las mismas condiciones de recuperación para RAG y CRAG. El
+manifiesto de Haiku se conserva en `configuracion-haiku-20261016.json`; la
+referencia actual pasa a Sonnet. La comparación dirigida de desarrollo completó
+28 llamadas y las pruebas web RAG/CRAG terminaron con fuentes; el conjunto
+reservado de veinte preguntas sigue sin ejecutar con este perfil. El
+[plan de perfiles y verificación](../../docs/sonnet-crag.md) separa los casos
+dirigidos de desarrollo del conjunto reservado y los resultados históricos.
+
 Este directorio documenta el protocolo de comparación justa entre **RAG básico (S10)** y **CRAG (S11)** sobre conjuntos cerrados de **20 preguntas (14 respondibles y 6 sin respuesta)** y separa tres artefactos con su procedencia exacta:
 
 1. **Evaluación ejecutada del laboratorio reproducible (`lab/eval/resultados-laboratorio.md`):**

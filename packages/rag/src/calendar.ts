@@ -20,6 +20,7 @@ export function isWeeklyScheduleQuestion(question: string): boolean {
       text,
     )
   )
+    // Rechaza esta condición y comunica el resultado negativo al llamador.
     return false;
   // «Clases de/sobre X» habla de un tema, salvo que X sea el propio curso o el grupo.
   if (
@@ -27,6 +28,7 @@ export function isWeeklyScheduleQuestion(question: string): boolean {
       text,
     )
   )
+    // Rechaza esta condición y comunica el resultado negativo al llamador.
     return false;
   // Solo cuenta como horario general si pregunta por los días o el horario de las clases.
   return (

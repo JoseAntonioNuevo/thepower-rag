@@ -72,7 +72,9 @@ export function liveResearchPorts(
       settings.settings.outputUsdPerMillion,
     );
   // Si las tarifas actuales no encajan con la reserva, no se sigue.
-  if (!outputCap) throw new Error("research-model-reservation-incompatible");
+  if (!outputCap)
+    // Detiene el recorrido con el diagnóstico: research-model-reservation-incompatible.
+    throw new Error("research-model-reservation-incompatible");
   // Puertos reales con el modelo de investigación.
   return createRealResearchPorts({
     // Señal, grupo del trabajo y versión del corpus configurada.

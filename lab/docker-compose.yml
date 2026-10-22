@@ -1,20 +1,35 @@
 # GUÍA DE LECTURA · lab/docker-compose.yml
 # Servicio PostgreSQL 17 con pgvector para el laboratorio reproducible de S10 y S11.
 services:
+  # Nombre de servicio que utiliza docker compose para arrancar y consultar la base.
   pgvector:
+    # PostgreSQL 17 con la extensión vector disponible en la imagen.
     image: pgvector/pgvector:pg17
+    # Nombre local reconocible para inspeccionar estado y logs durante la preparación.
     container_name: thepower-rag-lab-pgvector
+    # Reinicia el servicio si termina, salvo que el operador lo haya detenido.
     restart: unless-stopped
+    # Valores ficticios exclusivos del contenedor del laboratorio, no credenciales de producción.
     environment:
+      # Rol inicial que usará la URL de conexión de lab/.env.example.
       POSTGRES_USER: aether
+      # Contraseña didáctica de ese rol dentro del servicio local.
       POSTGRES_PASSWORD: aether_lab_2026
+      # Base cuyo nombre exige la comprobación de aislamiento del CLI.
       POSTGRES_DB: aether_rag
+    # Publica el puerto solo en loopback; el aula utiliza 54329 y el contenedor escucha en 5432.
     ports:
-      - "54329:5432"
+      - "127.0.0.1:54329:5432"
+    # Aplica el esquema en la inicialización de una base vacía y monta el archivo como solo lectura.
     volumes:
       - ./schema.sql:/docker-entrypoint-initdb.d/01-schema.sql:ro
+    # La disponibilidad del servidor se comprueba sin ejecutar modelos ni reconstruir el índice.
     healthcheck:
+      # pg_isready comprueba que PostgreSQL acepte conexiones al destino del laboratorio.
       test: ["CMD-SHELL", "pg_isready -U aether -d aether_rag"]
+      # Espacio entre comprobaciones del estado del servicio.
       interval: 5s
+      # Tiempo máximo que se espera a cada comprobación individual.
       timeout: 3s
+      # Fallos consecutivos necesarios para declarar el servicio no saludable.
       retries: 10

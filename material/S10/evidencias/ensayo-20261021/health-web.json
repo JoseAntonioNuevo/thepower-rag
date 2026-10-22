@@ -1,0 +1,63 @@
+{
+  "app": "thepower-rag",
+  "phase": "crag",
+  "execution": "real",
+  "runtime": "Cloudflare-Workers",
+  "capabilities": {
+    "sin-rag": {
+      "status": "ready",
+      "missing": []
+    },
+    "rag": {
+      "status": "ready",
+      "missing": []
+    },
+    "crag": {
+      "status": "ready",
+      "missing": []
+    },
+    "research": {
+      "status": "ready",
+      "missing": []
+    }
+  },
+  "corpus": {
+    "version": "c3a59a406888b",
+    "contentVersion": "cc037ef0bb1f7",
+    "profileId": "p76509a5f9743",
+    "profileFamily": "workers-ai",
+    "coverage": {
+      "curriculum": "complete",
+      "calendarLx": "complete",
+      "calendarMj": "complete",
+      "exerciseDetail": "partial",
+      "remote": "index-verified"
+    },
+    "embedding": "@cf/baai/bge-m3",
+    "dimensions": 1024,
+    "remoteRevision": null
+  },
+  "compatibility": {
+    "langgraph": "ok",
+    "anthropic": "loaded",
+    "note": "LangGraph carga. El grafo de CRAG vive en la ruta de chat. Esta comprobación no es una activación remota."
+  },
+  "durableResearch": true,
+  "modelConfiguration": {
+    "provider": "anthropic",
+    "generator": "claude-sonnet-5-5",
+    "evaluator": "claude-sonnet-5-5",
+    "research": "claude-haiku-5-5",
+    "cragExecutionBudgetMs": 60000,
+    "generationTimeoutMs": 30000,
+    "ragContextMode": "semantic",
+    "retrievalMinScore": 0.5
+  },
+  "media": {
+    "storage": "ready",
+    "vision": "configured",
+    "transcription": "configured",
+    "speech": "configured",
+    "note": "Configurar no ejecuta visión, transcripción ni voz."
+  }
+}

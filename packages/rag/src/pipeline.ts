@@ -132,9 +132,12 @@ export function isScheduleQuestion(question: string): boolean {
     .replace(/[\u0300-\u036f]/g, "")
     .toLowerCase();
   // Entregas, plazos y rúbricas no son preguntas de calendario.
-  if (/\b(?:entrega|plazo|rubrica)\b/.test(normalized)) return false;
+  if (/\b(?:entrega|plazo|rubrica)\b/.test(normalized))
+    // Rechaza esta condición y comunica el resultado negativo al llamador.
+    return false;
   // «Cuándo conviene/usar…» habla de técnica, no de fechas.
   if (/\bcuando\s+(?:conviene|compensa|plantea|usar|se usa|necesito)\b/.test(normalized))
+    // Rechaza esta condición y comunica el resultado negativo al llamador.
     return false;
   // Horario semanal, fechas, calendario, «cuándo es…» o quién imparte.
   return (

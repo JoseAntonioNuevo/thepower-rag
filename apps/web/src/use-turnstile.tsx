@@ -93,17 +93,24 @@ export function useTurnstile() {
         // Cuerpo.
         const body = await response.json();
         // Error.
-        if (!response.ok) throw new Error(body.message ?? "No se pudo verificar la sesión.");
+        if (!response.ok)
+          // Interrumpe esta rama y propaga el motivo al manejador de errores del recorrido.
+          throw new Error(body.message ?? "No se pudo verificar la sesión.");
         // Cancelado.
-        if (controller.signal.aborted) return;
+        if (controller.signal.aborted)
+          // Termina esta rama sin ejecutar los pasos siguientes del recorrido.
+          return;
         // Guarda la configuración.
         setConfig(body as VerificationConfig);
         // Sin protección: listo.
-        if (!body.enabled) setReady(true);
+        if (!body.enabled)
+          // Actualiza la disponibilidad de la verificación antes de permitir el siguiente envío.
+          setReady(true);
       })
       .catch((caught: unknown) => {
         // Error visible si no se canceló.
         if (!controller.signal.aborted)
+          // Expone el fallo en el estado de la interfaz para que el usuario pueda recuperarse.
           setError(caught instanceof Error ? caught.message : "No se pudo verificar la sesión.");
       });
     // Al desmontar, cancela.
@@ -112,14 +119,18 @@ export function useTurnstile() {
   // Pinta el widget cuando hay configuración.
   useEffect(() => {
     // Sin protección o sin datos: nada.
-    if (!config?.enabled || !container.current || !config.siteKey || !config.sessionId) return;
+    if (!config?.enabled || !container.current || !config.siteKey || !config.sessionId)
+      // Termina esta rama sin ejecutar los pasos siguientes del recorrido.
+      return;
     // ¿Sigue montado?
     let active = true;
     // Carga el script.
     void loadScript()
       .then(() => {
         // Desmontado o sin script.
-        if (!active || !container.current || !window.turnstile) return;
+        if (!active || !container.current || !window.turnstile)
+          // Termina esta rama sin ejecutar los pasos siguientes del recorrido.
+          return;
         // Pinta el widget.
         widget.current = window.turnstile.render(container.current, {
           sitekey: config.siteKey,
@@ -127,6 +138,7 @@ export function useTurnstile() {
           cData: config.sessionId,
           size: "flexible",
           appearance: "interaction-only",
+          // Recibe el token nuevo que Turnstile entrega al resolver el desafío.
           callback: (value: string) => {
             // Si sigue montado.
             if (active) {
@@ -142,6 +154,7 @@ export function useTurnstile() {
               for (const resolve of pending) resolve();
             }
           },
+          // Invalida la verificación cuando Turnstile informa de que el token ha caducado.
           "expired-callback": () => {
             // Si sigue montado.
             if (active) {
@@ -151,6 +164,7 @@ export function useTurnstile() {
               setReady(false);
             }
           },
+          // Refleja un fallo del widget para que el usuario pueda volver a verificarse.
           "error-callback": () => {
             // Si sigue montado.
             if (active) {
@@ -167,6 +181,7 @@ export function useTurnstile() {
       .catch((caught: unknown) => {
         // Error al cargar.
         if (active)
+          // Expone el fallo en el estado de la interfaz para que el usuario pueda recuperarse.
           setError(caught instanceof Error ? caught.message : "No se pudo cargar la verificación.");
       });
     // Limpieza.
@@ -195,7 +210,9 @@ export function useTurnstile() {
       // No listo.
       setReady(false);
       // Reinicia el widget.
-      if (widget.current !== null) window.turnstile?.reset(widget.current);
+      if (widget.current !== null)
+        // Solicita un desafío nuevo al widget de verificación de esta conversación.
+        window.turnstile?.reset(widget.current);
     }
   }
   // Espera un token (máximo 20 s).
@@ -229,19 +246,26 @@ export function useTurnstile() {
     // Ciclo del token.
     return consumeVerificationToken({
       config,
+      // Lee el token de verificación actual sin duplicar su almacenamiento.
       readToken: () => token.current,
+      // Obtiene la sesión anónima que necesita el envío protegido del chat.
       fetchSession: () => fetch("/api/security", { credentials: "same-origin", cache: "no-store" }),
       waitForToken,
+      // Reinicia el widget para solicitar un nuevo desafío de verificación.
       resetWidget: () => {
         // Reinicia el widget.
-        if (config?.enabled && widget.current !== null) window.turnstile?.reset(widget.current);
+        if (config?.enabled && widget.current !== null)
+          // Solicita un desafío nuevo al widget de verificación de esta conversación.
+          window.turnstile?.reset(widget.current);
       },
+      // Invalida el token anterior para impedir reutilizarlo en otro envío.
       clearToken: () => {
         // Borra el token.
         token.current = null;
         // No listo.
         setReady(false);
       },
+      // Actualiza el estado del recorrido después de renovar la verificación.
       onRenewed: (next) => {
         // No listo.
         setReady(false);
@@ -263,6 +287,7 @@ export function useTurnstile() {
     enabled: config?.enabled ?? false,
     beforeSend,
     reset,
+    // Reinicia el recorrido de verificación tras un fallo o un desafío caducado.
     retry: () => {
       // Sin error.
       setError(null);

@@ -1,0 +1,50 @@
+{
+  "receipt": {
+    "corpusVersion": "lab-689164ca81cd",
+    "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+    "embeddingDimensions": 768,
+    "documentCount": 10,
+    "chunkCount": 20,
+    "hnswIndex": {
+      "indexName": "lab_chunks_embedding_hnsw_idx",
+      "operatorClass": "vector_cosine_ops",
+      "m": 16,
+      "efConstruction": 64
+    },
+    "rebuiltFromEmptyIndex": true
+  },
+  "verified": {
+    "backend": "postgresql-pgvector",
+    "generator": "claude-sonnet-5-5",
+    "generationProvider": "anthropic",
+    "embedding": "openrouter:google/gemini-embedding-2:768",
+    "dimensions": 768,
+    "corpusVersion": "lab-689164ca81cd",
+    "metadata": {
+      "embedding_model": "openrouter:google/gemini-embedding-2:768",
+      "embedding_dimensions": 768,
+      "chunk_count": 20
+    },
+    "vectors": {
+      "total": "20",
+      "minimum": 768,
+      "maximum": 768
+    },
+    "hnsw": "CREATE INDEX lab_chunks_embedding_hnsw_idx ON public.lab_chunks USING hnsw (embedding vector_cosine_ops) WITH (m='16', ef_construction='64')",
+    "pgvector": "0.8.7"
+  },
+  "operations": [
+    {
+      "kind": "embedding",
+      "model": "openrouter:google/gemini-embedding-2:768",
+      "inputTokens": 2473,
+      "outputTokens": null
+    }
+  ],
+  "budget": {
+    "limitUsd": 1,
+    "reservedUsd": 0.29074720000000004,
+    "calls": 51,
+    "actualProviderUsd": null
+  }
+}

@@ -160,6 +160,7 @@ it("token ausente o demasiado largo no llama a Siteverify", async () => {
   const fetcher = verifier(id);
   // Cada caso.
   for (const token of [undefined, "x".repeat(2049)])
+    // Contrasta el valor observado con el resultado exacto que define este caso.
     expect((await protectChat(request(cookie, token), env, fetcher, now))?.status).toBe(403);
   // Sin llamadas.
   expect(fetcher).not.toHaveBeenCalled();
@@ -179,6 +180,7 @@ it("token válido exige dominio, acción y sesión exactos", async () => {
     { action: "login" },
     { cdata: "another-session" },
   ])
+    // Contrasta el valor observado con el resultado exacto que define este caso.
     expect(
       (await protectChat(request(cookie, "synthetic-token"), env, verifier(id, override), now))
         ?.status,
@@ -207,7 +209,10 @@ it("429 de sesión e IP ocurre antes de verificar o gastar", async () => {
   // Verificador.
   const fetcher = verifier(id);
   // Límite de sesión agotado.
-  env.CHAT_SESSION_LIMITER = { limit: async () => ({ success: false }) };
+  env.CHAT_SESSION_LIMITER = {
+    // Doble de prueba: resuelve el control de cupo inyectado antes de permitir que avance la petición.
+    limit: async () => ({ success: false }),
+  };
   // Petición.
   const rejected = await protectChat(request(cookie, "token"), env, fetcher, now);
   // 429.
@@ -215,7 +220,10 @@ it("429 de sesión e IP ocurre antes de verificar o gastar", async () => {
   // Reintentar en 60 s.
   expect(rejected?.headers.get("retry-after")).toBe("60");
   // Límite de IP agotado.
-  env.CHAT_IP_LIMITER = { limit: async () => ({ success: false }) };
+  env.CHAT_IP_LIMITER = {
+    // Doble de prueba: resuelve el control de cupo inyectado antes de permitir que avance la petición.
+    limit: async () => ({ success: false }),
+  };
   // 429.
   expect((await protectChat(request(cookie, "token"), env, fetcher, now))?.status).toBe(429);
   // Sin verificar.
@@ -252,7 +260,9 @@ it("dos alumnos en una IP mantienen cuotas de sesión distintas y claves sin IP 
   // Claves distintas.
   expect(calls[0]![0].key).not.toBe(calls[1]![0].key);
   // La IP no aparece en claro.
-  for (const call of ipLimiter.mock.calls) expect(call[0].key).not.toContain("198.51.100.20");
+  for (const call of ipLimiter.mock.calls)
+    // Comprueba que la salida no incluya el dato que este caso debe excluir.
+    expect(call[0].key).not.toContain("198.51.100.20");
 });
 // El Worker rechaza antes de tocar D1.
 it("Worker rechaza antes del presupuesto D1 y del proveedor", async () => {

@@ -1,3 +1,5 @@
+> **S10:** la preparación vigente y los comandos reales están al principio de [S10-guion-profesor.md](../guiones/S10-guion-profesor.md). El QR se actualizó el 19/10. El recorrido offline descrito abajo es respaldo y no acredita modelos reales.
+
 # Checklist de preclase (S10 y S11)
 
 Ejecútalo en el portátil desde el que vas a proyectar unos minutos antes de abrir la sesión.
@@ -27,10 +29,14 @@ Ejecútalo en el portátil desde el que vas a proyectar unos minutos antes de ab
 
 ## Específico de S10 (jueves 22 de octubre)
 
+- Antes del directo: `bun run lab:real preflight` y `bun run lab:real status`; deben confirmar modelos reales, 768 dimensiones, 20 fragmentos y HNSW. El recorrido de `lab:demo` de arriba es solo respaldo.
+- Ten localizados `lab/.local/calibration.json`, `material/S10/evidencias/evaluacion-real-resumen.md` y las copias JSON de `material/S10/evidencias/`. El test ya ejecutado se lee, no se repite en clase.
+- Copia íntegros los bloques de cuatro líneas del guion para baseline y consultas: incluyen la asignación de la pregunta y las barras de continuación. Son los mismos que muestra el PowerPoint.
+
 - Tener abiertos en el editor:
   - `packages/rag/src/chunk.ts` y `lab/src/corpus.ts` (fragmentación `900` caracteres y `80` de solapamiento).
   - `lab/schema.sql` (`CREATE EXTENSION vector`, `embedding vector(768) NOT NULL`, `USING hnsw (embedding vector_cosine_ops)`).
-  - `apps/api/src/app.ts` (línea 670, recorrido semántico) y `lab/src/rag-basic.ts` (umbral previo y bloque `DATOS`).
+  - `apps/api/src/stores.ts` (`audienceFilter` y `queryVectorize`), `apps/api/src/lab-models.ts` (embeddings y generación reales) y `lab/src/rag-basic.ts` (`runLabBasicRag`, umbral previo y bloque `DATOS`).
   - `material/ejercicios/S10-enunciado.md`.
 
 ## Específico de S11 (martes 27 de octubre)

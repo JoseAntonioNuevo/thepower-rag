@@ -51,6 +51,7 @@ describe("adaptador Firecrawl con red simulada", () => {
     const search = createFirecrawlSearch({
       apiKey: "test-key",
       usdPerCredit: null,
+      // Doble de prueba: atiende la petición HTTP con el adaptador y el entorno de este recorrido.
       fetch: async (url, init) => {
         // Cuenta.
         calls += 1;
@@ -108,6 +109,7 @@ describe("adaptador Firecrawl con red simulada", () => {
     const search = createFirecrawlSearch({
       apiKey: "test-key",
       usdPerCredit: 0.01,
+      // Doble de prueba: atiende la petición HTTP con el adaptador y el entorno de este recorrido.
       fetch: async () => jsonResponse({ success: true, data: { web: [] }, creditsUsed: 2 }),
     });
     // Busca.
@@ -125,6 +127,7 @@ describe("adaptador Firecrawl con red simulada", () => {
     const search = createFirecrawlSearch({
       apiKey: "test-key",
       usdPerCredit: 0.01,
+      // Doble de prueba: atiende la petición HTTP con el adaptador y el entorno de este recorrido.
       fetch: async () => jsonResponse({ success: true, data: { web: [] } }),
     });
     // Busca.
@@ -144,6 +147,7 @@ describe("adaptador Firecrawl con red simulada", () => {
     const search = createFirecrawlSearch({
       apiKey: "  ",
       usdPerCredit: null,
+      // Doble de prueba: atiende la petición HTTP con el adaptador y el entorno de este recorrido.
       fetch: async () => {
         // Cuenta.
         calls += 1;
@@ -168,12 +172,14 @@ describe("adaptador Firecrawl con red simulada", () => {
     const unauthorized = createFirecrawlSearch({
       apiKey: "test-key",
       usdPerCredit: null,
+      // Doble de prueba: atiende la petición HTTP con el adaptador y el entorno de este recorrido.
       fetch: async () => jsonResponse({ error: "no" }, 401),
     });
     // Responde 503.
     const unavailable = createFirecrawlSearch({
       apiKey: "test-key",
       usdPerCredit: null,
+      // Doble de prueba: atiende la petición HTTP con el adaptador y el entorno de este recorrido.
       fetch: async () => jsonResponse({ error: "down" }, 503),
     });
     // Busca con el 401.
@@ -198,12 +204,14 @@ describe("adaptador Firecrawl con red simulada", () => {
     const malformed = createFirecrawlSearch({
       apiKey: "test-key",
       usdPerCredit: null,
+      // Doble de prueba: atiende la petición HTTP con el adaptador y el entorno de este recorrido.
       fetch: async () => new Response("no-json", { status: 200 }),
     });
     // Responde success false.
     const shaped = createFirecrawlSearch({
       apiKey: "test-key",
       usdPerCredit: null,
+      // Doble de prueba: atiende la petición HTTP con el adaptador y el entorno de este recorrido.
       fetch: async () => jsonResponse({ success: false }),
     });
     // Busca.
@@ -242,6 +250,7 @@ describe("adaptador Firecrawl con red simulada", () => {
     // Stream de 10 bytes.
     const stream = new Response(
       new ReadableStream({
+        // Doble de prueba: inicializa la fuente del stream y encola los datos definidos por este adaptador.
         start(controller) {
           // Encola el texto.
           controller.enqueue(new TextEncoder().encode("0123456789"));
@@ -256,6 +265,7 @@ describe("adaptador Firecrawl con red simulada", () => {
     const search = createFirecrawlSearch({
       apiKey: "test-key",
       usdPerCredit: null,
+      // Doble de prueba: atiende la petición HTTP con el adaptador y el entorno de este recorrido.
       fetch: async () =>
         new Response("x", {
           status: 200,
@@ -279,7 +289,9 @@ describe("adaptador Firecrawl con red simulada", () => {
     const reader = createFirecrawlReader({
       apiKey: "test-key",
       usdPerCredit: null,
+      // Doble de prueba: proporciona el reloj del recorrido para calcular plazos y tiempos transcurridos.
       now: () => Date.parse("2026-10-10T00:00:00.000Z"),
+      // Doble de prueba: atiende la petición HTTP con el adaptador y el entorno de este recorrido.
       fetch: async (url, init) => {
         // URL de lectura.
         expect(url).toBe(FIRECRAWL_SCRAPE_URL);
@@ -335,6 +347,7 @@ describe("adaptador Firecrawl con red simulada", () => {
     const reader = createFirecrawlReader({
       apiKey: "test-key",
       usdPerCredit: null,
+      // Doble de prueba: atiende la petición HTTP con el adaptador y el entorno de este recorrido.
       fetch: async (_url, init) => {
         // La señal llega cancelada.
         expect(init?.signal?.aborted).toBe(true);

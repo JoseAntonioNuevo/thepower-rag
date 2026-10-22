@@ -142,90 +142,113 @@ export class PgVectorDatabaseStore implements LabVectorStore {
     // Lee y aplica las sentencias de `lab/schema.sql` (CREATE EXTENSION vector, tablas e índice HNSW).
     const statements = parseLabSchemaStatements(readFileSync(this.schemaPath, "utf8"));
     for (const statement of statements) {
+      // Aplica cada sentencia de preparación del esquema mediante la conexión inyectada.
       await this.sql.query(statement);
     }
-    // Vacía las tablas para garantizar reconstrucción desde índice vacío.
-    await this.sql.query("TRUNCATE TABLE lab_corpus_versions CASCADE");
-    // Comprueba de vuelta que el índice quedó con 0 fragmentos.
-    const emptyCount = await this.countChunks();
-    if (emptyCount !== 0) {
-      throw new Error("El índice no quedó vacío antes de reconstruir.");
-    }
-    // Calcula los vectores de 768 dimensiones para todos los fragmentos preparados (incluyendo título y sección).
+    // Calcula y valida todo antes de tocar el índice anterior: un fallo de API lo conserva.
     const vectors = await input.embedder.embed(
       input.corpus.chunks.map((chunk) => `${chunk.title} ${chunk.section}\n${chunk.content}`),
     );
-    // Comprueba que haya un vector de 768 dimensiones por fragmento.
+    // Comprueba la correspondencia uno a uno entre fragmentos y vectores antes de tocar el índice anterior.
     if (vectors.length !== input.corpus.chunks.length) {
+      // Detiene el recorrido con el diagnóstico: El número de vectores devueltos no coincide con los fragmentos preparados.
       throw new Error("El número de vectores devueltos no coincide con los fragmentos preparados.");
     }
-    // Inserta el registro de versión del corpus.
-    await this.sql.query(
-      `INSERT INTO lab_corpus_versions (
+    // Valida las 768 componentes finitas de cada vector antes de entrar en la transacción.
+    for (const vector of vectors) assertVector768(vector, "reconstrucción PostgreSQL");
+    // El ejecutor del CLI mantiene una sola conexión; rollback conserva la versión anterior.
+    await this.sql.query("BEGIN");
+    try {
+      // Vacía las tablas para garantizar reconstrucción desde índice vacío.
+      await this.sql.query("TRUNCATE TABLE lab_corpus_versions CASCADE");
+      // Comprueba de vuelta que el índice quedó con 0 fragmentos.
+      const emptyCount = await this.countChunks();
+      // Confirma dentro de la transacción que el vaciado no dejó fragmentos antiguos.
+      if (emptyCount !== 0) {
+        // Detiene el recorrido con el diagnóstico: El índice no quedó vacío antes de reconstruir.
+        throw new Error("El índice no quedó vacío antes de reconstruir.");
+      }
+      // Inserta el registro de versión del corpus.
+      await this.sql.query(
+        `INSERT INTO lab_corpus_versions (
         corpus_version, embedding_model, embedding_dimensions,
         chunk_size, chunk_overlap, document_count, chunk_count
       ) VALUES ($1, $2, $3, $4, $5, $6, $7)`,
-      [
-        input.corpus.corpusVersion,
-        input.embedder.modelId,
-        LAB_EMBEDDING_DIMENSIONS,
-        input.corpus.chunking.maxChars,
-        input.corpus.chunking.overlapChars,
-        input.corpus.documents.length,
-        input.corpus.chunks.length,
-      ],
-    );
-    // Inserta cada documento limpio.
-    for (const doc of input.corpus.documents) {
-      await this.sql.query(
-        `INSERT INTO lab_documents (
+        [
+          input.corpus.corpusVersion,
+          input.embedder.modelId,
+          LAB_EMBEDDING_DIMENSIONS,
+          input.corpus.chunking.maxChars,
+          input.corpus.chunking.overlapChars,
+          input.corpus.documents.length,
+          input.corpus.chunks.length,
+        ],
+      );
+      // Inserta cada documento limpio.
+      for (const doc of input.corpus.documents) {
+        // Escribe el documento con parámetros separados del SQL para conservar texto y metadatos.
+        await this.sql.query(
+          `INSERT INTO lab_documents (
           document_id, corpus_version, title, source_path, content_hash
         ) VALUES ($1, $2, $3, $4, $5)`,
-        [doc.documentId, input.corpus.corpusVersion, doc.title, doc.sourcePath, doc.contentHash],
-      );
-    }
-    // Inserta cada fragmento con su literal `vector(768)`.
-    for (let index = 0; index < input.corpus.chunks.length; index += 1) {
-      // Fragmento y vector correspondientes.
-      const chunk = input.corpus.chunks[index]!;
-      const vector = vectors[index]!;
-      const vectorLiteral = formatPgVectorLiteral(vector);
-      await this.sql.query(
-        `INSERT INTO lab_chunks (
+          [doc.documentId, input.corpus.corpusVersion, doc.title, doc.sourcePath, doc.contentHash],
+        );
+      }
+      // Inserta cada fragmento con su literal `vector(768)`.
+      for (let index = 0; index < input.corpus.chunks.length; index += 1) {
+        // Fragmento y vector correspondientes.
+        const chunk = input.corpus.chunks[index]!;
+        // Toma el vector de la misma posición que el fragmento preparado.
+        const vector = vectors[index]!;
+        // Serializa el vector validado al literal que acepta el tipo vector(768).
+        const vectorLiteral = formatPgVectorLiteral(vector);
+        // Inserta el fragmento y su embedding con identidad de corpus, modelo y dimensión.
+        await this.sql.query(
+          `INSERT INTO lab_chunks (
           chunk_id, corpus_version, document_id, ordinal, title, section,
           content, embedding_model, embedding_dimensions, embedding
         ) VALUES ($1, $2, $3, $4, $5, $6, $7, $8, $9, $10::vector(768))`,
-        [
-          chunk.chunkId,
-          chunk.corpusVersion,
-          chunk.documentId,
-          chunk.ordinal,
-          chunk.title,
-          chunk.section,
-          chunk.content,
-          input.embedder.modelId,
-          LAB_EMBEDDING_DIMENSIONS,
-          vectorLiteral,
-        ],
-      );
+          [
+            chunk.chunkId,
+            chunk.corpusVersion,
+            chunk.documentId,
+            chunk.ordinal,
+            chunk.title,
+            chunk.section,
+            chunk.content,
+            input.embedder.modelId,
+            LAB_EMBEDDING_DIMENSIONS,
+            vectorLiteral,
+          ],
+        );
+      }
+      // Lee de vuelta el conteo de fragmentos insertados.
+      const chunkCount = await this.countChunks(input.corpus.corpusVersion);
+      // Comprueba que la lectura de vuelta tenga exactamente el número de fragmentos esperado.
+      if (chunkCount !== input.corpus.chunks.length) {
+        // Interrumpe esta rama y propaga el motivo al manejador de errores del recorrido.
+        throw new Error(
+          "La lectura de vuelta en PostgreSQL no coincide con los fragmentos insertados.",
+        );
+      }
+      // Publica el índice completo solo después de comprobarlo en la misma transacción.
+      await this.sql.query("COMMIT");
+      // Devuelve el recibo verificado.
+      return {
+        corpusVersion: input.corpus.corpusVersion,
+        embeddingModel: input.embedder.modelId,
+        embeddingDimensions: LAB_EMBEDDING_DIMENSIONS,
+        documentCount: input.corpus.documents.length,
+        chunkCount,
+        hnswIndex: LAB_HNSW_INDEX,
+        rebuiltFromEmptyIndex: true,
+      };
+    } catch (error) {
+      // Deshace las escrituras de esta transacción para conservar la versión anterior si falla un paso.
+      await this.sql.query("ROLLBACK");
+      // Propaga el error original para que el llamador no confunda el fallo con un resultado válido.
+      throw error;
     }
-    // Lee de vuelta el conteo de fragmentos insertados.
-    const chunkCount = await this.countChunks(input.corpus.corpusVersion);
-    if (chunkCount !== input.corpus.chunks.length) {
-      throw new Error(
-        "La lectura de vuelta en PostgreSQL no coincide con los fragmentos insertados.",
-      );
-    }
-    // Devuelve el recibo verificado.
-    return {
-      corpusVersion: input.corpus.corpusVersion,
-      embeddingModel: input.embedder.modelId,
-      embeddingDimensions: LAB_EMBEDDING_DIMENSIONS,
-      documentCount: input.corpus.documents.length,
-      chunkCount,
-      hnswIndex: LAB_HNSW_INDEX,
-      rebuiltFromEmptyIndex: true,
-    };
   }
 
   // Busca vecinos por distancia coseno (`<=>`) sobre la columna `vector(768)`.
@@ -322,25 +345,33 @@ export class InMemoryPgVectorStore implements LabVectorStore {
   }): Promise<LabRebuildReceipt> {
     // Exige 768 dimensiones exactas.
     if (input.embedder.dimensions !== LAB_EMBEDDING_DIMENSIONS) {
+      // Detiene el recorrido con el diagnóstico: El almacén pgvector exige vectores de 768 dimensiones.
       throw new Error("El almacén pgvector exige vectores de 768 dimensiones.");
     }
     // Vacía documentos y fragmentos previos (índice vacío).
     this.documents = [];
+    // Vacía las filas del doble en memoria antes de reconstruir su índice de demostración.
     this.rows = [];
     // Calcula los vectores de 768 dimensiones (incluyendo título y sección).
     const vectors = await input.embedder.embed(
       input.corpus.chunks.map((chunk) => `${chunk.title} ${chunk.section}\n${chunk.content}`),
     );
+    // También en memoria exige un vector por fragmento para reproducir el contrato del almacén.
     if (vectors.length !== input.corpus.chunks.length) {
+      // Detiene el recorrido con el diagnóstico: El número de vectores no coincide con el número de fragmentos.
       throw new Error("El número de vectores no coincide con el número de fragmentos.");
     }
     // Guarda los documentos.
     this.documents = [...input.corpus.documents];
     // Valida e inserta cada fragmento con su vector de 768 dimensiones.
     for (let index = 0; index < input.corpus.chunks.length; index += 1) {
+      // Toma el fragmento preparado correspondiente a la posición actual.
       const chunk = input.corpus.chunks[index]!;
+      // Asocia el vector devuelto en esa misma posición del lote.
       const vector = vectors[index]!;
+      // Aplica la validación de 768 dimensiones también al doble en memoria.
       assertVector768(vector, `rebuildFromEmptyIndex(${chunk.chunkId})`);
+      // Guarda fragmento, documento y vector juntos para simular las consultas posteriores.
       this.rows.push({
         ...chunk,
         embeddingModel: input.embedder.modelId,
@@ -378,7 +409,9 @@ export class InMemoryPgVectorStore implements LabVectorStore {
     // Calcula distancia coseno `<=>` (menor = más cercano) y similitud `1 - distancia`.
     return candidates
       .map((row): LabVectorHit => {
+        // Calcula la distancia coseno que en PostgreSQL produciría el operador <=>.
         const cosineDistance = cosineDistance768(input.queryVector, row.embedding);
+        // Calcula la similitud coseno equivalente que usará el umbral de selección.
         const similarity = cosineSimilarity768(input.queryVector, row.embedding);
         return {
           chunkId: row.chunkId,
@@ -405,6 +438,7 @@ export class InMemoryPgVectorStore implements LabVectorStore {
   public async countChunks(corpusVersion?: string): Promise<number> {
     // Si se indica versión, filtra por ella.
     if (corpusVersion !== undefined) {
+      // Cuenta solo las filas del corpus solicitado, igual que el filtro del almacén SQL.
       return this.rows.filter((row) => row.corpusVersion === corpusVersion).length;
     }
     return this.rows.length;

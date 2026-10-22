@@ -291,7 +291,12 @@ export interface ResearchState {
 // Canal que conserva el último valor escrito.
 function last<T>() {
   // Reducer: el valor nuevo sustituye al anterior.
-  return Annotation<T>({ reducer: (_left: T, right: T) => right, default: () => undefined as T });
+  return Annotation<T>({
+    // Combina la actualización del estado con su valor anterior según esta regla de LangGraph.
+    reducer: (_left: T, right: T) => right,
+    // Crea el valor inicial independiente del canal de estado de LangGraph.
+    default: () => undefined as T,
+  });
 }
 
 // Estado del grafo: un canal «último valor» por campo.

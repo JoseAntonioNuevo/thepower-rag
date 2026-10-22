@@ -1,8 +1,16 @@
-# Estado publicado · 11 de octubre de 2026
+# Estado publicado · 18 de octubre de 2026
 
-Aplicación real: https://rag-thepower.josenuevo.dev. Sin RAG, RAG básico y CRAG usan los servicios remotos. [Operación y límites verificados](docs/despliegue-real.md). [Comparación de 40 respuestas](material/comparacion/resultados/tabla-resultados.md). El arranque local sigue siendo una demo offline.
+**S10 lista para seguir en directo:** [guion 30+50+10](material/guiones/S10-guion-profesor.md), [presentación](material/presentaciones/S10-rag-basico.pptx), [laboratorio real](lab/README.md) y [ensayo verificado](material/S10/evidencias/evaluacion-real-resumen.md). El respaldo offline está identificado y sus cifras no se atribuyen a modelos reales.
+
+Aplicación real: https://rag-thepower.josenuevo.dev. Sin RAG, RAG básico y CRAG usan los servicios remotos. [Operación y límites verificados](docs/despliegue-real.md). [Comparación histórica de 40 respuestas](material/comparacion/resultados/tabla-resultados.md). El arranque local sigue siendo una demo offline.
 
 S12 también está publicado: conversaciones aisladas, investigación asíncrona, contabilidad durable e imagen, audio y voz opcional. Su configuración y la evidencia de publicación están en [despliegue de S12](docs/s12-cloud-deployment.md).
+
+## Perfil de calidad publicado · 18 de octubre de 2026
+
+**Sonnet 5.5** está publicado para el generador de sin RAG/RAG/CRAG y su evaluador, con 30 s por llamada y un plazo único de CRAG de **60 segundos**. La versión `c9eae749-6cd4-4911-95a4-3cbb8390d2d9` recibe el 100 % del tráfico; se verificaron health, una respuesta RAG y otra CRAG con fuentes. La comparativa dirigida completó 28 llamadas; el conjunto reservado de veinte preguntas sigue sin ejecutar con Sonnet. La [evidencia de publicación y pruebas](docs/evidence/sonnet-quality-2026-10-18.md) separa estos resultados de los históricos. S12 mantiene Haiku, Whisper y Aura.
+
+Tras las dos pruebas quedan **0,6283574 USD** para nuevas reservas públicas. Un turno CRAG Sonnet requiere reservar **0,9000885 USD** y quedará bloqueado por el tope acumulado existente. No se ha reiniciado ni ampliado ese presupuesto. El [informe de migración](docs/sonnet-crag.md) explica costes y límites.
 
 # Asistente RAG del AI Engineer
 
@@ -16,7 +24,7 @@ S10, el 22 de octubre de 2026, cubre las dos primeras etapas. S11, el 27 de octu
 
 1. **Sin RAG.** Conversación sin documentos. En demo es un stream sin modelo. En real llama a la API de Claude.
 2. **RAG básico.** La configuración de referencia de S10 (`RAG_CONTEXT_MODE=semantic`) embebe la consulta, busca en Vectorize con filtro de grupo, aplica el umbral calibrado (`0,50`) antes de llamar al modelo y responde con citas o rechaza sin generar. La variante `RAG_CONTEXT_MODE=complete` lee de D1 todos los fragmentos autorizados del curso cuando se quiere mostrar contexto completo sobre un corpus pequeño.
-3. **CRAG.** Un grafo correctivo con nodos separados de reordenamiento (`rank`, escala `[0, 1]`) y valoración de suficiencia (`assess`, umbrales `CRAG_SCORE_THRESHOLDS`), tres búsquedas y dos reformulaciones como máximo, un solo plazo de 20 segundos y la ordenación validada. En demo usa guiones. En real, si falta configuración o una sesión de gasto, no llama al proveedor y no usa otra etapa.
+3. **CRAG.** Un grafo correctivo con nodos separados de reordenamiento (`rank`, escala `[0, 1]`) y valoración de suficiencia (`assess`, umbrales `CRAG_SCORE_THRESHOLDS`), tres búsquedas y dos reformulaciones como máximo, un solo plazo por turno (20 s por defecto; 60 s en el perfil Sonnet) y la ordenación validada. En demo usa guiones. En real, si falta configuración o una sesión de gasto, no llama al proveedor y no usa otra etapa.
 4. **Investigación.** Plan y fuentes externas acotados, conversaciones aisladas, Workflow asíncrono y un presupuesto propio. Admite imagen PNG/JPEG, audio WAV corto y voz opcional. La demostración local conserva los guiones; producción usa Tavily y los adaptadores reales configurados.
 
 ## Arquitectura
@@ -27,7 +35,7 @@ El navegador habla con un único Worker. Workers Static Assets sirve React. Hono
 - D1 guarda texto, metadatos, versiones y registros de ejecución.
 - R2 guarda el corpus privado y, en S12, adjuntos de investigación en un bucket aparte.
 - Workers AI ejecuta embeddings con `@cf/baai/bge-m3`; la dimensión observada en esta cuenta es 1024.
-- La versión publicada genera con `claude-haiku-5-5` por la API de Anthropic, y el evaluador de CRAG usa el mismo modelo. El código admite cualquier otro proveedor y modelo: [elegir proveedor y modelo](#elegir-proveedor-y-modelo).
+- El despliegue documentado del 11/10 generaba con `claude-haiku-5-5`. La configuración preparada del 18/10 usa `claude-sonnet-5-5` para generación y evaluación, pendiente de publicación. El código admite cualquier otro proveedor y modelo: [elegir proveedor y modelo](#elegir-proveedor-y-modelo).
 
 El perfil demo no usa esos servicios. Usa un índice lexical de 128 dimensiones, etiquetado como prueba. No es una búsqueda semántica ni Vectorize.
 
@@ -107,7 +115,7 @@ El código no está atado a Claude. `LLM_PROVIDER` elige el proveedor de todos l
 
 | Para usar…                                                                                       | `LLM_PROVIDER` | Clave                                                      | Ejemplo de `MODEL_ID`                     |
 | ------------------------------------------------------------------------------------------------ | -------------- | ---------------------------------------------------------- | ----------------------------------------- |
-| Claude por la API de Anthropic (versión publicada)                                               | `anthropic`    | `ANTHROPIC_API_KEY` (y `ANTHROPIC_WORKSPACE_ID`, opcional) | `claude-haiku-5-5`                        |
+| Claude por la API de Anthropic (perfil Sonnet publicado)                                         | `anthropic`    | `ANTHROPIC_API_KEY` (y `ANTHROPIC_WORKSPACE_ID`, opcional) | `claude-sonnet-5-5`                       |
 | GPT por la API de OpenAI                                                                         | `openai`       | `OPENAI_API_KEY`                                           | `gpt-6-luna`                              |
 | **Cualquier modelo de OpenRouter**: Claude, GPT, Gemini, GLM, Kimi, DeepSeek, Qwen, Llama, Grok… | `openrouter`   | `OPENROUTER_API_KEY`                                       | `z-ai/glm-5.3` (ID exacto de su catálogo) |
 | Gemini con clave de Google AI Studio                                                             | `gemini`       | `GEMINI_API_KEY`                                           | `gemini-3.1-flash-lite`                   |
@@ -127,7 +135,7 @@ RESEARCH_MODEL_ID=z-ai/glm-5.3
 Para cambiar de proveedor:
 
 1. Pon `LLM_PROVIDER`, su clave y los modelos en `apps/web/.dev.vars`. En local, `bun run dev` también toma `LLM_PROVIDER` y las claves del `.env` de la raíz si `.dev.vars` no las trae; `APP_MODE` y los modelos tienen que estar en `.dev.vars`.
-2. Pon las tarifas del modelo elegido en USD por millón de tokens: `MODEL_INPUT_USD_PER_MILLION` y `MODEL_OUTPUT_USD_PER_MILLION`; `EVALUATOR_*` si el evaluador es otro modelo, y `RESEARCH_*` para la investigación. Sirven para el coste mostrado y para reservar presupuesto. Sin tarifa, el coste mostrado queda `null`, salvo Claude Haiku 5.5, que trae la publicada. Un perfil con presupuesto, como el publicado o `bun run dev:real`, no admite consultas sin tarifa.
+2. Pon las tarifas del modelo elegido en USD por millón de tokens: `MODEL_INPUT_USD_PER_MILLION` y `MODEL_OUTPUT_USD_PER_MILLION`; `EVALUATOR_*` si el evaluador es otro modelo, y `RESEARCH_*` para la investigación. Sirven para el coste mostrado y para reservar presupuesto. Sin tarifa, el coste mostrado queda `null`, salvo los perfiles Anthropic conocidos (Haiku/Sonnet/Opus), que tienen tarifas documentadas. En el perfil público las tarifas explícitas siguen siendo obligatorias para reservar. Un perfil con presupuesto, como el publicado o `bun run dev:real`, no admite consultas sin tarifa.
 3. `bun run preflight` muestra el proveedor, el razonamiento y si está la clave, sin enseñarla ni llamar a la red.
 4. Arranca con `bun run dev`. Sin RAG solo necesita lo anterior. RAG básico y CRAG necesitan además los bindings de Cloudflare.
 

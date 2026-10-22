@@ -1361,7 +1361,9 @@ async function readLimited(
     // Siguiente.
     const next = await reader.read();
     // Fin.
-    if (next.done) break;
+    if (next.done)
+      // Detiene el bucle al alcanzar la condición de parada de esta rama.
+      break;
     // Suma.
     total += next.value.byteLength;
     // Supera el tope.

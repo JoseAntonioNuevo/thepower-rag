@@ -209,6 +209,7 @@ export function memoryMediaBucket(): ResearchMediaBucket {
   const objects = new Map<string, { bytes: Uint8Array; mime: string }>();
   // Implementación de los cuatro métodos.
   return {
+    // Guarda el recurso en el almacén con el contrato que utiliza este adaptador.
     async put(key, value, options) {
       // Copia los bytes para no compartir memoria.
       const copy = new Uint8Array(value.byteLength);
@@ -220,11 +221,14 @@ export function memoryMediaBucket(): ResearchMediaBucket {
         mime: options?.httpMetadata?.contentType ?? "application/octet-stream",
       });
     },
+    // Obtiene el recurso solicitado mediante el adaptador de almacenamiento o Workflow.
     async get(key, options) {
       // Objeto.
       const found = objects.get(key);
       // No existe.
-      if (!found) return null;
+      if (!found)
+        // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+        return null;
       // Inicio del rango.
       const offset = options?.range?.offset ?? 0;
       // Longitud del rango.
@@ -239,16 +243,19 @@ export function memoryMediaBucket(): ResearchMediaBucket {
       return {
         size: found.bytes.length,
         httpMetadata: { contentType: found.mime },
+        // Entrega los bytes del recurso con el contrato binario que espera el consumidor.
         arrayBuffer: () => Promise.resolve(copy.buffer),
         range: options?.range ? { offset, length: copy.byteLength } : undefined,
       };
     },
+    // Lee los metadatos del objeto sin devolver su cuerpo completo.
     async head(key) {
       // Objeto.
       const found = objects.get(key);
       // Tamaño y tipo o null.
       return found ? { size: found.bytes.length, httpMetadata: { contentType: found.mime } } : null;
     },
+    // Elimina el objeto solicitado del almacén de este adaptador.
     async delete(key) {
       // Borra.
       objects.delete(key);
@@ -278,7 +285,9 @@ async function readBody(
       // Siguiente trozo.
       const next = await reader.read();
       // Fin.
-      if (next.done) break;
+      if (next.done)
+        // Detiene el bucle al alcanzar la condición de parada de esta rama.
+        break;
       // Guarda.
       chunks.push(next.value);
       // Suma.
@@ -311,7 +320,9 @@ export async function readMediaObject(
   // Pide el objeto o el rango.
   const object = await bucket.get(key, range ? { range } : undefined);
   // No existe.
-  if (!object) return null;
+  if (!object)
+    // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+    return null;
   // Cuerpo.
   const body = await readBody(object);
   // Objeto normalizado.
@@ -340,7 +351,9 @@ export async function purgeOrphanMedia(
   // Cada uno.
   for (const row of rows) {
     // Borra la fila; si otro proceso ya la borró, se salta.
-    if (!(await deleteMediaRow(database, row.id))) continue;
+    if (!(await deleteMediaRow(database, row.id)))
+      // Omite el resto de esta iteración y pasa al siguiente elemento.
+      continue;
     // Borra el objeto de R2.
     await bucket.delete(row.object_key);
     // Cuenta.
@@ -414,7 +427,9 @@ export function parseRange(
   total: number,
 ): { start: number; end: number } | "invalid" | null {
   // Sin cabecera.
-  if (header === null || header.length === 0) return null;
+  if (header === null || header.length === 0)
+    // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+    return null;
   // Formato bytes=inicio-fin.
   const match = /^bytes=(\d+)-(\d*)$/.exec(header.trim());
   // No coincide: inválida.

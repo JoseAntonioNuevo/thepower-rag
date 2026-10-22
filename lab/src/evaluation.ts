@@ -337,11 +337,14 @@ function gradeQuestionResult(input: {
 }): { correct: boolean; sourceSupported: boolean } {
   // Si la pregunta no tiene respuesta en el corpus, solo es correcta si rechaza sin citar fuentes falsas.
   if (!input.testCase.answerable) {
+    // Un negativo es correcto solo si se rechaza y no se acompaña de citas aparentando evidencia.
     const refusedCleanly = input.decision === "refuse" && input.citations.length === 0;
+    // Usa ese mismo rechazo limpio para las métricas de corrección y respaldo documental.
     return { correct: refusedCleanly, sourceSupported: refusedCleanly };
   }
   // En preguntas respondibles, un rechazo es un fallo de recuperación o de juicio.
   if (input.decision !== "answer" || input.citations.length === 0) {
+    // Un caso que debería responderse falla si la ejecución no ha producido una respuesta válida.
     return { correct: false, sourceSupported: false };
   }
   // Comprueba que cada documento esperado esté citado al menos en un fragmento.
@@ -350,9 +353,11 @@ function gradeQuestionResult(input: {
   );
   // Comprueba que todos los datos o cifras esperados aparezcan en el texto de la respuesta.
   const normalizedAnswer = input.answer.toLowerCase();
+  // Comprueba que la respuesta normalizada contenga todos los hechos esperados de este ejercicio.
   const factsPresent = input.testCase.expectedFactsOrRefusal.every((fact) =>
     normalizedAnswer.includes(fact.toLowerCase()),
   );
+  // Combina presencia de hechos y respaldo por fuentes en el resultado de corrección.
   return {
     correct: sourceSupported && factsPresent,
     sourceSupported,
@@ -366,27 +371,36 @@ function summarizeStage(
 ): LabStageSummary {
   // Separa respondibles (14) y no respondibles (6).
   const answerableItems = items.filter((item) => item.answerable);
+  // Separa los negativos para medir el rechazo sin mezclarlos con preguntas respondibles.
   const refusalItems = items.filter((item) => !item.answerable);
+  // Cuenta los aciertos de las preguntas que sí tenían respuesta en el corpus.
   const answerableCorrect = answerableItems.filter((item) => item.correct).length;
+  // Cuenta los rechazos correctos de las preguntas sin respuesta documental.
   const refusalCorrect = refusalItems.filter((item) => item.correct).length;
+  // Suma ambos grupos sin cambiar la composición 14 positivas + 6 negativas del test.
   const totalCorrect = answerableCorrect + refusalCorrect;
   // Recuperaciones y reformulaciones medias.
   const averageRetrievals = Number(
     (items.reduce((sum, item) => sum + item.retrievalCount, 0) / items.length).toFixed(2),
   );
+  // Promedia las reformulaciones por pregunta y fija dos decimales para el informe.
   const averageReformulations = Number(
     (items.reduce((sum, item) => sum + item.reformulationCount, 0) / items.length).toFixed(2),
   );
   // Latencias ordenadas para la mediana.
   const sortedLatencies = items.map((item) => item.latencyMs).sort((a, b) => a - b);
+  // Localiza el centro de las latencias ordenadas para calcular la mediana.
   const mid = Math.floor(sortedLatencies.length / 2);
+  // Distingue conjuntos pares e impares al combinar los tiempos centrales.
   const medianLatencyMs =
     sortedLatencies.length % 2 === 0
       ? Math.round(((sortedLatencies[mid - 1] ?? 0) + (sortedLatencies[mid] ?? 0)) / 2)
       : (sortedLatencies[mid] ?? 0);
+  // Calcula también la media para mostrar el efecto de las ejecuciones lentas.
   const meanLatencyMs = Math.round(
     items.reduce((sum, item) => sum + item.latencyMs, 0) / items.length,
   );
+  // Entrega los contadores y tiempos agregados con el mismo formato para RAG y CRAG.
   return {
     stage,
     totalCorrect,
@@ -417,6 +431,7 @@ export async function runLabComparison20(input: {
   const items: LabEvaluatedQuestion[] = [];
   // Pasada 1: las 20 preguntas en el RAG básico de S10.
   for (const testCase of LAB_TEST_SET_20) {
+    // Ejecuta el caso con RAG básico y los mismos documentos y proveedor de embeddings del ensayo.
     const ragRes: LabBasicRagResult = await runLabBasicRag({
       question: testCase.question,
       corpusVersion: input.corpus.corpusVersion,
@@ -424,12 +439,14 @@ export async function runLabComparison20(input: {
       store: input.store,
       embedder: input.embedder,
     });
+    // Evalúa la respuesta RAG frente a los hechos y documentos esperados para esta pregunta.
     const graded = gradeQuestionResult({
       testCase,
       decision: ragRes.decision,
       answer: ragRes.answer,
       citations: ragRes.citations,
     });
+    // Guarda decisión, evidencia y métricas RAG sin perder las similitudes de los vecinos.
     items.push({
       id: testCase.id,
       stage: "rag",
@@ -448,6 +465,7 @@ export async function runLabComparison20(input: {
   }
   // Pasada 2: las mismas 20 preguntas en el grafo CRAG de S11.
   for (const testCase of LAB_TEST_SET_20) {
+    // Ejecuta después el mismo caso con el grafo correctivo y sus límites de intentos.
     const cragRes: LabCragResult = await runLabCrag({
       question: testCase.question,
       corpusVersion: input.corpus.corpusVersion,
@@ -455,13 +473,16 @@ export async function runLabComparison20(input: {
       store: input.store,
       embedder: input.embedder,
     });
+    // Aplica a CRAG el mismo criterio de corrección usado con RAG básico.
     const graded = gradeQuestionResult({
       testCase,
       decision: cragRes.decision,
       answer: cragRes.answer,
       citations: cragRes.citations,
     });
+    // Recupera el último reranking para mostrar las puntuaciones de la decisión final.
     const lastReranked = cragRes.iterations.at(-1)?.reranked ?? [];
+    // Guarda el resultado CRAG con sus reformulaciones, descartes y puntuaciones del último intento.
     items.push({
       id: testCase.id,
       stage: "crag",
@@ -483,10 +504,12 @@ export async function runLabComparison20(input: {
     "rag",
     items.filter((item) => item.stage === "rag"),
   );
+  // Agrupa solo los resultados CRAG antes de calcular sus métricas agregadas.
   const cragSummary = summarizeStage(
     "crag",
     items.filter((item) => item.stage === "crag"),
   );
+  // Devuelve ambas etapas, sus resúmenes y la diferencia observada en la comparación.
   return {
     executedAt: new Date().toISOString(),
     corpusVersion: input.corpus.corpusVersion,

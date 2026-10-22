@@ -55,11 +55,18 @@ describe("entrada privada local", () => {
       MODEL_INPUT_USD_PER_MILLION: "0.2",
       MODEL_OUTPUT_USD_PER_MILLION: "1",
       DB: {
+        // Doble de prueba: prepara una sentencia y devuelve el objeto que permitirá enlazar valores y ejecutarla.
         prepare() {
           // Cuenta la llamada.
           prepares += 1;
           // Reserva siempre aceptada.
-          return { bind: () => ({ first: async () => ({ id: "course-2026" }) }) };
+          return {
+            // Doble de prueba: asocia los parámetros a la sentencia sin concatenarlos al texto SQL.
+            bind: () => ({
+              // Doble de prueba: resuelve la primera fila o el valor de ausencia que define este adaptador.
+              first: async () => ({ id: "course-2026" }),
+            }),
+          };
         },
       },
     };

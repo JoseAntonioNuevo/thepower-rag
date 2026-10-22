@@ -49,6 +49,7 @@ function setup(group: "L/X" | "M/J", badScope = false) {
   const generate = vi.fn<() => void>(() => {});
   // Modelo simulado que repite la ficha con su cita.
   const model = new MockLanguageModelV4({
+    // Implementa el stream del modelo de prueba para verificar eventos sin llamar a un proveedor.
     doStream: async (options) => {
       // Cuenta la generación.
       generate();
@@ -95,8 +96,11 @@ function setup(group: "L/X" | "M/J", badScope = false) {
   const read = vi.fn<() => void>(() => {});
   // D1 que devuelve la ficha.
   const db: SqlDatabase = {
+    // Doble de prueba: prepara una sentencia y devuelve el objeto que permitirá enlazar valores y ejecutarla.
     prepare: () => ({
+      // Doble de prueba: asocia los parámetros a la sentencia sin concatenarlos al texto SQL.
       bind: () => ({
+        // Doble de prueba: resuelve la primera fila o el valor de ausencia que define este adaptador.
         first: async <T>() => {
           // Cuenta la lectura.
           read();
@@ -133,6 +137,7 @@ function setup(group: "L/X" | "M/J", badScope = false) {
     embed,
     query,
     read,
+    // Doble de prueba: recupera el prompt observado para comprobar qué evidencia se entregó al modelo.
     prompt: () => prompt,
   };
 }

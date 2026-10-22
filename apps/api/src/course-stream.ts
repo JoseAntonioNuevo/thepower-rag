@@ -79,6 +79,7 @@ export function streamFixedCourseResponse(input: {
 }): Response {
   // Crea el flujo; execute escribe las partes en orden.
   const stream = createUIMessageStream<CourseUIMessage>({
+    // Produce las partes del stream dentro del ciclo de ejecución del protocolo de mensajes.
     execute: async ({ writer }) => {
       // Inicio del mensaje, marcado como en curso.
       writer.write({
@@ -92,6 +93,7 @@ export function streamFixedCourseResponse(input: {
       }
       // Una parte data-source por fuente.
       for (const source of input.sources)
+        // Publica una parte del protocolo de mensajes para que la interfaz reciba la evidencia del stream.
         writer.write({ type: "data-source", id: source.chunkId, data: source });
       // Empieza el bloque de texto "answer".
       writer.write({ type: "text-start", id: "answer" });
@@ -118,6 +120,7 @@ export function streamFixedCourseResponse(input: {
       // Fin con los metadatos.
       writer.write({ type: "finish", messageMetadata: input.metadata });
     },
+    // Transforma el fallo del stream en el mensaje que recibirá el consumidor.
     onError: () => PUBLIC_PROVIDER_MESSAGE,
   });
   // Respuesta HTTP en streaming, sin caché y con el origen en una cabecera.
@@ -152,6 +155,8 @@ export function streamProviderCourseResponse(input: {
   onlyCitedSources?: boolean;
   // Tope de tokens de salida.
   maxOutputTokens?: number;
+  // Tope del perfil, idéntico al de generación en CRAG cuando se comparan ambos recorridos.
+  timeoutMs?: number;
   /** Tarifa del coste mostrado; null lo deja desconocido y sin valor usa la de Claude Haiku 5.5. */
   costPricing?: CostPricing | null;
 }): Response {
@@ -159,6 +164,7 @@ export function streamProviderCourseResponse(input: {
   const allowed = new Set(input.sources.map((source) => source.chunkId));
   // Crea el flujo de mensajes.
   const stream = createUIMessageStream<CourseUIMessage>({
+    // Produce las partes del stream dentro del ciclo de ejecución del protocolo de mensajes.
     execute: async ({ writer }) => {
       // Inicio, marcado como en curso.
       writer.write({
@@ -202,7 +208,7 @@ export function streamProviderCourseResponse(input: {
           maxOutputTokens: input.maxOutputTokens ?? LIMITS.maxOutputTokens,
           maxRetries: LIMITS.maxRetries,
           abortSignal: input.signal,
-          timeout: { totalMs: LIMITS.generationTimeoutMs },
+          timeout: { totalMs: input.timeoutMs ?? LIMITS.generationTimeoutMs },
         });
         // Empieza el bloque de texto.
         writer.write({ type: "text-start", id: "answer" });
@@ -224,7 +230,9 @@ export function streamProviderCourseResponse(input: {
           // Si hay algo que emitir.
           if (split.emit.length > 0) {
             // Muestra las fuentes que cita.
-            if (input.onlyCitedSources) showCited(split.emit);
+            if (input.onlyCitedSources)
+              // Entrega texto al filtro de citas antes de publicarlo en la respuesta visible.
+              showCited(split.emit);
             // Envía el texto.
             writer.write({ type: "text-delta", id: "answer", delta: split.emit });
           }
@@ -232,7 +240,9 @@ export function streamProviderCourseResponse(input: {
         // Al terminar, queda texto retenido.
         if (pending.length > 0) {
           // Muestra sus fuentes.
-          if (input.onlyCitedSources) showCited(pending);
+          if (input.onlyCitedSources)
+            // Entrega texto al filtro de citas antes de publicarlo en la respuesta visible.
+            showCited(pending);
           // Lo envía, filtrando citas desconocidas.
           writer.write({
             type: "text-delta",
@@ -293,6 +303,7 @@ export function streamProviderCourseResponse(input: {
         }
       }
     },
+    // Transforma el fallo del stream en el mensaje que recibirá el consumidor.
     onError: () => PUBLIC_PROVIDER_MESSAGE,
   });
   // Respuesta HTTP en streaming, sin caché.

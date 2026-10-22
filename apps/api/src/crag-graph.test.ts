@@ -146,6 +146,65 @@ async function turn(question: string, custom: Partial<CragPorts> = {}, audience 
 
 // Grupo de pruebas del grafo CRAG.
 describe("grafo CRAG", () => {
+  // El perfil Sonnet puede superar 20 s, pero conserva el mismo plazo entre pasos y rechaza lo tardío.
+  it("aplica el plazo del perfil sin reiniciarlo después de recuperar", async () => {
+    // Doble de prueba: produce las partes del stream dentro del ciclo de ejecución del protocolo de mensajes.
+    const execute = async (executionBudgetMs: number | undefined, finishedAt: number) => {
+      let now = 0;
+      let seenRemaining = -1;
+      const used = ports({
+        // Doble de prueba: proporciona el reloj del recorrido para calcular plazos y tiempos transcurridos.
+        now: () => now,
+        // Doble de prueba: recupera candidatos documentales dentro del ámbito de corpus y consulta del recorrido.
+        retrieve: async () => {
+          now = 25_000;
+          return { ok: true, providerCall: false, chunks: [chunk("s5")] };
+        },
+        // Doble de prueba: produce la respuesta final con los fragmentos que este recorrido ha seleccionado.
+        generate: async ({ remainingMs }) => {
+          seenRemaining = remainingMs;
+          now = finishedAt;
+          return {
+            ok: true,
+            providerCall: false,
+            text: "respuesta válida",
+            usage: null,
+            cost: null,
+          };
+        },
+      });
+      // Ejecuta el turno del grafo con el reloj y los puertos inyectados en esta prueba.
+      const result = await runCragTurn({
+        question: "pregunta",
+        scope,
+        ports: used,
+        fixture: true,
+        scenarioId: null,
+        executionBudgetMs,
+      });
+      return { result, seenRemaining };
+    };
+    const sonnet = await execute(60_000, 26_000);
+    // Contrasta el valor observado con el resultado exacto que define este caso.
+    expect(sonnet.result.terminal).toBe("answer");
+    // Contrasta el valor observado con el resultado exacto que define este caso.
+    expect(sonnet.seenRemaining).toBe(35_000);
+    const late = await execute(60_000, 60_001);
+    // Contrasta el valor observado con el resultado exacto que define este caso.
+    expect(late.result.terminal).toBe("error");
+    // Comprueba que la salida no incluya el dato que este caso debe excluir.
+    expect(late.result.answerText).not.toContain("respuesta válida");
+    const historical = await execute(undefined, 26_000);
+    // Contrasta el valor observado con el resultado exacto que define este caso.
+    expect(historical.result.terminal).toBe("error");
+    // Contrasta el valor observado con el resultado exacto que define este caso.
+    expect(historical.seenRemaining).toBe(-1);
+    const invalid = await execute(120_001, 26_000);
+    // Contrasta el valor observado con el resultado exacto que define este caso.
+    expect(invalid.result.terminal).toBe("error");
+    // Contrasta el valor observado con el resultado exacto que define este caso.
+    expect(invalid.seenRemaining).toBe(-1);
+  });
   // Basta con la primera búsqueda.
   it("responde en la primera búsqueda sin reformular", async () => {
     // Turno.
@@ -172,6 +231,7 @@ describe("grafo CRAG", () => {
     let retrieval = 0;
     // Turno con puertos propios.
     const { result } = await turn("estado y observabilidad", {
+      // Doble de prueba: recupera candidatos documentales dentro del ámbito de corpus y consulta del recorrido.
       retrieve: async () => {
         // Cuenta.
         retrieval += 1;
@@ -218,6 +278,7 @@ describe("grafo CRAG", () => {
     let retrieval = 0;
     // Turno.
     const { result } = await turn("observabilidad", {
+      // Doble de prueba: recupera candidatos documentales dentro del ámbito de corpus y consulta del recorrido.
       retrieve: async () => {
         // Cuenta.
         retrieval += 1;
@@ -260,6 +321,7 @@ describe("grafo CRAG", () => {
     const seen: string[] = [];
     // Puertos que nunca encuentran evidencia.
     const custom: Partial<CragPorts> = {
+      // Doble de prueba: recupera candidatos documentales dentro del ámbito de corpus y consulta del recorrido.
       retrieve: async ({ query }) => {
         // Guarda la consulta.
         seen.push(query);
@@ -293,6 +355,7 @@ describe("grafo CRAG", () => {
     // Segundo turno con evidencia suficiente.
     const second = await turn("otra pregunta", {
       ...custom,
+      // Doble de prueba: ordena los fragmentos y evalúa si aportan evidencia suficiente para la pregunta.
       rankAndAssess: async ({ chunks }) => ({
         ok: true,
         providerCall: false,
@@ -309,7 +372,9 @@ describe("grafo CRAG", () => {
   it("termina si la reformulación no avanza y si el evaluador devuelve un id desconocido", async () => {
     // La reformulación devuelve la misma consulta.
     const stalled = await turn("pregunta", {
+      // Doble de prueba: propone otra consulta a partir de la pregunta y las carencias detectadas.
       reformulate: async ({ query }) => ({ ok: true, providerCall: false, raw: { query } }),
+      // Doble de prueba: ordena los fragmentos y evalúa si aportan evidencia suficiente para la pregunta.
       rankAndAssess: async ({ chunks }) => ({
         ok: true,
         providerCall: false,
@@ -327,6 +392,7 @@ describe("grafo CRAG", () => {
     let ranks = 0;
     // Evaluador que inventa un id.
     const invalid = await turn("pregunta", {
+      // Doble de prueba: ordena los fragmentos y evalúa si aportan evidencia suficiente para la pregunta.
       rankAndAssess: async () => {
         // Cuenta.
         ranks += 1;
@@ -361,6 +427,7 @@ describe("grafo CRAG", () => {
     let seen: string[] = [];
     // Búsqueda que mezcla otra audiencia y otro perfil.
     const filtered = await turn("memoria", {
+      // Doble de prueba: recupera candidatos documentales dentro del ámbito de corpus y consulta del recorrido.
       retrieve: async () => ({
         ok: true,
         providerCall: false,
@@ -370,6 +437,7 @@ describe("grafo CRAG", () => {
           chunk("s5"),
         ],
       }),
+      // Doble de prueba: ordena los fragmentos y evalúa si aportan evidencia suficiente para la pregunta.
       rankAndAssess: async ({ chunks }) => {
         // Guarda los ids.
         seen = chunks.map((item) => item.chunkId);
@@ -439,6 +507,7 @@ describe("grafo CRAG", () => {
     let retrieval = 0;
     // Evidencia que se completa entre búsquedas.
     const across = await turn("sigue", {
+      // Doble de prueba: recupera candidatos documentales dentro del ámbito de corpus y consulta del recorrido.
       retrieve: async () => {
         // Cuenta.
         retrieval += 1;
@@ -501,7 +570,9 @@ describe("grafo CRAG", () => {
     let generations = 0;
     // Generación que tarda más del plazo.
     const late = await turn("tarde", {
+      // Doble de prueba: proporciona el reloj del recorrido para calcular plazos y tiempos transcurridos.
       now: () => now,
+      // Doble de prueba: produce la respuesta final con los fragmentos que este recorrido ha seleccionado.
       generate: async ({ remainingMs }) => {
         // Cuenta.
         generations += 1;
@@ -543,6 +614,7 @@ describe("grafo CRAG", () => {
     // Turno.
     const interrupted = await turn("pregunta", {
       signal: signalLater,
+      // Doble de prueba: recupera candidatos documentales dentro del ámbito de corpus y consulta del recorrido.
       retrieve: async () => {
         // Cuenta.
         retrievals += 1;
@@ -563,8 +635,10 @@ describe("grafo CRAG", () => {
     let started = 0;
     // Reserva de búsqueda rechazada.
     const blocked = await turn("pregunta", {
+      // Doble de prueba: comprueba o registra la reserva previa que permite continuar con una operación de pago.
       reserve: (kind) =>
         kind === "retrieval" ? { ok: false, reason: "sin reserva" } : { ok: true },
+      // Doble de prueba: recupera candidatos documentales dentro del ámbito de corpus y consulta del recorrido.
       retrieve: async () => {
         // Cuenta.
         started += 1;
@@ -584,11 +658,13 @@ describe("grafo CRAG", () => {
     const stepCalls: string[] = [];
     // Turno con puertos separados rerank y assess.
     const split = await turn("estado y observabilidad", {
+      // Doble de prueba: recupera candidatos documentales dentro del ámbito de corpus y consulta del recorrido.
       retrieve: async () => ({
         ok: true,
         providerCall: false,
         chunks: [chunk("s5"), chunk("s6")],
       }),
+      // Doble de prueba: reordena los candidatos mediante el puerto inyectado antes de evaluar su suficiencia.
       rerank: async () => {
         // Anota rerank.
         stepCalls.push("rerank");
@@ -602,6 +678,7 @@ describe("grafo CRAG", () => {
           ],
         };
       },
+      // Doble de prueba: valora la suficiencia de la evidencia y las carencias que quedan por cubrir.
       assess: async ({ ranking }) => {
         // Anota assess.
         stepCalls.push("assess");

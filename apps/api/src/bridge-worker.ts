@@ -379,6 +379,7 @@ async function localIndex(env: BridgeEnv): Promise<LocalVectorize> {
     name,
     dimensions: LOCAL_EMULATED_DIMENSIONS,
     rows,
+    // Guarda el estado actual del recorrido para que los resultados sobrevivan a una interrupción.
     persist: async (id, values, metadata) => {
       // INSERT o UPDATE.
       await db
@@ -396,6 +397,7 @@ async function localIndex(env: BridgeEnv): Promise<LocalVectorize> {
 function localEmbedder(env: BridgeEnv): EmbeddingRunner {
   // Con el método run.
   return {
+    // Ejecuta la operación del puerto y devuelve su resultado al llamador.
     async run(model, input) {
       // En remoto no se emula.
       if (remoteRequested(env)) {
@@ -688,6 +690,7 @@ async function ingest(
         ) => index.upsert(batch),
         // Lee de vuelta y describe el índice.
         getByIds: (ids: string[]) => index.getByIds(ids),
+        // Entrega las propiedades del índice que el recorrido utiliza para verificar compatibilidad.
         describe: () => index.describe(),
       }
     : // Sin índice local: usa el binding remoto y guarda el texto del error para diagnosticar.
@@ -711,6 +714,7 @@ async function ingest(
             throw error;
           }
         },
+        // Lee vectores por identificador para comprobar presencia, valores y metadatos.
         getByIds: async (ids: string[]) => {
           // Captura el error.
           try {
@@ -726,6 +730,7 @@ async function ingest(
             throw error;
           }
         },
+        // Entrega las propiedades del índice que el recorrido utiliza para verificar compatibilidad.
         describe: () => env.VECTORIZE?.describe() ?? Promise.resolve({}),
       };
   // Bindings para la ingesta.
@@ -733,6 +738,7 @@ async function ingest(
     CORPUS: bucket,
     DB: db,
     VECTORIZE: {
+      // Inserta o actualiza el lote de vectores por sus identificadores.
       upsert: async (batch) => {
         // Cuenta.
         upserts += 1;
@@ -748,6 +754,7 @@ async function ingest(
       },
       // Lectura de vuelta y descripción del índice.
       getByIds: (ids) => vectorBinding.getByIds(ids),
+      // Entrega las propiedades del índice que el recorrido utiliza para verificar compatibilidad.
       describe: () => vectorBinding.describe(),
     },
     // Índices de metadatos: del emulador o de la variable que leyó Wrangler.
@@ -856,6 +863,7 @@ async function offlineChat(request: Request, env: BridgeEnv): Promise<Response> 
     // Modelo emulado que solo responde si hay reserva.
     languageModel: localEmulatedLanguageModel({
       note,
+      // Expone el resultado de la reserva que condiciona las llamadas posteriores.
       reservationOk: () => reservationOk,
     }),
     // Puertos CRAG emulados sobre el índice local.
@@ -998,10 +1006,12 @@ export async function handleBridgeRequest(request: Request, env: BridgeEnv): Pro
       // App con registro de cada llamada.
       return createApp({
         allowance,
+        // Registra que este recorrido llegó al proveedor para distinguirlo de un plan sin red.
         onProviderCall: () => note({ id: "anthropic", remote: true, binding: null }),
       }).fetch(request, {
         ...env,
         AI: {
+          // Ejecuta la operación del puerto y devuelve su resultado al llamador.
           run: async (model: string, input: { text: string[] }) => {
             // Registra.
             note({ id: "workers-ai-binding", remote: true, binding: "AI" });
@@ -1011,6 +1021,7 @@ export async function handleBridgeRequest(request: Request, env: BridgeEnv): Pro
         },
         VECTORIZE: {
           ...remoteIndex,
+          // Ejecuta una consulta con sus parámetros y entrega las filas mediante el contrato del almacén.
           query: async (vector: number[], options: Parameters<VectorIndex["query"]>[1]) => {
             // Registra.
             note({ id: "vectorize-binding", remote: true, binding: "VECTORIZE" });
@@ -1109,6 +1120,7 @@ export async function handleBridgeRequest(request: Request, env: BridgeEnv): Pro
 
 // Worker con fetch.
 export default {
+  // Recibe la petición del runtime Worker y la delega al manejador con sus bindings de entorno.
   async fetch(request: Request, env: BridgeEnv): Promise<Response> {
     // Delega.
     return handleBridgeRequest(request, env);

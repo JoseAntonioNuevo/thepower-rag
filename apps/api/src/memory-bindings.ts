@@ -275,16 +275,20 @@ export function createMemoryBindings(input?: {
 
   // prepare simulado con bind, run, all y first.
   const prepare = (sql: string) => ({
+    // Asocia los parámetros a la sentencia sin concatenarlos al texto SQL.
     bind(...values: unknown[]) {
       // Métodos de la consulta.
       return {
+        // Ejecuta la operación del puerto y devuelve su resultado al llamador.
         run: async () => {
           // Aplica la escritura.
           apply(sql, values);
           // Resultado vacío.
           return {};
         },
+        // Resuelve el conjunto de filas en el formato que espera el consumidor SQL.
         all: async <T>() => ({ results: query(sql, values) as T[] }),
+        // Resuelve la primera fila o el valor de ausencia que define este adaptador.
         first: async <T>() => (query(sql, values)[0] as T | undefined) ?? null,
       };
     },
@@ -293,28 +297,38 @@ export function createMemoryBindings(input?: {
   // Bindings con contadores, R2, D1 y Vectorize simulados.
   const bindings: MemoryBindings = {
     tables,
+    // Expone el contador de escrituras para comprobar cuántas operaciones se enviaron.
     get upserts() {
       // Escrituras.
       return upserts;
     },
+    // Expone el contador de lecturas para comprobar el trabajo realizado por el adaptador.
     get reads() {
       // Lecturas.
       return reads;
     },
     CORPUS: {
+      // Guarda el recurso en el almacén con el contrato que utiliza este adaptador.
       async put(key, body) {
         // Guarda como texto.
         objects.set(key, typeof body === "string" ? body : new TextDecoder().decode(body));
       },
+      // Obtiene el recurso solicitado mediante el adaptador de almacenamiento o Workflow.
       async get(key) {
         // Objeto.
         const body = objects.get(key);
         // null o un objeto con text.
-        return body === undefined ? null : { text: async () => body };
+        return body === undefined
+          ? null
+          : {
+              // Devuelve como texto el cuerpo guardado en el objeto R2 simulado.
+              text: async () => body,
+            };
       },
     },
     DB: {
       prepare,
+      // Ejecuta el lote de sentencias según el contrato del adaptador de base de datos.
       batch: async (statements) => {
         // Ejecuta cada sentencia.
         for (const statement of statements) {
@@ -324,6 +338,7 @@ export function createMemoryBindings(input?: {
       },
     },
     VECTORIZE: {
+      // Inserta o actualiza el lote de vectores por sus identificadores.
       async upsert(batch) {
         // Cuenta la escritura.
         upserts += 1;
@@ -337,6 +352,7 @@ export function createMemoryBindings(input?: {
         // Id de mutación.
         return { mutationId: `mut-${String(mutation)}` };
       },
+      // Lee vectores por identificador para comprobar presencia, valores y metadatos.
       async getByIds(ids) {
         // Cuenta la lectura.
         reads += 1;
@@ -353,6 +369,7 @@ export function createMemoryBindings(input?: {
           return found === undefined ? [] : [{ id, metadata: found.metadata }];
         });
       },
+      // Entrega las propiedades del índice que el recorrido utiliza para verificar compatibilidad.
       async describe() {
         // Dimensiones y número de vectores.
         return {
@@ -361,6 +378,7 @@ export function createMemoryBindings(input?: {
         };
       },
     },
+    // Entrega los índices de metadatos para comprobar los filtros disponibles.
     listMetadataIndexes: async () => metadataIndexes,
   };
   // Bindings.
@@ -434,7 +452,9 @@ export function createMemoryDataPlane(input: {
   // Métodos del plano de datos.
   return {
     management: input.management,
+    // Construye los adaptadores de datos que utilizará el comando de activación.
     adapters: () => [adapter, { id: "fixture-embedder" as const, remote: false, binding: null }],
+    // Convierte los textos en vectores mediante el proveedor que implementa este puerto.
     async embed(texts: readonly string[], reservationId: string) {
       // Exige una reserva rN.
       if (!/^r[0-9]+$/.test(reservationId)) {
@@ -449,6 +469,7 @@ export function createMemoryDataPlane(input: {
         adapter: { id: "fixture-embedder" as const, remote: false, binding: null },
       };
     },
+    // Ejecuta el recorrido de ingesta con los puertos y el alcance de esta sesión.
     async ingest(request: { manifest: CorpusManifest; vectors: number[][] }) {
       // Perfiles.
       const profiles = await readProfileRows(input.bindings);
@@ -504,6 +525,7 @@ export function createMemoryDataPlane(input: {
         adapter,
       };
     },
+    // Selecciona el perfil del índice que usarán las consultas posteriores del curso.
     async selectActive(profileId: string) {
       // Perfiles antes.
       const before = await readProfileRows(input.bindings);

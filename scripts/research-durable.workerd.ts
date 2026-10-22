@@ -227,7 +227,11 @@ async function boot(
     logs += chunk;
   });
   // Proceso y registros.
-  return { child, logs: () => logs };
+  return {
+    child,
+    // Devuelve los mensajes capturados para explicar un fallo del Worker local.
+    logs: () => logs,
+  };
 }
 
 // Espera a que /api/health diga demo con investigación durable.

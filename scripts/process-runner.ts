@@ -52,6 +52,7 @@ export function scopedWranglerEnv(
 export function createWranglerRunner(wranglerPath: string, cwd: string): ProcessRunner {
   // Método run.
   return {
+    // Ejecuta la operación del puerto y devuelve su resultado al llamador.
     run(args, env) {
       // Promesa con código y salidas.
       return new Promise((resolve) => {

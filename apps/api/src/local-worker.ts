@@ -12,6 +12,7 @@ import { reservePublicTurn } from "./public-budget";
 
 // Manejador del Worker local.
 export default {
+  // Recibe la petición del runtime Worker y la delega al manejador con sus bindings de entorno.
   async fetch(
     request: Request,
     env: WorkerEnv & { LOCAL_BUDGET_USD?: string },

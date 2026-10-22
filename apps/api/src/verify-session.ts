@@ -64,6 +64,7 @@ export async function runVerificationSession(input: {
   const calls = { generative: 0, embedding: 0 };
   // Modelo simulado que reserva y cuenta cada llamada.
   const model: LanguageModel = new MockLanguageModelV4({
+    // Implementa el stream del modelo de prueba para verificar eventos sin llamar a un proveedor.
     doStream: async () => {
       // Reserva la generación.
       const reserved = input.ledger.reserve({ kind: "generation" });
@@ -125,8 +126,10 @@ export async function runVerificationSession(input: {
   // Puertos de CRAG simulados que reservan y cuentan.
   const ports: CragPorts = {
     measured: true,
+    // Proporciona el reloj del recorrido para calcular plazos y tiempos transcurridos.
     now: () => 0,
     signal: { aborted: false },
+    // Comprueba o registra la reserva previa que permite continuar con una operación de pago.
     reserve: (kind) => {
       // Reserva con los topes del tipo.
       const reserved = input.ledger.reserve({ kind, ...OPERATION_BOUNDS[kind] });
@@ -204,6 +207,7 @@ export async function runVerificationSession(input: {
   const app = createApp({
     languageModel: model,
     chunks: fixtureChunks(),
+    // Convierte los textos en vectores mediante el proveedor que implementa este puerto.
     embed: (text) => {
       // Reserva el embedding.
       const reserved = input.ledger.reserve({ kind: "embedding" });

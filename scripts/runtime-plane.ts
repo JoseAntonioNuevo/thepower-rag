@@ -238,6 +238,7 @@ export async function startOwnedBridge(input: {
     timeoutMs: 60_000,
     command: wranglerPath,
     spawn: spawnWranglerBridge(wranglerPath, input.projectRoot, input.accountId),
+    // Atiende la petición HTTP con el adaptador y el entorno de este recorrido.
     fetch: async (url, init) => {
       // Petición.
       const response = await loopbackFetch(url, init);

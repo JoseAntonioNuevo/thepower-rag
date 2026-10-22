@@ -68,11 +68,18 @@ describe("adaptadores reales de medios con dobles", () => {
     ["Uint8Array", (size) => new Uint8Array(size)],
     ["ArrayBuffer", (size) => new ArrayBuffer(size)],
     ["base64", (size) => btoa("a".repeat(size))],
-    ["arrayBuffer()", (size) => ({ arrayBuffer: async () => new ArrayBuffer(size) })],
+    [
+      "arrayBuffer()",
+      (size) => ({
+        // Doble de prueba: entrega los bytes del recurso con el contrato binario que espera el consumidor.
+        arrayBuffer: async () => new ArrayBuffer(size),
+      }),
+    ],
     [
       "ReadableStream",
       (size) =>
         new ReadableStream({
+          // Doble de prueba: inicializa la fuente del stream y encola los datos definidos por este adaptador.
           start(controller) {
             // Encola los bytes.
             controller.enqueue(new Uint8Array(size));
@@ -101,6 +108,7 @@ describe("adaptadores reales de medios con dobles", () => {
     // Objeto con body y arrayBuffer.
     const output = {
       body: new ReadableStream({
+        // Doble de prueba: inicializa la fuente del stream y encola los datos definidos por este adaptador.
         start(controller) {
           // 64 bytes.
           controller.enqueue(new Uint8Array(64));
@@ -108,6 +116,7 @@ describe("adaptadores reales de medios con dobles", () => {
           controller.close();
         },
       }),
+      // Doble de prueba: entrega los bytes del recurso con el contrato binario que espera el consumidor.
       arrayBuffer: async () => {
         // Cuenta.
         unboundedReads += 1;
@@ -131,6 +140,7 @@ describe("adaptadores reales de medios con dobles", () => {
     let calls = 0;
     // Modelo que devuelve el JSON esperado.
     const model = new MockLanguageModelV4({
+      // Implementa la respuesta del modelo de prueba compatible con el contrato del AI SDK.
       doGenerate: async () => {
         // Cuenta.
         calls += 1;
@@ -193,6 +203,7 @@ describe("adaptadores reales de medios con dobles", () => {
     let calls = 0;
     // Modelo que falla.
     const failing = new MockLanguageModelV4({
+      // Implementa la respuesta del modelo de prueba compatible con el contrato del AI SDK.
       doGenerate: async () => {
         // Cuenta.
         calls += 1;
@@ -214,6 +225,7 @@ describe("adaptadores reales de medios con dobles", () => {
     const controller = new AbortController();
     // Modelo que cancela y falla.
     const aborting = new MockLanguageModelV4({
+      // Implementa la respuesta del modelo de prueba compatible con el contrato del AI SDK.
       doGenerate: async () => {
         // Cuenta.
         calls += 1;
@@ -346,6 +358,7 @@ describe("adaptadores reales de medios con dobles", () => {
     // Transcripción correcta.
     const ok = await workersTranscript(
       {
+        // Doble de prueba: ejecuta la operación del puerto y devuelve su resultado al llamador.
         run: async (model, input) => {
           // Guarda la petición.
           seen.push({ model, input });
@@ -375,7 +388,10 @@ describe("adaptadores reales de medios con dobles", () => {
     expect(parseWhisper({ text: "  " })).toBeNull();
     // Respuesta sin texto.
     const invalid = await workersTranscript(
-      { run: async () => ({ duration: 1 }) },
+      {
+        // Doble de prueba: ejecuta la operación del puerto y devuelve su resultado al llamador.
+        run: async () => ({ duration: 1 }),
+      },
       MEDIA_LIMITS.sttModelId,
       audio,
       new AbortController().signal,
@@ -389,6 +405,7 @@ describe("adaptadores reales de medios con dobles", () => {
     // Workers AI falla.
     const failed = await workersTranscript(
       {
+        // Doble de prueba: ejecuta la operación del puerto y devuelve su resultado al llamador.
         run: async () => {
           // Error.
           throw new Error("down");
@@ -415,6 +432,7 @@ describe("adaptadores reales de medios con dobles", () => {
     // Voz correcta.
     const spoken = await workersSpeech(
       {
+        // Doble de prueba: ejecuta la operación del puerto y devuelve su resultado al llamador.
         run: async (model, input) => {
           // Guarda.
           seen.push({ model, input });
@@ -435,7 +453,10 @@ describe("adaptadores reales de medios con dobles", () => {
     expect(spoken.ok).toBe(true);
     // Salida mayor del tope.
     const oversized = await workersSpeech(
-      { run: async () => new Uint8Array(MEDIA_LIMITS.maxAudioBytes + 1) },
+      {
+        // Doble de prueba: ejecuta la operación del puerto y devuelve su resultado al llamador.
+        run: async () => new Uint8Array(MEDIA_LIMITS.maxAudioBytes + 1),
+      },
       MEDIA_LIMITS.ttsModelId,
       "hola",
       new AbortController().signal,
@@ -444,7 +465,10 @@ describe("adaptadores reales de medios con dobles", () => {
     expect(oversized).toMatchObject({ ok: false, error: "invalid" });
     // Salida vacía.
     const invalid = await workersSpeech(
-      { run: async () => ({}) },
+      {
+        // Doble de prueba: ejecuta la operación del puerto y devuelve su resultado al llamador.
+        run: async () => ({}),
+      },
       MEDIA_LIMITS.ttsModelId,
       "hola",
       new AbortController().signal,
@@ -458,6 +482,7 @@ describe("adaptadores reales de medios con dobles", () => {
     // Workers AI falla.
     const failed = await workersSpeech(
       {
+        // Doble de prueba: ejecuta la operación del puerto y devuelve su resultado al llamador.
         run: async () => {
           // Error.
           throw new Error("down");
@@ -475,6 +500,7 @@ describe("adaptadores reales de medios con dobles", () => {
     });
     // Stream que nunca entrega datos.
     const hanging = new ReadableStream<Uint8Array>({
+      // Doble de prueba: proporciona el siguiente fragmento de bytes cuando el lector solicita más datos.
       pull() {
         // Promesa que no se resuelve.
         return new Promise(() => undefined);
@@ -486,7 +512,10 @@ describe("adaptadores reales de medios con dobles", () => {
     const started = Date.now();
     // Pide la voz.
     const pending = workersSpeech(
-      { run: async () => hanging },
+      {
+        // Doble de prueba: ejecuta la operación del puerto y devuelve su resultado al llamador.
+        run: async () => hanging,
+      },
       MEDIA_LIMITS.ttsModelId,
       "hola",
       controller.signal,
@@ -543,6 +572,7 @@ describe("adaptadores reales de medios con dobles", () => {
       measured: true,
       fixture: false,
       estimatedMaxUsd: 1.25,
+      // Doble de prueba: proporciona el reloj del recorrido para calcular plazos y tiempos transcurridos.
       now: () => 20,
     });
     // Importe informado.

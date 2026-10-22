@@ -146,13 +146,19 @@ const LabCragAnnotation = Annotation.Root({
 function dedupeHits(hits: readonly LabVectorHit[]): LabVectorHit[] {
   // Conjunto de ids ya vistos.
   const seen = new Set<string>();
+  // Acumula vecinos sin duplicados preservando el orden de la primera aparición.
   const out: LabVectorHit[] = [];
+  // Recorre los candidatos en el orden en que llegaron de la recuperación.
   for (const hit of hits) {
+    // Solo acepta un fragmento si su identificador todavía no se ha visto.
     if (!seen.has(hit.chunkId)) {
+      // Marca la identidad antes de añadirla para que las siguientes apariciones se descarten.
       seen.add(hit.chunkId);
+      // Conserva la primera aparición de cada fragmento en la salida.
       out.push(hit);
     }
   }
+  // Entrega la lista deduplicada a los nodos de selección y evaluación.
   return out;
 }
 
@@ -187,6 +193,7 @@ export async function runLabCrag(input: {
   const startedAt = performance.now();
   // Verifica que el modelo de embeddings coincida con el configurado.
   if (input.embedder.modelId !== input.config.embeddingModelId) {
+    // Interrumpe esta rama y propaga el motivo al manejador de errores del recorrido.
     throw new Error(
       `El modelo de embeddings (${input.embedder.modelId}) no coincide con EMBEDDING_MODEL_ID (${input.config.embeddingModelId}).`,
     );
@@ -220,7 +227,9 @@ export async function runLabCrag(input: {
     .addNode("retrieve", async (state) => {
       // Embebe la consulta actual en 768 dimensiones.
       const [queryVector] = await input.embedder.embed([state.currentQuery]);
+      // La recuperación no puede consultar pgvector si el proveedor no devolvió el vector de la pregunta.
       if (queryVector === undefined) {
+        // Detiene el recorrido con el diagnóstico: El proveedor de embeddings no devolvió vector en retrieve.
         throw new Error("El proveedor de embeddings no devolvió vector en retrieve.");
       }
       // Consulta hasta 10 candidatos en pgvector.
@@ -259,14 +268,17 @@ export async function runLabCrag(input: {
           });
       // Valida que todas las puntuaciones estén en [0, 1].
       for (const item of reranked) {
+        // Comprueba que el reranker entregue puntuaciones finitas dentro de [0, 1].
         if (
           !Number.isFinite(item.rerankScore) ||
           item.rerankScore < LAB_CRAG_CONFIG.minScore ||
           item.rerankScore > LAB_CRAG_CONFIG.maxScore
         ) {
+          // Detiene el recorrido con el diagnóstico: El nodo rerank devolvió una puntuación fuera de la escala [0, 1].
           throw new Error("El nodo rerank devolvió una puntuación fuera de la escala [0, 1].");
         }
       }
+      // Actualiza el estado del grafo con la ordenación ya validada y su traza.
       return {
         shown,
         reranked,
@@ -291,6 +303,7 @@ export async function runLabCrag(input: {
       const canIterate =
         state.retrievalCount < LAB_CRAG_CONFIG.maxRetrievals &&
         state.reformulationCount < LAB_CRAG_CONFIG.maxReformulations;
+      // Traduce la suficiencia de evidencia a la ruta que tomará el grafo en este intento.
       const route: LabCragIterationTrace["route"] =
         assessment.status === "sufficient"
           ? "answer"
@@ -316,6 +329,7 @@ export async function runLabCrag(input: {
         assessment,
         route,
       };
+      // Guarda evaluación, ruta y métricas de la iteración sin perder el estado previo.
       return {
         assessment,
         iterations: [...state.iterations, iterationTrace],
@@ -328,9 +342,13 @@ export async function runLabCrag(input: {
       const usefulSet = new Set(state.assessment?.usefulIds ?? []);
       // Conserva los ya retenidos más los útiles actuales, ordenados según el último rerank.
       const keepIds = new Set([...state.retained.map((hit) => hit.chunkId), ...usefulSet]);
+      // Construye el contexto retenido respetando el orden decidido por el reranker.
       const orderedKept: LabVectorHit[] = [];
+      // Recorre los candidatos reordenados para conservar solo las identidades aceptadas.
       for (const item of state.reranked) {
+        // El evaluador decide qué identificadores siguen aportando evidencia útil.
         if (keepIds.has(item.hit.chunkId)) {
+          // Añade el fragmento retenido con la información necesaria para el siguiente intento.
           orderedKept.push({
             ...item.hit,
             similarity: item.rerankScore,
@@ -339,6 +357,7 @@ export async function runLabCrag(input: {
       }
       // Los fragmentos mostrados que no quedaron retenidos se anotan como descartados.
       const keptIdSet = new Set(orderedKept.map((hit) => hit.chunkId));
+      // Registra como descartados los candidatos de esta ronda que no se han conservado.
       const newDiscarded: LabDiscardedRecord[] = state.reranked
         .filter((item) => !keptIdSet.has(item.hit.chunkId))
         .map((item) => ({
@@ -347,6 +366,7 @@ export async function runLabCrag(input: {
           rerankScore: item.rerankScore,
           reason: item.reason,
         }));
+      // Actualiza evidencia retenida y descartes antes de recuperar más información.
       return {
         retained: orderedKept.slice(0, LAB_CRAG_CONFIG.maxRetained),
         discarded: [...state.discarded, ...newDiscarded],
@@ -358,6 +378,7 @@ export async function runLabCrag(input: {
     .addNode("discard", (state) => {
       // Conserva únicamente lo que ya estuviera retenido de una pasada parcial previa.
       const retainedIds = new Set(state.retained.map((hit) => hit.chunkId));
+      // En la ruta de descarte, conserva la explicación de los fragmentos que no pasan al contexto.
       const newDiscarded: LabDiscardedRecord[] = state.reranked
         .filter((item) => !retainedIds.has(item.hit.chunkId))
         .map((item) => ({
@@ -366,6 +387,7 @@ export async function runLabCrag(input: {
           rerankScore: item.rerankScore,
           reason: item.reason,
         }));
+      // Entrega al siguiente nodo el estado actualizado con su historial de descartes.
       return {
         discarded: [...state.discarded, ...newDiscarded],
         candidates: [],
@@ -394,10 +416,13 @@ export async function runLabCrag(input: {
       ).trim();
       // Si la reformulación está vacía o repite una consulta ya vista, corta hacia rechazo.
       const normalized = nextQuery.toLowerCase();
+      // Detecta una consulta vacía o ya usada después de normalizar espacios y mayúsculas.
       const repeated =
         normalized.length === 0 ||
         state.queries.some((seen) => seen.trim().toLowerCase() === normalized);
+      // Una reformulación repetida se detiene para no gastar otro intento en la misma búsqueda.
       if (repeated) {
+        // Marca la parada por repetición y conserva la traza que explica el rechazo.
         return {
           reformulationCount: nextReformulation,
           terminal: "refuse" as const,
@@ -407,6 +432,7 @@ export async function runLabCrag(input: {
           visitedNodes: [...state.visitedNodes, "reformulate"],
         };
       }
+      // Guarda la consulta nueva para que la siguiente ronda pueda recuperarla y detectar futuras repeticiones.
       return {
         reformulationCount: nextReformulation,
         currentQuery: nextQuery,
@@ -421,12 +447,14 @@ export async function runLabCrag(input: {
         ...state.retained.map((hit) => hit.chunkId),
         ...(state.assessment?.usefulIds ?? []),
       ]);
+      // Selecciona evidencia útil en orden de reranking y aplica el máximo de fragmentos retenidos.
       const finalEvidence = state.reranked
         .filter((item) => usefulSet.has(item.hit.chunkId))
         .slice(0, LAB_CRAG_CONFIG.maxRetained)
         .map((item) => item.hit);
       // Registra como descartados los fragmentos no incluidos en la evidencia final.
       const finalIds = new Set(finalEvidence.map((hit) => hit.chunkId));
+      // Anota qué candidatos quedaron fuera del contexto final por selección o límite.
       const extraDiscarded: LabDiscardedRecord[] = state.reranked
         .filter((item) => !finalIds.has(item.hit.chunkId))
         .map((item) => ({
@@ -439,11 +467,15 @@ export async function runLabCrag(input: {
       const rawText = input.generator
         ? await input.generator(state.originalQuestion, finalEvidence)
         : synthesizeGroundedLabAnswer(state.originalQuestion, finalEvidence);
+      // Autoriza únicamente citas a fragmentos de la evidencia final entregada al generador.
       const allowed = new Set(finalEvidence.map((hit) => hit.chunkId));
+      // Suprime referencias de la respuesta a fragmentos ajenos al contexto permitido.
       const answerText = suppressUnknownCitations(rawText, allowed);
+      // Extrae las citas válidas y elimina repeticiones manteniendo su primera aparición.
       const citations = [...answerText.matchAll(/\[cite:([^\]]+)\]/g)]
         .map((match) => match[1] ?? "")
         .filter((id, idx, arr) => allowed.has(id) && arr.indexOf(id) === idx);
+      // Termina el grafo con respuesta, evidencia utilizada y trazabilidad de los descartes.
       return {
         retained: finalEvidence,
         discarded: [...state.discarded, ...extraDiscarded],
@@ -458,9 +490,11 @@ export async function runLabCrag(input: {
     .addNode("refuse", (state) => {
       // Registra como descartados los candidatos restantes del último intento.
       const retainedIds = new Set(state.retained.map((hit) => hit.chunkId));
+      // Indexa los descartes ya registrados por intento y fragmento para no duplicar la traza.
       const alreadyLogged = new Set(
         state.discarded.map((item) => `${String(item.attempt)}:${item.chunkId}`),
       );
+      // Añade solo los descartes de esta ronda que aún no estaban anotados.
       const extraDiscarded: LabDiscardedRecord[] = state.reranked
         .filter(
           (item) =>
@@ -473,6 +507,7 @@ export async function runLabCrag(input: {
           rerankScore: item.rerankScore,
           reason: item.reason,
         }));
+      // Finaliza con rechazo y conserva las razones y evidencias del recorrido.
       return {
         discarded: [...state.discarded, ...extraDiscarded],
         terminal: "refuse" as const,
@@ -490,6 +525,7 @@ export async function runLabCrag(input: {
     .addConditionalEdges("assess", (state) => {
       // Última ruta decidida en el nodo `assess`.
       const lastRoute = state.iterations.at(-1)?.route ?? "refuse";
+      // Devuelve al enrutador la última decisión registrada por el nodo de evaluación.
       return lastRoute;
     })
     .addEdge("retain", "reformulate")
@@ -500,10 +536,14 @@ export async function runLabCrag(input: {
 
   // Compila e invoca el grafo.
   const finalState = await graph.compile().invoke(initialState, { recursionLimit: 30 });
+  // Mide el tiempo completo y registra al menos un milisegundo tras el redondeo.
   const latencyMs = Math.max(1, Math.round(performance.now() - startedAt));
+  // Traduce el estado terminal del grafo a la decisión pública del laboratorio.
   const decision = finalState.terminal === "answer" ? "answer" : "refuse";
+  // Si no llegó a haber evaluación, informa insuficiencia como estado conservador.
   const finalStatus = finalState.assessment?.status ?? "insufficient";
 
+  // Entrega la respuesta o rechazo junto a iteraciones, consultas, citas y métricas del ensayo.
   return {
     question,
     queries: finalState.queries,

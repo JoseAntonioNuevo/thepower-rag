@@ -85,10 +85,12 @@ function tracer(state: ResearchState, deps: NodeDeps, node: ResearchNode) {
   let trace = state.trace;
   // Objeto con log y la traza acumulada.
   return {
+    // Añade un evento al registro del recorrido de investigación.
     log(status: string) {
       // Añade un paso.
       trace = traced({ ...state, trace }, deps.emit, node, status);
     },
+    // Añade una etapa a la traza que explica el progreso de la investigación.
     get trace() {
       // Traza actual.
       return trace;

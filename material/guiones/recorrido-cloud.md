@@ -1,3 +1,5 @@
+> **S10 (22/10):** sigue el [guion canónico 30+50+10](S10-guion-profesor.md). La ruta principal es `lab:real` con PostgreSQL real; la web del curso se usa para explicar grupos y su configuración semántica. Los modelos actuales de la web son Sonnet; las menciones históricas de esta guía se conservan como referencia.
+
 # Recorrido del profesor en la aplicación real y el laboratorio reproducible
 
 URL pública: https://rag-thepower.josenuevo.dev · Perfil local real: `bun run dev:real` (`apps/web/wrangler.jsonc`) · Laboratorio pgvector del ejercicio: `lab/` (`bun run lab:demo` y `bun run lab:eval`).

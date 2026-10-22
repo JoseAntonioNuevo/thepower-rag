@@ -46,10 +46,12 @@ export interface LabBasicRagResult {
 export function buildUntrustedDataBlock(chunks: readonly LabVectorHit[]): string {
   // Neutraliza posibles intentos de inyección de prompt dentro del texto recuperado.
   const entries = chunks.map((chunk) => {
+    // Neutraliza delimitadores del cuerpo para que un documento no cierre el bloque de datos no fiables.
     const safeBody = chunk.content.replace(
       /ignore previous instructions|ignora las instrucciones anteriores/gi,
       "[instrucción incrustada ignorada]",
     );
+    // Devuelve el fragmento delimitado con su identidad y sus puntuaciones de recuperación.
     return `<fragmento id="${chunk.chunkId}" titulo="${chunk.title}" seccion="${chunk.section}" distancia_coseno="${chunk.cosineDistance.toFixed(4)}" similitud="${chunk.similarity.toFixed(4)}">\n${safeBody}\n</fragmento>`;
   });
   // Bloque delimitado con advertencia explícita de que el contenido es dato y no instrucción.
@@ -63,10 +65,13 @@ export function synthesizeGroundedLabAnswer(
 ): string {
   // Construye el bloque de datos no fiables para garantizar aislamiento frente a prompt injection.
   const dataBlock = buildUntrustedDataBlock(selected);
+  // El generador de demostración no necesita razonar sobre la pregunta: produce una salida determinista.
   void question;
+  // Este doble tampoco invoca un modelo con el bloque de datos; sirve para explicar el pipeline sin red.
   void dataBlock;
   // Sintetiza los hechos de los fragmentos seleccionados citando cada identificador real.
   const statements = selected.map((chunk) => {
+    // Limpia las marcas de ejercicio del fragmento antes de formar la respuesta extractiva de demostración.
     const clean = chunk.content
       .replace(
         /ignore previous instructions|ignora las instrucciones anteriores/gi,
@@ -74,8 +79,10 @@ export function synthesizeGroundedLabAnswer(
       )
       .replace(/\s+/g, " ")
       .trim();
+    // Asocia la frase extraída a su documento y a una cita del fragmento realmente seleccionado.
     return `Según ${chunk.title} (${chunk.section}) [cite:${chunk.chunkId}]: ${clean}`;
   });
+  // Une las frases de los fragmentos seleccionados en una respuesta determinista.
   return statements.join("\n\n");
 }
 
@@ -93,13 +100,16 @@ export async function runLabBasicRag(input: {
   const startedAt = performance.now();
   // Comprueba que el modelo de embeddings del llamador coincida con la configuración.
   if (input.embedder.modelId !== input.config.embeddingModelId) {
+    // Interrumpe esta rama y propaga el motivo al manejador de errores del recorrido.
     throw new Error(
       `El modelo de consulta (${input.embedder.modelId}) no coincide con EMBEDDING_MODEL_ID (${input.config.embeddingModelId}).`,
     );
   }
   // Paso 1: calcula el embedding de 768 dimensiones de la pregunta.
   const [queryVector] = await input.embedder.embed([input.question]);
+  // Comprueba que el proveedor haya devuelto al menos el vector de la pregunta.
   if (queryVector === undefined) {
+    // Detiene el recorrido con el diagnóstico: El proveedor de embeddings no devolvió un vector de 768 dimensiones.
     throw new Error("El proveedor de embeddings no devolvió un vector de 768 dimensiones.");
   }
   // Paso 2: recupera los `topK` vecinos más próximos en pgvector usando distancia coseno (`<=>`).
@@ -117,7 +127,9 @@ export async function runLabBasicRag(input: {
   );
   // Si ningún fragmento supera el umbral calibrado, se rechaza sin llamar al generador.
   if (selected.length === 0) {
+    // Mide el tiempo hasta el rechazo y evita registrar una duración redondeada a cero.
     const latencyMs = Math.max(1, Math.round(performance.now() - startedAt));
+    // Devuelve el rechazo con vecinos y métricas; este recorrido todavía no ha llamado al generador.
     return {
       question: input.question,
       corpusVersion: input.corpusVersion,
@@ -140,13 +152,17 @@ export async function runLabBasicRag(input: {
   const rawAnswer = input.generator
     ? await input.generator(input.question, selected)
     : synthesizeGroundedLabAnswer(input.question, selected);
+  // Construye la lista permitida de citas exclusivamente con los fragmentos seleccionados.
   const allowedIds = new Set(selected.map((chunk) => chunk.chunkId));
+  // Elimina referencias inventadas a fragmentos que no se entregaron al generador.
   const answer = suppressUnknownCitations(rawAnswer, allowedIds);
   // Extrae los ids efectivamente citados en la respuesta validada.
   const citations = [...answer.matchAll(/\[cite:([^\]]+)\]/g)]
     .map((match) => match[1] ?? "")
     .filter((id, idx, arr) => allowedIds.has(id) && arr.indexOf(id) === idx);
+  // Mide el recorrido completo, incluida la generación y la comprobación de citas.
   const latencyMs = Math.max(1, Math.round(performance.now() - startedAt));
+  // Entrega respuesta, evidencia, decisión y métricas con el contrato del laboratorio.
   return {
     question: input.question,
     corpusVersion: input.corpusVersion,

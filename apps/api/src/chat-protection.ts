@@ -85,7 +85,9 @@ async function session(
     .find((s) => s.startsWith(COOKIE + "="))
     ?.slice(COOKIE.length + 1);
   // Sin cookie.
-  if (!value) return null;
+  if (!value)
+    // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+    return null;
   // Partes: id, caducidad y firma.
   const [id, expiry, signature, ...rest] = value.split(".");
   // Formato estricto de cada parte.
@@ -98,11 +100,13 @@ async function session(
     !signature ||
     !/^[a-f0-9]{64}$/.test(signature)
   )
+    // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
     return null;
   // Caducidad.
   const expires = Number(expiry);
   // Caducada o demasiado lejana.
   if (expires <= Math.floor(now / 1000) || expires > Math.floor(now / 1000) + SESSION_SECONDS + 60)
+    // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
     return null;
   // Firma en bytes.
   const bytes = Uint8Array.from(signature.match(/../g)!, (x) => Number.parseInt(x, 16));
@@ -187,7 +191,9 @@ export async function protectChat(
   now = Date.now(),
 ): Promise<Response | null> {
   // Sin protección: pasa.
-  if (!protectionRequired(env)) return null;
+  if (!protectionRequired(env))
+    // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+    return null;
   // Mal configurada: 503.
   if (!configured(env))
     return failure(503, "La protección del chat no está disponible. Inténtalo más tarde.");

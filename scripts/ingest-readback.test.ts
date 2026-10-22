@@ -39,7 +39,9 @@ it("reanuda una lectura fallida en lotes de 20 sin repetir el upsert aceptado", 
     // Guarda el tamaño.
     sizes.push(ids.length);
     // Vectorize no admite más de 20 ids.
-    if (ids.length > 20) throw new Error("max id count is 20");
+    if (ids.length > 20)
+      // Detiene el recorrido con el diagnóstico: max id count is 20.
+      throw new Error("max id count is 20");
     // Primera vez.
     if (failOnce) {
       // Ya no fallará.

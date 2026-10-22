@@ -35,23 +35,31 @@ function tokenCycle(sessionId = "session-1") {
   // Métodos.
   return {
     used,
+    // Doble de prueba: renueva la verificación de la petición antes de reintentar su envío.
     renew() {
       // Cambia la sesión.
       currentSession = "session-2";
     },
+    // Doble de prueba: ejecuta el paso previo al envío, incluida la renovación de verificación que necesite este recorrido.
     async beforeSend() {
       // Ciclo real con dependencias simuladas.
       return consumeVerificationToken({
         config: { enabled: true, siteKey: "site", sessionId },
+        // Doble de prueba: lee el token de verificación actual sin duplicar su almacenamiento.
         readToken: () => token,
+        // Doble de prueba: obtiene la sesión anónima que necesita el envío protegido del chat.
         fetchSession: async () =>
           Response.json({ enabled: true, siteKey: "site", sessionId: currentSession }),
+        // Doble de prueba: espera un token nuevo antes de permitir que se envíe la petición protegida.
         waitForToken: async () => {
           // Ya hay token.
-          if (token) return;
+          if (token)
+            // Termina esta rama sin ejecutar los pasos siguientes del recorrido.
+            return;
           // Espera un tick.
           await new Promise((resolve) => setTimeout(resolve, 0));
         },
+        // Doble de prueba: reinicia el widget para solicitar un nuevo desafío de verificación.
         resetWidget() {
           // Siguiente número.
           const issued = next + 1;
@@ -63,12 +71,14 @@ function tokenCycle(sessionId = "session-1") {
             token = `token-${String(issued)}`;
           });
         },
+        // Doble de prueba: invalida el token anterior para impedir reutilizarlo en otro envío.
         clearToken() {
           // Registra el gastado.
           if (token) used.push(token);
           // Lo borra.
           token = null;
         },
+        // Doble de prueba: actualiza el estado del recorrido después de renovar la verificación.
         onRenewed() {
           // Sin token.
           token = null;
@@ -122,7 +132,9 @@ describe("envío multimodal protegido", () => {
       audio: { file: new Blob([new Uint8Array([4, 5, 6])]), key: "audio-key" },
       idempotencyKey: "job-key",
       generation: 1,
+      // Doble de prueba: lee la generación vigente de la conversación para descartar respuestas de un envío anterior.
       currentGeneration: () => 1,
+      // Doble de prueba: ejecuta el paso previo al envío, incluida la renovación de verificación que necesite este recorrido.
       beforeSend: () => cycle.beforeSend(),
       fetchImpl,
     });
@@ -189,7 +201,9 @@ describe("envío multimodal protegido", () => {
       audio: { file: new Blob(["wav"]), key: "audio-key" },
       idempotencyKey: "job-key",
       generation: 4,
+      // Doble de prueba: lee la generación vigente de la conversación para descartar respuestas de un envío anterior.
       currentGeneration: () => 4,
+      // Doble de prueba: ejecuta el paso previo al envío, incluida la renovación de verificación que necesite este recorrido.
       beforeSend: () => cycle.beforeSend(),
       fetchImpl,
     };
@@ -247,7 +261,9 @@ describe("envío multimodal protegido", () => {
       audio: { file: new Blob(["wav"]), key: "audio-key" },
       idempotencyKey: "job-key",
       generation: 1,
+      // Doble de prueba: lee la generación vigente de la conversación para descartar respuestas de un envío anterior.
       currentGeneration: () => generation,
+      // Doble de prueba: ejecuta el paso previo al envío, incluida la renovación de verificación que necesite este recorrido.
       beforeSend: () => cycle.beforeSend(),
       fetchImpl,
     });
@@ -278,8 +294,10 @@ describe("envío multimodal protegido", () => {
       audio: { file: new Blob(["wav"]), key: "audio-key" },
       idempotencyKey: "job-key",
       generation: 1,
+      // Doble de prueba: lee la generación vigente de la conversación para descartar respuestas de un envío anterior.
       currentGeneration: () => 1,
       beforeSend: renewing,
+      // Doble de prueba: implementa el transporte HTTP inyectable utilizado por este recorrido.
       fetchImpl: async (input) => {
         // URL.
         const url = requestUrl(input);
@@ -322,13 +340,16 @@ describe("envío multimodal protegido", () => {
         config: { enabled: true, siteKey: "site", sessionId: "session-1" },
         // No hay token y el servidor no puede emitir otro…
         readToken: () => null,
+        // Doble de prueba: obtiene la sesión anónima que necesita el envío protegido del chat.
         fetchSession: async () =>
           Response.json({ enabled: true, siteKey: "site", sessionId: "session-1" }),
         // …y esperar tampoco da un token.
         waitForToken: async () => undefined,
         // Funciones del widget que la prueba no necesita.
         resetWidget() {},
+        // Doble de prueba: invalida el token anterior para impedir reutilizarlo en otro envío.
         clearToken() {},
+        // Doble de prueba: actualiza el estado del recorrido después de renovar la verificación.
         onRenewed() {},
       }),
     ).rejects.toThrow(VERIFICATION_REQUIRED);

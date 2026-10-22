@@ -1,0 +1,305 @@
+{
+  "at": "2026-10-18T21:49:21.114Z",
+  "methodology": "fixed-candidates-development-only",
+  "profiles": [
+    {
+      "profile": "haiku",
+      "calls": 7,
+      "successful": 7,
+      "validEvaluations": 5,
+      "expectedMatches": 3,
+      "evaluationMeanMs": 2624.8,
+      "operationMeanMs": 2652.1428571428573,
+      "tokenTariffEstimateUsd": 0.0027799,
+      "usageComplete": true,
+      "assessments": [
+        {
+          "case": "estado",
+          "expected": "sufficient",
+          "observed": "partial"
+        },
+        {
+          "case": "parcial",
+          "expected": "partial",
+          "observed": "partial"
+        },
+        {
+          "case": "combinado",
+          "expected": "sufficient",
+          "observed": "partial"
+        },
+        {
+          "case": "irrelevante",
+          "expected": "insufficient",
+          "observed": "insufficient"
+        },
+        {
+          "case": "ausente",
+          "expected": "insufficient",
+          "observed": "insufficient"
+        }
+      ]
+    },
+    {
+      "profile": "sonnet-evaluator",
+      "calls": 7,
+      "successful": 7,
+      "validEvaluations": 5,
+      "expectedMatches": 4,
+      "evaluationMeanMs": 3274.2,
+      "operationMeanMs": 3238.8571428571427,
+      "tokenTariffEstimateUsd": 0.0414432,
+      "usageComplete": true,
+      "assessments": [
+        {
+          "case": "estado",
+          "expected": "sufficient",
+          "observed": "partial"
+        },
+        {
+          "case": "parcial",
+          "expected": "partial",
+          "observed": "partial"
+        },
+        {
+          "case": "combinado",
+          "expected": "sufficient",
+          "observed": "sufficient"
+        },
+        {
+          "case": "irrelevante",
+          "expected": "insufficient",
+          "observed": "insufficient"
+        },
+        {
+          "case": "ausente",
+          "expected": "insufficient",
+          "observed": "insufficient"
+        }
+      ]
+    },
+    {
+      "profile": "sonnet",
+      "calls": 7,
+      "successful": 7,
+      "validEvaluations": 5,
+      "expectedMatches": 5,
+      "evaluationMeanMs": 2793.6,
+      "operationMeanMs": 3275.4285714285716,
+      "tokenTariffEstimateUsd": 0.049574,
+      "usageComplete": true,
+      "assessments": [
+        {
+          "case": "estado",
+          "expected": "sufficient",
+          "observed": "sufficient"
+        },
+        {
+          "case": "parcial",
+          "expected": "partial",
+          "observed": "partial"
+        },
+        {
+          "case": "combinado",
+          "expected": "sufficient",
+          "observed": "sufficient"
+        },
+        {
+          "case": "irrelevante",
+          "expected": "insufficient",
+          "observed": "insufficient"
+        },
+        {
+          "case": "ausente",
+          "expected": "insufficient",
+          "observed": "insufficient"
+        }
+      ]
+    },
+    {
+      "profile": "opus",
+      "calls": 7,
+      "successful": 7,
+      "validEvaluations": 5,
+      "expectedMatches": 5,
+      "evaluationMeanMs": 6013.0,
+      "operationMeanMs": 5852.857142857143,
+      "tokenTariffEstimateUsd": 0.102716,
+      "usageComplete": true,
+      "assessments": [
+        {
+          "case": "estado",
+          "expected": "sufficient",
+          "observed": "sufficient"
+        },
+        {
+          "case": "parcial",
+          "expected": "partial",
+          "observed": "partial"
+        },
+        {
+          "case": "combinado",
+          "expected": "sufficient",
+          "observed": "sufficient"
+        },
+        {
+          "case": "irrelevante",
+          "expected": "insufficient",
+          "observed": "insufficient"
+        },
+        {
+          "case": "ausente",
+          "expected": "insufficient",
+          "observed": "insufficient"
+        }
+      ]
+    }
+  ],
+  "calls": 28,
+  "rawResultsSha256": "0b3f3a76b0b8450de9fa247a9ab61ed28bb0ac3914748f91df6f57dcfb6dc6dd",
+  "comparisonTokenTariffEstimateUsd": 0.1965131,
+  "comparisonReservedUsd": 3.8400000000000003,
+  "actualProviderUsd": null,
+  "manualReview": {
+    "completed": true,
+    "citations": "All four generated responses cite only the supplied S5/S6 chunks.",
+    "grounding": "Responses reflect the supplied curriculum and exercise summaries; they identify missing technical integration details.",
+    "limitations": "Five development cases with fixed candidates and one call per case. Labels are a curricular expectation, not validated general accuracy. Sonnet evaluator differed on estado between its two profiles; no deterministic or causal quality claim."
+  },
+  "deployment": {
+    "id": "ade2f97f-f076-4e07-9f7a-044c68531662",
+    "source": "wrangler",
+    "strategy": "percentage",
+    "author_email": "joseantonionuevo@gmail.com",
+    "annotations": {
+      "workers/triggered_by": "deployment"
+    },
+    "versions": [
+      {
+        "version_id": "c9eae749-6cd4-4911-95a4-3cbb8390d2d9",
+        "percentage": 100
+      }
+    ],
+    "created_on": "2026-10-18T21:49:03.008232Z"
+  },
+  "health": {
+    "app": "thepower-rag",
+    "phase": "crag",
+    "execution": "real",
+    "runtime": "Cloudflare-Workers",
+    "capabilities": {
+      "sin-rag": {
+        "status": "ready",
+        "missing": []
+      },
+      "rag": {
+        "status": "ready",
+        "missing": []
+      },
+      "crag": {
+        "status": "ready",
+        "missing": []
+      },
+      "research": {
+        "status": "ready",
+        "missing": []
+      }
+    },
+    "corpus": {
+      "version": "c3a59a406888b",
+      "contentVersion": "cc037ef0bb1f7",
+      "profileId": "p76509a5f9743",
+      "profileFamily": "workers-ai",
+      "coverage": {
+        "curriculum": "complete",
+        "calendarLx": "complete",
+        "calendarMj": "complete",
+        "exerciseDetail": "partial",
+        "remote": "index-verified"
+      },
+      "embedding": "@cf/baai/bge-m3",
+      "dimensions": 1024,
+      "remoteRevision": null
+    },
+    "compatibility": {
+      "langgraph": "ok",
+      "anthropic": "loaded",
+      "note": "LangGraph carga. El grafo de CRAG vive en la ruta de chat. Esta comprobación no es una activación remota."
+    },
+    "durableResearch": true,
+    "modelConfiguration": {
+      "provider": "anthropic",
+      "generator": "claude-sonnet-5-5",
+      "evaluator": "claude-sonnet-5-5",
+      "research": "claude-haiku-5-5",
+      "cragExecutionBudgetMs": 60000,
+      "generationTimeoutMs": 30000,
+      "ragContextMode": "semantic",
+      "retrievalMinScore": 0.5
+    },
+    "media": {
+      "storage": "ready",
+      "vision": "configured",
+      "transcription": "configured",
+      "speech": "configured",
+      "note": "Configurar no ejecuta visión, transcripción ni voz."
+    }
+  },
+  "budget": {
+    "at": "2026-10-18T21:51:04.553Z",
+    "publicBefore": {
+      "reserved_usd": 2.6215246124999982,
+      "turns": 93
+    },
+    "publicAfter": {
+      "reserved_usd": 3.671642612499998,
+      "turns": 95
+    },
+    "additionalPublicReservation": 1.0501179999999999,
+    "expectedPublicReservation": 1.0501179999999999,
+    "publicReservationMatched": true,
+    "additionalTurns": 2,
+    "publicRemaining": 0.6283573875000017,
+    "research": [
+      {
+        "results": [
+          {
+            "budget_micros": 1000000,
+            "reserved_micros": 0,
+            "unknown_micros": 480609,
+            "consumed_micros": 0,
+            "config_version": "research-prices-v1"
+          }
+        ],
+        "success": true,
+        "meta": {
+          "served_by": "v3-prod",
+          "served_by_region": "WEUR",
+          "served_by_colo": "LHR",
+          "served_by_primary": true,
+          "timings": {
+            "sql_duration_ms": 0.503
+          },
+          "duration": 0.503,
+          "changes": 0,
+          "last_row_id": 0,
+          "changed_db": false,
+          "size_after": 4620288,
+          "rows_read": 1,
+          "rows_written": 0,
+          "total_attempts": 1
+        }
+      }
+    ],
+    "comparisonWorstCaseUsd": 3.84,
+    "combinedConservativeBoundUsd": 4.890117999999999,
+    "authorizedMaxUsd": 5,
+    "actualProviderUsd": null
+  },
+  "webChecks": {
+    "rag": "Complete response with valid S5 citations; input 1291, output 500, generation tariff estimate USD 0.007582.",
+    "crag": "Complete response with valid S5 citations after one retrieval and evaluation; 10 candidates, 2 accepted chunks, no rewrite. Generator input 1045, output 402, generator-only tariff estimate USD 0.006110. Evaluator cost not included.",
+    "protection": "Normal Brave UI and existing Turnstile protection; no CAPTCHA challenge action, bypass or repeated send.",
+    "cost": "Web total cannot be reconstructed from generator-only metrics. D1 reserves both turns conservatively."
+  }
+}

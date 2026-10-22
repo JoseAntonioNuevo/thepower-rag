@@ -52,22 +52,26 @@ function isD1(value: unknown): value is D1Database {
 function wrapStatement(stmt: D1PreparedStatement): ResearchStatement {
   // Envoltorio.
   const wrapped: ResearchStatement = {
+    // Asocia los parámetros a la sentencia sin concatenarlos al texto SQL.
     bind(...values: unknown[]) {
       // Une parámetros.
       return wrapStatement(stmt.bind(...values));
     },
+    // Resuelve la primera fila o el valor de ausencia que define este adaptador.
     async first<T>() {
       // Primera fila.
       const row = await stmt.first<T>();
       // null si no hay.
       return row ?? null;
     },
+    // Resuelve el conjunto de filas en el formato que espera el consumidor SQL.
     async all<T>() {
       // Todas las filas.
       const result = await stmt.all<T>();
       // Resultados.
       return result.results;
     },
+    // Ejecuta la operación del puerto y devuelve su resultado al llamador.
     async run() {
       // Ejecuta.
       const result = await stmt.run();
@@ -85,10 +89,12 @@ function wrapStatement(stmt: D1PreparedStatement): ResearchStatement {
 export function wrapD1(database: D1Database): ResearchDatabase {
   // Base con la interfaz común.
   return {
+    // Prepara una sentencia y devuelve el objeto que permitirá enlazar valores y ejecutarla.
     prepare(sql: string) {
       // Prepara.
       return wrapStatement(database.prepare(sql));
     },
+    // Ejecuta el lote de sentencias según el contrato del adaptador de base de datos.
     async batch(statements: ResearchStatement[]) {
       // Sentencias D1 del lote.
       const raw = statements.map((statement) => {
@@ -107,6 +113,7 @@ export function wrapD1(database: D1Database): ResearchDatabase {
       // Filas cambiadas de cada una.
       return results.map((result) => ({ changes: result.meta.changes ?? 0 }));
     },
+    // Ejecuta texto SQL para preparar o actualizar el esquema del adaptador.
     async exec(sql: string) {
       // SQL directo.
       await database.exec(sql);

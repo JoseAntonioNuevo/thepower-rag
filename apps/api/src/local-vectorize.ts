@@ -74,7 +74,9 @@ export function createLocalVectorize(input: {
   let writes = 0;
   // Implementación de la interfaz.
   return {
+    // Expone el contador de escrituras para comprobar cuántas operaciones se enviaron.
     upserts: () => writes,
+    // Inserta o actualiza el lote de vectores por sus identificadores.
     async upsert(vectors) {
       // Valida y guarda cada vector.
       for (const vector of vectors) {
@@ -100,6 +102,7 @@ export function createLocalVectorize(input: {
       // Id de la mutación.
       return { mutationId: `local-${String(mutations)}` };
     },
+    // Lee vectores por identificador para comprobar presencia, valores y metadatos.
     async getByIds(ids) {
       // Vectores existentes con sus metadatos.
       return ids.flatMap((id) => {
@@ -109,6 +112,7 @@ export function createLocalVectorize(input: {
         return found === undefined ? [] : [{ id, metadata: found.metadata }];
       });
     },
+    // Entrega las propiedades del índice que el recorrido utiliza para verificar compatibilidad.
     async describe() {
       // Descripción del índice.
       return {
@@ -118,6 +122,7 @@ export function createLocalVectorize(input: {
         config: { metric: "cosine" as const },
       };
     },
+    // Ejecuta una consulta con sus parámetros y entrega las filas mediante el contrato del almacén.
     async query(vector, options) {
       // Resultados.
       const matches: { id: string; score: number; metadata: Record<string, string> }[] = [];
@@ -149,6 +154,7 @@ export function createLocalVectorize(input: {
       // Los primeros topK.
       return { matches: matches.slice(0, options.topK) };
     },
+    // Entrega los índices de metadatos para comprobar los filtros disponibles.
     async listMetadataIndexes() {
       // Índices de metadatos emulados.
       return ["corpusVersion", "audience", "profileId"];

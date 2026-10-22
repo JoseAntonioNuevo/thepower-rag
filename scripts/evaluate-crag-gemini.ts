@@ -43,6 +43,7 @@ if (
   !auth.allowOpenRouter ||
   auth.maxSpendUsd !== 5
 )
+  // Detiene el recorrido con el diagnóstico: Falta autorización del curso.
   throw new Error("Falta autorización del curso.");
 // Carpeta de evidencias.
 const out = path.join(root, "docs/evidence/crag-gemini");
@@ -54,13 +55,18 @@ const continuing = process.argv.includes("--continue");
 const file = path.join(out, continuing ? "continuation-results.json" : "directed-results.json");
 // La continuación necesita la primera prueba.
 if (continuing && !existsSync(path.join(out, "directed-results.json")))
+  // Detiene el recorrido con el diagnóstico: No existe la primera prueba.
   throw new Error("No existe la primera prueba.");
 // No se repite.
-if (existsSync(file)) throw new Error("Ya hay evidencia; no se repite automáticamente.");
+if (existsSync(file))
+  // Detiene el recorrido con el diagnóstico: Ya hay evidencia; no se repite automáticamente.
+  throw new Error("Ya hay evidencia; no se repite automáticamente.");
 // Clave.
 const key = readRepoAnthropicKey(root);
 // Sin clave: error.
-if (!key) throw new Error("Falta ANTHROPIC_API_KEY en .env.");
+if (!key)
+  // Detiene el recorrido con el diagnóstico: Falta ANTHROPIC_API_KEY en .env.
+  throw new Error("Falta ANTHROPIC_API_KEY en .env.");
 // Tope de gasto.
 const maxSpend = continuing ? 0.12 : 0.25;
 // Sesión de gasto con tarifas de Haiku.
@@ -105,7 +111,9 @@ const s6 = find("s06-observabilidad");
 // S16.
 const s16 = find("s16-cloud-aws");
 // Faltan fragmentos.
-if (!s5.length || !s6.length || !s16.length) throw new Error("Faltan fragmentos.");
+if (!s5.length || !s6.length || !s16.length)
+  // Detiene el recorrido con el diagnóstico: Faltan fragmentos.
+  throw new Error("Faltan fragmentos.");
 // Puertos reales sin búsqueda (no se usa).
 const ports = createRealCragPorts({
   // Señal y alcance de la prueba.
@@ -201,7 +209,9 @@ const pendingCases = continuing
 // Cada caso.
 for (const c of pendingCases) {
   // Reserva.
-  if (!ports.reserve("evaluation").ok) throw new Error("Reserva denegada.");
+  if (!ports.reserve("evaluation").ok)
+    // Detiene el recorrido con el diagnóstico: Reserva denegada.
+    throw new Error("Reserva denegada.");
   // Inicio.
   const start = Date.now();
   // Guarda aunque falle.
@@ -233,7 +243,9 @@ for (const c of pendingCases) {
     // Progreso.
     console.log({ id: c.id, passed, durationMs: Date.now() - start });
     // Fallo: error.
-    if (!passed) throw new Error("La evaluación no cumplió el contrato; ver evidencia privada.");
+    if (!passed)
+      // Detiene el recorrido con el diagnóstico: La evaluación no cumplió el contrato; ver evidencia privada.
+      throw new Error("La evaluación no cumplió el contrato; ver evidencia privada.");
   } catch (e) {
     // Guarda.
     save();
@@ -242,7 +254,9 @@ for (const c of pendingCases) {
   }
 }
 // Reserva la reformulación.
-if (!ports.reserve("reformulation").ok) throw new Error("Reserva denegada.");
+if (!ports.reserve("reformulation").ok)
+  // Detiene el recorrido con el diagnóstico: Reserva denegada.
+  throw new Error("Reserva denegada.");
 // Reformula.
 const rewrite = await ports.reformulate({
   question: cases[1]!.question,
@@ -256,9 +270,13 @@ results.push({ id: "rewrite", result: rewrite });
 // Guarda.
 save();
 // Fallo.
-if (!rewrite.ok) throw new Error("Reformulación fallida.");
+if (!rewrite.ok)
+  // Detiene el recorrido con el diagnóstico: Reformulación fallida.
+  throw new Error("Reformulación fallida.");
 // Reserva la generación.
-if (!ports.reserve("generation").ok) throw new Error("Reserva denegada.");
+if (!ports.reserve("generation").ok)
+  // Detiene el recorrido con el diagnóstico: Reserva denegada.
+  throw new Error("Reserva denegada.");
 // Genera.
 const generated = await ports.generate({
   question: cases[0]!.question,
@@ -271,6 +289,7 @@ results.push({ id: "generation-luna", result: generated });
 save();
 // Debe citar.
 if (!generated.ok || !generated.text.includes("[cite:"))
+  // Detiene el recorrido con el diagnóstico: Generación sin respuesta o cita.
   throw new Error("Generación sin respuesta o cita.");
 // Fin.
 console.log("Prueba dirigida completada; decisiones y respuesta guardadas.");

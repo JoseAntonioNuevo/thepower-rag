@@ -166,6 +166,7 @@ describe("puente y comandos", () => {
         name: vectorizeIndexName(profileId),
         metadataIndexes: ["corpusVersion", "audience", "profileId"],
       },
+      // Doble de prueba: convierte los textos en vectores mediante el proveedor que implementa este puerto.
       embed: async (texts) => {
         // Cuenta.
         embedCalls += 1;
@@ -196,14 +197,20 @@ describe("puente y comandos", () => {
       plane,
       allowance,
       paths,
-      runner: { run: async () => ({ code: 0, stdout: "", stderr: "" }) },
+      runner: {
+        // Doble de prueba: ejecuta la operación del puerto y devuelve su resultado al llamador.
+        run: async () => ({ code: 0, stdout: "", stderr: "" }),
+      },
     });
     // Ejecutor sin plano de datos.
     const blocked = createCourseExecutor({
       cwd: root,
       migrationsDir: path.join(root, "apps/api/migrations"),
       corpusPath: path.join(root, "corpus/prepared/corpus.json"),
-      runner: { run: async () => ({ code: 0, stdout: "", stderr: "" }) },
+      runner: {
+        // Doble de prueba: ejecuta la operación del puerto y devuelve su resultado al llamador.
+        run: async () => ({ code: 0, stdout: "", stderr: "" }),
+      },
     });
     // Sin plano: no conectado.
     expect((await blocked.probeEmbeddings(auth())).summary).toContain("no está conectado");
@@ -297,13 +304,17 @@ describe("puente y comandos", () => {
       cwd: root,
       migrationsDir: path.join(root, "apps/api/migrations"),
       corpusPath: path.join(root, "corpus/prepared/corpus.json"),
-      runner: { run: async () => ({ code: 0, stdout: "", stderr: "" }) },
+      runner: {
+        // Doble de prueba: ejecuta la operación del puerto y devuelve su resultado al llamador.
+        run: async () => ({ code: 0, stdout: "", stderr: "" }),
+      },
       sessionPrices: {
         embeddingUsdPerMillionInput: 1,
         generativeUsdPerMillionInput: 1,
         generativeUsdPerMillionOutput: 1,
       },
       sessionLimits: { generative: 3, embedding: 8 },
+      // Doble de prueba: comprueba el recorrido completo con el alcance e identidades de la sesión.
       verifySession: async () => {
         // Cuenta.
         calls += 1;
@@ -368,8 +379,11 @@ describe("puente y comandos", () => {
     // Arranque simulado.
     const started = await startLoopbackBridge(spec, {
       timeoutMs: 1_000,
+      // Doble de prueba: proporciona el reloj del recorrido para calcular plazos y tiempos transcurridos.
       now: () => 0,
+      // Doble de prueba: representa la espera del recorrido mediante el reloj o temporizador inyectado.
       sleep: async () => undefined,
+      // Doble de prueba: arranca el proceso hijo del puente y devuelve los controles de su ciclo de vida.
       spawn: (_command, args) => {
         // Escucha en 127.0.0.1.
         expect(args).toContain("--ip");
@@ -384,11 +398,15 @@ describe("puente y comandos", () => {
         // Proceso simulado.
         return {
           pid: 42,
+          // Doble de prueba: solicita terminar el proceso hijo y deja su limpieza al controlador del recorrido.
           kill: () => killed.push(42),
+          // Doble de prueba: informa si el proceso hijo ya terminó para evitar tratarlo como un puente disponible.
           hasExited: () => false,
+          // Doble de prueba: espera la terminación del proceso hijo antes de dar por liberados sus recursos.
           waitForExit: async () => 0,
         };
       },
+      // Doble de prueba: atiende la petición HTTP con el adaptador y el entorno de este recorrido.
       fetch: async () => ({ status: 200, body: { ok: true, bind: "127.0.0.1" } }),
     });
     // PID.
@@ -402,14 +420,21 @@ describe("puente y comandos", () => {
     // Arranque que falla la primera vez.
     const retried = await startLoopbackBridge(spec, {
       timeoutMs: 1_000,
+      // Doble de prueba: proporciona el reloj del recorrido para calcular plazos y tiempos transcurridos.
       now: () => 0,
+      // Doble de prueba: representa la espera del recorrido mediante el reloj o temporizador inyectado.
       sleep: async () => undefined,
+      // Doble de prueba: arranca el proceso hijo del puente y devuelve los controles de su ciclo de vida.
       spawn: () => ({
         pid: 8,
+        // Doble de prueba: solicita terminar el proceso hijo y deja su limpieza al controlador del recorrido.
         kill: () => undefined,
+        // Doble de prueba: informa si el proceso hijo ya terminó para evitar tratarlo como un puente disponible.
         hasExited: () => false,
+        // Doble de prueba: espera la terminación del proceso hijo antes de dar por liberados sus recursos.
         waitForExit: async () => 0,
       }),
+      // Doble de prueba: atiende la petición HTTP con el adaptador y el entorno de este recorrido.
       fetch: async () => {
         // Cuenta.
         fetches += 1;
@@ -433,13 +458,18 @@ describe("puente y comandos", () => {
       startLoopbackBridge(spec, {
         // Plazo cero: el puente no llega a estar listo.
         timeoutMs: 0,
+        // Doble de prueba: proporciona el reloj del recorrido para calcular plazos y tiempos transcurridos.
         now: () => 10,
+        // Doble de prueba: representa la espera del recorrido mediante el reloj o temporizador inyectado.
         sleep: async () => undefined,
         // Proceso simulado que no termina por sí solo.
         spawn: () => ({
           pid: 7,
+          // Doble de prueba: solicita terminar el proceso hijo y deja su limpieza al controlador del recorrido.
           kill: () => killed.push(7),
+          // Doble de prueba: informa si el proceso hijo ya terminó para evitar tratarlo como un puente disponible.
           hasExited: () => false,
+          // Doble de prueba: espera la terminación del proceso hijo antes de dar por liberados sus recursos.
           waitForExit: async () => 0,
         }),
         // El puente responde 503 (aún no listo).
@@ -479,6 +509,7 @@ describe("puente y comandos", () => {
         BRIDGE_REMOTE: "true",
         BRIDGE_ROLE: "probe",
         AI: {
+          // Doble de prueba: ejecuta la operación del puerto y devuelve su resultado al llamador.
           run: async () => {
             // Cuenta.
             remoteCalls += 1;
@@ -501,6 +532,7 @@ describe("puente y comandos", () => {
         BRIDGE_TOKEN: "testigo-local-de-prueba",
         BRIDGE_REMOTE: "true",
         AI: {
+          // Doble de prueba: ejecuta la operación del puerto y devuelve su resultado al llamador.
           run: async () => {
             // Cuenta.
             remoteCalls += 1;

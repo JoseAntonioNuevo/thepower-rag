@@ -161,6 +161,7 @@ export function modelOutputCap(
     inputUsdPerMillion <= 0 ||
     outputUsdPerMillion <= 0
   )
+    // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
     return null;
   // Lo que queda de la reserva tras la entrada máxima.
   const remaining =

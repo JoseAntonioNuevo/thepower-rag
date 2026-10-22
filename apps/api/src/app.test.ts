@@ -85,6 +85,7 @@ function textOf(events: unknown[]): string {
 function mockModel(text: string, calls: { count: number; prompt: string }): LanguageModel {
   // MockLanguageModelV4 con doStream.
   return new MockLanguageModelV4({
+    // Implementa el stream del modelo de prueba para verificar eventos sin llamar a un proveedor.
     doStream: async (options) => {
       // Cuenta.
       calls.count += 1;
@@ -485,6 +486,7 @@ describe("fase 2", () => {
     await expect(
       embedWithWorkersAi(
         {
+          // Doble de prueba: ejecuta la operación del puerto y devuelve su resultado al llamador.
           run: async () => {
             // Cuenta.
             runs += 1;
@@ -581,7 +583,10 @@ describe("fase 2", () => {
     // Workers AI con otra dimensión.
     await expect(
       embedWithWorkersAi(
-        { run: async () => ({ data: [[1, 2, 3]] }) },
+        {
+          // Doble de prueba: ejecuta la operación del puerto y devuelve su resultado al llamador.
+          run: async () => ({ data: [[1, 2, 3]] }),
+        },
         "@cf/baai/bge-m3",
         ["hola"],
         32,
@@ -758,7 +763,9 @@ describe("fase 5", () => {
           // Reloj y señal fijos, y reserva que siempre acepta.
           now: () => 0,
           signal: { aborted: false },
+          // Doble de prueba: comprueba o registra la reserva previa que permite continuar con una operación de pago.
           reserve: () => ({ ok: true }),
+          // Doble de prueba: recupera candidatos documentales dentro del ámbito de corpus y consulta del recorrido.
           retrieve: async () => ({
             // Búsqueda que devuelve un fragmento de S5.
             ok: true,
@@ -778,6 +785,7 @@ describe("fase 5", () => {
               },
             ],
           }),
+          // Doble de prueba: ordena los fragmentos y evalúa si aportan evidencia suficiente para la pregunta.
           rankAndAssess: async ({ chunks }) => ({
             // Evaluación suficiente con todos los fragmentos como útiles.
             ok: true,

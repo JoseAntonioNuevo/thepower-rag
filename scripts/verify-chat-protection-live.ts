@@ -47,7 +47,9 @@ async function budget() {
     scopedWranglerEnv(process.env, COURSE_DESTINATION.accountId),
   );
   // Fallo.
-  if (run.code !== 0) throw new Error("No se pudo leer el presupuesto.");
+  if (run.code !== 0)
+    // Detiene el recorrido con el diagnóstico: No se pudo leer el presupuesto.
+    throw new Error("No se pudo leer el presupuesto.");
   // Fila del presupuesto.
   return (parseJsonText(run.stdout) as { results: { reserved_usd: number; turns: number }[] }[])[0]!
     .results[0]!;
@@ -59,11 +61,15 @@ const bootstrap = await fetch(origin + "/api/security");
 // Cookie.
 const cookieHeader = bootstrap.headers.get("set-cookie");
 // Sin sesión: error.
-if (!bootstrap.ok || !cookieHeader) throw new Error("No hay sesión de prueba.");
+if (!bootstrap.ok || !cookieHeader)
+  // Detiene el recorrido con el diagnóstico: No hay sesión de prueba.
+  throw new Error("No hay sesión de prueba.");
 // Configuración.
 const config = (await bootstrap.json()) as { enabled: boolean; siteKey: string };
 // Protección desactivada: error.
-if (!config.enabled) throw new Error("Protección desactivada.");
+if (!config.enabled)
+  // Detiene el recorrido con el diagnóstico: Protección desactivada.
+  throw new Error("Protección desactivada.");
 // Cookie nombre=valor.
 const cookie = cookieHeader.split(";")[0]!;
 // Cuerpo de prueba.
@@ -101,7 +107,9 @@ for (const name of ["no-origin", "no-cookie", "tampered-cookie", "no-token", "in
   // Registra.
   observations.push({ name, status: response.status, message: value.message });
   // Debe ser 403.
-  if (response.status !== 403) throw new Error("No se rechazó " + name);
+  if (response.status !== 403)
+    // Detiene el recorrido con el diagnóstico: No se rechazó .
+    throw new Error("No se rechazó " + name);
 }
 // ¿Se vio el límite?
 let limited = false;
@@ -127,10 +135,14 @@ for (let n = 0; n < 15; n++) {
     break;
   }
   // El resto deben ser 403.
-  if (response.status !== 403) throw new Error("Un envío sin token no fue rechazado.");
+  if (response.status !== 403)
+    // Detiene el recorrido con el diagnóstico: Un envío sin token no fue rechazado.
+    throw new Error("Un envío sin token no fue rechazado.");
 }
 // Debe verse el límite.
-if (!limited) throw new Error("No se observó el límite de sesión en la prueba acotada.");
+if (!limited)
+  // Detiene el recorrido con el diagnóstico: No se observó el límite de sesión en la prueba acotada.
+  throw new Error("No se observó el límite de sesión en la prueba acotada.");
 // Presupuesto después.
 const after = await budget();
 // Evidencia.
@@ -156,6 +168,7 @@ writeFileSync(
 console.log(receipt);
 // Si cambió el presupuesto, error.
 if (!receipt.noBudgetChange)
+  // Interrumpe esta rama y propaga el motivo al manejador de errores del recorrido.
   throw new Error(
     "El presupuesto cambió durante la prueba; revisar concurrencia antes de atribuirlo.",
   );

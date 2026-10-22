@@ -68,13 +68,26 @@ describe("verificación local", () => {
         embeddingLabel: "bge",
       },
       // Bindings vacíos: embeddings, índice y D1 sin datos.
-      embedder: { run: async () => ({ data: [] }) },
-      index: { query: async () => ({ matches: [] }), upsert: async () => ({}) },
+      embedder: {
+        // Doble de prueba: ejecuta la operación del puerto y devuelve su resultado al llamador.
+        run: async () => ({ data: [] }),
+      },
+      index: {
+        // Doble de prueba: ejecuta una consulta con sus parámetros y entrega las filas mediante el contrato del almacén.
+        query: async () => ({ matches: [] }),
+        // Doble de prueba: inserta o actualiza el lote de vectores por sus identificadores.
+        upsert: async () => ({}),
+      },
       database: {
+        // Doble de prueba: prepara una sentencia y devuelve el objeto que permitirá enlazar valores y ejecutarla.
         prepare: () => ({
+          // Doble de prueba: asocia los parámetros a la sentencia sin concatenarlos al texto SQL.
           bind: () => ({
+            // Doble de prueba: resuelve la primera fila o el valor de ausencia que define este adaptador.
             first: async () => null,
+            // Doble de prueba: resuelve el conjunto de filas en el formato que espera el consumidor SQL.
             all: async () => ({ results: [] }),
+            // Doble de prueba: ejecuta la operación del puerto y devuelve su resultado al llamador.
             run: async () => ({}),
           }),
         }),

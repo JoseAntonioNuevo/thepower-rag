@@ -25,6 +25,7 @@ function modelFor(value: unknown) {
   let outputCap: number | undefined;
   // Modelo simulado.
   const model = new MockLanguageModelV4({
+    // Implementa la respuesta del modelo de prueba compatible con el contrato del AI SDK.
     doGenerate: async (options) => {
       // Guarda el tope.
       outputCap = options.maxOutputTokens;
@@ -45,7 +46,9 @@ function modelFor(value: unknown) {
   // Puerto y accesos a los contadores.
   return {
     port: createResearchModelPort({ planner: model, generator: model, maxOutputTokens: 1800 }),
+    // Doble de prueba: expone las llamadas observadas para verificar el número de inferencias de la prueba.
     calls: () => calls,
+    // Doble de prueba: expone el límite de salida solicitado al modelo para comprobar que esté acotado.
     outputCap: () => outputCap,
   };
 }

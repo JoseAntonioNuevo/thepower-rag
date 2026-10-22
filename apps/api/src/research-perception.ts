@@ -152,11 +152,15 @@ export function auraInput(text: string): Record<string, unknown> {
 // Lee la respuesta de Whisper; null si no tiene texto.
 export function parseWhisper(value: unknown): TranscriptRead | null {
   // Sin campo text: null.
-  if (typeof value !== "object" || value === null || !("text" in value)) return null;
+  if (typeof value !== "object" || value === null || !("text" in value))
+    // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+    return null;
   // Texto.
   const text = (value as { text?: unknown }).text;
   // Vacío: null.
-  if (typeof text !== "string" || text.trim().length === 0) return null;
+  if (typeof text !== "string" || text.trim().length === 0)
+    // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+    return null;
   // Información de la transcripción.
   const info = (value as { transcription_info?: { language?: unknown; duration?: unknown } })
     .transcription_info;
@@ -177,7 +181,9 @@ export async function bytesFromAiOutput(
   signal?: AbortSignal,
 ): Promise<Uint8Array | null> {
   // Cancelado: null.
-  if (signal?.aborted) return null;
+  if (signal?.aborted)
+    // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+    return null;
   // Tope de bytes de audio.
   const cap = MEDIA_LIMITS.maxAudioBytes;
   // Ya son bytes: se aceptan si caben.
@@ -190,13 +196,17 @@ export async function bytesFromAiOutput(
   // Texto base64.
   if (typeof value === "string" && value.length > 0) {
     // Base64 ocupa 4/3: demasiado largo sin decodificar.
-    if (value.length > Math.ceil(cap / 3) * 4) return null;
+    if (value.length > Math.ceil(cap / 3) * 4)
+      // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+      return null;
     // Decodificación protegida.
     try {
       // Decodifica.
       const binary = atob(value);
       // Demasiado grande.
-      if (binary.length > cap) return null;
+      if (binary.length > cap)
+        // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+        return null;
       // Bytes.
       const bytes = new Uint8Array(binary.length);
       // Cada carácter.
@@ -226,7 +236,9 @@ export async function bytesFromAiOutput(
     // Candidato con arrayBuffer y size.
     const candidate = value as { arrayBuffer?: unknown; size?: unknown };
     // Sin función: null.
-    if (typeof candidate.arrayBuffer !== "function") return null;
+    if (typeof candidate.arrayBuffer !== "function")
+      // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+      return null;
     // Tamaño declarado inválido o mayor del tope.
     if (
       typeof candidate.size === "number" &&
@@ -297,7 +309,9 @@ export async function bytesFromAiOutput(
           );
         });
         // Fin del stream.
-        if (next.done) break;
+        if (next.done)
+          // Detiene el bucle al alcanzar la condición de parada de esta rama.
+          break;
         // Trozo como Uint8Array.
         const piece =
           next.value instanceof Uint8Array ? next.value : new Uint8Array(next.value as ArrayBuffer);

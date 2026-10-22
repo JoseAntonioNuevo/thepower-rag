@@ -190,9 +190,11 @@ export function embedLabText768(text: string): number[] {
       const idxB = Number.parseInt(hash.slice(8, 16), 16) % LAB_EMBEDDING_DIMENSIONS;
       // Signos +1 o -1.
       const signA = (Number.parseInt(hash.slice(0, 2), 16) & 1) === 0 ? 1 : -1;
+      // Obtiene del hash un segundo signo reproducible para distribuir la característica léxica.
       const signB = (Number.parseInt(hash.slice(2, 4), 16) & 1) === 0 ? 1 : -1;
       // Acumula en las dos coordenadas.
       vector[idxA] = (vector[idxA] ?? 0) + signA * feature.weight;
+      // Añade una contribución secundaria de menor peso a otra posición del vector de demostración.
       vector[idxB] = (vector[idxB] ?? 0) + signB * (feature.weight * 0.5);
     }
   }
@@ -202,6 +204,7 @@ export function embedLabText768(text: string): number[] {
   if (norm > 0) {
     // Divide cada componente por la norma.
     for (let index = 0; index < vector.length; index += 1) {
+      // Normaliza cada componente y fija seis decimales para obtener resultados reproducibles.
       vector[index] = Number(((vector[index] ?? 0) / norm).toFixed(6));
     }
   }
@@ -215,18 +218,25 @@ export function embedLabText768(text: string): number[] {
 export function cosineSimilarity768(left: readonly number[], right: readonly number[]): number {
   // Verifica ambas dimensiones.
   assertVector768(left, "cosineSimilarity768(left)");
+  // Valida también el segundo vector antes de calcular la similitud coseno.
   assertVector768(right, "cosineSimilarity768(right)");
   // Producto escalar y normas.
   let dot = 0;
+  // Acumula por separado el cuadrado de la norma del vector izquierdo.
   let normLeft = 0;
+  // Mantiene otro acumulador para la norma del vector derecho.
   let normRight = 0;
   // Recorre las 768 posiciones.
   for (let index = 0; index < LAB_EMBEDDING_DIMENSIONS; index += 1) {
     // Componentes.
     const a = left[index] ?? 0;
+    // Lee la componente correspondiente del segundo vector.
     const b = right[index] ?? 0;
+    // Suma los productos de componentes para obtener el producto escalar.
     dot += a * b;
+    // Suma el cuadrado de la componente izquierda para calcular después su norma.
     normLeft += a * a;
+    // Hace lo mismo con la componente derecha antes de normalizar el producto escalar.
     normRight += b * b;
   }
   // Si alguno es el vector cero, la similitud es 0.
@@ -253,6 +263,7 @@ export function createDeterministic768EmbeddingProvider(
   return {
     modelId,
     dimensions: LAB_EMBEDDING_DIMENSIONS,
+    // Convierte los textos en vectores mediante el proveedor que implementa este puerto.
     async embed(texts: readonly string[]): Promise<number[][]> {
       // Embebe cada texto validando las 768 dimensiones.
       return texts.map((text) => embedLabText768(text));

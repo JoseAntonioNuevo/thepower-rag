@@ -135,26 +135,34 @@ export function journalPorts(
     estimatedMaxUsd: prices.holdMicros / 1_000_000,
     // Modelo: plan, evaluación, seguimiento y síntesis, cada uno con su tipo de operación.
     model: {
+      // Construye el plan de investigación que consumen los nodos posteriores.
       plan: (input, context) => call("plan", input, () => inner.model.plan(input, context)),
+      // Valora la suficiencia de la evidencia y las carencias que quedan por cubrir.
       assess: (input, context) => call("assess", input, () => inner.model.assess(input, context)),
+      // Propone consultas adicionales a partir de las carencias del intento anterior.
       followUp: (input, context) =>
         call("follow-up", input, () => inner.model.followUp(input, context)),
+      // Compone el informe a partir de la evidencia reunida y las subpreguntas del plan.
       synthesize: (input, context) =>
         call("synthesize", input, () => inner.model.synthesize(input, context)),
     },
     // Curso, herramienta, búsqueda y lectura con el mismo patrón.
     course: {
+      // Recupera candidatos documentales dentro del ámbito de corpus y consulta del recorrido.
       retrieve: (input, context) =>
         call("course", input, () => inner.course.retrieve(input, context)),
     },
     tool: {
+      // Resuelve una ficha del curso usando el ámbito y los filtros del recorrido.
       getCourseSession: (args, context) =>
         call("tool", args, () => inner.tool.getCourseSession(args, context)),
     },
     search: {
+      // Busca candidatos para la consulta con los límites y el transporte de este adaptador.
       search: (input, context) => call("search", input, () => inner.search.search(input, context)),
     },
     reader: {
+      // Lee el recurso solicitado y devuelve el resultado de este adaptador al consumidor.
       read: (input, context) => call("read", input, () => inner.reader.read(input, context)),
     },
   };
@@ -258,7 +266,9 @@ export async function journalMediaCall<T>(
     // Detiene la espera.
     const halt = () => {
       // Si ya se resolvió, nada.
-      if (settled) return;
+      if (settled)
+        // Termina esta rama sin ejecutar los pasos siguientes del recorrido.
+        return;
       // Marca como resuelto.
       settled = true;
       // Corta la llamada.
@@ -284,7 +294,9 @@ export async function journalMediaCall<T>(
     // Cuando llega el resultado, resuelve con él si nadie lo hizo antes.
     void pending.then((value) => {
       // Ya resuelto.
-      if (settled) return;
+      if (settled)
+        // Termina esta rama sin ejecutar los pasos siguientes del recorrido.
+        return;
       // Marca.
       settled = true;
       // Resuelve con el resultado.
@@ -292,9 +304,13 @@ export async function journalMediaCall<T>(
     });
   }).finally(() => {
     // Limpia el temporizador.
-    if (timer !== undefined) clearTimeout(timer);
+    if (timer !== undefined)
+      // Cancela el temporizador del plazo porque este recorrido ya ha terminado.
+      clearTimeout(timer);
     // Retira el oyente.
-    if (onAbort !== undefined) input.signal.removeEventListener("abort", onAbort);
+    if (onAbort !== undefined)
+      // Retira el listener de cancelación para que no siga actuando tras terminar la operación.
+      input.signal.removeEventListener("abort", onAbort);
   });
   // ¿Tarde? Parada, cancelación o plazo vencido.
   const late = outcome === "stop" || input.signal.aborted || Date.now() > job.deadline_at;

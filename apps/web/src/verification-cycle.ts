@@ -39,9 +39,13 @@ export async function consumeVerificationToken(input: {
   onRenewed: (next: VerificationConfig) => void;
 }): Promise<string | null> {
   // Sin configuración: error.
-  if (!input.config) throw new Error(VERIFICATION_NOT_READY);
+  if (!input.config)
+    // Interrumpe esta rama y propaga el motivo al manejador de errores del recorrido.
+    throw new Error(VERIFICATION_NOT_READY);
   // Sin protección: sin token.
-  if (!input.config.enabled) return null;
+  if (!input.config.enabled)
+    // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+    return null;
   // Sin token.
   if (!input.readToken()) {
     // Reinicia el widget.
@@ -52,7 +56,9 @@ export async function consumeVerificationToken(input: {
   // Token actual.
   const current = input.readToken();
   // Sigue sin token: error.
-  if (!current) throw new Error(VERIFICATION_REQUIRED);
+  if (!current)
+    // Interrumpe esta rama y propaga el motivo al manejador de errores del recorrido.
+    throw new Error(VERIFICATION_REQUIRED);
   // Comprueba la sesión.
   const response = await input.fetchSession();
   // Respuesta.
@@ -74,7 +80,9 @@ export async function consumeVerificationToken(input: {
   // Token a gastar.
   const value = input.readToken();
   // Sin token: error.
-  if (!value) throw new Error(VERIFICATION_REQUIRED);
+  if (!value)
+    // Interrumpe esta rama y propaga el motivo al manejador de errores del recorrido.
+    throw new Error(VERIFICATION_REQUIRED);
   // Lo borra para no reutilizarlo.
   input.clearToken();
   // Pide uno nuevo.

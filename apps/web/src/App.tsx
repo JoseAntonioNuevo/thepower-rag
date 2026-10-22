@@ -608,6 +608,7 @@ function ChatPane({
     () =>
       new DefaultChatTransport<CourseUIMessage>({
         api: "/api/chat",
+        // Atiende la petición HTTP con el adaptador y el entorno de este recorrido.
         fetch: async (url, init) => {
           // Petición.
           const response = await fetch(url, init);
@@ -621,6 +622,7 @@ function ChatPane({
           // Respuesta.
           return response;
         },
+        // Construye el cuerpo del envío con etapa, grupo y mensajes de la conversación actual.
         prepareSendMessagesRequest: ({ messages }) => ({
           body: {
             mode,
@@ -645,6 +647,7 @@ function ChatPane({
   const { messages, sendMessage, status, stop, error, clearError, setMessages } =
     useChat<CourseUIMessage>({
       transport,
+      // Incorpora al estado visual las partes de datos que llegan por el stream del chat.
       onData: (part) => {
         // Paso CRAG.
         if (part.type === "data-step") {

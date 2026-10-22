@@ -95,11 +95,15 @@ export function contextualize(
     // Texto compactado y recortado.
     const text = turn.text.replace(/\s+/g, " ").trim().slice(0, cap);
     // Vacío: se salta.
-    if (text.length === 0) continue;
+    if (text.length === 0)
+      // Omite el resto de esta iteración y pasa al siguiente elemento.
+      continue;
     // Línea con el papel.
     const line = `${turn.role === "user" ? "Usuario" : "Investigación"}: ${text}`;
     // Si no cabe, se salta.
-    if (used + line.length > RESEARCH_MEMORY_CHARS) continue;
+    if (used + line.length > RESEARCH_MEMORY_CHARS)
+      // Omite el resto de esta iteración y pasa al siguiente elemento.
+      continue;
     // Se elige.
     chosen.add(turn);
     // Guarda su línea.

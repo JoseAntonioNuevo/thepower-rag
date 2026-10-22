@@ -1,0 +1,142 @@
+[
+  {
+    "id": 1,
+    "question": "¿Qué identificadores tienen las regiones primaria y de contingencia y cuántas zonas tiene cada una?",
+    "answerable": true,
+    "expectedDocuments": ["01-arquitectura-aethercloud"],
+    "expectedFactsOrRefusal": ["eu-mad-1", "eu-fra-1", "tres zonas"]
+  },
+  {
+    "id": 2,
+    "question": "Si el plano de control entra en mantenimiento, ¿durante cuánto tiempo mínimo sigue funcionando el de datos?",
+    "answerable": true,
+    "expectedDocuments": ["01-arquitectura-aethercloud"],
+    "expectedFactsOrRefusal": ["6 horas"]
+  },
+  {
+    "id": 3,
+    "question": "Compara la caducidad de un token de acceso con el intervalo de rotación de los certificados de trabajo.",
+    "answerable": true,
+    "expectedDocuments": ["02-autenticacion-mtls-tokens"],
+    "expectedFactsOrRefusal": ["24 horas", "7 días"]
+  },
+  {
+    "id": 4,
+    "question": "¿En cuántos segundos como máximo se propaga una revocación de emergencia a las pasarelas europeas?",
+    "answerable": true,
+    "expectedDocuments": ["02-autenticacion-mtls-tokens"],
+    "expectedFactsOrRefusal": ["90 segundos"]
+  },
+  {
+    "id": 5,
+    "question": "Para el plan Empresa, indica el cupo por minuto, la concurrencia y el tamaño límite de un POST.",
+    "answerable": true,
+    "expectedDocuments": ["03-limites-y-cuotas-api"],
+    "expectedFactsOrRefusal": ["600", "50", "4 MiB"]
+  },
+  {
+    "id": 6,
+    "question": "¿Cada cuántos días se renuevan las DEK y provoca esa renovación una parada?",
+    "answerable": true,
+    "expectedDocuments": ["04-almacenamiento-y-cifrado-kms"],
+    "expectedFactsOrRefusal": ["30 días", "sin tiempo de inactividad"]
+  },
+  {
+    "id": 7,
+    "question": "Explica la periodicidad de las instantáneas incrementales y cuánto tiempo se conservan.",
+    "answerable": true,
+    "expectedDocuments": ["04-almacenamiento-y-cifrado-kms"],
+    "expectedFactsOrRefusal": ["6 horas", "35 días"]
+  },
+  {
+    "id": 8,
+    "question": "¿Qué disponibilidad mensual se garantiza y qué crédito corresponde al intervalo de 99,00 a 99,94 por ciento?",
+    "answerable": true,
+    "expectedDocuments": ["05-sla-y-creditos-servicio"],
+    "expectedFactsOrRefusal": ["99,95", "10 %"]
+  },
+  {
+    "id": 9,
+    "question": "Ante una caída total del plano de datos, ¿cuándo llega la primera respuesta y cuándo se entrega el RCA definitivo?",
+    "answerable": true,
+    "expectedDocuments": ["06-respuesta-a-incidentes"],
+    "expectedFactsOrRefusal": ["15 minutos", "5 días hábiles"]
+  },
+  {
+    "id": 10,
+    "question": "¿Cuánto cuesta al mes el plan Empresa y qué precio tiene cada GiB-mes de almacenamiento adicional?",
+    "answerable": true,
+    "expectedDocuments": ["07-facturacion-y-planes"],
+    "expectedFactsOrRefusal": ["850 EUR", "0,18 EUR"]
+  },
+  {
+    "id": 11,
+    "question": "¿Durante cuántos años o días se guardan los registros inmutables de acceso administrativo?",
+    "answerable": true,
+    "expectedDocuments": ["08-residencia-datos-y-rgpd"],
+    "expectedFactsOrRefusal": ["2 años", "730 días"]
+  },
+  {
+    "id": 12,
+    "question": "¿Qué puertos corresponden a OTLP por gRPC y por HTTP y cuántos días se conservan las trazas?",
+    "answerable": true,
+    "expectedDocuments": ["09-observabilidad-opentelemetry"],
+    "expectedFactsOrRefusal": ["4317", "4318", "14 días"]
+  },
+  {
+    "id": 13,
+    "question": "Describe los dos primeros porcentajes del canary, sus ventanas y el umbral de errores 5xx que dispara rollback.",
+    "answerable": true,
+    "expectedDocuments": ["10-despliegues-canary-y-rollback"],
+    "expectedFactsOrRefusal": ["10 %", "50 %", "10 minutos", "2,0 %"]
+  },
+  {
+    "id": 14,
+    "question": "Une el nombre de la autoridad que emite los certificados mTLS con la frecuencia de actualizaciones de un incidente crítico.",
+    "answerable": true,
+    "expectedDocuments": ["02-autenticacion-mtls-tokens", "06-respuesta-a-incidentes"],
+    "expectedFactsOrRefusal": ["AetherCA-G2", "30 minutos"]
+  },
+  {
+    "id": 15,
+    "question": "¿Cuál es el número de teléfono personal del responsable comercial en Madrid?",
+    "answerable": false,
+    "expectedDocuments": [],
+    "expectedFactsOrRefusal": ["El corpus no contiene teléfonos ni contactos personales."]
+  },
+  {
+    "id": 16,
+    "question": "¿Qué distribución Linux y versión de kernel instalan las máquinas de los clientes?",
+    "answerable": false,
+    "expectedDocuments": [],
+    "expectedFactsOrRefusal": ["No se especifican distribución ni kernel."]
+  },
+  {
+    "id": 17,
+    "question": "¿Cuál es el NIF de la sociedad que opera AetherCloud?",
+    "answerable": false,
+    "expectedDocuments": [],
+    "expectedFactsOrRefusal": ["No consta identidad fiscal de la sociedad."]
+  },
+  {
+    "id": 18,
+    "question": "¿Qué beca educativa de 2027 paga la cuota del plan Empresa?",
+    "answerable": false,
+    "expectedDocuments": [],
+    "expectedFactsOrRefusal": ["No existe política de becas en el corpus."]
+  },
+  {
+    "id": 19,
+    "question": "¿Qué salario anual recibe una persona de guardia del centro de operaciones?",
+    "answerable": false,
+    "expectedDocuments": [],
+    "expectedFactsOrRefusal": ["No consta información laboral ni salarial."]
+  },
+  {
+    "id": 20,
+    "question": "¿Qué número de patente protege el algoritmo de facturación de AetherCloud?",
+    "answerable": false,
+    "expectedDocuments": [],
+    "expectedFactsOrRefusal": ["No constan patentes."]
+  }
+]

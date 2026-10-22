@@ -192,6 +192,7 @@ describe("HTTP de investigación", () => {
         ...ports,
         // Herramienta de sesiones que siempre devuelve un fallo del proveedor.
         tool: {
+          // Doble de prueba: resuelve una ficha del curso usando el ámbito y los filtros del recorrido.
           getCourseSession: () =>
             Promise.resolve({
               ok: false as const,
@@ -326,8 +327,14 @@ describe("HTTP de investigación", () => {
       PUBLIC_ORIGIN: "https://rag-thepower.josenuevo.dev",
       TURNSTILE_SITE_KEY: "site-key",
       TURNSTILE_SECRET_KEY: "x".repeat(24),
-      CHAT_IP_LIMITER: { limit: async () => ({ success: true }) },
-      CHAT_SESSION_LIMITER: { limit: async () => ({ success: true }) },
+      CHAT_IP_LIMITER: {
+        // Doble de prueba: resuelve el control de cupo inyectado antes de permitir que avance la petición.
+        limit: async () => ({ success: true }),
+      },
+      CHAT_SESSION_LIMITER: {
+        // Doble de prueba: resuelve el control de cupo inyectado antes de permitir que avance la petición.
+        limit: async () => ({ success: true }),
+      },
     };
     // Petición desde un dominio ajeno.
     const foreign = await createApp().request(

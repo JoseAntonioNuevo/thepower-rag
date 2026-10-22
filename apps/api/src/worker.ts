@@ -12,6 +12,7 @@ const app = createApp();
 
 // Manejador que Cloudflare llama en cada petición.
 export default {
+  // Recibe la petición del runtime Worker y la delega al manejador con sus bindings de entorno.
   async fetch(request: Request, env: WorkerEnv, context: ExecutionContext): Promise<Response> {
     // Ruta de la petición.
     const pathname = new URL(request.url).pathname;

@@ -1,10 +1,10 @@
 {
-  "frozenAt": "2026-10-16T18:15:00.000Z",
+  "frozenAt": "2026-10-18",
   "origin": "https://rag-thepower.josenuevo.dev",
   "questionsFile": "material/comparacion/conjunto-reservado-referencia-actual-20.md",
   "provider": "anthropic",
-  "model": "claude-haiku-5-5",
-  "evaluator": "claude-haiku-5-5",
+  "model": "claude-sonnet-5-5",
+  "evaluator": "claude-sonnet-5-5",
   "reasoningEffort": "low",
   "ragContextMode": "semantic",
   "corpus": "c3a59a406888b",
@@ -22,13 +22,35 @@
   "evaluatorMaxOutputTokens": 1600,
   "maxRetrievals": 3,
   "maxRewrites": 2,
-  "turnDeadlineMs": 20000,
+  "turnDeadlineMs": 60000,
   "sha256": {
     "apps/api/src/prompts.ts": "fb922412995cd0ebe9fc5eb2d402252c338366106a565264ccf307ac0cd18f06",
-    "apps/api/src/crag-real.ts": "267f3ac6d50d2d1d1a3a41363482588ac9f51a8c7ae0ae54eff80545cdcb3a47",
-    "apps/api/src/crag-graph.ts": "cd03e11b1886d2c876e3e6728986a790afb995ceba30f006d550ba18d82ea9b6",
-    "apps/api/src/model.ts": "e5be1e11a169841311912b06bdc2e646b60ce4c635c9a323f9008627ee23fc79",
+    "apps/api/src/crag-real.ts": "dd08f18ee3e166fa7ddbc4259ef419a7339bc15c67689aa516499ec2873a07a5",
+    "apps/api/src/crag-graph.ts": "e475bfbf8e5d6736b0be0158927b7a1fc49d5aaaf0dabcf38e253c36c693243a",
+    "apps/api/src/model.ts": "b9f8ca52ae31a5f150e571a2f3f98b852b06973863d8913f98f06e2508392599",
     "corpus/prepared/corpus.json": "79c0e2a1ff4230f79b29adf32ed192da66e0af024235e08c907d4be4ba9d99cc",
-    "material/comparacion/conjunto-reservado-referencia-actual-20.md": "d18b9c4e6b42096cb025733daf5309d7b382af29c10165d67731df912293e606"
-  }
+    "material/comparacion/conjunto-reservado-referencia-actual-20.md": "d18b9c4e6b42096cb025733daf5309d7b382af29c10165d67731df912293e606",
+    "apps/api/src/crag-http.ts": "6160bd382ec176ff9722daeb043751d1b98f439b0f75f85f8f69d387a733581a",
+    "apps/api/src/env.ts": "43eb62cfac4a9c54442eba8c43340ab20797d9fc8b6dd9e1d9adf9410598a4cf",
+    "apps/api/src/course-models.ts": "95fdcb8cbd4b93831ff335ea504750f9a0c9b4a0667a93808d8860a06f92a0fb",
+    "apps/api/src/public-budget.ts": "ffb9c7321999691c1d7fdd5157754f79b29bc41cfcbe35c411f54e519f7d0b53",
+    "packages/rag/src/crag.ts": "67899bf3f90569de077e14d3919eb0ba8b1caf8f10ccce6730f0e01afac3b06e",
+    "apps/web/wrangler.jsonc": "b0c06b8af3117507736a478cf09176a580d98f683c41c2624cc91abd78af7b24",
+    "apps/api/src/app.ts": "0d91348fdf3868f97c77753e28e55bd8df8685e747be7c298def3aaa47beae04",
+    "apps/api/src/course-stream.ts": "b485f323a6d5916936d3cc85b4e09a8d89be980dac5310016178062afc86543e",
+    "packages/contracts/src/health.ts": "32fd6cc9f46266de6f248d4d1afba5935ae3e0990054479949e14ebfe9b365f5"
+  },
+  "status": "deployed-development-tested-reserved-set-not-executed",
+  "generatorRates": {
+    "input": 2,
+    "output": 10
+  },
+  "evaluatorRates": {
+    "input": 2,
+    "output": 10
+  },
+  "generationTimeoutMs": 30000,
+  "deploymentVersion": "c9eae749-6cd4-4911-95a4-3cbb8390d2d9",
+  "deploymentTrafficPercent": 100,
+  "developmentComparisonRun": "sonnet-20261018-approved"
 }

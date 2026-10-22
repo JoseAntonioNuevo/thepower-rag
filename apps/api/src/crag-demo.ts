@@ -131,7 +131,9 @@ export function createDemoCragPorts(input: {
     measured: false,
     now: input.now ?? Date.now,
     signal: input.signal,
+    // Comprueba o registra la reserva previa que permite continuar con una operación de pago.
     reserve: () => ({ ok: true }),
+    // Recupera candidatos documentales dentro del ámbito de corpus y consulta del recorrido.
     async retrieve({ query, scope, attempt }) {
       // Suficiente: S5 a la primera.
       if (scenario === "sufficient-s5") {
@@ -181,6 +183,7 @@ export function createDemoCragPorts(input: {
       // Candidatos.
       return { ok: true, providerCall: false, chunks };
     },
+    // Ordena los fragmentos y evalúa si aportan evidencia suficiente para la pregunta.
     async rankAndAssess({ chunks }) {
       // Error provocado: ids inexistentes.
       if (scenario === "evaluator-error") {
@@ -328,6 +331,7 @@ export function createDemoCragPorts(input: {
         ),
       };
     },
+    // Propone otra consulta a partir de la pregunta y las carencias detectadas.
     async reformulate({ question, query, attempt }) {
       // Parcial: consulta sobre observabilidad.
       if (scenario === "partial-s5-s6") {
@@ -366,6 +370,7 @@ export function createDemoCragPorts(input: {
       // Consulta con el sufijo.
       return { ok: true, raw: { query: `${query} ${suffix}` }, providerCall: false };
     },
+    // Produce la respuesta final con los fragmentos que este recorrido ha seleccionado.
     async generate({ evidence }) {
       // Respuesta de prueba con citas.
       return {

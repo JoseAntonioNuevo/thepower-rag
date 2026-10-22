@@ -1,3 +1,5 @@
+> **Histórico del respaldo determinista:** estos resultados se obtuvieron con vectores léxicos y generación extractiva. Los nombres de modelos que aparecen en la configuración eran etiquetas, no llamadas realizadas a Gemini ni a Qwen. El ensayo real de S10 está en [material/S10/evidencias](../../material/S10/evidencias/evaluacion-real-resumen.md).
+
 # Evaluación ejecutada del laboratorio reproducible (S10 y S11)
 
 Resultados obtenidos reconstruyendo el sistema desde los **10 documentos ficticios en bruto de AetherCloud** e **índice vacío** con vectores de **768 dimensiones** (`vector(768)` e índice HNSW `vector_cosine_ops`).

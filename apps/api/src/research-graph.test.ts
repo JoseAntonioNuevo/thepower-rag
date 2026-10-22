@@ -87,16 +87,32 @@ function counted(ports: ResearchPorts): { ports: ResearchPorts; calls: Calls } {
       ...ports,
       // Cada método anota la llamada y delega en el puerto original.
       model: {
+        // Doble de prueba: construye el plan de investigación que consumen los nodos posteriores.
         plan: (i, c) => (calls.model.push("plan"), ports.model.plan(i, c)),
+        // Doble de prueba: valora la suficiencia de la evidencia y las carencias que quedan por cubrir.
         assess: (i, c) => (calls.model.push("assess"), ports.model.assess(i, c)),
+        // Doble de prueba: propone consultas adicionales a partir de las carencias del intento anterior.
         followUp: (i, c) => (calls.model.push("followUp"), ports.model.followUp(i, c)),
+        // Doble de prueba: compone el informe a partir de la evidencia reunida y las subpreguntas del plan.
         synthesize: (i, c) => (calls.model.push("synthesize"), ports.model.synthesize(i, c)),
       },
       // Búsqueda, lectura, curso y herramienta, con el mismo patrón.
-      search: { search: (i, c) => ((calls.search += 1), ports.search.search(i, c)) },
-      reader: { read: (i, c) => (calls.read.push(i.url), ports.reader.read(i, c)) },
-      course: { retrieve: (i, c) => ((calls.course += 1), ports.course.retrieve(i, c)) },
-      tool: { getCourseSession: (i, c) => ((calls.tool += 1), ports.tool.getCourseSession(i, c)) },
+      search: {
+        // Doble de prueba: busca candidatos para la consulta con los límites y el transporte de este adaptador.
+        search: (i, c) => ((calls.search += 1), ports.search.search(i, c)),
+      },
+      reader: {
+        // Doble de prueba: lee el recurso solicitado y devuelve el resultado de este adaptador al consumidor.
+        read: (i, c) => (calls.read.push(i.url), ports.reader.read(i, c)),
+      },
+      course: {
+        // Doble de prueba: recupera candidatos documentales dentro del ámbito de corpus y consulta del recorrido.
+        retrieve: (i, c) => ((calls.course += 1), ports.course.retrieve(i, c)),
+      },
+      tool: {
+        // Doble de prueba: resuelve una ficha del curso usando el ámbito y los filtros del recorrido.
+        getCourseSession: (i, c) => ((calls.tool += 1), ports.tool.getCourseSession(i, c)),
+      },
     },
   };
 }
@@ -406,6 +422,7 @@ describe("grafo de investigación con adaptadores de prueba", () => {
       ...ports,
       model: {
         ...ports.model,
+        // Doble de prueba: compone el informe a partir de la evidencia reunida y las subpreguntas del plan.
         synthesize: async (input, context) => {
           // Informe original.
           const base = await ports.model.synthesize(input, context);
@@ -457,6 +474,7 @@ describe("grafo de investigación con adaptadores de prueba", () => {
         ...ports,
         model: {
           ...ports.model,
+          // Doble de prueba: valora la suficiencia de la evidencia y las carencias que quedan por cubrir.
           assess: async (input, context) => {
             // Evaluación original.
             const base = await ports.model.assess(input, context);
@@ -496,6 +514,7 @@ describe("grafo de investigación con adaptadores de prueba", () => {
       ...ports,
       model: {
         ...ports.model,
+        // Doble de prueba: valora la suficiencia de la evidencia y las carencias que quedan por cubrir.
         assess: async (input, context) => {
           // Evaluación original.
           const result = await ports.model.assess(input, context);
@@ -549,6 +568,7 @@ describe("grafo de investigación con adaptadores de prueba", () => {
     const { summary, state } = await run("course-tool", question, "M/J", (ports) => ({
       ...ports,
       tool: {
+        // Doble de prueba: resuelve una ficha del curso usando el ámbito y los filtros del recorrido.
         getCourseSession: () =>
           Promise.resolve({
             ok: false as const,
@@ -580,6 +600,7 @@ describe("grafo de investigación con adaptadores de prueba", () => {
     const { summary, state } = await run("course-tool", question, "M/J", (ports) => ({
       ...ports,
       tool: {
+        // Doble de prueba: resuelve una ficha del curso usando el ámbito y los filtros del recorrido.
         getCourseSession: () =>
           Promise.resolve({
             ok: true as const,
@@ -621,6 +642,7 @@ describe("grafo de investigación con adaptadores de prueba", () => {
       measured: true,
       model: {
         ...base.model,
+        // Doble de prueba: construye el plan de investigación que consumen los nodos posteriores.
         plan: () => {
           // Marca la entrada.
           entered = true;
@@ -647,6 +669,7 @@ describe("grafo de investigación con adaptadores de prueba", () => {
             }, 220);
           });
         },
+        // Doble de prueba: valora la suficiencia de la evidencia y las carencias que quedan por cubrir.
         assess: (input, context) => {
           // Cuenta.
           assessCalls += 1;
@@ -707,6 +730,7 @@ describe("contabilidad de la investigación", () => {
       measured: true,
       fixture: false,
       estimatedMaxUsd: 1.25,
+      // Doble de prueba: proporciona el reloj del recorrido para calcular plazos y tiempos transcurridos.
       now: () => 20,
     });
   }

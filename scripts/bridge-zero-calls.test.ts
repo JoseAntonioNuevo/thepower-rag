@@ -24,6 +24,7 @@ const env = {
   MIN_RETRIEVAL_SCORE: "0.5",
   // Workers AI que lanza un error si alguien lo llama.
   AI: {
+    // Doble de prueba: ejecuta la operación del puerto y devuelve su resultado al llamador.
     run: async () => {
       // Cualquier llamada al proveedor es un error.
       throw new Error("unexpected provider call");

@@ -41,6 +41,7 @@ const TURNS: readonly Turn[] = [
     text: "¿Qué es un embedding?",
     embeddingCalls: 0,
     generativeCalls: 1,
+    // Comprueba una propiedad de la respuesta HTTP y registra el fallo de verificación si no se cumple.
     expect: (body) =>
       body.includes('"completion":"complete"') && body.includes('"type":"text-delta"'),
   },
@@ -52,6 +53,7 @@ const TURNS: readonly Turn[] = [
     text: "¿Cuándo es la clase de RAG S10?",
     embeddingCalls: 1,
     generativeCalls: 1,
+    // Comprueba una propiedad de la respuesta HTTP y registra el fallo de verificación si no se cumple.
     expect: (body) => body.includes("2026-10-22") && !body.includes("2026-10-26"),
   },
   // CRAG: un embedding y dos llamadas (evaluar y generar); cita S5.
@@ -62,6 +64,7 @@ const TURNS: readonly Turn[] = [
     text: "¿Cómo modela LangGraph un agente con estado y nodos?",
     embeddingCalls: 1,
     generativeCalls: 2,
+    // Comprueba una propiedad de la respuesta HTTP y registra el fallo de verificación si no se cumple.
     expect: (body) => body.includes("s05-langgraph"),
   },
   // Aclaración: sin llamadas; pide el grupo.
@@ -72,6 +75,7 @@ const TURNS: readonly Turn[] = [
     text: "¿Cuándo es la clase de RAG?",
     embeddingCalls: 0,
     generativeCalls: 0,
+    // Comprueba una propiedad de la respuesta HTTP y registra el fallo de verificación si no se cumple.
     expect: (body) => body.toLowerCase().includes("grupo"),
   },
   // Rechazo: un embedding y ninguna generación; sin citas.
@@ -82,6 +86,7 @@ const TURNS: readonly Turn[] = [
     text: "¿Qué beca interna del año 1991 cubre este programa?",
     embeddingCalls: 1,
     generativeCalls: 0,
+    // Comprueba una propiedad de la respuesta HTTP y registra el fallo de verificación si no se cumple.
     expect: (body) => body.includes("No hay contexto utilizable") && !body.includes("[cite:"),
   },
 ];

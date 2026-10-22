@@ -470,9 +470,13 @@ export function ResearchDesk({
     // Limpieza.
     return () => {
       // Imagen.
-      if (imageUrlRef.current) URL.revokeObjectURL(imageUrlRef.current);
+      if (imageUrlRef.current)
+        // Libera la URL temporal del adjunto para que el navegador pueda recuperar su memoria.
+        URL.revokeObjectURL(imageUrlRef.current);
       // Audio.
-      if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current);
+      if (audioUrlRef.current)
+        // Libera la URL temporal del adjunto para que el navegador pueda recuperar su memoria.
+        URL.revokeObjectURL(audioUrlRef.current);
     };
   }, []);
 
@@ -491,9 +495,13 @@ export function ResearchDesk({
     // Sin clave.
     audioKey.current = null;
     // Vacía el input.
-    if (imageInput.current) imageInput.current.value = "";
+    if (imageInput.current)
+      // Vacía el selector del adjunto para permitir volver a elegir el mismo archivo.
+      imageInput.current.value = "";
     // Vacía el input.
-    if (audioInput.current) audioInput.current.value = "";
+    if (audioInput.current)
+      // Vacía el selector del adjunto para permitir volver a elegir el mismo archivo.
+      audioInput.current.value = "";
     // Sin voz.
     setVoice(false);
   }
@@ -503,7 +511,9 @@ export function ResearchDesk({
     // URL nueva o null.
     const next = file ? URL.createObjectURL(file) : null;
     // Libera la anterior.
-    if (imageUrlRef.current) URL.revokeObjectURL(imageUrlRef.current);
+    if (imageUrlRef.current)
+      // Libera la URL temporal del adjunto para que el navegador pueda recuperar su memoria.
+      URL.revokeObjectURL(imageUrlRef.current);
     // Guarda.
     imageUrlRef.current = next;
     // Estado.
@@ -515,7 +525,9 @@ export function ResearchDesk({
     // URL nueva o null.
     const next = file ? URL.createObjectURL(file) : null;
     // Libera la anterior.
-    if (audioUrlRef.current) URL.revokeObjectURL(audioUrlRef.current);
+    if (audioUrlRef.current)
+      // Libera la URL temporal del adjunto para que el navegador pueda recuperar su memoria.
+      URL.revokeObjectURL(audioUrlRef.current);
     // Guarda.
     audioUrlRef.current = next;
     // Estado.
@@ -748,7 +760,9 @@ export function ResearchDesk({
       return;
     }
     // Ya hay un envío en curso.
-    if (!submitGate.enter()) return;
+    if (!submitGate.enter())
+      // Termina esta rama sin ejecutar los pasos siguientes del recorrido.
+      return;
     // Generación al empezar.
     const generationAtStart = generation.current;
     // Conversación al empezar.
@@ -783,6 +797,7 @@ export function ResearchDesk({
         audio: audioFile && audioKey.current ? { file: audioFile, key: audioKey.current } : null,
         idempotencyKey,
         generation: generationAtStart,
+        // Lee la generación vigente de la conversación para descartar respuestas de un envío anterior.
         currentGeneration: () => generation.current,
         beforeSend,
       });
@@ -1164,7 +1179,9 @@ export function ResearchDesk({
                       // Sin clave.
                       imageKey.current = null;
                       // Vacía el input.
-                      if (imageInput.current) imageInput.current.value = "";
+                      if (imageInput.current)
+                        // Vacía el selector del adjunto para permitir volver a elegir el mismo archivo.
+                        imageInput.current.value = "";
                       // Libera la URL.
                       replaceImageUrl(null);
                     }}
@@ -1194,7 +1211,9 @@ export function ResearchDesk({
                       // Sin clave.
                       audioKey.current = null;
                       // Vacía el input.
-                      if (audioInput.current) audioInput.current.value = "";
+                      if (audioInput.current)
+                        // Vacía el selector del adjunto para permitir volver a elegir el mismo archivo.
+                        audioInput.current.value = "";
                       // Libera la URL.
                       replaceAudioUrl(null);
                     }}

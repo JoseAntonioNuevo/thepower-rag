@@ -184,7 +184,9 @@ describe("decisiones de CRAG", () => {
     });
     // Conserva s5 como útil pero declara la cobertura parcial.
     expect(partial.status).toBe("partial");
+    // Compara la estructura y los valores completos con la referencia de la prueba.
     expect(partial.usefulIds).toEqual(["s5"]);
+    // Compara la estructura y los valores completos con la referencia de la prueba.
     expect(partial.gaps).toEqual(["Falta cómo observar la ejecución con Langfuse y LangSmith."]);
     // Cuando ambos fragmentos superan 0,50 y la cobertura llega a >= 0,75 sin lagunas: sufficient.
     const sufficient = assessCoverageByThresholds({
@@ -197,6 +199,7 @@ describe("decisiones de CRAG", () => {
     });
     // Suficiente con ambos fragmentos.
     expect(sufficient.status).toBe("sufficient");
+    // Compara la estructura y los valores completos con la referencia de la prueba.
     expect(sufficient.usefulIds).toEqual(["s5", "s6"]);
     // También pasa validateAssessment por separado.
     expect(validateAssessment(candidates, sufficient).ok).toBe(true);

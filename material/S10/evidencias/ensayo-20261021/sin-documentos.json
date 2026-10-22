@@ -1,0 +1,25 @@
+{
+  "backend": "postgresql-pgvector",
+  "generator": "claude-sonnet-5-5",
+  "generationProvider": "anthropic",
+  "embedding": "openrouter:google/gemini-embedding-2:768",
+  "dimensions": 768,
+  "question": "¿Con qué algoritmo se cifran los volúmenes en reposo y qué periodo de enfriamiento exige destruir una CMK?",
+  "answer": "No puedo responder a ninguna de las dos partes de la pregunta: el bloque DATOS_NO_FIABLES no contiene ningún fragmento documental. Está vacío, sin documentos ni identificadores que citar.\n\nPor tanto, no dispongo de información sobre el algoritmo de cifrado de los volúmenes en reposo ni sobre el periodo de enfriamiento exigido para destruir una CMK, y no voy a completarlo con conocimiento externo.\n\nSi me facilitas los fragmentos con sus identificadores, responderé con las citas correspondientes.",
+  "retrievalCount": 0,
+  "suppliedDocuments": 0,
+  "operations": [
+    {
+      "kind": "generation",
+      "model": "claude-sonnet-5-5",
+      "inputTokens": 282,
+      "outputTokens": 198
+    }
+  ],
+  "budget": {
+    "limitUsd": 1,
+    "reservedUsd": 0.2878314,
+    "calls": 50,
+    "actualProviderUsd": null
+  }
+}

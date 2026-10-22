@@ -98,7 +98,9 @@ export function parseVisionJson(text: string): ImageRead | null {
   // Última llave.
   const end = text.lastIndexOf("}");
   // Sin objeto JSON.
-  if (start < 0 || end <= start) return null;
+  if (start < 0 || end <= start)
+    // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+    return null;
   // JSON mal formado devuelve null.
   try {
     // Analiza el objeto.
@@ -111,7 +113,9 @@ export function parseVisionJson(text: string): ImageRead | null {
       uncertain?: unknown;
     };
     // El texto leído es obligatorio.
-    if (typeof parsed.observedText !== "string") return null;
+    if (typeof parsed.observedText !== "string")
+      // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+      return null;
     // Lectura recortada a los límites.
     return {
       observedText: parsed.observedText.trim().slice(0, MEDIA_LIMITS.maxObservedChars),

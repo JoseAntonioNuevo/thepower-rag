@@ -485,7 +485,9 @@ export function spawnWranglerBridge(
     // Proceso controlable.
     return {
       pid: child.pid ?? -1,
+      // Informa si el proceso hijo ya terminó para evitar tratarlo como un puente disponible.
       hasExited: () => exited,
+      // Solicita terminar el proceso hijo y deja su limpieza al controlador del recorrido.
       kill: () => {
         // PID.
         const pid = child.pid;
@@ -503,6 +505,7 @@ export function spawnWranglerBridge(
           child.kill("SIGTERM");
         }
       },
+      // Espera la terminación del proceso hijo antes de dar por liberados sus recursos.
       waitForExit: async () => {
         // Espera la salida o mata a la fuerza a los 2 s.
         const result = await Promise.race([

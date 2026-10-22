@@ -138,6 +138,7 @@ export async function researchHttpResponse(input: {
   };
   // Stream de la respuesta.
   const stream = createUIMessageStream({
+    // Produce las partes del stream dentro del ciclo de ejecución del protocolo de mensajes.
     execute: async ({ writer }) => {
       // Inicio.
       writer.write({ type: "start", messageMetadata: metadata });
@@ -172,6 +173,7 @@ export async function researchHttpResponse(input: {
         messageMetadata: { ...metadata, completion: completionFor(summary.outcome) },
       });
     },
+    // Transforma el fallo del stream en el mensaje que recibirá el consumidor.
     onError: () => PUBLIC_PROVIDER_MESSAGE,
   });
   // Respuesta HTTP sin caché.

@@ -19,7 +19,9 @@ import { PROVIDER_ENV_VARIABLES } from "../../packages/contracts/src/limits";
 // ¿Valor configurado? Ni vacío ni un marcador de plantilla.
 function configuredValue(value: string | undefined): value is string {
   // Sin valor.
-  if (value === undefined) return false;
+  if (value === undefined)
+    // Rechaza esta condición y comunica el resultado negativo al llamador.
+    return false;
   // Sin espacios.
   const trimmed = value.trim();
   // Minúsculas.
@@ -33,11 +35,15 @@ function configuredRepoEnv(name: string): string | undefined {
   // Ruta del .env.
   const file = path.resolve(import.meta.dirname, "../../.env");
   // Sin archivo.
-  if (!existsSync(file)) return undefined;
+  if (!existsSync(file))
+    // Indica que esta rama no ha producido un valor disponible para el llamador.
+    return undefined;
   // Valor de la variable.
   const value = parse(readFileSync(file, "utf8"))[name];
   // Sin valor útil.
-  if (typeof value !== "string" || !configuredValue(value)) return undefined;
+  if (typeof value !== "string" || !configuredValue(value))
+    // Indica que esta rama no ha producido un valor disponible para el llamador.
+    return undefined;
   // Valor sin espacios.
   return value.trim();
 }
@@ -60,7 +66,9 @@ export default defineConfig(({ command }) => ({
       // Ajusta la configuración del Worker antes de arrancarlo.
       config(workerConfig) {
         // Solo en vp dev y fuera de investigación.
-        if (command !== "serve" || researchDev) return;
+        if (command !== "serve" || researchDev)
+          // Termina esta rama sin ejecutar los pasos siguientes del recorrido.
+          return;
         // Variables actuales.
         const vars = { ...workerConfig.vars };
         // ¿Se añadió alguna?
@@ -81,7 +89,9 @@ export default defineConfig(({ command }) => ({
           }
         }
         // Sin cambios.
-        if (!changed) return;
+        if (!changed)
+          // Termina esta rama sin ejecutar los pasos siguientes del recorrido.
+          return;
         // Variables nuevas.
         return { vars };
       },

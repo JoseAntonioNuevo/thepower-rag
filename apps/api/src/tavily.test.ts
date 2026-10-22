@@ -123,6 +123,7 @@ describe("Tavily en la investigación durable", () => {
     // Buscador con fetch simulado.
     const port = createTavilySearch({
       apiKey: "test-key",
+      // Doble de prueba: atiende la petición HTTP con el adaptador y el entorno de este recorrido.
       fetch: async (url, init) => {
         // Guarda la petición.
         seen.push({ url, init });
@@ -172,7 +173,9 @@ describe("Tavily en la investigación durable", () => {
     const port = createTavilyReader({
       apiKey: "test-key",
       allowedDomains: ["docs.langchain.com"],
+      // Doble de prueba: proporciona el reloj del recorrido para calcular plazos y tiempos transcurridos.
       now: () => 0,
+      // Doble de prueba: atiende la petición HTTP con el adaptador y el entorno de este recorrido.
       fetch: async (_url, init) => {
         // Guarda el cuerpo.
         seen.push(requestJson(init));
@@ -224,6 +227,7 @@ describe("Tavily en la investigación durable", () => {
     const port = createTavilyReader({
       apiKey: "test-key",
       allowedDomains: ["docs.langchain.com"],
+      // Doble de prueba: atiende la petición HTTP con el adaptador y el entorno de este recorrido.
       fetch: async () => {
         // Cuenta.
         calls += 1;
@@ -258,6 +262,7 @@ describe("Tavily en la investigación durable", () => {
     const reader = createTavilyReader({
       apiKey: "test-key",
       allowedDomains: ["docs.langchain.com"],
+      // Doble de prueba: atiende la petición HTTP con el adaptador y el entorno de este recorrido.
       fetch: async () => {
         // Cuenta.
         calls += 1;
@@ -277,6 +282,7 @@ describe("Tavily en la investigación durable", () => {
     // Buscador con respuesta inesperada.
     const port = createTavilySearch({
       apiKey: "test-key",
+      // Doble de prueba: atiende la petición HTTP con el adaptador y el entorno de este recorrido.
       fetch: async () => {
         // Cuenta.
         calls += 1;
@@ -297,6 +303,7 @@ describe("Tavily en la investigación durable", () => {
     // Buscador cuyo fetch lanza.
     const failing = createTavilySearch({
       apiKey: "test-key",
+      // Doble de prueba: atiende la petición HTTP con el adaptador y el entorno de este recorrido.
       fetch: async () => {
         // Error.
         throw new Error("aborted");

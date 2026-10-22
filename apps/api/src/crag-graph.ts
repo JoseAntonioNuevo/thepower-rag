@@ -124,6 +124,8 @@ interface GraphState {
   ledger: Ledger;
   // Inicio del turno.
   startedAt: number;
+  // Plazo único de este turno; no se reinicia entre recuperaciones ni llamadas.
+  executionBudgetMs: number;
   // Si son datos de prueba.
   fixture: boolean;
   // Escenario de prueba.
@@ -158,6 +160,7 @@ const CragGraphState = Annotation.Root({
   // Libro de llamadas, inicio del turno (para el plazo de 20 s) y guion de demo.
   ledger: Annotation<Ledger>,
   startedAt: Annotation<number>,
+  executionBudgetMs: Annotation<number>,
   fixture: Annotation<boolean>,
   scenarioId: Annotation<string | null>,
 });
@@ -181,6 +184,8 @@ export interface CragTurnInput {
   fixture: boolean;
   // Escenario.
   scenarioId: string | null;
+  // Plazo opcional del perfil; la demo y las referencias anteriores conservan 20 segundos.
+  executionBudgetMs?: number;
   // Callback de cada paso.
   onStep?: (step: CragStep) => void;
 }
@@ -345,7 +350,7 @@ function blocked(
     };
   }
   // Sin tiempo.
-  if (!budgetOpen(state.startedAt, ports.now())) {
+  if (!budgetOpen(state.startedAt, ports.now(), state.executionBudgetMs)) {
     // Paso error.
     emitStep(state, emit, {
       kind: "error",
@@ -367,7 +372,9 @@ function blocked(
 // Tiempo restante para la siguiente llamada.
 function callBudget(state: GraphState, ports: CragPorts): { remainingMs: number } {
   // Milisegundos.
-  return { remainingMs: remainingBudgetMs(state.startedAt, ports.now()) };
+  return {
+    remainingMs: remainingBudgetMs(state.startedAt, ports.now(), state.executionBudgetMs),
+  };
 }
 
 // Tras una llamada: rechaza el resultado si llegó cancelado o tarde.
@@ -398,7 +405,7 @@ function finishedLate(
     };
   }
   // Fuera de tiempo.
-  if (!budgetOpen(state.startedAt, ports.now())) {
+  if (!budgetOpen(state.startedAt, ports.now(), state.executionBudgetMs)) {
     // Paso error.
     emitStep({ ...state, ledger }, emit, {
       kind: "error",
@@ -492,6 +499,7 @@ export async function runCragTurn(input: CragTurnInput): Promise<CragTurnResult>
     // Libro inicial, reloj para el plazo único y datos de la demo.
     ledger: emptyLedger(input.ports.measured),
     startedAt: input.ports.now(),
+    executionBudgetMs: input.executionBudgetMs ?? CRAG_BOUNDS.executionBudgetMs,
     fixture: input.fixture,
     scenarioId: input.scenarioId,
   };

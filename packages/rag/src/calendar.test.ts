@@ -36,6 +36,7 @@ it("reconoce consultas semanales generales, con o sin tildes", () => {
     "¿Cuáles son los días de clase?",
     "¿Cuál es el horario de las clases?",
   ])
+    // Contrasta el valor observado con el resultado exacto que define este caso.
     expect(isWeeklyScheduleQuestion(q)).toBe(true);
   // Preguntas con fecha, sesión, tema u otra cosa no lo activan.
   for (const q of [
@@ -45,6 +46,7 @@ it("reconoce consultas semanales generales, con o sin tildes", () => {
     "¿Cuál es el correo de Ignacio?",
     "¿Qué beca de 1991 hay?",
   ])
+    // Contrasta el valor observado con el resultado exacto que define este caso.
     expect(isWeeklyScheduleQuestion(q)).toBe(false);
 });
 // El atajo devuelve la ficha del grupo exacto sin puntuación inventada ni embeddings.
@@ -113,6 +115,7 @@ it("rechaza otro grupo, otra versión, documento falso o texto vacío", () => {
     // Texto vacío.
     { ...chunk("L/X"), text: "" },
   ])
+    // Contrasta el valor observado con el resultado exacto que define este caso.
     expect(
       // Cada caso debe terminar en rechazo.
       calendarOverviewOutcome({

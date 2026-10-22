@@ -1,0 +1,385 @@
+[
+  {
+    "start": 0,
+    "end": 1,
+    "title": "RAG: chatbot con documentación propia",
+    "body": [
+      "S10 · AI Engineer · jueves 22 de octubre de 2026",
+      "30 min de conceptos · 50 min de recorrido · 10 min de cierre"
+    ],
+    "say": "Hoy vamos a seguir una pregunta desde los documentos hasta una respuesta que podamos comprobar. Ya sabemos guardar vectores de S9; hoy conectamos esa búsqueda con un modelo y decidimos cuándo no debe responder. El programa ya está construido: leeremos sus piezas y ejecutaremos el recorrido, no instalaremos una aplicación entera en 90 minutos.",
+    "do": "Abre la presentación en modo de exposición y el guion en una segunda pantalla. Deja la terminal en la raíz de 3-rag y el editor con lab/ abierto.",
+    "check": "El grupo entiende que el objetivo es explicar y verificar el flujo completo. La práctica autónoma tiene su propio tiempo.",
+    "fallback": "Si alguien no tiene entorno instalado, puede seguir las evidencias y preparar el ejercicio después.",
+    "code": "",
+    "image": "portada.png"
+  },
+  {
+    "start": 1,
+    "end": 3,
+    "title": "Feedback de S9 y objetivo de hoy",
+    "body": [
+      "Escanea el QR de AI Engineer",
+      "Evalúa S9 · PostgreSQL y pgvector · 20 de octubre",
+      "Hoy: recuperar, fundamentar, citar y rechazar"
+    ],
+    "say": "Este QR evalúa la clase anterior, S9. Os dejo unos segundos para responder porque ese feedback ayuda a ajustar el ritmo. Para hoy quiero que salgáis pudiendo explicar qué información leyó el modelo, por qué se eligió y qué sucede si falta la respuesta.",
+    "do": "Muestra el QR nuevo de Laura. Espera unos 40 segundos. Pregunta: ¿una base vectorial por sí sola ya es un chatbot?",
+    "check": "El QR abre el formulario de AI Engineer en kb.tools.thepower.education. No pidas datos del formulario ni completes respuestas por alumnos.",
+    "fallback": "Si una cámara no lo lee, comparte el enlace del QR nuevo en el chat de clase manualmente.",
+    "code": "",
+    "image": ""
+  },
+  {
+    "start": 3,
+    "end": 5,
+    "title": "Prompting, fine-tuning y RAG",
+    "body": [
+      "Prompting: instrucciones y ejemplos por petición",
+      "Fine-tuning: comportamiento aprendido o adaptadores",
+      "RAG: documentos recuperados durante la consulta"
+    ],
+    "say": "En S7 y S8 trabajamos con comportamiento y adaptación. Si cambia una política o una fecha, normalmente actualizo su documento y su índice. Si quiero un patrón estable de clasificación o formato, primero comparo prompts y después valoro el ajuste. Podemos combinar las técnicas; consultar documentación no cambia los pesos del modelo.",
+    "do": "Pide una decisión rápida: para cambiar mañana la fecha de una clase, ¿actualizaríamos un documento o entrenaríamos de nuevo?",
+    "check": "La respuesta conecta hechos cambiantes con documentos y distingue comportamiento de conocimiento disponible.",
+    "fallback": "No abras otro tutorial de fine-tuning: recoge la duda y vuelve al recorrido de RAG.",
+    "code": "",
+    "image": ""
+  },
+  {
+    "start": 5,
+    "end": 7,
+    "title": "Tres formas de aportar contexto",
+    "body": [
+      "Contexto completo: todo el corpus autorizado si cabe",
+      "RAG selectivo: búsqueda, filtros y umbral",
+      "CRAG: evalúa suficiencia y corrige la búsqueda"
+    ],
+    "say": "La web del curso ofrece ahora RAG semántico. Su ruta de contexto completo sigue en el código como alternativa para corpus pequeños. Hoy enseñamos el recorrido selectivo, que es el que necesita la práctica. CRAG añade decisiones y búsquedas de corrección; lo desarrollaremos el martes 27.",
+    "do": "Abre, si hace falta, https://rag-thepower.josenuevo.dev/api/health y señala modelConfiguration.ragContextMode: semantic. No gastes un turno público para comprobar solo la configuración.",
+    "check": "Distinguen una lectura completa desde D1 de una consulta vectorial y no atribuyen al modo completo un umbral que no ejecuta.",
+    "fallback": "Si la web no responde, usa el laboratorio local; sus proveedores e índice se identifican en preflight.",
+    "code": "",
+    "image": ""
+  },
+  {
+    "start": 7,
+    "end": 9,
+    "title": "El corpus delimita lo que se puede saber",
+    "body": [
+      "Curso: 22 documentos, 69 fragmentos, dos grupos",
+      "Laboratorio: 10 documentos ficticios de AetherCloud",
+      "Solo datos ficticios; no completamos los huecos"
+    ],
+    "say": "Usaremos el corpus del curso para explicar los grupos y AetherCloud para reconstruir el ejercicio. Los documentos son la autoridad de esta práctica, no el conocimiento general del modelo. Si el corpus no dice un precio o una licencia, no lo deducimos. Son casos distintos que comparten el patrón de ingeniería.",
+    "do": "Abre lab/corpus/sources/04-almacenamiento-y-cifrado-kms.md. Localiza AES-256-GCM y las 72 horas. Enseña después los dos calendarios del curso sin mezclarlos con AetherCloud.",
+    "check": "El alumnado puede señalar el párrafo que tendrá que respaldar la primera respuesta.",
+    "fallback": "Si se pierde tiempo navegando, usa la copia del fragmento incluida en material/S10/evidencias/consulta-con-fuentes.json.",
+    "code": "",
+    "image": ""
+  },
+  {
+    "start": 9,
+    "end": 12,
+    "title": "Preparar una vez; consultar muchas veces",
+    "body": [
+      "Preparación: leer, limpiar, fragmentar, embeber, guardar",
+      "Consulta: embeber pregunta, buscar, seleccionar, generar",
+      "El generador recibe texto y procedencia"
+    ],
+    "say": "Indexar documentos y responder preguntas son dos momentos distintos. Al cambiar un documento hay que reconstruir sus vectores y conservar la identidad de la versión. Al llegar una pregunta reutilizamos el índice. El modelo generativo recibe los fragmentos legibles; los números del embedding sirven al buscador.",
+    "do": "Abre lab/src/corpus.ts y muestra prepareLabCorpusFromDirectory. Después señala las dos llamadas de embeddings: documentos durante rebuild y pregunta durante query.",
+    "check": "Pueden situar cada coste y cada fallo en preparación o consulta.",
+    "fallback": "No recorras cada línea del archivo: identifica entrada, salida y siguiente etapa.",
+    "code": "",
+    "image": ""
+  },
+  {
+    "start": 12,
+    "end": 15,
+    "title": "Fragmentación con significado y procedencia",
+    "body": [
+      "Limpieza sin perder cifras ni identificadores",
+      "900 caracteres como máximo y 80 de solapamiento",
+      "ID estable: versión, documento y ordinal"
+    ],
+    "say": "Un fragmento debe conservar suficiente contexto para entender sus cifras y condiciones. El solapamiento ayuda en los bordes, pero no garantiza recuperar la evidencia correcta. Aquí preservamos el título, la sección, la fuente y un ID estable. Si el corpus cambia, la versión también cambia.",
+    "do": "Abre lab/src/corpus.ts y packages/rag/src/chunk.ts. Localiza maxChars y overlapChars. Muestra el ID lab-689164ca81cd:04-almacenamiento-y-cifrado-kms:00 en el recibo.",
+    "check": "La cifra 72 horas sigue unida a la destrucción de CMK y a su fuente.",
+    "fallback": "Si preguntan por un tamaño universal, explica que se valida con las preguntas del dominio; no ajustes con el test.",
+    "code": "",
+    "image": ""
+  },
+  {
+    "start": 15,
+    "end": 18,
+    "title": "Embeddings compatibles",
+    "body": [
+      "Gemini Embedding 2 real · 768 dimensiones en lab/",
+      "Mismo modelo, proveedor y dimensión para consultar",
+      "El parecido no demuestra veracidad ni suficiencia"
+    ],
+    "say": "El embedding representa una entrada en un espacio aprendido. Dos textos parecidos pueden no contener el dato solicitado. Mismo tamaño no basta si cambiamos de modelo. En este laboratorio hemos observado 768 componentes devueltos por el proveedor. La web usa BGE-M3 de 1024: son índices diferentes, no vectores intercambiables.",
+    "do": "Muestra la identidad del modelo en preflight y los valores mínimo/máximo de vector_dims en status. La ilustración es conceptual; las puntuaciones de la terminal sí proceden de consultas reales.",
+    "check": "No se confunde el respaldo léxico offline con un embedding aprendido.",
+    "fallback": "Si falla la API, no se recortan ni rellenan vectores: se detiene la ingesta y se conserva el índice anterior.",
+    "code": "",
+    "image": "embedding.png"
+  },
+  {
+    "start": 18,
+    "end": 21,
+    "title": "PostgreSQL, pgvector y HNSW",
+    "body": [
+      "vector(768) almacena cada representación",
+      "<=> mide distancia coseno: menor es más próximo",
+      "HNSW es aproximado; una tabla pequeña puede usar escaneo"
+    ],
+    "say": "pgvector añade operadores e índices vectoriales a PostgreSQL. El índice HNSW permite aproximar vecinos; con veinte fragmentos el planificador puede preferir un escaneo y eso no es un fallo. La consulta ordena directamente por distancia y limita los candidatos. Similitud es uno menos distancia y no es una probabilidad.",
+    "do": "Abre lab/schema.sql. Señala la columna y el índice. Abre queryNearest en lab/src/pgvector-store.ts y localiza ORDER BY y LIMIT. El bloque SQL de la diapositiva muestra fragmentos del esquema y la consulta, no una sentencia completa para pegar en la terminal.",
+    "check": "Entienden la dirección de la puntuación y que crear HNSW no significa que todas las consultas lo utilicen.",
+    "fallback": "No fuerces un plan de ejecución ni abras optimización de producción durante esta clase.",
+    "code": "embedding vector(768) NOT NULL\nUSING hnsw (embedding vector_cosine_ops)\nORDER BY embedding <=> $1::vector(768) ASC\nLIMIT $4",
+    "image": ""
+  },
+  {
+    "start": 21,
+    "end": 24,
+    "title": "Recuperar candidatos y seleccionar contexto",
+    "body": [
+      "Filtrar por versión y modelo antes de ordenar",
+      "top-k = 4 limita la cantidad de candidatos",
+      "El umbral decide cuáles pueden llegar al generador"
+    ],
+    "say": "Buscar candidatos no es recuperar una respuesta. La consulta aplica filtros, ordena y devuelve como máximo cuatro vecinos. Después el código compara sus puntuaciones con el corte calibrado. Un vecino de facturación puede estar cerca de una pregunta sobre licencias sin contener el precio de esas licencias.",
+    "do": "Recorre queryNearest y selected en runLabBasicRag. Identifica el filtro SQL y el filtro de puntuación como dos decisiones diferentes.",
+    "check": "Un top-k de cuatro no se interpreta como cuatro fragmentos útiles garantizados.",
+    "fallback": "Si se adelantan a reranking, enlázalo con S11 y termina primero el recorrido de una sola búsqueda.",
+    "code": "",
+    "image": ""
+  },
+  {
+    "start": 24,
+    "end": 27,
+    "title": "Calibrar y decidir antes de generar",
+    "body": [
+      "Seis preguntas de validación separadas del test",
+      "Corte observado en este ensayo: 0,724767",
+      "Sin candidatos aceptados: rechazo sin generador"
+    ],
+    "say": "El corte no se elige porque el número resulte cómodo. En el ensayo se consultaron seis ejemplos de validación y se separaron las puntuaciones positivas y negativas. Solo después se congeló el umbral. Si se solapan, el comando para; no consulta el test para buscar un resultado bonito. Un rechazo evita generar, aunque ya haya usado embeddings para buscar.",
+    "do": "Abre lab/.local/calibration.json o material/S10/evidencias/calibracion-real.json. Señala las seis filas y el threshold. No ejecutes calibrate otra vez durante el directo.",
+    "check": "Queda clara la separación entre el coste de recuperar y el de generar.",
+    "fallback": "No reutilices 0,25 del respaldo léxico ni 0,50 de BGE-M3 en este índice.",
+    "code": "",
+    "image": ""
+  },
+  {
+    "start": 27,
+    "end": 30,
+    "title": "Contexto, respuesta y citas",
+    "body": [
+      "Los documentos son datos, no instrucciones",
+      "El modelo recibe la pregunta y los fragmentos aceptados",
+      "Cada cita debe resolver a un ID suministrado"
+    ],
+    "say": "Construimos un bloque que marca el contenido documental como datos no fiables. Eso ayuda a separar el contenido de las instrucciones, sin ser una garantía universal contra inyección. La respuesta debe citar identificadores que realmente llegaron al contexto. Filtrar IDs inventados tampoco prueba por sí solo que cada afirmación esté respaldada: vamos a abrir la fuente.",
+    "do": "Muestra buildUntrustedDataBlock en lab/src/rag-basic.ts y el prompt en apps/api/src/lab-models.ts. Al llegar a las 19:00, cambia a la terminal aunque queden dudas conceptuales.",
+    "check": "El grupo conoce el flujo y está listo para observarlo en ejecución.",
+    "fallback": "Apunta preguntas largas para las 19:50; conserva el bloque práctico de 50 minutos.",
+    "code": "",
+    "image": ""
+  },
+  {
+    "start": 30,
+    "end": 35,
+    "title": "La misma pregunta sin documentos",
+    "body": [
+      "Primero: modelo real sin evidencia suministrada",
+      "Después: misma pregunta con recuperación",
+      "Una abstención es un resultado válido"
+    ],
+    "say": "Vamos a preguntar por el cifrado y la destrucción de claves de AetherCloud sin darle documentos. Mantenemos las instrucciones de responder solo con evidencia. Lo honesto es reconocer que faltan datos, no forzar una alucinación para que la comparación parezca más espectacular.",
+    "do": "Ejecuta las cuatro líneas del comando baseline de abajo, incluida la asignación de pregunta. Lee suppliedDocuments: 0 y retrievalCount: 0. Haz la pregunta al grupo antes de mostrar la segunda ejecución.",
+    "check": "El ensayo guardado no aportó algoritmo ni plazo cuando el bloque de documentos estaba vacío.",
+    "fallback": "Abre material/S10/evidencias/sin-documentos.json y aclara que es una ejecución real guardada.",
+    "code": "pregunta='¿Con qué algoritmo se cifran los volúmenes en reposo y '\\\n'qué periodo de enfriamiento exige destruir una CMK?'\nbun run lab:real baseline --question \"$pregunta\" \\\n  --execute --max-spend-usd 1",
+    "image": ""
+  },
+  {
+    "start": 35,
+    "end": 43,
+    "title": "Reconstruir el índice desde los archivos",
+    "body": [
+      "10 Markdown en bruto producen 20 fragmentos",
+      "Embeddings reales antes de sustituir el índice",
+      "Transacción y lectura de vuelta: 20 vectores de 768"
+    ],
+    "say": "Ahora reconstruimos desde los documentos, no desde respuestas precocinadas. Los embeddings se obtienen antes de vaciar la versión anterior. Después la sustitución ocurre en una transacción y se comprueban los conteos. Si falla el proveedor, se detiene; no aparece un índice simulado con la misma etiqueta.",
+    "do": "Ejecuta rebuild y status. Abre lab/src/corpus.ts (prepareLabCorpusFromDirectory), apps/api/src/lab-models.ts (embed) y lab/src/pgvector-store.ts (rebuildFromEmptyIndex). No muestres archivos .env ni valores de claves.",
+    "check": "Ves 10 documentos, 20 fragmentos, dimensions 768, pgvector y la definición real del índice HNSW.",
+    "fallback": "Usa material/S10/evidencias/indice-real.json. Si el proveedor falla, el índice anterior sigue disponible para consultar; no repitas envíos automáticamente.",
+    "code": "bun run lab:real rebuild --execute --max-spend-usd 1\nbun run lab:real status",
+    "image": ""
+  },
+  {
+    "start": 43,
+    "end": 53,
+    "title": "Consultar con recuperación real",
+    "body": [
+      "Pregunta → embedding → consulta pgvector",
+      "Cifrado: AES-256-GCM · enfriamiento: 72 horas",
+      "La traza conserva candidatos, puntuaciones y selección"
+    ],
+    "say": "Es exactamente la pregunta que antes no tenía documentos. Mira primero los candidatos y sus puntuaciones, después la respuesta. En el ensayo el fragmento de cifrado obtuvo aproximadamente 0,814 y superó 0,724767. Los vecinos por debajo del corte no entraron en el prompt.",
+    "do": "Ejecuta las cuatro líneas de query con --brief, incluida la asignación de la misma pregunta que en baseline. Lee las columnas seleccionado y similitud; relaciona cada fila con selected en el código. Enseña la respuesta y la marca cite.",
+    "check": "La respuesta cita 04-almacenamiento-y-cifrado-kms:00 y contiene AES-256-GCM y 72 horas.",
+    "fallback": "Abre material/S10/evidencias/consulta-con-fuentes.json y lab/corpus/sources/04-almacenamiento-y-cifrado-kms.md. No atribuyas las puntuaciones guardadas a una consulta nueva.",
+    "code": "pregunta='¿Con qué algoritmo se cifran los volúmenes en reposo y '\\\n'qué periodo de enfriamiento exige destruir una CMK?'\nbun run lab:real query --question \"$pregunta\" \\\n  --execute --max-spend-usd 1 --brief",
+    "image": ""
+  },
+  {
+    "start": 53,
+    "end": 60,
+    "title": "Abrir la fuente y verificar la afirmación",
+    "body": [
+      "Una cita existente puede seguir siendo insuficiente",
+      "Abrir el fragmento y localizar el dato exacto",
+      "Comprobar toda la respuesta, no solo el formato"
+    ],
+    "say": "Una respuesta con corchetes no es una respuesta validada. Vamos a localizar el algoritmo y la condición temporal en el documento. Si el modelo añadiera otra afirmación sin soporte, la marcaríamos como error aunque el ID exista. Esta revisión humana es parte de evaluar el sistema.",
+    "do": "Abre lab/corpus/sources/04-almacenamiento-y-cifrado-kms.md y compáralo con la respuesta. Abre lab/.local/last-query.json para ver result.retrieved, result.selected, result.citations, result.latencyMs y los tokens en operations. Antes de la siguiente consulta, copia el recibo si quieres conservarlo. Pregunta qué dato no podríamos afirmar si no estuviera en el párrafo.",
+    "check": "Cada afirmación señalada se encuentra en el texto recuperado. El consumo observado se diferencia de las reservas.",
+    "fallback": "La copia del recibo está en material/S10/evidencias/consulta-con-fuentes.json.",
+    "code": "",
+    "image": ""
+  },
+  {
+    "start": 60,
+    "end": 68,
+    "title": "Una pregunta sin respuesta documental",
+    "body": [
+      "Las licencias de Windows no constan en el corpus",
+      "Hay vecinos cercanos, pero no superan el corte",
+      "decision: refuse · generationCalled: false"
+    ],
+    "say": "Ahora preguntamos por un precio que la documentación no incluye. La búsqueda puede devolver documentos de facturación: cercanía temática no es respuesta. En el ensayo la puntuación más alta fue 0,70153, inferior al corte. El código rechazó sin invocar al generador. Sí hubo una llamada de embeddings; no debemos decir que todo el turno fue gratis.",
+    "do": "Ejecuta las cuatro líneas de la pregunta sin respuesta con --brief. Antes de leer la respuesta, pide al grupo que decida mirando la tabla. Abre la rama selected.length === 0 en runLabBasicRag.",
+    "check": "Decisión refuse, fuentes vacías y generationCalled false. No se inventa el precio de una licencia.",
+    "fallback": "Abre material/S10/evidencias/consulta-rechazada.json y muestra sus operaciones: solo embedding.",
+    "code": "pregunta='¿Qué coste mensual tienen las licencias de '\\\n'Windows Server 2025 en AetherCloud?'\nbun run lab:real query --question \"$pregunta\" \\\n  --execute --max-spend-usd 1 --brief",
+    "image": ""
+  },
+  {
+    "start": 68,
+    "end": 72,
+    "title": "Filtros de grupo en el asistente del curso",
+    "body": [
+      "M/J: S10 el 22 de octubre",
+      "L/X: S10 el 26 de octubre",
+      "Sin grupo, una pregunta de calendario pide aclaración"
+    ],
+    "say": "El patrón también necesita permisos o audiencias. Nuestro laboratorio separa corpus y modelo; la aplicación del curso añade filtros de grupo. Un documento puede ser muy parecido y pertenecer a otro grupo. En el calendario definitivo S10 de L/X es el día 26, no el 21: el 21 es S9.",
+    "do": "Abre corpus/sources/cohorts/calendario-mj.md y corpus/sources/cohorts/calendario-lx.md. Si la web está preparada, señala el selector de grupo sin iniciar consultas de pago. Abre apps/api/src/stores.ts y muestra audienceFilter y el filtro audience de queryVectorize antes de construir el contexto.",
+    "check": "El grupo entiende por qué el calendario L/X no puede respaldar una fecha M/J.",
+    "fallback": "Usa directamente los dos archivos; esta parte de la clase no depende del presupuesto público.",
+    "code": "",
+    "image": ""
+  },
+  {
+    "start": 72,
+    "end": 77,
+    "title": "Evaluar sin ajustar con el test",
+    "body": [
+      "20 preguntas: 14 respondibles y 6 sin respuesta",
+      "Conjunto distinto de las seis de validación",
+      "Conservar respuestas, fuentes, puntuaciones y fallos"
+    ],
+    "say": "Una buena demostración no mide toda la calidad. Hemos preparado y ejecutado un lote de veinte preguntas con expectativas escritas antes. El umbral se congeló previamente con validación. Revisamos manualmente las respuestas y contamos por separado los aciertos en catorce y los rechazos en seis. Las cifras describen este corpus y esta configuración.",
+    "do": "Abre material/S10/evidencias/evaluacion-real-resumen.md y material/S10/evidencias/evaluacion-real.json. Contrasta los casos 1 (completo) y 4 (abstención incorrecta). Lee los fallos además de los aciertos. No ejecutes las veinte llamadas de nuevo durante la clase.",
+    "check": "Saben distinguir evaluación real, prueba del código y respaldo offline. No se presentan 16/20 del laboratorio léxico como resultado de Sonnet.",
+    "fallback": "Si falta una ejecución, muestra su estado pendiente y explica la limitación; nunca completes cifras inventadas.",
+    "code": "",
+    "image": ""
+  },
+  {
+    "start": 77,
+    "end": 80,
+    "title": "La práctica que debéis entregar",
+    "body": [
+      "8 o más documentos ficticios · pgvector 768 + HNSW",
+      "Ingesta, consulta, control previo, respuesta y fuentes",
+      "Test 14 + 6 ejecutado · README reproducible"
+    ],
+    "say": "La clase enseña el recorrido; vuestra práctica lo reconstruye en un dominio ficticio propio. Basta terminal, notebook o API. No pedimos una interfaz ni desplegar. Reservad unas cuatro a seis horas con entorno preparado. Usad validación para ajustar y escribid las expectativas del test antes de ejecutarlo.",
+    "do": "Abre material/ejercicios/S10-enunciado.md y material/ejercicios/laboratorio-apoyo.md. Señala el ejemplo de variables y el orden preflight, rebuild, calibrate, query, eval. Explica que los nombres del proveedor y los modelos realmente usados deben quedar registrados.",
+    "check": "Cada alumno puede enumerar las piezas y evidencias que entregará.",
+    "fallback": "Para problemas de instalación, remite a la guía y pide el error sin claves; no abras una instalación colectiva al final.",
+    "code": "",
+    "image": ""
+  },
+  {
+    "start": 80,
+    "end": 83,
+    "title": "Lo que debe poder explicar un RAG",
+    "body": [
+      "Qué documentos leyó y por qué llegaron al contexto",
+      "Qué afirma y qué fuente respalda cada afirmación",
+      "Qué hizo cuando no encontró evidencia suficiente"
+    ],
+    "say": "Repasemos el sistema sin mirar código. Indexamos cuando cambian los documentos. Consultamos con el mismo embedding, filtramos, aplicamos un corte y solo entonces generamos. Conservamos procedencia y verificamos las citas. Si falta evidencia, la aplicación controla el rechazo; no depende solo de una frase en el prompt.",
+    "do": "Pide que alguien reconstruya oralmente el flujo. Haz una pausa entre recuperación, selección y generación.",
+    "check": "La explicación menciona el control previo y no confunde el generador con el índice.",
+    "fallback": "Si falta tiempo, esta recapitulación tiene prioridad sobre el apéndice de métricas.",
+    "code": "",
+    "image": ""
+  },
+  {
+    "start": 83,
+    "end": 88,
+    "title": "Preguntas y decisiones de diseño",
+    "body": [
+      "¿Qué cambia si crece el corpus?",
+      "¿Dónde falla: ingesta, búsqueda, contexto o generación?",
+      "¿Cómo detectar una cita que no respalda la respuesta?"
+    ],
+    "say": "Respondemos primero a dudas que afecten a completar el ejercicio. Para una mala respuesta, diagnostiquemos por capas: el dato quizá no estaba, se fragmentó mal, no llegó al contexto o el generador lo interpretó mal. Cambiar el modelo no arregla necesariamente la primera capa.",
+    "do": "Recupera las preguntas anotadas. Si sale evaluación de recuperación, usa la diapositiva 24; si sale instalación individual, conserva la consulta para el soporte posterior.",
+    "check": "Las dudas se responden con una ruta concreta del código o una evidencia, sin prometer calidad general.",
+    "fallback": "Para una pregunta que no podamos verificar, deja anotado qué evidencia falta.",
+    "code": "",
+    "image": ""
+  },
+  {
+    "start": 88,
+    "end": 90,
+    "title": "El siguiente paso: CRAG",
+    "body": [
+      "S11 · martes 27 de octubre · 18:30–20:00",
+      "Recuperar, reordenar, valorar y corregir",
+      "Mismo problema; más decisiones y un coste que medir"
+    ],
+    "say": "Hoy hicimos una búsqueda y aplicamos un corte. El martes preguntaremos si la evidencia cubre toda la pregunta, cómo conservar una parte útil y cómo buscar lo que falta con límites. No asumiremos que CRAG siempre mejora: lo compararemos. Gracias por el feedback y recordad la entrega de fuentes y resultados.",
+    "do": "Recuerda el QR si quedó alguien pendiente. Deja visibles los enlaces al ejercicio y a la guía del laboratorio.",
+    "check": "Cierre a las 20:00. El grupo sabe cuándo es S11 y qué amplía respecto a S10.",
+    "fallback": "No empieces ahora la implementación de CRAG.",
+    "code": "",
+    "image": ""
+  },
+  {
+    "start": 90,
+    "end": 90,
+    "title": "Apéndice: medir recuperación",
+    "body": [
+      "Hit@k: aparece al menos una evidencia relevante",
+      "Recall@k: relevantes recuperados / relevantes esperados",
+      "MRR: media de 1 / rango de la primera evidencia relevante"
+    ],
+    "say": "Con dos documentos relevantes esperados, recuperar solo uno puede dar Hit@k igual a uno, pero Recall@k es un medio. Los casos sin evidencia esperada requieren una métrica de rechazo separada. No confundamos que una fuente aparezca con que toda la pregunta quede cubierta.",
+    "do": "Úsala solo como consulta durante preguntas. Ejemplo: esperados A y B; recuperados A y C.",
+    "check": "Hit=1, Recall=1/2; el ejemplo aclara el denominador.",
+    "fallback": "Si el tiempo se agota, deja el apéndice para lectura posterior.",
+    "code": "",
+    "image": ""
+  }
+]

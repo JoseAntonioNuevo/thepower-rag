@@ -834,7 +834,12 @@ describe("investigación durable", () => {
     let runs = 0;
     // Estado con un número.
     const state = Annotation.Root({
-      value: Annotation<number>({ reducer: (_left, right) => right, default: () => 0 }),
+      value: Annotation<number>({
+        // Doble de prueba: combina la actualización del estado con su valor anterior según esta regla de LangGraph.
+        reducer: (_left, right) => right,
+        // Doble de prueba: crea el valor inicial independiente del canal de estado de LangGraph.
+        default: () => 0,
+      }),
     });
     // Grafo de dos nodos con pausa antes del segundo.
     const graph = new StateGraph(state)

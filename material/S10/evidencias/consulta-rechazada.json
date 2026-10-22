@@ -1,0 +1,91 @@
+{
+  "backend": "postgresql-pgvector",
+  "generator": "claude-sonnet-5-5",
+  "generationProvider": "anthropic",
+  "embedding": "openrouter:google/gemini-embedding-2:768",
+  "dimensions": 768,
+  "profile": "5a2d65a60a2c9f4bc43bbbd7e7a9be89a6275411dc6b10ca13f76c49edbb542c",
+  "result": {
+    "question": "¿Qué coste mensual tienen las licencias de Windows Server 2025 en AetherCloud?",
+    "corpusVersion": "lab-689164ca81cd",
+    "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+    "genModelId": "claude-sonnet-5-5",
+    "minSimilarity": 0.724767,
+    "maxCosineDistance": 0.27523299999999995,
+    "retrieved": [
+      {
+        "chunkId": "lab-689164ca81cd:07-facturacion-y-planes:00",
+        "corpusVersion": "lab-689164ca81cd",
+        "documentId": "07-facturacion-y-planes",
+        "ordinal": 0,
+        "title": "Facturación, tarifas y planes comerciales",
+        "section": "Cuotas mensuales y franquicias incluidas",
+        "content": "## Cuotas mensuales y franquicias incluidas\n\nAetherCloud ofrece dos planes comerciales facturados en euros (`EUR`) a mes vencido:\n\n- **Plan Estándar:** cuota base de `190 EUR/mes`, incluye 2 millones de peticiones API, 100 GiB de almacenamiento cifrado y soporte en horario laboral europeo.\n- **Plan Empresa:** cuota base de `850 EUR/mes`, incluye 15 millones de peticiones API, 1 TiB de almacenamiento cifrado, soporte 24x7 para `SEV-1` y réplica activa en `eu-fra-1`.",
+        "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+        "embeddingDimensions": 768,
+        "cosineDistance": 0.29847,
+        "similarity": 0.70153
+      },
+      {
+        "chunkId": "lab-689164ca81cd:05-sla-y-creditos-servicio:00",
+        "corpusVersion": "lab-689164ca81cd",
+        "documentId": "05-sla-y-creditos-servicio",
+        "ordinal": 0,
+        "title": "Acuerdo de nivel de servicio (SLA) y créditos",
+        "section": "Disponibilidad mensual comprometida",
+        "content": "## Disponibilidad mensual comprometida\n\nAetherCloud garantiza una disponibilidad mensual de al menos el `99,95 %` para los servicios del plano de datos en producción. El cálculo excluye las ventanas de mantenimiento programado notificadas con al menos 7 días naturales de antelación y cuya duración no supere los 45 minutos al mes.",
+        "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+        "embeddingDimensions": 768,
+        "cosineDistance": 0.299145,
+        "similarity": 0.700855
+      },
+      {
+        "chunkId": "lab-689164ca81cd:04-almacenamiento-y-cifrado-kms:00",
+        "corpusVersion": "lab-689164ca81cd",
+        "documentId": "04-almacenamiento-y-cifrado-kms",
+        "ordinal": 0,
+        "title": "Almacenamiento persistente y cifrado KMS",
+        "section": "Cifrado en reposo y jerarquía de claves",
+        "content": "## Cifrado en reposo y jerarquía de claves\n\nTodos los volúmenes de bloques, bases de datos y copias de seguridad de AetherCloud se cifran en reposo con `AES-256-GCM`. Cada organización dispone de una clave maestra dedicada (`CMK`) custodiada en módulos de seguridad hardware (`HSM` FIPS 140-3 Nivel 3) dentro de `eu-mad-1` y replicada en `eu-fra-1`.\n\nLas claves de datos (`DEK`) se renuevan automáticamente cada 30 días sin tiempo de inactividad. Si una organización solicita la destrucción criptográfica de su `CMK`, existe un periodo de enfriamiento obligatorio de 72 horas antes del borrado irreversible.",
+        "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+        "embeddingDimensions": 768,
+        "cosineDistance": 0.329943,
+        "similarity": 0.670057
+      },
+      {
+        "chunkId": "lab-689164ca81cd:01-arquitectura-aethercloud:00",
+        "corpusVersion": "lab-689164ca81cd",
+        "documentId": "01-arquitectura-aethercloud",
+        "ordinal": 0,
+        "title": "Arquitectura general de AetherCloud",
+        "section": "Regiones y topología",
+        "content": "## Regiones y topología\n\nAetherCloud opera exclusivamente en dos regiones europeas de producción: `eu-mad-1` (Madrid, región primaria) y `eu-fra-1` (Fráncfort, región secundaria de contingencia). Cada región despliega tres zonas de disponibilidad independientes interconectadas mediante fibra dedicada con latencia inferior a 1,8 milisegundos.\n\nEl tráfico entrante atraviesa pasarelas perimetrales Anycast con terminación TLS 1.3 obligatoria. Ningún servicio de aplicación expone puertos directamente a internet pública sin pasar por la pasarela regional.",
+        "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+        "embeddingDimensions": 768,
+        "cosineDistance": 0.332546,
+        "similarity": 0.667454
+      }
+    ],
+    "selected": [],
+    "decision": "refuse",
+    "generationCalled": false,
+    "retrievalCount": 1,
+    "answer": "No consta información suficiente en la documentación de AetherCloud para responder a esta consulta (ningún fragmento superó el umbral calibrado previo a la generación).",
+    "citations": [],
+    "latencyMs": 722
+  },
+  "operations": [
+    {
+      "kind": "embedding",
+      "model": "openrouter:google/gemini-embedding-2:768",
+      "inputTokens": 19,
+      "outputTokens": null
+    }
+  ],
+  "budget": {
+    "limitUsd": 1,
+    "reservedUsd": 0.027785200000000003,
+    "calls": 10,
+    "actualProviderUsd": null
+  }
+}

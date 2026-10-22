@@ -1,0 +1,20 @@
+{
+  "backend": "postgresql-pgvector",
+  "generator": "claude-sonnet-5-5",
+  "generationProvider": "anthropic",
+  "embedding": "openrouter:google/gemini-embedding-2:768",
+  "dimensions": 768,
+  "corpusVersion": "lab-689164ca81cd",
+  "metadata": {
+    "embedding_model": "openrouter:google/gemini-embedding-2:768",
+    "embedding_dimensions": 768,
+    "chunk_count": 20
+  },
+  "vectors": {
+    "total": "20",
+    "minimum": 768,
+    "maximum": 768
+  },
+  "hnsw": "CREATE INDEX lab_chunks_embedding_hnsw_idx ON public.lab_chunks USING hnsw (embedding vector_cosine_ops) WITH (m='16', ef_construction='64')",
+  "pgvector": "0.8.7"
+}

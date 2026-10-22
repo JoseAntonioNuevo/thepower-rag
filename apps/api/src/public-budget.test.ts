@@ -25,11 +25,16 @@ describe("presupuesto público", () => {
       MODEL_INPUT_USD_PER_MILLION: "0.2",
       MODEL_OUTPUT_USD_PER_MILLION: "1",
       DB: {
+        // Doble de prueba: prepara una sentencia y devuelve el objeto que permitirá enlazar valores y ejecutarla.
         prepare: () => ({
+          // Doble de prueba: asocia los parámetros a la sentencia sin concatenarlos al texto SQL.
           bind: (quote: number, _: number, limit: number) => ({
+            // Doble de prueba: resuelve la primera fila o el valor de ausencia que define este adaptador.
             first: async () => {
               // La sentencia condicional rechaza si no cabe.
-              if (reserved + quote > limit) return null;
+              if (reserved + quote > limit)
+                // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
+                return null;
               // Suma la reserva.
               reserved += quote;
               // Fila actualizada.
@@ -49,7 +54,9 @@ describe("presupuesto público", () => {
     // Libro de la reserva aceptada.
     const ledger = outcomes.find(Boolean)!;
     // Seis evaluaciones caben.
-    for (let n = 0; n < 6; n++) expect(ledger.reserve({ kind: "evaluation" }).ok).toBe(true);
+    for (let n = 0; n < 6; n++)
+      // Contrasta el valor observado con el resultado exacto que define este caso.
+      expect(ledger.reserve({ kind: "evaluation" }).ok).toBe(true);
     // Una séptima llamada no.
     expect(ledger.reserve({ kind: "generation" }).ok).toBe(false);
     // Otra reserva tampoco cabe.
@@ -67,8 +74,11 @@ describe("presupuesto público", () => {
       MODEL_INPUT_USD_PER_MILLION: "0.2",
       MODEL_OUTPUT_USD_PER_MILLION: "1",
       DB: {
+        // Doble de prueba: prepara una sentencia y devuelve el objeto que permitirá enlazar valores y ejecutarla.
         prepare: () => ({
+          // Doble de prueba: asocia los parámetros a la sentencia sin concatenarlos al texto SQL.
           bind: (quote: number) => ({
+            // Doble de prueba: resuelve la primera fila o el valor de ausencia que define este adaptador.
             first: async () => {
               // Guarda el importe.
               quotes.push(quote);
