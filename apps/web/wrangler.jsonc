@@ -60,7 +60,7 @@
         "APP_MODE": "real",
         // Referencia principal de S10: recuperación semántica con filtro, puntuaciones y umbral.
         // Para la variante de contexto completo del curso se usa "complete" (docs/rag-contexto-completo.md).
-        "RAG_CONTEXT_MODE": "semantic",
+        "RAG_CONTEXT_MODE": "complete",
         // Proveedor fijo de producción: no cambiarlo sin petición expresa del usuario.
         "LLM_PROVIDER": "anthropic",
         // Perfil de calidad preparado: mismo generador Sonnet para RAG y CRAG.
