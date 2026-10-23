@@ -41,7 +41,7 @@ El servidor ejecuta estos controles antes de acceder al presupuesto, a los docum
 5. Cada token caduca a los cinco minutos y solo se puede validar una vez. El widget se retira al terminar el intento, tanto si tiene éxito como si falla. El siguiente desafío espera a una nueva acción del usuario; no hay renovación automática después de enviar ni mientras llega la respuesta. No se guarda el token en localStorage.
 6. La secret key solo está en el entorno privado del servidor. La site key puede estar en el navegador. No proyectar ni subir `.dev.vars.production` ni el valor de los secretos.
 
-Este orden del navegador se corrigió y verificó localmente el 23 de octubre de 2026. Su publicación sigue pendiente; la [evidencia del cambio](../../docs/evidence/turnstile-before-send-2026-10-23.md) distingue las pruebas locales del servicio publicado.
+Este orden del navegador se corrigió, publicó y verificó en producción el 23 de octubre de 2026. La [evidencia del cambio](../../docs/evidence/turnstile-before-send-2026-10-23.md) distingue las pruebas locales del servicio publicado.
 
 La sesión de esta demo se renueva con la actividad y dura treinta minutos. Cambiar de etapa o cohorte no cambia deliberadamente su identidad ni elimina su cuota.
 

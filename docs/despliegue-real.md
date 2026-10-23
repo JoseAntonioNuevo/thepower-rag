@@ -2,6 +2,12 @@
 
 Verificado el 3 de octubre de 2026. URL: https://rag-thepower.josenuevo.dev.
 
+## Turnstile: publicación del 23 de octubre de 2026
+
+El código `273641f` está publicado en la versión `dc051851-8cd1-41d0-96f5-21843c62ca4e`, deployment `ef13fc2f-976b-4190-9368-ad71754a162f`, al 100 % del tráfico. Turnstile verifica antes del envío, solo muestra interacción cuando Cloudflare la exige y no precarga otro desafío después de la respuesta. La revisión admite dos recuperaciones nativas de errores transitorios dentro de la misma verificación y plazo.
+
+342 pruebas correctas, tipos/lint/formato y build de producción correctos. El hash del cliente servido coincide con el compilado. Dos preguntas consecutivas completaron respuestas reales sin intervención manual; el ensayo de Brave instrumentado que agotó la verificación se conserva separado. [Recibo completo, capturas y límites de la comprobación](evidence/turnstile-before-send-2026-10-23.md). Los apartados siguientes conservan la evidencia histórica de las publicaciones anteriores.
+
 ## Estado operativo
 
 - Cloudflare Worker `thepower-rag`, frontend Vite/React y API Hono en el mismo origen.
