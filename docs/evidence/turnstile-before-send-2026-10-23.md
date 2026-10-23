@@ -16,7 +16,7 @@ El servidor sí valida Siteverify antes de usar presupuesto, documentos o modelo
 2. Enviar adquiere un cerrojo síncrono y comprueba primero la sesión. Si cambió la identidad o la clave pública, reconstruye la configuración y conserva la pregunta para el reintento.
 3. Cada petición obtiene su propio widget con `execution: "execute"` y `appearance: "interaction-only"`. Solo Cloudflare decide si hace falta interacción visible. No se comparten ni reutilizan tokens.
 4. La pregunta permanece en el formulario. El historial y `POST /api/chat` esperan al callback de éxito. El servidor conserva todas sus comprobaciones.
-5. El widget se retira al terminar. `retry`, `refresh-expired` y `refresh-timeout` están en `never`: un fallo se presenta al usuario y el siguiente intento requiere una nueva acción.
+5. El widget se retira al terminar. `refresh-expired` y `refresh-timeout` están en `never`. `retry: "auto"` permite hasta dos recuperaciones nativas de errores transitorios dentro de la misma verificación y del mismo plazo; solo un token válido desbloquea la petición. Un error definitivo se presenta al usuario y exige una nueva acción.
 6. Error, caducidad, cancelación, desmontaje y plazo agotado rechazan la espera y descartan callbacks antiguos. El plazo local del desafío es de 120 segundos; el de sesión es de 10 y el del script, de 15.
 7. Chat e investigación comparten el controlador. La investigación incorpora recuperación explícita del script/configuración y estado de verificación. Sus adjuntos y trabajos siguen usando un token independiente por mutación.
 
@@ -29,8 +29,8 @@ La revisión de consola detectó también un bloque del indicador de actividad d
 | Comprobación                                                       | Resultado                                                                                                                                       |
 | ------------------------------------------------------------------ | ----------------------------------------------------------------------------------------------------------------------------------------------- |
 | `bun run check`                                                    | Formato, lint y tipos correctos: sin avisos ni errores.                                                                                         |
-| `bun run test`                                                     | 339 pasan, incluidos ambos modos de recuperación en la prueba de comparación.                                                                   |
-| Pruebas de Turnstile, sesión e investigación incluidas en la suite | 37 pasan.                                                                                                                                       |
+| `bun run test`                                                     | 342 pasan, incluidos ambos modos de recuperación y los reintentos acotados de Turnstile.                                                        |
+| Pruebas de Turnstile, sesión e investigación incluidas en la suite | 40 pasan.                                                                                                                                       |
 | `bun run test:entrypoint`                                          | 6 pasan, en 3 suites de workerd.                                                                                                                |
 | `bun run build`                                                    | Cliente y Worker compilados con `CLOUDFLARE_ENV=production`; dry-run de Wrangler correcto.                                                      |
 | `bun run preflight`                                                | Demo local, sin bindings remotos ni llamadas de pago.                                                                                           |
@@ -71,3 +71,11 @@ Biblioteca `/websites/developers_cloudflare_turnstile`, tres consultas sobre eje
 ## Entrega de memoria
 
 El selector `/Users/jose/.config/openviking/workspace-account.sh` devuelve código 1 sin cuenta para este repositorio. No se ha usado otro tenant ni se ha modificado la infraestructura. La sesión y sus decisiones se conservan en este informe y en `docs/decisions.md`; la escritura y lectura de vuelta de OpenViking quedan pendientes de un mapeo válido.
+
+## Ajuste durante la comprobación real
+
+La primera publicación (`f54c297`, versión `c832582d-f08b-40ee-8947-3f0d7a2e2712`) permitió completar una respuesta real después de un reintento manual. Otro envío volvió a recibir un fallo del widget sin llegar a insertar el mensaje. El código inicial no conservaba el código de error y no permite atribuir esos fallos a una causa concreta.
+
+Se consultó de nuevo Context7: Cloudflare recomienda `retry: "auto"` para fallos transitorios y devolver `false` desde `error-callback` para que el widget se recupere. Se admiten hasta dos recuperaciones para los códigos documentados como reintentables, sin cambiar el plazo ni permitir un POST antes del token. Un tercer fallo, un error de configuración o una cancelación retiran el widget. Se registra únicamente el código público para poder diagnosticar los siguientes intentos.
+
+Fuentes: [reintentos y callbacks](https://developers.cloudflare.com/turnstile/troubleshooting/client-side-errors/) y [códigos de error](https://developers.cloudflare.com/turnstile/troubleshooting/client-side-errors/error-codes/).

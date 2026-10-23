@@ -27,6 +27,8 @@ interface Attempt {
   timer: ReturnType<typeof setTimeout>;
   resolve: (token: string) => void;
   reject: (error: Error) => void;
+  // Los reintentos pertenecen al mismo envío y no amplían su plazo.
+  failures: number;
 }
 
 // Prepara el controlador sin pintar ni ejecutar ningún desafío hasta requestToken.
@@ -72,6 +74,7 @@ export function createTurnstileWidget(
           widgetId: null,
           resolve,
           reject,
+          failures: 0,
           timer: setTimeout(() => {
             finish(attempt, new Error("La verificación tardó demasiado. Vuelve a enviar."));
           }, VERIFICATION_TIMEOUT_MS),
@@ -86,7 +89,8 @@ export function createTurnstileWidget(
             size: "flexible",
             execution: "execute",
             appearance: "interaction-only",
-            retry: "never",
+            // Cloudflare puede recuperar un fallo transitorio mientras este envío sigue esperando.
+            retry: "auto",
             "refresh-expired": "never",
             "refresh-timeout": "never",
             "response-field": false,
@@ -97,11 +101,25 @@ export function createTurnstileWidget(
                 token && token.length <= 2048 ? token : new Error(VERIFICATION_REQUIRED),
               );
             },
-            // Ningún fallo o caducidad reinicia el desafío por su cuenta.
+            // La caducidad termina el intento; no precarga un desafío para la siguiente pregunta.
             "expired-callback": () => finish(attempt, new Error(VERIFICATION_REQUIRED)),
             "timeout-callback": () =>
               finish(attempt, new Error("La verificación caducó. Vuelve a enviar.")),
-            "error-callback": () => {
+            "error-callback": (code: string) => {
+              // Un callback tardío no puede reiniciar un widget retirado ni afectar a otro envío.
+              if (pending !== attempt) return true;
+              // Solo se registra el código público, nunca el token, la sesión o la pregunta.
+              const safeCode = /^\d{6}$/.test(code) ? code : "unknown";
+              const retryable =
+                /^(300|600)\d{3}$/.test(safeCode) ||
+                ["110600", "110620", "200500"].includes(safeCode);
+              attempt.failures += 1;
+              // Dos recuperaciones nativas como máximo, dentro del plazo original de dos minutos.
+              if (retryable && attempt.failures <= 2) {
+                console.warn(`Turnstile ${safeCode}: reintento ${String(attempt.failures)}/2.`);
+                return false;
+              }
+              console.warn(`Turnstile ${safeCode}: verificación detenida.`);
               finish(attempt, new Error("No se pudo completar la verificación. Reintenta."));
               return true;
             },

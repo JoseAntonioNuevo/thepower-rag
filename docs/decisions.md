@@ -109,7 +109,7 @@ La reserva usa las tarifas correspondientes y conserva todos los límites y sald
 
 ## Turnstile antes del envío (23 de octubre de 2026)
 
-El cliente verifica bajo demanda con `execution: "execute"` y `appearance: "interaction-only"`. Primero comprueba la sesión; después solicita un token nuevo y solo entonces entrega el mensaje al transporte. Cada intento posee un widget que se retira al terminar. No se precarga el siguiente token ni se renueva por caducidad en reposo. Esto elimina los dos reinicios anteriores: al consumir el token y al terminar el stream. El servidor conserva Siteverify por petición, hostname, acción, sesión, cuotas y presupuesto.
+El cliente verifica bajo demanda con `execution: "execute"` y `appearance: "interaction-only"`. Primero comprueba la sesión; después solicita un token nuevo y solo entonces entrega el mensaje al transporte. Cada intento posee un widget que se retira al terminar. No se precarga el siguiente token ni se renueva por caducidad en reposo. Esto elimina los dos reinicios anteriores: al consumir el token y al terminar el stream. El servidor conserva Siteverify por petición, hostname, acción, sesión, cuotas y presupuesto. La comprobación real añadió hasta dos reintentos nativos de errores transitorios dentro del mismo envío y plazo: no son una renovación anticipada del siguiente mensaje.
 
 El borrador se conserva ante fallo o cancelación, las esperas se cancelan al desmontar y los callbacks de un intento no pueden resolver otro. El botón Cancelar/Detener previene la acción por defecto del clic porque React puede reutilizar ese nodo como botón de envío durante la actualización. La verificación tiene un plazo de dos minutos para admitir interacción humana y no el antiguo límite de veinte segundos.
 

@@ -40,7 +40,10 @@ function harness() {
 }
 
 // Los temporizadores no salen de cada caso.
-afterEach(() => vi.useRealTimers());
+afterEach(() => {
+  vi.useRealTimers();
+  vi.restoreAllMocks();
+});
 
 // El mensaje solo sale tras el callback de éxito, sin preparar otro desafío.
 it("verifica antes de enviar y permanece inactivo durante y después de la respuesta", async () => {
@@ -63,7 +66,7 @@ it("verifica antes de enviar y permanece inactivo durante y después de la respu
   expect(options[0]).toMatchObject({
     execution: "execute",
     appearance: "interaction-only",
-    retry: "never",
+    retry: "auto",
     "refresh-expired": "never",
     "refresh-timeout": "never",
     action: "course-chat",
@@ -150,5 +153,39 @@ it("convierte un fallo de execute en error recuperable", async () => {
     throw new Error("synthetic widget error");
   });
   await expect(widget.requestToken()).rejects.toThrow("No se pudo iniciar");
+  expect(api.remove).toHaveBeenCalledTimes(1);
+});
+
+// Una recuperación nativa no envía, no cambia de widget y no prepara otro token tras el éxito.
+it("espera al token durante dos fallos transitorios sin reiniciar la petición", async () => {
+  vi.spyOn(console, "warn").mockImplementation(() => {});
+  const { api, widget, options, emit } = harness();
+  const posted = vi.fn<(token: string) => void>();
+  const sending = widget.requestToken().then(posted);
+  const onError = options[0]!["error-callback"] as (code: string) => boolean;
+  expect(onError("600010")).toBe(false);
+  expect(onError("200500")).toBe(false);
+  expect(posted).not.toHaveBeenCalled();
+  expect(api.remove).not.toHaveBeenCalled();
+  emit("callback", 0, "recovered-token");
+  await sending;
+  expect(posted).toHaveBeenCalledExactlyOnceWith("recovered-token");
+  expect(api.execute).toHaveBeenCalledTimes(1);
+  expect(api.remove).toHaveBeenCalledTimes(1);
+  expect(onError("600010")).toBe(true);
+});
+
+// Los fallos persistentes y los de configuración no se reintentan indefinidamente.
+it.each([
+  { code: "600010", failures: 3 },
+  { code: "110200", failures: 1 },
+])("detiene $code tras $failures fallos", async ({ code, failures }) => {
+  vi.spyOn(console, "warn").mockImplementation(() => {});
+  const { api, widget, options } = harness();
+  const token = widget.requestToken();
+  const onError = options[0]!["error-callback"] as (code: string) => boolean;
+  for (let i = 0; i < failures - 1; i += 1) onError(code);
+  expect(onError(code)).toBe(true);
+  await expect(token).rejects.toThrow("No se pudo completar la verificación");
   expect(api.remove).toHaveBeenCalledTimes(1);
 });
