@@ -1,4 +1,4 @@
-// GUÍA DE LECTURA · apps/api/src/model-quality.test.ts
+// GUÍA DE LECTURA · scripts/model-quality.test.ts
 // Protege el contrato de la migración: roles y tarifas coherentes, presupuesto sin ampliar,
 // configuración inválida cerrada y lectura pública de identidad sin secretos ni inferencia.
 import { readFileSync } from "node:fs";
@@ -112,70 +112,83 @@ describe("perfil de calidad de modelos", () => {
   });
 
   // Verifica este escenario: expone modelos y plazo por health sin revelar la clave.
-  it("expone modelos y plazo por health sin revelar la clave", async () => {
-    // Consulta la ruta health dentro de Hono sin abrir un servidor ni invocar modelos.
-    const response = await createApp().request(
-      "/api/health",
-      {},
-      {
-        ...config.env.production!.vars,
-        ANTHROPIC_API_KEY: "sentinel-never-return-this-secret",
-      },
-    );
-    // Valida el cuerpo de salud con el mismo esquema que utiliza el consumidor del comparador.
-    const body = healthResponseSchema.parse(await response.json());
-    // Contrasta los campos relevantes sin exigir igualdad de los metadatos adicionales.
-    expect(body.modelConfiguration).toMatchObject({
-      provider: "anthropic",
-      generator: "claude-sonnet-5-5",
-      evaluator: "claude-sonnet-5-5",
-      research: "claude-haiku-5-5",
-      cragExecutionBudgetMs: 60_000,
-    });
-    // Comprueba que la salida no incluya el dato que este caso debe excluir.
-    expect(JSON.stringify(body)).not.toContain("sentinel-never-return-this-secret");
-    // El comparador debe rechazar una web anterior aunque esté sana y el índice exista.
-    const target = {
-      provider: "anthropic",
-      model: "claude-sonnet-5-5",
-      evaluator: "claude-sonnet-5-5",
-      corpus: "c-test",
-      profile: "p-test",
-      embedding: "@cf/baai/bge-m3",
-      dimensions: 1024,
-      turnDeadlineMs: 60_000,
-      generationTimeoutMs: 30_000,
-      ragContextMode: "semantic",
-      minScore: 0.5,
-    };
-    // Clona la lectura para preparar un objetivo verificable sin alterar la respuesta original.
-    const ready = structuredClone(body);
-    // Simula la disponibilidad RAG de un índice ya verificado.
-    ready.capabilities.rag.status = "ready";
-    // Simula también la disponibilidad CRAG para aislar la comprobación de identidad.
-    ready.capabilities.crag.status = "ready";
-    // Asocia la referencia del experimento a los campos públicos del corpus.
-    Object.assign(ready.corpus, {
-      version: target.corpus,
-      profileId: target.profile,
-      embedding: target.embedding,
-      dimensions: target.dimensions,
-    });
-    // Marca la lectura remota como verificada para satisfacer el requisito del comparador.
-    ready.corpus.coverage.remote = "index-verified";
-    // Fija el mismo umbral que declara la referencia congelada.
-    ready.modelConfiguration!.retrievalMinScore = 0.5;
-    // Comprueba que la configuración válida supere la validación sin lanzar errores.
-    expect(() => assertModelComparisonTarget(target, ready)).not.toThrow();
-    // Cambia solo el generador para demostrar que un despliegue anterior se rechaza.
-    ready.modelConfiguration!.generator = "claude-haiku-5-5";
-    // Comprueba que la entrada inválida produzca el error previsto antes de continuar.
-    expect(() => assertModelComparisonTarget(target, ready)).toThrow("La web no demuestra");
-    // Elimina después la identidad de modelos para demostrar que una lectura incompleta también bloquea.
-    delete ready.modelConfiguration;
-    // Comprueba que la entrada inválida produzca el error previsto antes de continuar.
-    expect(() => assertModelComparisonTarget(target, ready)).toThrow("La web no demuestra");
-  });
+  it.each(["semantic", "complete"] as const)(
+    "expone modelos y plazo por health con recuperación %s sin revelar la clave",
+    async (ragContextMode) => {
+      // Consulta la ruta health dentro de Hono sin abrir un servidor ni invocar modelos.
+      const response = await createApp().request(
+        "/api/health",
+        {},
+        {
+          ...config.env.production!.vars,
+          // Cada caso declara su modo: no depende del modo elegido por el despliegue actual.
+          RAG_CONTEXT_MODE: ragContextMode,
+          ANTHROPIC_API_KEY: "sentinel-never-return-this-secret",
+        },
+      );
+      // Valida el cuerpo de salud con el mismo esquema que utiliza el consumidor del comparador.
+      const body = healthResponseSchema.parse(await response.json());
+      // Contrasta los campos relevantes sin exigir igualdad de los metadatos adicionales.
+      expect(body.modelConfiguration).toMatchObject({
+        provider: "anthropic",
+        generator: "claude-sonnet-5-5",
+        evaluator: "claude-sonnet-5-5",
+        research: "claude-haiku-5-5",
+        cragExecutionBudgetMs: 60_000,
+        ragContextMode,
+      });
+      // Comprueba que la salida no incluya el dato que este caso debe excluir.
+      expect(JSON.stringify(body)).not.toContain("sentinel-never-return-this-secret");
+      // El comparador debe rechazar una web anterior aunque esté sana y el índice exista.
+      const target = {
+        provider: "anthropic",
+        model: "claude-sonnet-5-5",
+        evaluator: "claude-sonnet-5-5",
+        corpus: "c-test",
+        profile: "p-test",
+        embedding: "@cf/baai/bge-m3",
+        dimensions: 1024,
+        turnDeadlineMs: 60_000,
+        generationTimeoutMs: 30_000,
+        ragContextMode,
+        minScore: 0.5,
+      };
+      // Clona la lectura para preparar un objetivo verificable sin alterar la respuesta original.
+      const ready = structuredClone(body);
+      // Simula la disponibilidad RAG de un índice ya verificado.
+      ready.capabilities.rag.status = "ready";
+      // Simula también la disponibilidad CRAG para aislar la comprobación de identidad.
+      ready.capabilities.crag.status = "ready";
+      // Asocia la referencia del experimento a los campos públicos del corpus.
+      Object.assign(ready.corpus, {
+        version: target.corpus,
+        profileId: target.profile,
+        embedding: target.embedding,
+        dimensions: target.dimensions,
+      });
+      // Marca la lectura remota como verificada para satisfacer el requisito del comparador.
+      ready.corpus.coverage.remote = "index-verified";
+      // Fija el mismo umbral que declara la referencia congelada.
+      ready.modelConfiguration!.retrievalMinScore = 0.5;
+      // Comprueba que la configuración válida supere la validación sin lanzar errores.
+      expect(() => assertModelComparisonTarget(target, ready)).not.toThrow();
+      // Otro modo de recuperación debe rechazarse incluso si coinciden modelos, índice y plazos.
+      const differentMode = structuredClone(ready);
+      differentMode.modelConfiguration!.ragContextMode =
+        ragContextMode === "semantic" ? "complete" : "semantic";
+      expect(() => assertModelComparisonTarget(target, differentMode)).toThrow(
+        "La web no demuestra",
+      );
+      // Cambia solo el generador para demostrar que un despliegue anterior se rechaza.
+      ready.modelConfiguration!.generator = "claude-haiku-5-5";
+      // Comprueba que la entrada inválida produzca el error previsto antes de continuar.
+      expect(() => assertModelComparisonTarget(target, ready)).toThrow("La web no demuestra");
+      // Elimina después la identidad de modelos para demostrar que una lectura incompleta también bloquea.
+      delete ready.modelConfiguration;
+      // Comprueba que la entrada inválida produzca el error previsto antes de continuar.
+      expect(() => assertModelComparisonTarget(target, ready)).toThrow("La web no demuestra");
+    },
+  );
 
   // Verifica este escenario: un plazo inválido se rechaza antes de reservar dinero.
   it("un plazo inválido se rechaza antes de reservar dinero", async () => {

@@ -35,11 +35,13 @@ El servidor ejecuta estos controles antes de acceder al presupuesto, a los docum
 ## Turnstile explicado paso a paso
 
 1. El backend entrega la site key pública y crea una cookie anónima `Secure`, `HttpOnly`, `SameSite=Strict`, sin almacenar una identidad personal. Su firma impide modificar el identificador de sesión para saltarse una cuota.
-2. React carga el script oficial de Turnstile y muestra el widget Managed si Cloudflare necesita interacción. La acción es `course-chat` y `cData` lleva la sesión actual.
-3. El botón espera a que haya un token. Al enviar, el cliente renueva la sesión y añade el token a la cabecera `x-turnstile-token`. No entra en los mensajes, prompts, fuentes ni trazas.
+2. React prepara el script oficial sin ejecutar desafíos. Al pulsar Enviar renueva primero la sesión y crea un widget con `execution: "execute"` y `appearance: "interaction-only"`. La acción es `course-chat` y `cData` lleva la sesión vigente.
+3. El cliente ejecuta la verificación y conserva el borrador. Solo muestra el widget si Cloudflare requiere interacción. Hasta recibir el token no inserta la pregunta en el historial ni hace el POST. Después añade el token a la cabecera `x-turnstile-token`; no entra en mensajes, prompts, fuentes ni trazas.
 4. El Worker llama a Siteverify con la secret key privada y el token. Comprueba `success`, el hostname exacto, la acción y la sesión (`cdata`). Un fallo o timeout bloquea el chat.
-5. Cada token caduca a los cinco minutos y solo se puede validar una vez. Después de cualquier intento, React reinicia el widget para obtener otro. No se guarda el token en localStorage.
+5. Cada token caduca a los cinco minutos y solo se puede validar una vez. El widget se retira al terminar el intento, tanto si tiene éxito como si falla. El siguiente desafío espera a una nueva acción del usuario; no hay renovación automática después de enviar ni mientras llega la respuesta. No se guarda el token en localStorage.
 6. La secret key solo está en el entorno privado del servidor. La site key puede estar en el navegador. No proyectar ni subir `.dev.vars.production` ni el valor de los secretos.
+
+Este orden del navegador se corrigió y verificó localmente el 23 de octubre de 2026. Su publicación sigue pendiente; la [evidencia del cambio](../../docs/evidence/turnstile-before-send-2026-10-23.md) distingue las pruebas locales del servicio publicado.
 
 La sesión de esta demo se renueva con la actividad y dura treinta minutos. Cambiar de etapa o cohorte no cambia deliberadamente su identidad ni elimina su cuota.
 

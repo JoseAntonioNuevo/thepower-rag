@@ -1,301 +1,190 @@
 // GUÍA DE LECTURA · apps/web/src/use-turnstile.tsx
-// Hook de React para Cloudflare Turnstile: carga el script, pide /api/security, pinta el widget y entrega un
-// token de un solo uso antes de cada envío. En demo la protección está desactivada y no hace nada.
-// Hooks de React.
+// Prepara la sesión y el script sin ejecutar desafíos. beforeSend verifica bajo demanda antes
+// de enviar; cancelar, desmontar o fallar conserva el borrador y no deja peticiones pendientes.
 import { useCallback, useEffect, useRef, useState } from "react";
-// Ciclo del token y su configuración.
+// El controlador aísla cada desafío y evita los refrescos posteriores al envío.
+import { createTurnstileWidget, type Turnstile } from "./turnstile-widget";
 import {
-  VERIFICATION_REQUIRED,
+  VERIFICATION_CANCELLED,
+  VERIFICATION_IN_PROGRESS,
+  VERIFICATION_NOT_READY,
   consumeVerificationToken,
+  readVerificationResponse,
   type VerificationConfig,
 } from "./verification-cycle";
-// API mínima del widget de Turnstile.
-interface Turnstile {
-  // Pinta el widget y devuelve su id.
-  render(container: HTMLElement, options: Record<string, unknown>): string;
-  // Reinicia el widget.
-  reset(id: string): void;
-  // Lo quita.
-  remove(id: string): void;
-}
-// Amplía el tipo global window.
+
+// El script público añade su API al navegador.
 declare global {
-  // window.turnstile lo añade el script.
   interface Window {
-    // Widget global.
     turnstile?: Turnstile;
   }
 }
-// Carga en curso del script, compartida.
+
+// Comparte la carga entre montajes, incluidas las comprobaciones de StrictMode.
 let loading: Promise<void> | null = null;
-// Carga el script de Turnstile una sola vez.
 function loadScript(): Promise<void> {
-  // Ya cargado.
   if (window.turnstile) return Promise.resolve();
-  // Cargando.
   if (loading) return loading;
-  // Promesa de carga.
   loading = new Promise((resolve, reject) => {
-    // Etiqueta script.
+    // Un bloqueo de red también tiene plazo y permite reintentar sin recargar la página.
     const script = document.createElement("script");
-    // URL con render explícito.
-    script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
-    // Asíncrono.
-    script.async = true;
-    // Diferido.
-    script.defer = true;
-    // Al cargar, resuelve.
-    script.onload = () => resolve();
-    // Si falla.
-    script.onerror = () => {
-      // Permite reintentar.
-      loading = null;
-      // Quita la etiqueta.
+    const fail = () => {
+      clearTimeout(timer);
+      script.onload = null;
+      script.onerror = null;
       script.remove();
-      // Error.
+      loading = null;
       reject(new Error("No se pudo cargar la verificación. Comprueba la conexión y reintenta."));
     };
-    // Añade el script.
+    const timer = setTimeout(fail, 15_000);
+    script.src = "https://challenges.cloudflare.com/turnstile/v0/api.js?render=explicit";
+    script.async = true;
+    script.defer = true;
+    script.onload = () => {
+      if (!window.turnstile) return fail();
+      clearTimeout(timer);
+      resolve();
+    };
+    script.onerror = fail;
     document.head.append(script);
   });
-  // Promesa.
   return loading;
 }
-// Estado y acciones de la verificación.
+
+// Estado y acciones compartidos por chat e investigación.
 export function useTurnstile() {
-  // Contenedor del widget.
+  // Referencias para el DOM, el controlador y la exclusión síncrona entre envíos.
   const container = useRef<HTMLDivElement>(null);
-  // Id del widget.
-  const widget = useRef<string | null>(null);
-  // Token actual.
-  const token = useRef<string | null>(null);
-  // Esperas pendientes de un token.
-  const waiters = useRef<Array<() => void>>([]);
-  // Configuración de /api/security.
+  const widget = useRef<ReturnType<typeof createTurnstileWidget> | null>(null);
+  const request = useRef<AbortController | null>(null);
+  const mounted = useRef(false);
+  // ready significa que se puede iniciar una verificación, no que exista un token precargado.
   const [config, setConfig] = useState<VerificationConfig | null>(null);
-  // ¿Listo para enviar?
-  const [ready, setReady] = useState(false);
-  // Error visible.
+  const [preparedConfig, setPreparedConfig] = useState<VerificationConfig | null>(null);
+  const [pending, setPending] = useState(false);
   const [error, setError] = useState<string | null>(null);
-  // Contador de reintentos.
   const [retry, setRetry] = useState(0);
-  // Pide la configuración al montar o al reintentar.
+  // Una configuración nueva invalida la anterior sin encadenar actualizaciones desde un efecto.
+  const initialized = config !== null && (!config.enabled || preparedConfig === config);
+
+  // Cancela tanto la lectura de sesión como un posible desafío interactivo.
+  const cancel = useCallback(() => {
+    request.current?.abort(new Error(VERIFICATION_CANCELLED));
+    widget.current?.cancel();
+  }, []);
+
   useEffect(() => {
-    // Controlador.
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+      cancel();
+    };
+  }, [cancel]);
+
+  // Obtiene configuración validada; un fallo nunca equivale a protección desactivada.
+  useEffect(() => {
     const controller = new AbortController();
-    // GET /api/security.
     void fetch("/api/security", {
-      signal: controller.signal,
+      signal: AbortSignal.any([controller.signal, AbortSignal.timeout(10_000)]),
       credentials: "same-origin",
       cache: "no-store",
     })
       .then(async (response) => {
-        // Cuerpo.
-        const body = await response.json();
-        // Error.
-        if (!response.ok)
-          // Interrumpe esta rama y propaga el motivo al manejador de errores del recorrido.
-          throw new Error(body.message ?? "No se pudo verificar la sesión.");
-        // Cancelado.
-        if (controller.signal.aborted)
-          // Termina esta rama sin ejecutar los pasos siguientes del recorrido.
-          return;
-        // Guarda la configuración.
-        setConfig(body as VerificationConfig);
-        // Sin protección: listo.
-        if (!body.enabled)
-          // Actualiza la disponibilidad de la verificación antes de permitir el siguiente envío.
-          setReady(true);
+        const next = await readVerificationResponse(response);
+        if (!controller.signal.aborted) setConfig(next);
       })
       .catch((caught: unknown) => {
-        // Error visible si no se canceló.
-        if (!controller.signal.aborted)
-          // Expone el fallo en el estado de la interfaz para que el usuario pueda recuperarse.
+        if (!controller.signal.aborted) {
           setError(caught instanceof Error ? caught.message : "No se pudo verificar la sesión.");
+        }
       });
-    // Al desmontar, cancela.
     return () => controller.abort();
   }, [retry]);
-  // Pinta el widget cuando hay configuración.
+
+  // Prepara únicamente el controlador. El widget no se renderiza hasta beforeSend.
   useEffect(() => {
-    // Sin protección o sin datos: nada.
-    if (!config?.enabled || !container.current || !config.siteKey || !config.sessionId)
-      // Termina esta rama sin ejecutar los pasos siguientes del recorrido.
-      return;
-    // ¿Sigue montado?
     let active = true;
-    // Carga el script.
+    if (!config?.enabled) return;
     void loadScript()
       .then(() => {
-        // Desmontado o sin script.
-        if (!active || !container.current || !window.turnstile)
-          // Termina esta rama sin ejecutar los pasos siguientes del recorrido.
-          return;
-        // Pinta el widget.
-        widget.current = window.turnstile.render(container.current, {
-          sitekey: config.siteKey,
-          action: "course-chat",
-          cData: config.sessionId,
-          size: "flexible",
-          appearance: "interaction-only",
-          // Recibe el token nuevo que Turnstile entrega al resolver el desafío.
-          callback: (value: string) => {
-            // Si sigue montado.
-            if (active) {
-              // Guarda el token.
-              token.current = value;
-              // Listo.
-              setReady(true);
-              // Sin error.
-              setError(null);
-              // Esperas pendientes.
-              const pending = waiters.current.splice(0);
-              // Las despierta.
-              for (const resolve of pending) resolve();
-            }
-          },
-          // Invalida la verificación cuando Turnstile informa de que el token ha caducado.
-          "expired-callback": () => {
-            // Si sigue montado.
-            if (active) {
-              // Token caducado.
-              token.current = null;
-              // No listo.
-              setReady(false);
-            }
-          },
-          // Refleja un fallo del widget para que el usuario pueda volver a verificarse.
-          "error-callback": () => {
-            // Si sigue montado.
-            if (active) {
-              // Sin token.
-              token.current = null;
-              // No listo.
-              setReady(false);
-              // Error visible.
-              setError("No se pudo completar la verificación. Reintenta antes de enviar.");
-            }
-          },
-        });
+        if (!active) return;
+        if (!container.current || !window.turnstile) throw new Error(VERIFICATION_NOT_READY);
+        widget.current = createTurnstileWidget(window.turnstile, container.current, config);
+        setPreparedConfig(config);
       })
       .catch((caught: unknown) => {
-        // Error al cargar.
-        if (active)
-          // Expone el fallo en el estado de la interfaz para que el usuario pueda recuperarse.
+        if (active) {
           setError(caught instanceof Error ? caught.message : "No se pudo cargar la verificación.");
+        }
       });
-    // Limpieza.
     return () => {
-      // Desmontado.
       active = false;
-      // Sin token.
-      token.current = null;
-      // Sin esperas.
-      waiters.current.splice(0);
-      // Si hay widget.
-      if (widget.current !== null) {
-        // Lo quita.
-        window.turnstile?.remove(widget.current);
-        // Sin id.
-        widget.current = null;
-      }
+      widget.current?.dispose();
+      widget.current = null;
     };
   }, [config]);
-  // Reinicia el widget y el token.
-  function reset() {
-    // Sin token.
-    token.current = null;
-    // Con protección.
-    if (config?.enabled) {
-      // No listo.
-      setReady(false);
-      // Reinicia el widget.
-      if (widget.current !== null)
-        // Solicita un desafío nuevo al widget de verificación de esta conversación.
-        window.turnstile?.reset(widget.current);
+
+  // El cerrojo cubre también la lectura de /api/security, antes de crear el widget.
+  async function beforeSend(): Promise<string | null> {
+    if (request.current) throw new Error(VERIFICATION_IN_PROGRESS);
+    if (!initialized) throw new Error(VERIFICATION_NOT_READY);
+    const controller = new AbortController();
+    request.current = controller;
+    setPending(true);
+    setError(null);
+    try {
+      const token = await consumeVerificationToken({
+        config,
+        fetchSession: () =>
+          fetch("/api/security", {
+            credentials: "same-origin",
+            cache: "no-store",
+            signal: AbortSignal.any([controller.signal, AbortSignal.timeout(10_000)]),
+          }),
+        requestToken: () => {
+          controller.signal.throwIfAborted();
+          if (!widget.current) throw new Error(VERIFICATION_NOT_READY);
+          return widget.current.requestToken();
+        },
+        onRenewed: (next) => {
+          setConfig(next);
+        },
+      });
+      // Ni una cancelación tardía ni un cambio de conversación pueden acabar enviando.
+      controller.signal.throwIfAborted();
+      return token;
+    } catch (caught: unknown) {
+      const failure = controller.signal.aborted
+        ? new Error(VERIFICATION_CANCELLED)
+        : caught instanceof Error
+          ? caught
+          : new Error("No se pudo verificar el envío.");
+      if (mounted.current && !controller.signal.aborted) setError(failure.message);
+      throw failure;
+    } finally {
+      if (request.current === controller) request.current = null;
+      if (mounted.current) setPending(false);
     }
   }
-  // Espera un token (máximo 20 s).
-  function waitForToken(): Promise<void> {
-    // Ya hay.
-    if (token.current) return Promise.resolve();
-    // Promesa.
-    return new Promise((resolve, reject) => {
-      // Temporizador.
-      let timer = 0;
-      // Al recibir el token.
-      const waiter = () => {
-        // Cancela el temporizador.
-        window.clearTimeout(timer);
-        // Resuelve.
-        resolve();
-      };
-      // Plazo.
-      timer = window.setTimeout(() => {
-        // Quita la espera.
-        waiters.current = waiters.current.filter((item) => item !== waiter);
-        // Error.
-        reject(new Error(VERIFICATION_REQUIRED));
-      }, 20_000);
-      // Registra la espera.
-      waiters.current.push(waiter);
-    });
-  }
-  // Antes de cada envío: gasta el token y pide otro.
-  async function beforeSend(): Promise<string | null> {
-    // Ciclo del token.
-    return consumeVerificationToken({
-      config,
-      // Lee el token de verificación actual sin duplicar su almacenamiento.
-      readToken: () => token.current,
-      // Obtiene la sesión anónima que necesita el envío protegido del chat.
-      fetchSession: () => fetch("/api/security", { credentials: "same-origin", cache: "no-store" }),
-      waitForToken,
-      // Reinicia el widget para solicitar un nuevo desafío de verificación.
-      resetWidget: () => {
-        // Reinicia el widget.
-        if (config?.enabled && widget.current !== null)
-          // Solicita un desafío nuevo al widget de verificación de esta conversación.
-          window.turnstile?.reset(widget.current);
-      },
-      // Invalida el token anterior para impedir reutilizarlo en otro envío.
-      clearToken: () => {
-        // Borra el token.
-        token.current = null;
-        // No listo.
-        setReady(false);
-      },
-      // Actualiza el estado del recorrido después de renovar la verificación.
-      onRenewed: (next) => {
-        // No listo.
-        setReady(false);
-        // Nueva configuración.
-        setConfig(next);
-      },
-    });
-  }
-  // Ref con callback para el contenedor.
+
+  // React conecta el contenedor estable antes de ejecutar los efectos.
   const attachContainer = useCallback((node: HTMLDivElement | null) => {
-    // Guarda el nodo.
     container.current = node;
   }, []);
-  // Lo que usa la interfaz.
+
   return {
     container: attachContainer,
-    ready,
+    ready: initialized && !pending,
+    pending,
     error,
-    enabled: config?.enabled ?? false,
     beforeSend,
-    reset,
-    // Reinicia el recorrido de verificación tras un fallo o un desafío caducado.
+    cancel,
+    // Reintentar carga configuración y script; sigue sin ejecutar desafíos en reposo.
     retry: () => {
-      // Sin error.
+      cancel();
       setError(null);
-      // Sin configuración.
       setConfig(null);
-      // No listo.
-      setReady(false);
-      // Fuerza un nuevo intento.
+      setPreparedConfig(null);
       setRetry((n) => n + 1);
     },
   };

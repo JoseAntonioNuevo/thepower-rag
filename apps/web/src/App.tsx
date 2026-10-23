@@ -582,15 +582,16 @@ function ChatPane({
   const {
     container: verificationContainer,
     ready: verificationReady,
+    pending: verifying,
     error: verificationError,
     beforeSend,
-    reset: resetVerification,
+    cancel: cancelVerification,
     retry: retryVerification,
   } = useTurnstile();
   // Error de envío.
   const [submitError, setSubmitError] = useState<string | null>(null);
-  // ¿Verificando?
-  const [verifying, setVerifying] = useState(false);
+  // Cerrojo síncrono: dos eventos antes del siguiente render no pueden enviar dos preguntas.
+  const submitting = useRef(false);
   // Escenario CRAG.
   const [scenario, setScenario] = useState<DemoScenarioId | null>(null);
   // Pasos CRAG en directo.
@@ -716,15 +717,15 @@ function ChatPane({
     // Texto.
     const text = input.trim();
     // Vacío, ocupado o sin verificación.
-    if (text.length === 0 || busy || !verificationReady) {
+    if (text.length === 0 || busy || submitting.current || !verificationReady) {
       // Nada.
       return;
     }
     // Sin error.
     setSubmitError(null);
-    // Verificando.
-    setVerifying(true);
-    // try/catch/finally: error visible y token renovado.
+    // Mantiene la exclusión desde la verificación hasta el final del stream.
+    submitting.current = true;
+    // Un fallo de verificación conserva el borrador y nunca inserta un mensaje en el chat.
     try {
       // Token.
       const verificationToken = await beforeSend();
@@ -734,8 +735,8 @@ function ChatPane({
       setLiveSteps([]);
       // Limpia los pasos.
       setResearchSteps([]);
-      // Vacía el formulario.
-      setInput("");
+      // Conserva cualquier borrador que se haya editado durante la espera.
+      setInput((current) => (current.trim() === text ? "" : current));
       // Envía con la cabecera del token.
       await sendMessage(
         { text },
@@ -745,10 +746,8 @@ function ChatPane({
       // Error visible.
       setSubmitError(caught instanceof Error ? caught.message : "No se pudo enviar la pregunta.");
     } finally {
-      // Fin de la verificación.
-      setVerifying(false);
-      // Pide otro token.
-      resetVerification();
+      // El siguiente desafío solo se iniciará con otra intención de envío.
+      submitting.current = false;
     }
   }
 
@@ -774,7 +773,7 @@ function ChatPane({
   }
 
   // Etiqueta del estado.
-  const statusLabel = conversationStatus(status, mode);
+  const statusLabel = verifying ? "Verificando antes de enviar…" : conversationStatus(status, mode);
   // ¿Hay respuestas? Entonces se muestra el panel lateral.
   const showRail = messages.some((message) => message.role === "assistant");
   // Error visible.
@@ -927,7 +926,7 @@ function ChatPane({
             </p>
           ) : null}
           {/* Línea de estado bajo el formulario: error, actividad, ejemplo o nueva conversación. */}
-          <p className="composer-caption">
+          <div className="composer-caption">
             {/* Según el estado. */}
             {alertMessage !== null ? (
               <span role="alert">
@@ -941,15 +940,15 @@ function ChatPane({
                 ) : null}
               </span>
             ) : busy ? (
-              <span className="conversation-status" role="status">
+              <div className="conversation-status" role="status">
                 {/* Indicador de carga. */}
-                <span className="status-loader">
+                <div className="status-loader">
                   {/* Matriz. */}
                   <MatrixLoader variant="scan" />
-                </span>
+                </div>
                 {/* Estado. */}
                 <ThinkStatus label={statusLabel} live />
-              </span>
+              </div>
             ) : messages.length === 0 ? (
               <button
                 className="caption-action"
@@ -989,7 +988,7 @@ function ChatPane({
                 Nueva conversación
               </button>
             )}
-          </p>
+          </div>
           {/* Caja de la pregunta. */}
           <div className="composer-pill">
             {/* Textarea. */}
@@ -1029,9 +1028,18 @@ function ChatPane({
             />
             {/* Detener o enviar. */}
             {busy ? (
-              // Mientras responde: botón para cortar el stream.
-              <button className="send" type="button" onClick={() => void stop()}>
-                Detener
+              // Antes del envío cancela la verificación; después, detiene el stream.
+              <button
+                className="send"
+                type="button"
+                onClick={(event) => {
+                  // El mismo nodo puede volver a type=submit durante este clic: evita su acción por defecto.
+                  event.preventDefault();
+                  if (verifying) cancelVerification();
+                  else void stop();
+                }}
+              >
+                {verifying ? "Cancelar envío" : "Detener"}
               </button>
             ) : (
               // En reposo: enviar, desactivado sin verificación o sin texto.

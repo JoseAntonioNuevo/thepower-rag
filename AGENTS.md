@@ -192,7 +192,7 @@ La ingesta (`packages/rag/src/ingest.ts`, adaptada en `apps/api/src/ingest-run.t
 
 ## Interfaz web (`apps/web/src`)
 
-`App.tsx` monta los selectores de etapa y grupo, el chat (`useChat` del AI SDK) y el panel lateral de fuentes, traza y grafo CRAG. Cambiar de etapa, de grupo o reiniciar crea una conversación aislada (`scope.ts`). La investigación durable usa la mesa `research-desk.tsx` (sondeo del trabajo, adjuntos, presupuesto) y `research-panel.tsx` (fuentes y traza). Las respuestas se pintan con un Markdown reducido propio (`course-markdown.ts` → `course-answer.tsx`) que nunca inserta HTML del modelo. El movimiento sale del catálogo de transitions.dev (`transitions.css`, `chat-motion*.ts(x)`) y respeta `prefers-reduced-motion`. Turnstile vive en `use-turnstile.tsx` y `verification-cycle.ts`.
+`App.tsx` monta los selectores de etapa y grupo, el chat (`useChat` del AI SDK) y el panel lateral de fuentes, traza y grafo CRAG. Cambiar de etapa, de grupo o reiniciar crea una conversación aislada (`scope.ts`). La investigación durable usa la mesa `research-desk.tsx` (sondeo del trabajo, adjuntos, presupuesto) y `research-panel.tsx` (fuentes y traza). Las respuestas se pintan con un Markdown reducido propio (`course-markdown.ts` → `course-answer.tsx`) que nunca inserta HTML del modelo. El movimiento sale del catálogo de transitions.dev (`transitions.css`, `chat-motion*.ts(x)`) y respeta `prefers-reduced-motion`. Turnstile vive en `use-turnstile.tsx`, `verification-cycle.ts` y `turnstile-widget.ts`. La verificación se ejecuta bajo demanda antes de cada mutación; no se precargan tokens ni se reinicia el desafío al terminar la respuesta.
 
 ## Archivos uno a uno
 
@@ -262,7 +262,7 @@ La ingesta (`packages/rag/src/ingest.ts`, adaptada en `apps/api/src/ingest-run.t
 
 ### `apps/web/src`
 
-`main.tsx` (arranque), `App.tsx` (interfaz), `chat.ts` (tipo y transporte), `scope.ts` (clave de conversación), `crag-panel.ts` (claves del panel CRAG), `course-markdown.ts` + `course-answer.tsx` (Markdown seguro), `chat-motion.ts` + `chat-motion-view.tsx` + `transitions.css` (movimiento), `research-desk.tsx`, `research-panel.tsx`, `research-submit.ts`, `research-labels.ts` (investigación), `use-turnstile.tsx` + `verification-cycle.ts` (Turnstile), `styles.css` (estilos propios).
+`main.tsx` (arranque), `App.tsx` (interfaz), `chat.ts` (tipo y transporte), `scope.ts` (clave de conversación), `crag-panel.ts` (claves del panel CRAG), `course-markdown.ts` + `course-answer.tsx` (Markdown seguro), `chat-motion.ts` + `chat-motion-view.tsx` + `transitions.css` (movimiento), `research-desk.tsx`, `research-panel.tsx`, `research-submit.ts`, `research-labels.ts` (investigación), `use-turnstile.tsx` + `verification-cycle.ts` + `turnstile-widget.ts` (Turnstile bajo demanda), `styles.css` (estilos propios).
 
 ### `scripts`
 

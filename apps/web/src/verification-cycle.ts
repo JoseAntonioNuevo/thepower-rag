@@ -1,92 +1,91 @@
 // GUÍA DE LECTURA · apps/web/src/verification-cycle.ts
-// Ciclo de Turnstile en el navegador: cada mutación gasta un token de un solo uso y pide otro después.
-// Error: el widget aún no cargó.
-export const VERIFICATION_NOT_READY = "La verificación todavía no está lista.";
-// Error: falta resolver el desafío.
-export const VERIFICATION_REQUIRED = "Completa la verificación antes de enviar.";
-// Error: la sesión cambió y hay que repetir.
-export const SESSION_RENEWED =
-  "La sesión se renovó. Espera a la nueva verificación y vuelve a enviar.";
+// Verifica primero la sesión y después pide un token nuevo para una única mutación.
+// Nunca prepara el desafío del siguiente envío mientras la petición actual sigue en curso.
 
-// Configuración de verificación que da /api/security.
+// Mensajes compartidos por el chat y la investigación.
+export const VERIFICATION_NOT_READY = "La verificación todavía no está lista.";
+export const VERIFICATION_REQUIRED = "Completa la verificación antes de enviar.";
+export const VERIFICATION_CANCELLED = "Envío cancelado. Tu pregunta no se ha enviado.";
+export const VERIFICATION_IN_PROGRESS = "Ya hay una verificación en curso.";
+export const SESSION_RENEWED =
+  "La sesión se renovó. Vuelve a enviar para verificar la nueva sesión.";
+
+// Configuración pública que devuelve /api/security.
 export interface VerificationConfig {
-  // Si la protección está activa.
+  // La demo desactiva la protección de forma explícita.
   enabled: boolean;
-  // Clave pública del widget.
+  // Clave pública e identidad de la sesión firmada.
   siteKey: string | null;
-  // Sesión firmada.
   sessionId: string | null;
 }
 
-/**
- * Gasta un token de un solo uso y pide otro para la siguiente mutación.
- * No reutiliza el token que acaba de entregar.
- */
+// Rechaza respuestas incompletas: la ausencia de enabled nunca desactiva la protección.
+export function parseVerificationConfig(value: unknown): VerificationConfig {
+  // Una respuesta de error o un HTML no son configuración.
+  if (typeof value !== "object" || value === null) {
+    throw new Error("No se pudo verificar la sesión.");
+  }
+  // Los campos se validan antes de usarlos para renderizar el widget.
+  const body = value as Record<string, unknown>;
+  if (body.enabled === false && body.siteKey === null && body.sessionId === null) {
+    return { enabled: false, siteKey: null, sessionId: null };
+  }
+  if (
+    body.enabled === true &&
+    typeof body.siteKey === "string" &&
+    body.siteKey.trim().length > 0 &&
+    typeof body.sessionId === "string" &&
+    body.sessionId.trim().length > 0
+  ) {
+    return { enabled: true, siteKey: body.siteKey, sessionId: body.sessionId };
+  }
+  throw new Error("No se pudo verificar la sesión.");
+}
+
+// Conserva los mensajes públicos del servidor, incluidos los límites de sesión o red.
+export async function readVerificationResponse(response: Response): Promise<VerificationConfig> {
+  const body: unknown = await response.json().catch(() => null);
+  if (!response.ok) {
+    const message =
+      typeof body === "object" && body !== null && "message" in body ? body.message : null;
+    throw new Error(
+      typeof message === "string" && message.length > 0
+        ? message
+        : "No se pudo verificar la sesión.",
+    );
+  }
+  return parseVerificationConfig(body);
+}
+
+// Obtiene un token solo para la petición que el usuario acaba de iniciar.
 export async function consumeVerificationToken(input: {
-  // Configuración actual.
+  // Configuración con la que se preparó el widget.
   config: VerificationConfig | null;
-  // Lee el token del widget.
-  readToken: () => string | null;
-  // Pide /api/security.
+  // Renueva la cookie antes del desafío, para no gastar un token de otra sesión.
   fetchSession: () => Promise<Response>;
-  // Espera a un token nuevo.
-  waitForToken: () => Promise<void>;
-  // Reinicia el widget.
-  resetWidget: () => void;
-  // Borra el token guardado.
-  clearToken: () => void;
-  // Avisa de una sesión nueva.
+  // Resuelve únicamente cuando termina la verificación de este envío.
+  requestToken: () => Promise<string>;
+  // Reconstruye el widget si el servidor ha renovado su identidad o clave.
   onRenewed: (next: VerificationConfig) => void;
 }): Promise<string | null> {
-  // Sin configuración: error.
-  if (!input.config)
-    // Interrumpe esta rama y propaga el motivo al manejador de errores del recorrido.
-    throw new Error(VERIFICATION_NOT_READY);
-  // Sin protección: sin token.
-  if (!input.config.enabled)
-    // Representa la ausencia de resultado con null para que el llamador decida la siguiente ruta.
-    return null;
-  // Sin token.
-  if (!input.readToken()) {
-    // Reinicia el widget.
-    input.resetWidget();
-    // Espera a que llegue.
-    await input.waitForToken();
-  }
-  // Token actual.
-  const current = input.readToken();
-  // Sigue sin token: error.
-  if (!current)
-    // Interrumpe esta rama y propaga el motivo al manejador de errores del recorrido.
-    throw new Error(VERIFICATION_REQUIRED);
-  // Comprueba la sesión.
-  const response = await input.fetchSession();
-  // Respuesta.
-  const next = (await response.json().catch(() => null)) as
-    | (VerificationConfig & { message?: string })
-    | null;
-  // Error del servidor.
-  if (!response.ok || next === null) {
-    // Mensaje.
-    throw new Error(next?.message ?? "No se pudo verificar la sesión.");
-  }
-  // La sesión cambió.
-  if (next.sessionId !== input.config.sessionId) {
-    // Avisa.
+  // Sin configuración válida no se permite iniciar una petición protegida.
+  if (!input.config) throw new Error(VERIFICATION_NOT_READY);
+  const config = parseVerificationConfig(input.config);
+  if (!config.enabled) return null;
+
+  // Primero comprueba la sesión; un error HTTP no llega a ejecutar Turnstile.
+  const next = await readVerificationResponse(await input.fetchSession());
+  if (
+    next.enabled !== config.enabled ||
+    next.sessionId !== config.sessionId ||
+    next.siteKey !== config.siteKey
+  ) {
     input.onRenewed(next);
-    // Error para repetir.
     throw new Error(SESSION_RENEWED);
   }
-  // Token a gastar.
-  const value = input.readToken();
-  // Sin token: error.
-  if (!value)
-    // Interrumpe esta rama y propaga el motivo al manejador de errores del recorrido.
-    throw new Error(VERIFICATION_REQUIRED);
-  // Lo borra para no reutilizarlo.
-  input.clearToken();
-  // Pide uno nuevo.
-  input.resetWidget();
-  // Token.
-  return value;
+
+  // El token va directamente al llamador: no se almacena ni se precarga otro.
+  const token = await input.requestToken();
+  if (!token || token.length > 2048) throw new Error(VERIFICATION_REQUIRED);
+  return token;
 }

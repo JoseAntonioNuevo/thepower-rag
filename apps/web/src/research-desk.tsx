@@ -383,8 +383,11 @@ export function ResearchDesk({
   const {
     container: verificationContainer,
     ready: verificationReady,
+    pending: verificationPending,
     error: verificationError,
     beforeSend,
+    cancel: cancelVerification,
+    retry: retryVerification,
   } = useTurnstile();
 
   // Lee el estado del presupuesto.
@@ -1227,6 +1230,14 @@ export function ResearchDesk({
             </div>
           ) : null}
           {/* Contenedor del widget de Turnstile. */}
+          {verificationPending ? (
+            <p role="status">
+              Verificando antes de continuar. Si aparece un desafío, complétalo.
+              <button type="button" className="caption-action" onClick={cancelVerification}>
+                Cancelar verificación
+              </button>
+            </p>
+          ) : null}
           <div ref={verificationContainer} aria-label="Verificación de seguridad" />
         </form>
       </section>
@@ -1293,7 +1304,14 @@ export function ResearchDesk({
         ) : null}
       </section>
       {/* Error de verificación. */}
-      {verificationError ? <ChatError message={verificationError} /> : null}
+      {verificationError ? (
+        <div>
+          <ChatError message={verificationError} />
+          <button type="button" className="caption-action" onClick={retryVerification}>
+            Reintentar verificación
+          </button>
+        </div>
+      ) : null}
       {/* Aviso. */}
       {notice ? <ChatError message={notice} /> : null}
       {/* Presupuesto. */}
