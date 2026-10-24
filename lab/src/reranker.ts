@@ -245,6 +245,64 @@ export function assessLabEvidence(input: {
   };
 }
 
+// Decide en código la suficiencia a partir de un juez externo (un modelo real): el juez puntúa y
+// estima la cobertura, pero los umbrales calibrados de S11 deciden la ruta, igual que con las reglas.
+export function decideLabSufficiency(input: {
+  reranked: readonly LabRerankedCandidate[];
+  coverageScore: number;
+  gaps: readonly string[];
+  reason: string;
+}): LabSufficiencyAssessment {
+  // Fragmentos que superan la relevancia individual mínima (0,50), en el orden validado.
+  const useful = input.reranked
+    .filter((item) => item.rerankScore >= LAB_CRAG_CONFIG.minChunkRelevance)
+    .slice(0, LAB_CRAG_CONFIG.maxRetained);
+  // Relevancia máxima observada en esta pasada.
+  const maxChunkRelevance = input.reranked.reduce(
+    (max, item) => Math.max(max, item.rerankScore),
+    0,
+  );
+  // La cobertura del juez se acota a la escala cerrada [0, 1].
+  const coverageScore = Number(Math.min(1, Math.max(0, input.coverageScore)).toFixed(4));
+  // Las lagunas viajan a la reformulación aunque la evidencia sea insuficiente.
+  const gaps = [...input.gaps];
+  // Sin ningún fragmento útil, o con cobertura por debajo de 0,40, la pasada es insuficiente.
+  if (useful.length === 0 || coverageScore < LAB_CRAG_CONFIG.partialCoverageMin) {
+    // No se conserva nada de esta pasada.
+    return {
+      status: "insufficient",
+      coverageScore,
+      maxChunkRelevance,
+      reason: input.reason,
+      gaps,
+      usefulIds: [],
+    };
+  }
+  // Ids útiles en el orden del reordenador.
+  const usefulIds = useful.map((item) => item.hit.chunkId);
+  // Cobertura de al menos 0,75 y ninguna laguna pendiente: suficiente.
+  if (coverageScore >= LAB_CRAG_CONFIG.sufficientCoverageMin && gaps.length === 0) {
+    // Se puede responder con los fragmentos útiles.
+    return {
+      status: "sufficient",
+      coverageScore,
+      maxChunkRelevance,
+      reason: input.reason,
+      gaps,
+      usefulIds,
+    };
+  }
+  // Hay evidencia útil, pero falta una parte: se conserva y se reformula hacia la laguna.
+  return {
+    status: "partial",
+    coverageScore,
+    maxChunkRelevance,
+    reason: input.reason,
+    gaps: gaps.length > 0 ? gaps : ["Falta evidencia para cubrir toda la pregunta original."],
+    usefulIds,
+  };
+}
+
 // Reformula la consulta de búsqueda apuntando a la laguna detectada sin perder la intención original.
 export function reformulateLabQuery(input: {
   originalQuestion: string;

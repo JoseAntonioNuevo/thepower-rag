@@ -137,3 +137,18 @@ export type {
 } from "./research";
 // Tipos del mensaje que viaja entre la API y React.
 export type { CourseDataParts, CourseUIMessage } from "./ui-message";
+// Consola docente local del laboratorio: no importa adaptadores de servidor.
+export { AULA_STAGES, aulaStages } from "./aula";
+export type {
+  AulaStageId,
+  AulaKind,
+  AulaMode,
+  AulaRunStatus,
+  AulaJson,
+  AulaObserver,
+  AulaEvent,
+  AulaRun,
+  AulaStoredChunk,
+  AulaDocument,
+  AulaStatus,
+} from "./aula";

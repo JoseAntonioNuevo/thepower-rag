@@ -9,6 +9,8 @@ reservado de veinte preguntas sigue sin ejecutar con este perfil. El
 [plan de perfiles y verificación](../../docs/sonnet-crag.md) separa los casos
 dirigidos de desarrollo del conjunto reservado y los resultados históricos.
 
+**Actualización del 24/10/2026:** el laboratorio ejecutó este protocolo con modelos reales sobre la tienda ficticia **Zocomar** (12 políticas, `vector(768)` + HNSW, Gemini Embedding 2 y Sonnet en las dos etapas, juez Sonnet en CRAG). Resultado con revisión manual: **RAG básico `14/14` y `6/6`; CRAG `14/14` y `6/6`**, `1,00` frente a `1,60` recuperaciones medias y mediana `3,2 s` frente a `8,9 s` en respondibles. CRAG gana margen de decisión (`0,65` frente a `0,014`) y contexto limpio, no acierto. Evidencia y límites: [`docs/evidence/zocomar-lab-2026-10-24.md`](../../docs/evidence/zocomar-lab-2026-10-24.md). Los resultados de abajo del laboratorio (16/20 y 17/20) son del respaldo determinista sobre AetherCloud y no miden modelos.
+
 Este directorio documenta el protocolo de comparación justa entre **RAG básico (S10)** y **CRAG (S11)** sobre conjuntos cerrados de **20 preguntas (14 respondibles y 6 sin respuesta)** y separa tres artefactos con su procedencia exacta:
 
 1. **Evaluación ejecutada del laboratorio reproducible (`lab/eval/resultados-laboratorio.md`):**

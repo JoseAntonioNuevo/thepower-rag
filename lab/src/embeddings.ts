@@ -86,7 +86,7 @@ const STOPWORDS = new Set([
   "todos",
   "todas",
   // Término común a todos los documentos del corpus ficticio y verbos genéricos de enunciado.
-  "aethercloud",
+  "zocomar",
   "maximo",
   "maxima",
   "minimo",

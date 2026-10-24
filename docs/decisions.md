@@ -114,3 +114,29 @@ El cliente verifica bajo demanda con `execution: "execute"` y `appearance: "inte
 El borrador se conserva ante fallo o cancelación, las esperas se cancelan al desmontar y los callbacks de un intento no pueden resolver otro. El botón Cancelar/Detener previene la acción por defecto del clic porque React puede reutilizar ese nodo como botón de envío durante la actualización. La verificación tiene un plazo de dos minutos para admitir interacción humana y no el antiguo límite de veinte segundos.
 
 Estado: publicado el 23 de octubre de 2026 al 100 % en la versión `dc051851-8cd1-41d0-96f5-21843c62ca4e`, código `273641f`, con dos respuestas reales consecutivas en el navegador integrado. [Evidencia y pruebas reproducibles](evidence/turnstile-before-send-2026-10-23.md). El selector de OpenViking sigue sin cuenta para este repositorio; esta nota conserva la decisión localmente sin escribir en otro tenant.
+
+## Aula / Inspector local (23 de octubre de 2026)
+
+El usuario pidió enseñar el interior del laboratorio con ejecución paso a paso, datos reales, TablePlus y un guion. Se instrumentan el pipeline pgvector y los adaptadores de modelos existentes mediante un observador opcional; el CLI conserva su comportamiento. No se crea una segunda recuperación didáctica con datos inventados ni se cambia el despliegue público.
+
+El servidor Bun escucha solo en loopback. Comparte límite acumulativo y bloqueo con `lab:real`; abrir pantalla/historial/SSE no consume modelos. Los pasos esperan antes de operar, y la ingesta espera antes de abrir su transacción. Cada avance nombra la etapa pendiente para que un doble clic no autorice la siguiente. Cancelar conserva reservas inciertas. Los eventos, incluidos SQL, parámetros, filas, deltas y consumo, se confirman en PostgreSQL antes de emitirse al navegador. El UUID enlaza la consola y TablePlus; las tablas del diario no se truncan al reconstruir el índice.
+
+La comparación «Sin documentos» conserva el generador y sus instrucciones restrictivas con contexto vacío. Sirve para aislar el contexto suministrado, no para medir el conocimiento general de un chat abierto. Las barras del vector enseñan componentes reales, no una proyección semántica. Validar ids de citas no valida automáticamente todas las afirmaciones.
+
+El ensayo real detectó que Bun.SQL volvía a serializar como string el JSON ya serializado al enlazarlo directamente con `::jsonb`. El diario enlaza texto con `::text::jsonb` y una prueba transaccional real comprueba tipos/valores después de leerlos. El arranque corrige esa envoltura únicamente en sus propias columnas JSONB; no borra recorridos. [Evidencia, límites y recibos](evidence/aula-inspector-2026-10-23.md).
+
+OpenViking sigue sin una cuenta asignada por el selector de este repositorio. No se escribe en otro tenant; decisiones y evidencia quedan en el checkout y la entrega de memoria externa permanece pendiente.
+
+## Laboratorio con la tienda Zocomar y CRAG real (24 de octubre de 2026)
+
+El usuario pidió sustituir el material de clase por una tienda ficticia para probar RAG y después CRAG y ver la diferencia. El laboratorio pasa a Zocomar, un marketplace inventado de 12 políticas. Los documentos reproducen fallos reales de una búsqueda única: remisiones entre documentos, excepciones por categoría, una política sustituida muy parecida a la vigente y lenguaje de cliente frente a lenguaje de política. Pedidos y stock quedan fuera del corpus porque son datos estructurados y cambiantes.
+
+CRAG del laboratorio deja de depender solo de reglas léxicas: `rerank` y `assess` usan un juez real con el mismo modelo que el generador. El juez puntúa cada candidato en `[0, 1]`, estima la cobertura y nombra lagunas; la ruta la deciden en código los umbrales 0,50/0,40/0,75. Un id omitido o inventado es un error, no se rellena. RAG y CRAG comparten índice, embeddings, generador e instrucciones de citas.
+
+Validación, demostración y test se escribieron antes de ejecutar ningún modelo sobre Zocomar y son disjuntos. Los casos de demostración enseñan mecanismos; el número lo da el test y se publica aunque no favorezca a CRAG. El estado y el diario de gasto de Zocomar están en `lab/.local/zocomar/`: un tope nuevo autorizado por el usuario, sin tocar el diario de AetherCloud. AetherCloud y sus recibos de S10 se conservan.
+
+La web publicada y la investigación de S12 (jueves 29) siguen con el curso hasta validar la tienda en el laboratorio; su cambio requiere despliegue e ingesta con autorización propia. OpenViking sigue sin cuenta para este repositorio.
+
+Resultado del 24 de octubre con modelos reales (diario de 5 USD autorizado, 2,7741628 USD reservados): RAG básico y CRAG aciertan 14/14 y 6/6 en el test reservado. CRAG no mejora la corrección con este corpus y Sonnet; aporta margen de decisión, contexto sin la política sustituida y no depende de un umbral que solo funciona en una franja de 0,014, a cambio de unas 3 veces más latencia. Durante la demostración, antes de abrir el test, se corrigieron dos fallos del juez: la validación de ids (ahora igual que el evaluador publicado) y la definición de laguna. El resultado se publica tal cual: [evidencia](evidence/zocomar-lab-2026-10-24.md).
+
+Material de S11 (25 de octubre de 2026): guion, enunciado, referencia de corrección, guía de apoyo, protocolo, matriz y notas usan ya Zocomar y el resultado real (empate en acierto; margen, contexto limpio y coste). El enunciado conserva sus requisitos obligatorios y añade, como recomendación, medir el margen de decisión y el contexto que llega al generador. Por decisión del usuario, la presentación `S11-crag.pptx` no se actualiza: el guion indica qué decir en las diapositivas 4, 12, 13 y 15. El 25/10 se regeneraron los ZIP del alumno (9 archivos) y del profesor (215 archivos) con las reglas de `material/S10/fuentes/empaquetar.py`; el ZIP de código no se tocó.

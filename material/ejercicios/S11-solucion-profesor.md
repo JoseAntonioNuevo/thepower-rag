@@ -24,12 +24,19 @@ No es un documento para repartir antes de la entrega. Reúne los criterios de co
 ## Valores de referencia en el repositorio
 
 1. **En el laboratorio reproducible (`lab/`, referencia directa del ejercicio):**
-   - Nodos del `StateGraph` (`lab/src/crag-graph.ts`): `retrieve` (top 10) → `rerank` (escala `[0, 1]`) → `assess` (`minChunkRelevance = 0,50`, `partialCoverageMin = 0,40`, `sufficientCoverageMin = 0,75`) → `retain` / `discard` → `reformulate` (máx. 2, 3 búsquedas) → `answer` / `refuse`.
-   - Comparación ejecutada sobre 20 preguntas nuevas (`lab/eval/resultados-laboratorio.md`):
-     - **RAG básico (S10):** `16/20` totales (`10/14` respondibles, `6/6` rechazos correctos, **`1,00` recuperaciones medias**, `0,00` reformulaciones medias).
-     - **CRAG (S11):** `17/20` totales (`11/14` respondibles, `6/6` rechazos correctos, **`1,80` recuperaciones medias**, `0,80` reformulaciones medias).
+   - Nodos del `StateGraph` (`lab/src/crag-graph.ts`): `retrieve` (top 10) → `rerank` (escala `[0, 1]`) → `assess` (`minChunkRelevance = 0,50`, `partialCoverageMin = 0,40`, `sufficientCoverageMin = 0,75`) → `retain` / `discard` → `reformulate` (máx. 2, 3 búsquedas) → `answer` / `refuse`. Con modelos reales, el juez y el reformulador están en `apps/api/src/lab-models.ts` y los umbrales se aplican en código (`decideLabSufficiency`).
+   - **Comparación real del 24 de octubre de 2026** sobre la tienda ficticia Zocomar (12 políticas, `vector(768)` + HNSW, Gemini Embedding 2, Sonnet como generador y juez; `docs/evidence/zocomar-lab-2026-10-24.md`):
+     - **RAG básico:** `14/14` respondibles, `6/6` rechazos, **`1,00` recuperaciones medias**, mediana `3,2 s` con respuesta y `0,5 s` sin respuesta.
+     - **CRAG:** `14/14` respondibles, `6/6` rechazos, **`1,60` recuperaciones medias**, `0,60` reformulaciones medias, mediana `8,9 s` con respuesta y `21 s` sin respuesta.
+     - Margen de decisión: `0,014` (similitud de RAG alrededor del umbral `0,7226`) frente a `0,65` (relevancia del juez). Política sustituida en el contexto del generador: 3 de 14 respuestas en RAG, 0 en CRAG.
+   - El ensayo de S10 con AetherCloud (`material/S10/evidencias/evaluacion-real-resumen.md`) obtuvo `9/14` y `6/6` en RAG básico; los cinco fallos fueron del umbral, con el documento correcto en primera posición.
+   - `lab/eval/resultados-laboratorio.md` es el respaldo determinista sin red: sus números no miden modelos ni sirven como referencia de corrección.
 2. **En el demostrador de aula (`apps/`, corpus real S1–S20):**
    - Grafo (`apps/api/src/crag-graph.ts`): `validate → retrieve → rank → assess → (answer | retain | discard | refuse)` con escala `[0, 1]` (`CRAG_SCORE_THRESHOLDS` en `packages/rag/src/crag.ts`).
    - Comparación histórica congelada del 3 de octubre de 2026 (`material/comparacion/resultados/tabla-resultados.md`, modelo `openai/gpt-6-luna` + BGE-M3 1024 d):
      - **RAG básico:** `17/20` (`11/14` respondibles, `6/6` rechazos, **`0,95` recuperaciones medias**, mediana `1193 ms`).
      - **CRAG:** `18/20` (`13/14` respondibles, `5/6` rechazos, **`1,55` recuperaciones medias**, `0,60` reformulaciones medias, mediana `4304 ms`).
+
+## Cómo leer un empate al corregir
+
+Un empate en `X/14` e `Y/6` es un resultado válido si la comparación es justa y está ejecutada. Valora positivamente que el alumno explique dónde aporta o no aporta CRAG (margen de decisión, contexto que llega al generador, coste y latencia) y que conserve los fallos. Penaliza que reajuste el grafo o los umbrales después de ver el test para que CRAG gane.

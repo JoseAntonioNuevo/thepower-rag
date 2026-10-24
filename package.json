@@ -3,7 +3,8 @@
   "private": true,
   "workspaces": [
     "apps/*",
-    "packages/*"
+    "packages/*",
+    "lab/ui"
   ],
   "type": "module",
   "scripts": {
@@ -26,7 +27,8 @@
     "lab:real": "bun scripts/lab-real.ts",
     "lab:rebuild": "bun scripts/lab-cli.ts rebuild",
     "lab:demo": "bun scripts/lab-cli.ts demo",
-    "lab:eval": "bun scripts/lab-cli.ts eval"
+    "lab:eval": "bun scripts/lab-cli.ts eval",
+    "lab:aula": "bun scripts/lab-aula.ts"
   },
   "devDependencies": {
     "@thepower-rag/contracts": "workspace:*",

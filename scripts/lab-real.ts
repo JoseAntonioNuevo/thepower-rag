@@ -1,31 +1,37 @@
 // GUÍA DE LECTURA · scripts/lab-real.ts
-// Recorrido real y repetible de S10: PostgreSQL local, embeddings, calibración y respuestas con citas.
+// Recorrido real y repetible de S10 y S11 sobre la tienda ficticia Zocomar: PostgreSQL local,
+// embeddings, calibración, RAG básico, CRAG con juez real y comparación de ambos con citas.
 // preflight/status no consumen modelos; los demás comandos requieren --execute y tope autorizado.
 import { closeSync, existsSync, mkdirSync, openSync, readFileSync, unlinkSync } from "node:fs";
 import path from "node:path";
 import { parse } from "dotenv";
 import { createLabModels, type LabModelOperation } from "../apps/api/src/lab-models";
-import S10_REAL_TEST from "../lab/eval/s10-real-test-20.json";
 import {
   prepareLabCorpusFromDirectory,
   PgVectorDatabaseStore,
   resolveLabConfig,
   runLabBasicRag,
+  runLabCrag,
+  LAB_DEMO_CASES,
+  LAB_TEST_SET_20,
   LAB_VALIDATION_SET,
+  type LabBasicRagResult,
+  type LabCragResult,
   type PostgresSqlExecutor,
 } from "../lab/src/index";
 import {
   chooseLabThreshold,
   labHash,
   LabBudget,
+  LAB_LOCAL_DIR,
   realLabSettings,
   saveLabJson,
 } from "../lab/src/real-session";
 
 // Todas las rutas pertenecen a este laboratorio; nunca se toma DATABASE_URL de otra aplicación.
 const root = path.resolve(import.meta.dirname, "..");
-// Guarda manifiestos, calibración y recibos en el estado privado del laboratorio.
-const local = path.join(root, "lab/.local");
+// Guarda manifiestos, calibración, diario de gasto y recibos del corpus actual (Zocomar).
+const local = path.join(root, LAB_LOCAL_DIR);
 // Omite los argumentos del ejecutable y conserva solo las opciones del alumno.
 const args = process.argv.slice(2);
 // Sin subcomando, empieza por la comprobación que no consume modelos.
@@ -40,12 +46,22 @@ const option = (name: string) => {
 
 // Coordina el comando del laboratorio: valida opciones, prepara puertos y ejecuta la etapa solicitada.
 async function main(): Promise<void> {
-  // Acepta únicamente los siete recorridos previstos en el guion de clase.
-  if (
-    !["preflight", "status", "rebuild", "calibrate", "baseline", "query", "eval"].includes(command)
-  )
+  // Acepta únicamente los recorridos previstos en los guiones de S10 y S11.
+  const commands = [
+    "preflight",
+    "status",
+    "rebuild",
+    "calibrate",
+    "baseline",
+    "query",
+    "crag",
+    "compare",
+    "demo",
+    "eval",
+  ];
+  if (!commands.includes(command))
     // Detiene una orden desconocida antes de abrir la base o reservar dinero.
-    throw new Error("Comandos: preflight, status, rebuild, calibrate, baseline, query, eval.");
+    throw new Error(`Comandos: ${commands.join(", ")}.`);
   // La configuración específica del laboratorio tiene prioridad sobre variables de otros proyectos.
   const envFile = path.join(root, "lab/.env");
   // Combina el entorno del proceso con lab/.env y valida proveedores, tarifas y destino local.
@@ -136,7 +152,7 @@ async function main(): Promise<void> {
     };
     // Inyecta el adaptador SQL en el almacén pgvector, sin cambiar la lógica de recuperación.
     const store = new PgVectorDatabaseStore(executor);
-    // Prepara únicamente los documentos ficticios de AetherCloud del directorio del laboratorio.
+    // Prepara únicamente los documentos ficticios de Zocomar del directorio del laboratorio.
     const corpus = prepareLabCorpusFromDirectory(path.join(root, "lab/corpus/sources"));
     // La huella liga la versión documental, el modelo de embeddings y sus 768 dimensiones.
     const profile = labHash({
@@ -359,14 +375,82 @@ async function main(): Promise<void> {
         embedder: models.embedder,
         generator: models.generator,
       });
-    // Query ejecuta una sola pregunta con la configuración ya calibrada.
-    if (command === "query") {
-      // Lee la pregunta que el profesor quiere mostrar al alumnado.
+    // Ejecuta CRAG sobre el mismo índice, embeddings y generador; solo cambia la política de corrección.
+    const cragQuery = (question: string) =>
+      runLabCrag({
+        question,
+        corpusVersion: corpus.corpusVersion,
+        config,
+        store,
+        embedder: models.embedder,
+        reranker: models.crag.reranker,
+        assessor: models.crag.assessor,
+        reformulator: models.crag.reformulator,
+        generator: models.generator,
+      });
+    // Lee la pregunta de query, crag y compare con el mismo límite de longitud.
+    const askedQuestion = () => {
+      // Pregunta que el profesor quiere mostrar al alumnado.
       const question = option("--question");
       // Limita la entrada antes de reservar y enviar la consulta al modelo.
       if (!question || question.length > 2000)
         // Explica el formato válido de la pregunta y detiene la operación.
         throw new Error("Indica --question con entre 1 y 2000 caracteres.");
+      // Pregunta validada.
+      return question;
+    };
+    // Resumen de RAG básico para proyectar: decisión, vecinos con su similitud y respuesta.
+    const printRag = (result: LabBasicRagResult) => {
+      // Decisión, generador y umbral.
+      console.log(
+        `\n== RAG básico ==\nDecisión: ${result.decision} · búsquedas: 1 · generador invocado: ${String(result.generationCalled)} · umbral: ${String(result.minSimilarity)}`,
+      );
+      // Vecinos y si superaron el corte.
+      console.table(
+        result.retrieved.map((hit) => ({
+          fragmento: `${hit.documentId}:${String(hit.ordinal)}`,
+          seccion: hit.section,
+          similitud: Number(hit.similarity.toFixed(4)),
+          seleccionado: result.selected.some((selected) => selected.chunkId === hit.chunkId),
+        })),
+      );
+      // Respuesta con sus citas filtradas.
+      console.log(result.answer);
+    };
+    // Resumen de CRAG para proyectar: cada pasada con su consulta, puntuaciones del juez y ruta.
+    const printCrag = (result: LabCragResult) => {
+      // Decisión y contadores del grafo.
+      console.log(
+        `\n== CRAG ==\nDecisión: ${result.decision} · búsquedas: ${String(result.retrievalCount)} · reformulaciones: ${String(result.reformulationCount)} · generador invocado: ${String(result.generationCalled)}`,
+      );
+      // Una tabla por pasada del grafo.
+      for (const iteration of result.iterations) {
+        // Consulta, ruta, cobertura y lagunas de la pasada.
+        console.log(
+          `\nPasada ${String(iteration.attempt)} · consulta: «${iteration.query}» · ruta: ${iteration.route} · cobertura: ${iteration.assessment.coverageScore.toFixed(2)}${iteration.assessment.gaps.length ? ` · lagunas: ${iteration.assessment.gaps.join(" | ")}` : ""}`,
+        );
+        // Similitud del índice frente a relevancia del juez, en el orden del juez.
+        const similarity = new Map(
+          iteration.retrievedIds.map((hit) => [hit.chunkId, hit.similarity]),
+        );
+        console.table(
+          iteration.reranked.map((item) => ({
+            fragmento: item.chunkId.split(":").slice(1).join(":"),
+            similitud: similarity.has(item.chunkId)
+              ? Number(similarity.get(item.chunkId)!.toFixed(4))
+              : "conservado",
+            relevancia: item.rerankScore,
+            motivo: item.reason.slice(0, 90),
+          })),
+        );
+      }
+      // Respuesta o rechazo final.
+      console.log(`\n${result.answer}`);
+    };
+    // Query ejecuta una sola pregunta en RAG básico.
+    if (command === "query") {
+      // Pregunta validada.
+      const question = askedQuestion();
       // Recorre embedding, vecinos, umbral, generación condicionada y validación de citas.
       const result = await query(question);
       // Reúne el resultado y el uso de los modelos bajo la identidad del experimento.
@@ -374,29 +458,160 @@ async function main(): Promise<void> {
       // Guarda la consulta completa para inspeccionar evidencia y decisión después de clase.
       saveLabJson(path.join(local, "last-query.json"), receipt);
       // La opción breve adapta la salida a la proyección en el aula.
-      if (args.includes("--brief")) {
-        // Muestra si se respondió o rechazó y si llegó a invocarse el generador.
+      if (args.includes("--brief")) printRag(result);
+      // Sin salida breve, imprime todos los detalles del recibo en JSON.
+      else console.log(JSON.stringify(receipt, null, 2));
+      // Indica dónde está el recibo y cuánto se ha reservado hasta ahora.
+      console.log(
+        `\nRecibo: ${LAB_LOCAL_DIR}/last-query.json · reserva acumulada: ${budget.receipt().reservedUsd.toFixed(6)} USD`,
+      );
+      // Termina la consulta individual.
+      return;
+    }
+    // Crag ejecuta una sola pregunta en el grafo correctivo.
+    if (command === "crag") {
+      // Pregunta validada.
+      const question = askedQuestion();
+      // Recorre el grafo con el juez real.
+      const result = await cragQuery(question);
+      // Recibo completo de la ejecución.
+      const receipt = { ...identity, profile, result, operations, budget: budget.receipt() };
+      // Guarda la traza para revisarla después de clase.
+      saveLabJson(path.join(local, "last-crag.json"), receipt);
+      // Salida breve o completa.
+      if (args.includes("--brief")) printCrag(result);
+      else console.log(JSON.stringify(receipt, null, 2));
+      // Recibo y reserva acumulada.
+      console.log(
+        `\nRecibo: ${LAB_LOCAL_DIR}/last-crag.json · reserva acumulada: ${budget.receipt().reservedUsd.toFixed(6)} USD`,
+      );
+      // Termina la consulta individual.
+      return;
+    }
+    // Compare ejecuta la misma pregunta en RAG básico y después en CRAG, con el mismo índice y generador.
+    if (command === "compare") {
+      // Pregunta validada.
+      const question = askedQuestion();
+      // Primero la línea base de S10.
+      const rag = await query(question);
+      // Después el grafo de S11.
+      const crag = await cragQuery(question);
+      // Recibo conjunto para la clase.
+      const receipt = {
+        ...identity,
+        profile,
+        question,
+        rag,
+        crag,
+        operations,
+        budget: budget.receipt(),
+      };
+      // Guarda la comparación.
+      saveLabJson(path.join(local, "last-compare.json"), receipt);
+      // Pregunta y las dos ejecuciones, una debajo de otra.
+      console.log(`Pregunta: ${question}`);
+      printRag(rag);
+      printCrag(crag);
+      // Recibo y reserva acumulada.
+      console.log(
+        `\nRecibo: ${LAB_LOCAL_DIR}/last-compare.json · reserva acumulada: ${budget.receipt().reservedUsd.toFixed(6)} USD`,
+      );
+      // Termina la comparación.
+      return;
+    }
+    // Ejecuta un conjunto de casos en las dos etapas y guarda cada paso; un fallo queda registrado.
+    const runCases = async (
+      file: string,
+      cases: readonly {
+        id: number;
+        question: string;
+        answerable: boolean;
+        expectedDocuments: readonly string[];
+        expectedFactsOrRefusal: readonly string[];
+      }[],
+      frozen: Record<string, unknown>,
+    ) => {
+      // Resultados por caso.
+      const results: Record<string, unknown>[] = [];
+      // Escribe el inicio antes de la primera consulta, por si se interrumpe.
+      saveLabJson(file, { frozen, status: "running", results });
+      // Recorre los casos en orden y en las dos etapas.
+      for (const testCase of cases) {
+        // RAG básico; un error se guarda como resultado y no detiene el resto.
+        const rag = await query(testCase.question).catch((error: unknown) => ({
+          error: error instanceof Error ? error.message : "Error desconocido.",
+        }));
+        // CRAG sobre la misma pregunta.
+        const crag = await cragQuery(testCase.question).catch((error: unknown) => ({
+          error: error instanceof Error ? error.message : "Error desconocido.",
+        }));
+        // Guarda expectativas y resultados; la exactitud la revisa una persona.
+        results.push({
+          id: testCase.id,
+          question: testCase.question,
+          answerable: testCase.answerable,
+          expectedDocuments: testCase.expectedDocuments,
+          expectedFacts: testCase.expectedFactsOrRefusal,
+          rag,
+          crag,
+          manualReview: "pending",
+        });
+        // Persiste el avance después de cada caso.
+        saveLabJson(file, {
+          frozen,
+          status: "running",
+          results,
+          operations,
+          budget: budget.receipt(),
+        });
+        // Una línea de progreso por caso.
+        const decisionOf = (value: { decision?: string; error?: string }) =>
+          value.error ? `error` : value.decision;
         console.log(
-          `Pregunta: ${question}\nDecisión: ${result.decision}\nGenerador invocado: ${String(result.generationCalled)}\nUmbral: ${String(result.minSimilarity)}\n`,
+          `Caso ${String(testCase.id)} · RAG: ${String(decisionOf(rag))} · CRAG: ${String(decisionOf(crag))}`,
         );
-        // Convierte los vecinos en una tabla y marca cuáles superaron la selección del pipeline.
-        console.table(
-          result.retrieved.map((hit) => ({
-            documento: hit.documentId,
-            similitud: hit.similarity,
-            seleccionado: result.selected.some((selected) => selected.chunkId === hit.chunkId),
-          })),
-        );
-        // Presenta la respuesta final con sus citas ya filtradas.
-        console.log(result.answer);
-        // Indica dónde está el recibo completo y cuánto se ha reservado hasta ahora.
-        console.log(
-          `\nRecibo completo: lab/.local/last-query.json\nReserva acumulada: ${budget.receipt().reservedUsd.toFixed(6)} USD`,
-        );
-      } else
-        // Sin salida breve, imprime todos los detalles del recibo en JSON.
-        console.log(JSON.stringify(receipt, null, 2));
-      // Termina la consulta individual sin ejecutar el test reservado.
+      }
+      // Marca el recorrido automático como completo; la revisión manual sigue pendiente.
+      saveLabJson(file, {
+        frozen,
+        status: "complete",
+        results,
+        operations,
+        budget: budget.receipt(),
+      });
+      // Total de casos ejecutados.
+      return results.length;
+    };
+    // Identidad congelada común de demo y eval.
+    const frozenBase = {
+      ...identity,
+      profile,
+      threshold: calibration.threshold,
+      cragThresholds: {
+        minChunkRelevance: 0.5,
+        partialCoverageMin: 0.4,
+        sufficientCoverageMin: 0.75,
+      },
+      startedAt: new Date().toISOString(),
+    };
+    // Demo ejecuta los casos de demostración de S11; cada ejecución deja su propio recibo.
+    if (command === "demo") {
+      // Un archivo por ejecución para no sobrescribir demostraciones anteriores.
+      const file = path.join(local, `demo-${frozenBase.startedAt.replace(/[:.]/g, "-")}.json`);
+      // Recorre los seis casos visibles.
+      const total = await runCases(file, LAB_DEMO_CASES, {
+        ...frozenBase,
+        demoHash: labHash(LAB_DEMO_CASES),
+      });
+      // Ubicación del recibo y reserva.
+      console.log(
+        JSON.stringify(
+          { cases: total, receipt: path.relative(root, file), budget: budget.receipt() },
+          null,
+          2,
+        ),
+      );
+      // Termina la demostración.
       return;
     }
     // La referencia se congela antes de abrir el test; no se cambia después por sus resultados.
@@ -407,56 +622,18 @@ async function main(): Promise<void> {
       throw new Error(
         "El test real ya tiene un recibo. Conserva sus fallos; no se vuelve a ajustar aquí.",
       );
-    // Congela modelos, índice, umbral y preguntas antes de comenzar la evaluación.
-    const frozen = {
-      ...identity,
-      profile,
-      threshold: calibration.threshold,
-      testHash: labHash(S10_REAL_TEST),
-      startedAt: new Date().toISOString(),
-    };
-    // Escribe el inicio del ensayo antes de la primera consulta, por si se interrumpe.
-    saveLabJson(evaluationFile, { frozen, status: "running", results: [] });
-    // Acumula cada resultado sin modificar las preguntas ni el umbral congelados.
-    const results = [];
-    // Ejecuta las veinte preguntas reservadas con la misma función de consulta.
-    for (const testCase of S10_REAL_TEST) {
-      // Obtiene la respuesta y sus evidencias usando los parámetros congelados.
-      const result = await query(testCase.question);
-      // Guarda expectativas y resultado; la revisión de exactitud sigue siendo una tarea humana.
-      results.push({
-        id: testCase.id,
-        answerable: testCase.answerable,
-        expectedDocuments: testCase.expectedDocuments,
-        expectedFacts: testCase.expectedFactsOrRefusal,
-        result,
-        manualReview: "pending",
-      });
-      // Persiste el avance después de cada pregunta para conservar llamadas y resultados parciales.
-      saveLabJson(evaluationFile, {
-        frozen,
-        status: "running",
-        results,
-        operations,
-        budget: budget.receipt(),
-      });
-    }
-    // Marca el recorrido automático como completo y mantiene la revisión manual pendiente.
-    saveLabJson(evaluationFile, {
-      frozen,
-      status: "complete",
-      results,
-      operations,
-      budget: budget.receipt(),
+    // Recorre las veinte preguntas reservadas en RAG básico y en CRAG.
+    const total = await runCases(evaluationFile, LAB_TEST_SET_20, {
+      ...frozenBase,
+      testHash: labHash(LAB_TEST_SET_20),
     });
     // Publica la ubicación del recibo, los casos ejecutados y la reserva acumulativa.
     console.log(
       JSON.stringify(
         {
-          ...frozen,
-          evaluations: results.length,
+          evaluations: total,
           manualReview: "pending",
-          receipt: "lab/.local/evaluation.json",
+          receipt: `${LAB_LOCAL_DIR}/evaluation.json`,
           budget: budget.receipt(),
         },
         null,

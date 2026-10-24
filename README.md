@@ -2,6 +2,8 @@
 
 **S10 lista para seguir en directo:** [guion 30+50+10](material/guiones/S10-guion-profesor.md), [presentación](material/presentaciones/S10-rag-basico.pptx), [laboratorio real](lab/README.md) y [ensayo verificado](material/S10/evidencias/evaluacion-real-resumen.md). El respaldo offline está identificado y sus cifras no se atribuyen a modelos reales.
 
+**Aula / Inspector local (23/10):** [guion de 60 minutos y TablePlus](material/aula/guion-aula.md). `bun run lab:aula --execute --max-spend-usd 1` abre el laboratorio en `http://127.0.0.1:5192/`, con pausas antes de operar, datos reales de pgvector/proveedores y ejecuciones guardadas. [Preparación](lab/README.md#aula--inspector--ejecución-visual-con-datos-reales) · [evidencia](docs/evidence/aula-inspector-2026-10-23.md).
+
 Aplicación real: https://rag-thepower.josenuevo.dev. Sin RAG, RAG básico y CRAG usan los servicios remotos. [Operación y límites verificados](docs/despliegue-real.md). [Comparación histórica de 40 respuestas](material/comparacion/resultados/tabla-resultados.md). El arranque local sigue siendo una demo offline.
 
 S12 también está publicado: conversaciones aisladas, investigación asíncrona, contabilidad durable e imagen, audio y voz opcional. Su configuración y la evidencia de publicación están en [despliegue de S12](docs/s12-cloud-deployment.md).

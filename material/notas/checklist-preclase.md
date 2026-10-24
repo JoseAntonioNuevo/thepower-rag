@@ -16,7 +16,7 @@ Ejecútalo en el portátil desde el que vas a proyectar unos minutos antes de ab
    ```bash
    bun run lab:demo
    ```
-   Debe reconstruir el índice `lab-689164ca81cd` (10 documentos ficticios de AetherCloud, 20 fragmentos, `768` dimensiones, índice HNSW `lab_chunks_embedding_hnsw_idx`) y mostrar en consola la respuesta citada, el rechazo sin generador, el reordenamiento `top-10`, la ruta parcial con 2 búsquedas y el corte a las 3 búsquedas.
+   Es el respaldo sin red. Desde el 24 de octubre reconstruye el índice `lab-ae3817b7bdcf` (12 políticas ficticias de Zocomar, 54 fragmentos, `768` dimensiones, índice HNSW `lab_chunks_embedding_hnsw_idx`) y muestra la respuesta citada, el rechazo sin generador, la ruta parcial simulada con 2 búsquedas y el corte a las 3 búsquedas. Sus reglas son léxicas: no miden modelos.
 4. Arranca el servidor local de respaldo en una pestaña de terminal:
    ```bash
    bun run dev
@@ -45,5 +45,8 @@ Ejecútalo en el portátil desde el que vas a proyectar unos minutos antes de ab
   - `packages/rag/src/crag.ts` (`CRAG_SCORE_THRESHOLDS`: escala `[0, 1]`, corte individual `0,50`, cobertura parcial `0,40` y suficiente `0,75`).
   - `apps/api/src/crag-graph.ts` y `lab/src/crag-graph.ts` (nodos separados `retrieve → rank/rerank → assess → retain/discard → reformulate → answer/refuse`).
   - `lab/src/reranker.ts` (`formatQwen3RerankerPrompt` y distinción entre relevancia de un fragmento y cobertura de la pregunta).
-  - `lab/eval/resultados-laboratorio.md` y `material/comparacion/resultados/tabla-resultados.md` (tablas con recuperaciones medias).
+  - `apps/api/src/lab-models.ts` (juez y reformulador reales del laboratorio) y `lab/src/evaluation.ts` (validación, demostración y test de Zocomar).
+  - `docs/evidence/zocomar-lab-2026-10-24.md` (resultado real: empate 14/14 y 6/6, margen 0,014 frente a 0,65, contexto limpio y coste).
   - `material/ejercicios/S11-enunciado.md`.
+- Antes del directo, sin coste: `docker compose -f lab/docker-compose.yml up -d`, `bun run lab:real preflight` y `bun run lab:real status` (54 vectores de 768 dimensiones y HNSW). El diario `lab/.local/zocomar` tiene un tope autorizado de 5 USD y 2,7741628 USD reservados tras el ensayo del 24/10.
+- La presentación de S11 no se ha actualizado con Zocomar: las diapositivas 4, 13 y 15 muestran datos anteriores. Sigue las indicaciones del guion para esas tres.

@@ -1,7 +1,7 @@
 // GUÍA DE LECTURA · lab/src/evaluation.ts
 // Conjuntos separados de validación (6 preguntas para calibrar umbrales) y de test (20 preguntas:
-// 14 respondibles y 6 sin respuesta) sobre los 10 documentos ficticios de AetherCloud, y ejecutor
-// comparativo entre el RAG básico de S10 y el CRAG de S11.
+// 14 respondibles y 6 sin respuesta), casos de demostración sobre los 12 documentos de Zocomar
+// (un marketplace inventado) y ejecutor comparativo entre el RAG básico de S10 y el CRAG de S11.
 // Configuración del laboratorio.
 import type { LabConfig } from "./config";
 // Corpus preparado.
@@ -21,7 +21,7 @@ export interface LabEvaluationCase {
   id: number;
   // Pregunta formulada al sistema.
   question: string;
-  // true si tiene respuesta en los 10 documentos de AetherCloud; false si debe rechazarse.
+  // true si tiene respuesta en los documentos de Zocomar; false si debe rechazarse.
   answerable: boolean;
   // Prefijos de `documentId` que respaldan la respuesta (vacío en preguntas no respondibles).
   expectedDocuments: string[];
@@ -30,220 +30,269 @@ export interface LabEvaluationCase {
 }
 
 // Conjunto de validación de 6 casos (4 respondibles y 2 sin respuesta) usado para calibrar umbrales.
-// Nunca se mezcla con las 20 preguntas reservadas del conjunto de test.
+// Nunca se mezcla con las 20 preguntas reservadas del conjunto de test ni con los casos de demostración.
 export const LAB_VALIDATION_SET: readonly LabEvaluationCase[] = [
   {
     id: 1,
-    question: "¿Qué latencia máxima interzona tienen las regiones eu-mad-1 y eu-fra-1?",
+    question: "¿Cuánto tiempo tiene el vendedor para responder a una disputa?",
     answerable: true,
-    expectedDocuments: ["01-arquitectura-aethercloud"],
-    expectedFactsOrRefusal: ["1,8 milisegundos"],
+    expectedDocuments: ["08-garantia-zocomar-y-disputas"],
+    expectedFactsOrRefusal: ["48 horas"],
+  },
+  {
+    id: 2,
+    question: "¿Qué comisión paga un vendedor que está en el Plan Pro?",
+    answerable: true,
+    expectedDocuments: ["07-vendedores-planes-y-comisiones"],
+    expectedFactsOrRefusal: ["8 %"],
+  },
+  {
+    id: 3,
+    question: "¿En qué horario atiende el chat de la aplicación de Zocomar?",
+    answerable: true,
+    expectedDocuments: ["11-atencion-al-cliente"],
+    expectedFactsOrRefusal: ["8:00", "22:00"],
+  },
+  {
+    id: 4,
+    question: "¿Cuántas unidades de una misma oferta flash puede comprar un cliente?",
+    answerable: true,
+    expectedDocuments: ["12-promociones-y-cupones"],
+    expectedFactsOrRefusal: ["2 unidades"],
+  },
+  {
+    id: 5,
+    question: "¿Qué seguro de viaje ofrece Zocomar a sus clientes?",
+    answerable: false,
+    expectedDocuments: [],
+    expectedFactsOrRefusal: ["Rechazo: la documentación no menciona seguros de viaje."],
+  },
+  {
+    id: 6,
+    question: "¿Cuántas personas trabajan en el almacén de Getafe?",
+    answerable: false,
+    expectedDocuments: [],
+    expectedFactsOrRefusal: ["Rechazo: no consta la plantilla del almacén."],
+  },
+] as const;
+
+// Caso de demostración: se enseña en clase para explicar un mecanismo concreto de CRAG.
+export interface LabDemoCase extends LabEvaluationCase {
+  // Mecanismo que el caso permite observar en la traza.
+  mechanism: string;
+}
+
+// Casos de demostración de S11, visibles y distintos del test. Muestran por qué una búsqueda única
+// puede quedarse corta; no miden la calidad general (eso lo hace el test de 20 preguntas).
+export const LAB_DEMO_CASES: readonly LabDemoCase[] = [
+  {
+    id: 1,
+    question:
+      "Devolví en un Zocopunto un pedido que pagué con Bizum. ¿Cuánto puede tardar en llegarme el dinero?",
+    answerable: true,
+    expectedDocuments: ["02-devoluciones", "06-pagos-y-reembolsos"],
+    expectedFactsOrRefusal: ["3 días hábiles", "2 días hábiles"],
+    mechanism:
+      "Salto entre documentos: devoluciones remite a la política de pagos para el plazo de Bizum.",
   },
   {
     id: 2,
     question:
-      "¿Qué código HTTP devuelve la pasarela si X-Aether-Tenant no coincide con el certificado?",
+      "Me compré unos cascos de botón hace 10 días, los he estrenado y no me convencen. ¿Los puedo devolver?",
     answerable: true,
-    expectedDocuments: ["02-autenticacion-mtls-tokens"],
-    expectedFactsOrRefusal: ["403", "TENANT_MISMATCH"],
+    expectedDocuments: ["03-electronica-y-garantia"],
+    expectedFactsOrRefusal: ["precinto higiénico", "garantía"],
+    mechanism:
+      "Excepción en otro documento: la regla general de 30 días no se aplica a los auriculares intraauditivos.",
   },
   {
     id: 3,
-    question:
-      "¿Cuál es el límite de peticiones por minuto del Plan Estándar y qué precio mensual tiene ese plan?",
+    question: "¿A partir de qué importe es gratis el envío estándar a la península?",
     answerable: true,
-    expectedDocuments: ["03-limites-y-cuotas-api", "07-facturacion-y-planes"],
-    expectedFactsOrRefusal: ["120", "190 EUR"],
+    expectedDocuments: ["04-envios-vigente"],
+    expectedFactsOrRefusal: ["39 €", "vendedor"],
+    mechanism:
+      "Documento obsoleto: la política de 2025 (29 €) se parece a la pregunta, pero está sustituida.",
   },
   {
     id: 4,
-    question: "¿Qué porcentaje de trazas exitosas muestrea el colector OTLP?",
+    question:
+      "Soy de Zocomar Plus y vivo en Mallorca. ¿Pago envío en un pedido de 35 € de un solo vendedor y lo puedo pedir exprés?",
     answerable: true,
-    expectedDocuments: ["09-observabilidad-opentelemetry"],
-    expectedFactsOrRefusal: ["10 %"],
+    expectedDocuments: ["04-envios-vigente"],
+    expectedFactsOrRefusal: ["29 €", "no está disponible"],
+    mechanism: "Pregunta compuesta: ventaja Plus en Baleares y disponibilidad del exprés.",
   },
   {
     id: 5,
-    question: "¿Qué descuento ofrece AetherCloud por pagar con criptomonedas?",
-    answerable: false,
-    expectedDocuments: [],
-    expectedFactsOrRefusal: ["Rechazo: la documentación no menciona pagos con criptomonedas."],
+    question: "Me habéis cobrado dos veces el mismo pedido, ¿qué hago?",
+    answerable: true,
+    expectedDocuments: ["06-pagos-y-reembolsos"],
+    expectedFactsOrRefusal: ["7 días", "48 horas hábiles"],
+    mechanism:
+      "Lenguaje del cliente frente a lenguaje de la política (cargo duplicado, retención).",
   },
   {
     id: 6,
-    question: "¿Cuál es el teléfono gratuito de soporte telefónico en Estados Unidos?",
+    question: "¿Qué descuento tienen los estudiantes universitarios en Zocomar?",
     answerable: false,
     expectedDocuments: [],
-    expectedFactsOrRefusal: ["Rechazo: no existe soporte telefónico en EE. UU. en el corpus."],
+    expectedFactsOrRefusal: ["Rechazo: no existe un descuento para estudiantes."],
+    mechanism:
+      "Dato ausente: tres búsquedas, dos reformulaciones y rechazo sin llamar al generador.",
   },
 ] as const;
 
-// Conjunto de test de 20 preguntas (14 respondibles y 6 sin respuesta) para evaluar S10 y comparar con S11.
+// Conjunto de test de 20 preguntas (14 respondibles y 6 sin respuesta) para comparar RAG básico y CRAG.
+// Se redactó antes de ejecutar ningún modelo sobre el corpus de Zocomar y no se ajusta después.
 export const LAB_TEST_SET_20: readonly LabEvaluationCase[] = [
   {
     id: 1,
     question:
-      "¿Cuáles son las dos regiones europeas de producción de AetherCloud y cuántas zonas tiene cada una?",
+      "¿Cuánto cuesta el envío exprés y hasta qué hora hay que confirmar el pedido para recibirlo en 24 horas?",
     answerable: true,
-    expectedDocuments: ["01-arquitectura-aethercloud"],
-    expectedFactsOrRefusal: ["eu-mad-1", "eu-fra-1", "tres zonas"],
+    expectedDocuments: ["04-envios-vigente"],
+    expectedFactsOrRefusal: ["6,99 €", "14:00"],
   },
   {
     id: 2,
-    question:
-      "¿Cuánto tiempo puede operar el plano de datos si el plano de control entra en mantenimiento?",
+    question: "¿Cuántos días tiene un miembro de Zocomar Plus para devolver unas zapatillas?",
     answerable: true,
-    expectedDocuments: ["01-arquitectura-aethercloud"],
-    expectedFactsOrRefusal: ["6 horas"],
+    expectedDocuments: ["02-devoluciones"],
+    expectedFactsOrRefusal: ["45 días"],
   },
   {
     id: 3,
-    question:
-      "¿Qué duración máxima tienen los tokens de acceso EdDSA y cada cuántos días rotan los certificados de trabajo?",
+    question: "¿Qué pasa si devuelvo un móvil sin quitar el bloqueo de activación?",
     answerable: true,
-    expectedDocuments: ["02-autenticacion-mtls-tokens"],
-    expectedFactsOrRefusal: ["24 horas", "7 días"],
+    expectedDocuments: ["03-electronica-y-garantia"],
+    expectedFactsOrRefusal: ["rechaza", "6,50 €"],
   },
   {
     id: 4,
-    question: "¿En cuántos segundos se propaga una revocación de emergencia mediante listas CRL?",
+    question:
+      "¿Cuánto tarda el servicio técnico en diagnosticar un producto en garantía y cuánta garantía tiene un portátil reacondicionado?",
     answerable: true,
-    expectedDocuments: ["02-autenticacion-mtls-tokens"],
-    expectedFactsOrRefusal: ["90 segundos"],
+    expectedDocuments: ["03-electronica-y-garantia"],
+    expectedFactsOrRefusal: ["15 días hábiles", "1 año"],
   },
   {
     id: 5,
-    question:
-      "¿Cuántas peticiones por minuto y concurrentes permite el Plan Empresa y cuál es el tamaño máximo de un POST?",
+    question: "¿Puedo pagar a plazos un pedido de 1.200 € con PayPal?",
     answerable: true,
-    expectedDocuments: ["03-limites-y-cuotas-api"],
-    expectedFactsOrRefusal: ["600", "50", "4 MiB"],
+    expectedDocuments: ["06-pagos-y-reembolsos"],
+    expectedFactsOrRefusal: ["tarjeta"],
   },
   {
     id: 6,
     question:
-      "¿Con qué algoritmo se cifran los volúmenes en reposo y qué periodo de enfriamiento exige destruir una CMK?",
+      "Si devuelvo un pedido pagado con ZocoPlazos, ¿qué pasa con las cuotas y cuánto tarda el almacén en validar la devolución?",
     answerable: true,
-    expectedDocuments: ["04-almacenamiento-y-cifrado-kms"],
-    expectedFactsOrRefusal: ["AES-256-GCM", "72 horas"],
+    expectedDocuments: ["06-pagos-y-reembolsos", "02-devoluciones"],
+    expectedFactsOrRefusal: ["cuotas pendientes", "3 días hábiles"],
   },
   {
     id: 7,
-    question:
-      "¿Cada cuántas horas se toman instantáneas incrementales y cuántos días naturales se retienen?",
+    question: "¿Qué comisión pagan los vendedores de electrónica y cada cuánto cobran sus ventas?",
     answerable: true,
-    expectedDocuments: ["04-almacenamiento-y-cifrado-kms"],
-    expectedFactsOrRefusal: ["6 horas", "35 días"],
+    expectedDocuments: ["07-vendedores-planes-y-comisiones"],
+    expectedFactsOrRefusal: ["7 %", "14 días"],
   },
   {
     id: 8,
     question:
-      "¿Qué disponibilidad mensual garantiza el SLA de AetherCloud y qué crédito corresponde si baja al 99,20 %?",
+      "¿Qué necesita un vendedor para activar el sello de devolución gratuita y quién paga entonces las devoluciones?",
     answerable: true,
-    expectedDocuments: ["05-sla-y-creditos-servicio"],
-    expectedFactsOrRefusal: ["99,95 %", "10 %"],
+    expectedDocuments: ["07-vendedores-planes-y-comisiones"],
+    expectedFactsOrRefusal: ["4,5", "2 %"],
   },
   {
     id: 9,
     question:
-      "¿Cuál es el tiempo máximo de primera respuesta para un incidente SEV-1 y en cuántos días hábiles se entrega el RCA definitivo?",
+      "Mi paquete no llega y ya ha pasado la fecha máxima de entrega: ¿desde cuándo puedo reclamar y hasta qué importe me cubre Zocomar?",
     answerable: true,
-    expectedDocuments: ["06-respuesta-a-incidentes"],
-    expectedFactsOrRefusal: ["15 minutos", "5 días hábiles"],
+    expectedDocuments: ["08-garantia-zocomar-y-disputas"],
+    expectedFactsOrRefusal: ["tercer día", "2.500 €"],
   },
   {
     id: 10,
     question:
-      "¿Cuál es la cuota mensual del Plan Empresa y cuánto cuesta cada GiB-mes adicional de almacenamiento?",
+      "Si devuelvo todo el pedido porque no me gustó, ¿me devuelven lo que pagué por el envío exprés?",
     answerable: true,
-    expectedDocuments: ["07-facturacion-y-planes"],
-    expectedFactsOrRefusal: ["850 EUR", "0,18 EUR"],
+    expectedDocuments: ["02-devoluciones"],
+    expectedFactsOrRefusal: ["exprés no se reembolsan"],
   },
   {
     id: 11,
-    question:
-      "¿Durante cuánto tiempo se conservan en almacenamiento WORM los registros de auditoría administrativa según la política RGPD?",
+    question: "¿Puede recoger mi hijo de 16 años un paquete con una botella de vino?",
     answerable: true,
-    expectedDocuments: ["08-residencia-datos-y-rgpd"],
-    expectedFactsOrRefusal: ["2 años", "730 días"],
+    expectedDocuments: ["10-productos-prohibidos-y-restringidos"],
+    expectedFactsOrRefusal: ["18 años"],
   },
   {
     id: 12,
-    question:
-      "¿En qué puertos escucha el colector OpenTelemetry OTLP por gRPC y por HTTP y cuántos días se retienen las trazas?",
+    question: "¿Cuánto cuesta enviar a Lisboa un pedido de 45 € de un solo vendedor?",
     answerable: true,
-    expectedDocuments: ["09-observabilidad-opentelemetry"],
-    expectedFactsOrRefusal: ["4317", "4318", "14 días"],
+    expectedDocuments: ["04-envios-vigente"],
+    expectedFactsOrRefusal: ["4,99 €"],
   },
   {
     id: 13,
     question:
-      "¿Qué porcentajes de tráfico y ventanas de observación tienen las etapas del despliegue canary y cuándo salta el rollback automático?",
+      "Si compro con el cupón de bienvenida y luego devuelvo el artículo, ¿recupero el cupón?",
     answerable: true,
-    expectedDocuments: ["10-despliegues-canary-y-rollback"],
-    expectedFactsOrRefusal: ["10 %", "50 %", "10 minutos", "2,0 %"],
+    expectedDocuments: ["12-promociones-y-cupones"],
+    expectedFactsOrRefusal: ["no se repone"],
   },
   {
     id: 14,
     question:
-      "¿Cómo se autentican los clientes mTLS con X-Aether-Tenant y qué tiempo máximo de primera respuesta aplica si cae todo el plano de datos en un incidente SEV-1?",
+      "Si cancelo Zocomar Plus anual a los 10 días sin haber usado nada, ¿me devuelven la cuota? ¿Y si fuera mensual?",
     answerable: true,
-    expectedDocuments: ["02-autenticacion-mtls-tokens", "06-respuesta-a-incidentes"],
-    expectedFactsOrRefusal: ["AetherCA-G2", "15 minutos"],
+    expectedDocuments: ["09-zocomar-plus"],
+    expectedFactsOrRefusal: ["proporcional", "mensual no se reembolsa"],
   },
   {
     id: 15,
-    question:
-      "¿Qué coste mensual tienen las licencias dedicadas de Windows Server 2025 en AetherCloud?",
+    question: "¿Cuál es el NIF de la empresa que opera Zocomar?",
     answerable: false,
     expectedDocuments: [],
-    expectedFactsOrRefusal: [
-      "Rechazo: no consta soporte ni tarifas de Windows Server en el corpus.",
-    ],
+    expectedFactsOrRefusal: ["Rechazo: no consta la identidad fiscal de Zocomar."],
   },
   {
     id: 16,
-    question:
-      "¿Cuál es la dirección postal de las oficinas centrales de AetherCloud en Tokio (región ap-northeast-1)?",
+    question: "¿Cuánto cobra al mes un repartidor de Zocomar?",
     answerable: false,
     expectedDocuments: [],
-    expectedFactsOrRefusal: [
-      "Rechazo: no existe región ap-northeast-1 ni sede en Tokio en el corpus.",
-    ],
+    expectedFactsOrRefusal: ["Rechazo: no consta información salarial."],
   },
   {
     id: 17,
-    question:
-      "¿Qué versión exacta del kernel de Linux y qué tarjeta GPU NVIDIA H200 incluye el Plan Estándar?",
+    question: "¿Cuántos puntos de fidelidad gana un cliente por cada euro gastado?",
     answerable: false,
     expectedDocuments: [],
-    expectedFactsOrRefusal: [
-      "Rechazo: los documentos no especifican kernel de Linux ni GPUs H200.",
-    ],
+    expectedFactsOrRefusal: ["Rechazo: no existe un programa de puntos."],
   },
   {
     id: 18,
-    question:
-      "¿Cuántos días de vacaciones anuales tienen los ingenieros de guardia del turno nocturno?",
+    question: "¿Cuál es la dirección de la oficina central de Zocomar en Lisboa?",
     answerable: false,
     expectedDocuments: [],
-    expectedFactsOrRefusal: ["Rechazo: política laboral interna ausente del corpus técnico."],
+    expectedFactsOrRefusal: ["Rechazo: no consta ninguna oficina en Lisboa."],
   },
   {
     id: 19,
-    question:
-      "¿Qué código SWIFT/BIC bancario debe usarse para transferencias internacionales en francos suizos (CHF)?",
+    question: "¿Cuánto cuesta el servicio de montaje de muebles a domicilio?",
     answerable: false,
     expectedDocuments: [],
-    expectedFactsOrRefusal: ["Rechazo: no consta código SWIFT/BIC ni facturación en CHF."],
+    expectedFactsOrRefusal: ["Rechazo: no existe un servicio de montaje."],
   },
   {
     id: 20,
-    question:
-      "¿Cómo se configura el conector nativo de SAP R/3 por protocolo RFC dentro del plano de control?",
+    question: "¿Qué día de la semana se publican las ofertas flash?",
     answerable: false,
     expectedDocuments: [],
-    expectedFactsOrRefusal: ["Rechazo: no existe documentación sobre conectores SAP R/3 ni RFC."],
+    expectedFactsOrRefusal: ["Rechazo: no consta el día de publicación."],
   },
 ] as const;
 

@@ -61,6 +61,20 @@ Construir un grafo de estados en **LangGraph** (en Python o en LangGraph.js) que
     - **Latencia** (mediana y media).
     - **Revisión manual de las fuentes citadas** frente a los documentos esperados.
   - **Conservar y analizar los fallos:** no se exige usar Ragas ni demostrar que CRAG gane obligatoriamente al RAG básico. Una comparación sin ejecutar puede describirse honestamente si hubo un bloqueo, pero **no equivale a entregar la comparación ejecutada que pide el ejercicio**.
+- **Recomendado, no obligatorio:** además del acierto, medir dos cosas que explican dónde aporta CRAG aunque empate en `X/14` e `Y/6`:
+  - **Margen de decisión:** en RAG básico, la similitud más baja del documento correcto en las respondibles frente a la similitud más alta en las no respondibles; en CRAG, lo mismo con la puntuación de `rerank`. Cuanto menor sea la distancia, más depende el resultado de un umbral exacto.
+  - **Contexto que llega al generador:** cuántas respuestas recibieron fragmentos obsoletos, de otra categoría o irrelevantes.
+
+### 2.1 Referencia del laboratorio: un empate es un resultado válido
+
+El laboratorio del repositorio (`lab/`, tienda ficticia **Zocomar**: 12 políticas, `vector(768)` + HNSW, Gemini Embedding 2 y Sonnet en las dos etapas) ejecutó este protocolo el 24 de octubre de 2026 con modelos reales:
+
+| Etapa      | Respondibles | Rechazos correctos | Búsquedas medias | Latencia mediana (con respuesta) |
+| ---------- | -----------: | -----------------: | ---------------: | -------------------------------: |
+| RAG básico |        14/14 |                6/6 |             1,00 |                            3,2 s |
+| CRAG       |        14/14 |                6/6 |             1,60 |                            8,9 s |
+
+Empataron en acierto. La diferencia estuvo en el margen (0,014 de similitud en RAG frente a 0,65 de relevancia en el juez de CRAG) y en el contexto (RAG pasó una política sustituida al generador en 3 de 14 respuestas; CRAG, en ninguna), a cambio de casi tres veces más latencia. Tu resultado puede ser otro: lo que se evalúa es el método y la honestidad del análisis, no que CRAG gane. Evidencia: `docs/evidence/zocomar-lab-2026-10-24.md`.
 
 ---
 
@@ -77,5 +91,5 @@ _(Opcional: búsqueda web pública como último recurso con fuentes marcadas y l
 
 ## 4. Material de apoyo incluido en este repositorio
 
-- **Laboratorio de referencia (`lab/`):** incluye `lab/src/crag-graph.ts` (LangGraph con `retrieve` → `rerank` → `assess` → `retain`/`discard` → `reformulate` → `answer`/`refuse`), `lab/src/reranker.ts` (escala `[0, 1]`, plantilla de `Qwen3-Reranker-0.6B` y umbrales calibrados) y `lab/eval/resultados-laboratorio.md` (comparación ejecutada de 40 pasadas con recuperaciones medias).
+- **Laboratorio de referencia (`lab/`):** corpus Zocomar en `lab/corpus/sources/`; `lab/src/crag-graph.ts` (LangGraph con `retrieve` → `rerank` → `assess` → `retain`/`discard` → `reformulate` → `answer`/`refuse`); `lab/src/reranker.ts` (escala `[0, 1]`, plantilla de `Qwen3-Reranker-0.6B`, umbrales calibrados y `decideLabSufficiency`); `apps/api/src/lab-models.ts` (juez y reformulador con un modelo real); `bun run lab:real compare` y `eval` para comparar con modelos reales. `lab/eval/resultados-laboratorio.md` es el respaldo determinista sin red: no mide modelos.
 - **Guía de apoyo:** consulta [`laboratorio-apoyo.md`](laboratorio-apoyo.md).

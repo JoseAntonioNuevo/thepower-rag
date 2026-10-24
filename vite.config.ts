@@ -34,7 +34,7 @@ export default defineConfig({
     overrides: [
       // La web añade reglas de React.
       {
-        files: ["apps/web/**"],
+        files: ["apps/web/**", "lab/ui/**"],
         plugins: ["react"],
       },
       // Los tests añaden reglas de Vitest.

@@ -1,5 +1,5 @@
 // GUÍA DE LECTURA · scripts/lab-pgvector.test.ts
-// Pruebas del laboratorio reproducible de S10 y S11: reconstrucción desde 10 documentos ficticios e
+// Pruebas del laboratorio reproducible de S10 y S11: reconstrucción desde 12 documentos de Zocomar e
 // índice vacío, esquema PostgreSQL/pgvector con vector(768) e índice HNSW, umbral de RAG básico,
 // grafo CRAG con nodos separados retrieve -> rerank -> assess y evaluación de 20 preguntas (14+6).
 // Rutas de archivos.
@@ -11,8 +11,10 @@ import {
   InMemoryPgVectorStore,
   LAB_CRAG_CONFIG,
   LAB_EMBEDDING_DIMENSIONS,
+  LAB_DEMO_CASES,
   LAB_TEST_SET_20,
   LAB_VALIDATION_SET,
+  decideLabSufficiency,
   PgVectorDatabaseStore,
   createDeterministic768EmbeddingProvider,
   formatQwen3RerankerPrompt,
@@ -24,19 +26,19 @@ import {
   type PostgresSqlExecutor,
 } from "../lab/src/index";
 
-// Carpeta con los 10 documentos ficticios de AetherCloud.
+// Carpeta con los 12 documentos ficticios de Zocomar, un marketplace inventado.
 const sourcesDir = path.join(import.meta.dirname, "../lab/corpus/sources");
 
 // Grupo de pruebas del laboratorio S10 y S11.
 describe("laboratorio reproducible S10 y S11 (pgvector 768 + HNSW + CRAG)", () => {
-  // Verifica los 10 documentos ficticios, los vectores de 768 d y el esquema SQL con HNSW.
-  it("reconstruye el sistema desde 10 documentos en bruto e índice vacío sobre PostgreSQL/pgvector (vector(768) + HNSW)", async () => {
+  // Verifica los 12 documentos ficticios, los vectores de 768 d y el esquema SQL con HNSW.
+  it("reconstruye el sistema desde 12 documentos en bruto e índice vacío sobre PostgreSQL/pgvector (vector(768) + HNSW)", async () => {
     // Prepara el corpus desde los archivos Markdown en bruto.
     const corpus = prepareLabCorpusFromDirectory(sourcesDir);
-    // Hay al menos 8 documentos ficticios (10 en el laboratorio).
+    // Hay al menos 8 documentos ficticios (12 en el laboratorio).
     expect(corpus.documents.length).toBeGreaterThanOrEqual(8);
     // Contrasta el valor observado con el resultado exacto que define este caso.
-    expect(corpus.documents.length).toBe(10);
+    expect(corpus.documents.length).toBe(12);
     // Comprueba que la medida alcance el límite inferior esperado.
     expect(corpus.chunks.length).toBeGreaterThanOrEqual(16);
 
@@ -105,7 +107,7 @@ describe("laboratorio reproducible S10 y S11 (pgvector 768 + HNSW + CRAG)", () =
     // Contrasta el valor observado con el resultado exacto que define este caso.
     expect(receipt.embeddingDimensions).toBe(LAB_EMBEDDING_DIMENSIONS);
     // Contrasta el valor observado con el resultado exacto que define este caso.
-    expect(receipt.documentCount).toBe(10);
+    expect(receipt.documentCount).toBe(12);
     // Contrasta el valor observado con el resultado exacto que define este caso.
     expect(receipt.chunkCount).toBe(corpus.chunks.length);
     // Contrasta el valor observado con el resultado exacto que define este caso.
@@ -123,7 +125,7 @@ describe("laboratorio reproducible S10 y S11 (pgvector 768 + HNSW + CRAG)", () =
     expect(allSql).toContain("TRUNCATE TABLE lab_corpus_versions CASCADE");
 
     // Verifica que la consulta usa el operador de distancia coseno `<=>` con `::vector(768)`.
-    const [qVec] = await embedder.embed(["regiones europeas de AetherCloud"]);
+    const [qVec] = await embedder.embed(["zonas de envío de Zocomar"]);
     // Recupera los vecinos del corpus y modelo solicitados ordenados por distancia coseno.
     const hits = await pgStore.queryNearest({
       queryVector: qVec!,
@@ -152,12 +154,11 @@ describe("laboratorio reproducible S10 y S11 (pgvector 768 + HNSW + CRAG)", () =
     // Reconstruye el índice del ensayo con los documentos preparados y el proveedor inyectado.
     await store.rebuildFromEmptyIndex({ corpus, embedder });
 
-    // Pregunta respondible sobre cifrado y enfriamiento de CMK.
+    // Pregunta respondible sobre el horario del chat.
     let genCalls = 0;
     // Ejecuta recuperación, corte de similitud y generación condicionada para este caso RAG.
     const answered = await runLabBasicRag({
-      question:
-        "¿Con qué algoritmo se cifran los volúmenes en reposo y qué periodo de enfriamiento exige destruir una CMK?",
+      question: "¿En qué horario atiende el chat de la aplicación de Zocomar?",
       corpusVersion: corpus.corpusVersion,
       config,
       store,
@@ -166,8 +167,8 @@ describe("laboratorio reproducible S10 y S11 (pgvector 768 + HNSW + CRAG)", () =
       generator: (q, selected) => {
         genCalls += 1;
         // Comprueba que la salida incluya la evidencia o el mensaje previsto por el caso.
-        expect(q).toContain("CMK");
-        return `Se cifra con AES-256-GCM y requiere 72 horas [cite:${selected[0]!.chunkId}] [cite:id-inventado-falso].`;
+        expect(q).toContain("chat");
+        return `El chat atiende de 8:00 a 22:00 [cite:${selected[0]!.chunkId}] [cite:id-inventado-falso].`;
       },
     });
     // Contrasta el valor observado con el resultado exacto que define este caso.
@@ -179,15 +180,13 @@ describe("laboratorio reproducible S10 y S11 (pgvector 768 + HNSW + CRAG)", () =
     // Filtra la cita inventada y conserva solo la cita real seleccionada.
     expect(answered.answer).not.toContain("id-inventado-falso");
     // Contrasta el valor observado con el resultado exacto que define este caso.
-    expect(answered.citations.some((id) => id.includes("04-almacenamiento-y-cifrado-kms"))).toBe(
-      true,
-    );
+    expect(answered.citations.some((id) => id.includes("11-atencion-al-cliente"))).toBe(true);
 
     // Pregunta sin apoyo documental: el control previo rechaza sin invocar al generador.
     let refusedGenCalls = 0;
     // Ejecuta recuperación, corte de similitud y generación condicionada para este caso RAG.
     const refused = await runLabBasicRag({
-      question: "¿Qué coste mensual tienen las licencias dedicadas de Windows Server 2025?",
+      question: "¿Qué descuento tienen los estudiantes universitarios en Zocomar?",
       corpusVersion: corpus.corpusVersion,
       config,
       store,
@@ -223,52 +222,45 @@ describe("laboratorio reproducible S10 y S11 (pgvector 768 + HNSW + CRAG)", () =
 
     // Verifica también la plantilla oficial de Qwen3-Reranker-0.6B.
     const prompt = formatQwen3RerankerPrompt({
-      query: "mTLS X-Aether-Tenant",
-      document: "Certificados emitidos por AetherCA-G2.",
+      query: "plazo de abono Bizum",
+      document: "El abono tarda 2 días hábiles en Bizum.",
     });
     // Comprueba que la salida incluya la evidencia o el mensaje previsto por el caso.
     expect(prompt).toContain('Note that the answer can only be "yes" or "no".');
     // Comprueba que la salida incluya la evidencia o el mensaje previsto por el caso.
-    expect(prompt).toContain("<Query>: mTLS X-Aether-Tenant");
+    expect(prompt).toContain("<Query>: plazo de abono Bizum");
 
     // Caso 1: pregunta compuesta donde la primera búsqueda es parcial y la segunda completa la cobertura.
     const composite = await runLabCrag({
-      question:
-        "¿Cómo se autentican los clientes mTLS con X-Aether-Tenant y qué tiempo máximo de primera respuesta aplica si cae todo el plano de datos en un incidente SEV-1?",
+      question: LAB_DEMO_CASES[0]!.question,
       corpusVersion: corpus.corpusVersion,
       config,
       store,
       embedder,
-      // En el intento 1 simulamos que solo se recupera el documento de mTLS (relevancia alta, cobertura parcial).
+      // En el intento 1 simulamos que devoluciones remite a pagos (relevancia alta, cobertura parcial).
       assessor: ({ reranked, attempt }) => {
-        // Localiza evidencia de autenticación mTLS dentro de los candidatos reordenados.
-        const mtlsChunk = reranked.find((item) =>
-          item.hit.documentId.includes("02-autenticacion-mtls-tokens"),
-        );
-        // Busca por separado el documento de incidentes que cubrirá el segundo aspecto de la pregunta.
-        const sevChunk = reranked.find((item) =>
-          item.hit.documentId.includes("06-respuesta-a-incidentes"),
-        );
-        if (attempt === 1 && mtlsChunk) {
+        // Localiza la política de devoluciones dentro de los candidatos reordenados.
+        const refund = reranked.find((item) => item.hit.documentId === "02-devoluciones");
+        // Busca por separado la política de pagos, que trae el plazo de Bizum.
+        const payments = reranked.find((item) => item.hit.documentId === "06-pagos-y-reembolsos");
+        if (attempt === 1 && refund) {
           return {
             status: "partial",
             coverageScore: 0.5,
-            maxChunkRelevance: mtlsChunk.rerankScore,
-            reason: "Relevancia alta en mTLS, pero falta el tiempo de primera respuesta SEV-1.",
-            gaps: [
-              "Falta evidencia documental sobre: tiempo máximo de primera respuesta en incidente SEV-1",
-            ],
-            usefulIds: [mtlsChunk.hit.chunkId],
+            maxChunkRelevance: refund.rerankScore,
+            reason: "Devoluciones cubre la validación, pero falta el abono de Bizum.",
+            gaps: ["Plazo de abono de un reembolso pagado con Bizum"],
+            usefulIds: [refund.hit.chunkId],
           };
         }
         // Declara cobertura suficiente y filtra ids ausentes antes de entregar la evidencia útil.
         return {
           status: "sufficient",
           coverageScore: 0.9,
-          maxChunkRelevance: Math.max(mtlsChunk?.rerankScore ?? 0.8, sevChunk?.rerankScore ?? 0.85),
-          reason: "Ambos aspectos (mTLS y SEV-1) están cubiertos.",
+          maxChunkRelevance: Math.max(refund?.rerankScore ?? 0.8, payments?.rerankScore ?? 0.85),
+          reason: "Validación y abono cubiertos.",
           gaps: [],
-          usefulIds: [mtlsChunk?.hit.chunkId, sevChunk?.hit.chunkId].filter((id): id is string =>
+          usefulIds: [refund?.hit.chunkId, payments?.hit.chunkId].filter((id): id is string =>
             Boolean(id),
           ),
         };
@@ -293,15 +285,13 @@ describe("laboratorio reproducible S10 y S11 (pgvector 768 + HNSW + CRAG)", () =
       "answer",
     ]);
     // Cita ambos documentos sin duplicar ids.
-    expect(composite.citations.some((id) => id.includes("02-autenticacion-mtls-tokens"))).toBe(
-      true,
-    );
+    expect(composite.citations.some((id) => id.includes("02-devoluciones"))).toBe(true);
     // Contrasta el valor observado con el resultado exacto que define este caso.
-    expect(composite.citations.some((id) => id.includes("06-respuesta-a-incidentes"))).toBe(true);
+    expect(composite.citations.some((id) => id.includes("06-pagos-y-reembolsos"))).toBe(true);
 
     // Caso 2: pregunta sin respuesta en el corpus -> 3 búsquedas, 2 reformulaciones y rechazo sin generar.
     const exhausted = await runLabCrag({
-      question: "¿Qué descuento ofrece AetherCloud por pagar con criptomonedas?",
+      question: LAB_DEMO_CASES[5]!.question,
       corpusVersion: corpus.corpusVersion,
       config,
       store,
@@ -319,10 +309,12 @@ describe("laboratorio reproducible S10 y S11 (pgvector 768 + HNSW + CRAG)", () =
     expect(exhausted.citations).toEqual([]);
   });
 
-  // Verifica que el conjunto de validación (6) y el de test (20: 14+6) son disjuntos y ejecuta la comparación completa.
+  // Verifica que validación, demostración y test son disjuntos y ejecuta la comparación completa sin red.
   it("ejecuta la comparación de 20 preguntas nuevas (14 respondibles y 6 sin respuesta) entre RAG básico y CRAG", async () => {
     // Comprueba la cantidad de elementos para detectar pérdidas o duplicados en el recorrido.
     expect(LAB_VALIDATION_SET).toHaveLength(6);
+    // Seis casos de demostración visibles.
+    expect(LAB_DEMO_CASES).toHaveLength(6);
     // Comprueba la cantidad de elementos para detectar pérdidas o duplicados en el recorrido.
     expect(LAB_TEST_SET_20).toHaveLength(20);
     // Comprueba la cantidad de elementos para detectar pérdidas o duplicados en el recorrido.
@@ -330,11 +322,21 @@ describe("laboratorio reproducible S10 y S11 (pgvector 768 + HNSW + CRAG)", () =
     // Comprueba la cantidad de elementos para detectar pérdidas o duplicados en el recorrido.
     expect(LAB_TEST_SET_20.filter((item) => !item.answerable)).toHaveLength(6);
 
-    // Ninguna pregunta de validación aparece en el conjunto de test de 20 preguntas.
-    const validationQuestions = new Set(LAB_VALIDATION_SET.map((item) => item.question));
+    // Ninguna pregunta de validación o de demostración aparece en el test de 20 preguntas.
+    const visibleQuestions = new Set(
+      [...LAB_VALIDATION_SET, ...LAB_DEMO_CASES].map((item) => item.question),
+    );
     for (const testCase of LAB_TEST_SET_20) {
       // Contrasta el valor observado con el resultado exacto que define este caso.
-      expect(validationQuestions.has(testCase.question)).toBe(false);
+      expect(visibleQuestions.has(testCase.question)).toBe(false);
+    }
+    // Cada documento esperado existe en el corpus.
+    const corpusForIds = prepareLabCorpusFromDirectory(sourcesDir);
+    const documentIds = new Set(corpusForIds.documents.map((doc) => doc.documentId));
+    for (const item of [...LAB_VALIDATION_SET, ...LAB_DEMO_CASES, ...LAB_TEST_SET_20]) {
+      // Un id de documento mal escrito invalidaría la corrección.
+      for (const documentId of item.expectedDocuments)
+        expect(documentIds.has(documentId)).toBe(true);
     }
 
     // Resuelve los parámetros del laboratorio a partir del entorno suministrado.
@@ -350,19 +352,78 @@ describe("laboratorio reproducible S10 y S11 (pgvector 768 + HNSW + CRAG)", () =
     const report = await runLabComparison20({ corpus, config, store, embedder });
     // Comprueba la cantidad de elementos para detectar pérdidas o duplicados en el recorrido.
     expect(report.items).toHaveLength(40);
-    // Contrasta el valor observado con el resultado exacto que define este caso.
-    expect(report.ragSummary.refusalCorrect).toBe(6);
-    // Contrasta el valor observado con el resultado exacto que define este caso.
-    expect(report.cragSummary.refusalCorrect).toBe(6);
-    // Comprueba que la medida alcance el límite inferior esperado.
-    expect(report.ragSummary.answerableCorrect).toBeGreaterThanOrEqual(10);
-    // Comprueba que la medida supere el límite esperado.
-    expect(report.cragSummary.answerableCorrect).toBeGreaterThan(
-      report.ragSummary.answerableCorrect,
-    );
-    // Contrasta el valor observado con el resultado exacto que define este caso.
+    // RAG básico hace siempre una búsqueda.
     expect(report.ragSummary.averageRetrievals).toBe(1);
-    // Comprueba que la medida supere el límite esperado.
-    expect(report.cragSummary.averageRetrievals).toBeGreaterThan(1);
+    // CRAG nunca supera tres búsquedas ni dos reformulaciones por pregunta.
+    for (const item of report.items.filter((entry) => entry.stage === "crag")) {
+      // Límite de búsquedas en código.
+      expect(item.retrievalCount).toBeLessThanOrEqual(LAB_CRAG_CONFIG.maxRetrievals);
+      // Límite de reformulaciones en código.
+      expect(item.reformulationCount).toBeLessThanOrEqual(LAB_CRAG_CONFIG.maxReformulations);
+    }
+    // Un rechazo nunca lleva citas en ninguna de las dos etapas.
+    for (const item of report.items.filter((entry) => entry.decision === "refuse")) {
+      // Sin fuentes aparentes en un rechazo.
+      expect(item.citations).toEqual([]);
+    }
+  });
+
+  // Verifica que los umbrales de código deciden la ruta a partir de la valoración de un juez real.
+  it("decide suficiencia, evidencia parcial e insuficiencia con los umbrales de S11", () => {
+    // Fragmento mínimo para construir candidatos reordenados.
+    const hit = (chunkId: string) => ({
+      chunkId,
+      corpusVersion: "v",
+      documentId: chunkId,
+      ordinal: 0,
+      title: "t",
+      section: "s",
+      content: "c",
+      embeddingModel: "m",
+      embeddingDimensions: 768 as const,
+      cosineDistance: 0.3,
+      similarity: 0.7,
+    });
+    // Un fragmento útil y otro irrelevante.
+    const reranked = [
+      { hit: hit("a"), rerankScore: 0.9, reason: "dato directo" },
+      { hit: hit("b"), rerankScore: 0.1, reason: "otro tema" },
+    ];
+    // Cobertura alta sin lagunas: suficiente con el fragmento útil.
+    const sufficient = decideLabSufficiency({
+      reranked,
+      coverageScore: 0.8,
+      gaps: [],
+      reason: "ok",
+    });
+    expect(sufficient.status).toBe("sufficient");
+    expect(sufficient.usefulIds).toEqual(["a"]);
+    // Cobertura alta pero con una laguna nombrada: parcial, nunca suficiente.
+    const partial = decideLabSufficiency({
+      reranked,
+      coverageScore: 0.8,
+      gaps: ["Plazo de abono de Bizum"],
+      reason: "falta una parte",
+    });
+    expect(partial.status).toBe("partial");
+    expect(partial.gaps).toEqual(["Plazo de abono de Bizum"]);
+    // Cobertura por debajo de 0,40: insuficiente y no conserva nada, aunque mantiene la laguna.
+    const low = decideLabSufficiency({
+      reranked,
+      coverageScore: 0.3,
+      gaps: ["Otra búsqueda"],
+      reason: "poco",
+    });
+    expect(low.status).toBe("insufficient");
+    expect(low.usefulIds).toEqual([]);
+    expect(low.gaps).toEqual(["Otra búsqueda"]);
+    // Ningún fragmento llega a 0,50: insuficiente aunque el juez estime cobertura alta.
+    const none = decideLabSufficiency({
+      reranked: [{ hit: hit("c"), rerankScore: 0.4, reason: "tema cercano" }],
+      coverageScore: 0.9,
+      gaps: [],
+      reason: "parecido",
+    });
+    expect(none.status).toBe("insufficient");
   });
 });

@@ -8,7 +8,9 @@ import { LAB_BASIC_THRESHOLDS, type LabConfig } from "./config";
 // Proveedor de embeddings de 768 dimensiones.
 import type { LabEmbeddingProvider } from "./embeddings";
 // Almacén pgvector y sus resultados.
-import type { LabVectorHit, LabVectorStore } from "./pgvector-store";
+import { labNearestQuery, type LabVectorHit, type LabVectorStore } from "./pgvector-store";
+// El observador hace visibles las operaciones reales sin sustituirlas.
+import type { AulaObserver } from "@thepower-rag/contracts";
 
 // Resultado completo de una consulta al RAG básico de S10.
 export interface LabBasicRagResult {
@@ -94,6 +96,7 @@ export async function runLabBasicRag(input: {
   store: LabVectorStore;
   embedder: LabEmbeddingProvider;
   topK?: number;
+  observer?: AulaObserver;
   generator?: (question: string, selected: readonly LabVectorHit[]) => Promise<string> | string;
 }): Promise<LabBasicRagResult> {
   // Reloj de inicio.
@@ -106,12 +109,31 @@ export async function runLabBasicRag(input: {
     );
   }
   // Paso 1: calcula el embedding de 768 dimensiones de la pregunta.
+  await input.observer?.before("question-embedding", {
+    question: input.question,
+    model: input.embedder.modelId,
+    dimensions: input.embedder.dimensions,
+  });
   const [queryVector] = await input.embedder.embed([input.question]);
   // Comprueba que el proveedor haya devuelto al menos el vector de la pregunta.
   if (queryVector === undefined) {
     // Detiene el recorrido con el diagnóstico: El proveedor de embeddings no devolvió un vector de 768 dimensiones.
     throw new Error("El proveedor de embeddings no devolvió un vector de 768 dimensiones.");
   }
+  await input.observer?.after("question-embedding", {
+    vector: queryVector,
+    dimensions: queryVector.length,
+    model: input.embedder.modelId,
+  });
+  await input.observer?.before(
+    "search",
+    labNearestQuery({
+      queryVector,
+      corpusVersion: input.corpusVersion,
+      embeddingModel: input.config.embeddingModelId,
+      topK: input.topK ?? LAB_BASIC_THRESHOLDS.topK,
+    }),
+  );
   // Paso 2: recupera los `topK` vecinos más próximos en pgvector usando distancia coseno (`<=>`).
   const retrieved = await input.store.queryNearest({
     queryVector,
@@ -119,12 +141,23 @@ export async function runLabBasicRag(input: {
     embeddingModel: input.config.embeddingModelId,
     topK: input.topK ?? LAB_BASIC_THRESHOLDS.topK,
   });
+  await input.observer?.after("search", { retrieved });
+  await input.observer?.before("selection", {
+    retrieved,
+    minSimilarity: input.config.minSimilarity,
+    maxCosineDistance: input.config.maxCosineDistance,
+  });
   // Paso 3: control de puntuación previo a generar (similitud >= minSimilarity y distancia <= maxCosineDistance).
   const selected = retrieved.filter(
     (hit) =>
       hit.similarity >= input.config.minSimilarity &&
       hit.cosineDistance <= input.config.maxCosineDistance,
   );
+  await input.observer?.after("selection", {
+    selected,
+    rejected: retrieved.filter((hit) => !selected.includes(hit)),
+    minSimilarity: input.config.minSimilarity,
+  });
   // Si ningún fragmento supera el umbral calibrado, se rechaza sin llamar al generador.
   if (selected.length === 0) {
     // Mide el tiempo hasta el rechazo y evita registrar una duración redondeada a cero.
@@ -143,7 +176,7 @@ export async function runLabBasicRag(input: {
       generationCalled: false,
       retrievalCount: 1,
       answer:
-        "No consta información suficiente en la documentación de AetherCloud para responder a esta consulta (ningún fragmento superó el umbral calibrado previo a la generación).",
+        "No consta información suficiente en la documentación de Zocomar para responder a esta consulta (ningún fragmento superó el umbral calibrado previo a la generación).",
       citations: [],
       latencyMs,
     };
@@ -152,6 +185,10 @@ export async function runLabBasicRag(input: {
   const rawAnswer = input.generator
     ? await input.generator(input.question, selected)
     : synthesizeGroundedLabAnswer(input.question, selected);
+  await input.observer?.before("citations", {
+    rawAnswer,
+    allowedIds: selected.map((chunk) => chunk.chunkId),
+  });
   // Construye la lista permitida de citas exclusivamente con los fragmentos seleccionados.
   const allowedIds = new Set(selected.map((chunk) => chunk.chunkId));
   // Elimina referencias inventadas a fragmentos que no se entregaron al generador.
@@ -160,6 +197,11 @@ export async function runLabBasicRag(input: {
   const citations = [...answer.matchAll(/\[cite:([^\]]+)\]/g)]
     .map((match) => match[1] ?? "")
     .filter((id, idx, arr) => allowedIds.has(id) && arr.indexOf(id) === idx);
+  await input.observer?.after("citations", {
+    answer,
+    citations,
+    sources: selected.filter((chunk) => citations.includes(chunk.chunkId)),
+  });
   // Mide el recorrido completo, incluida la generación y la comprobación de citas.
   const latencyMs = Math.max(1, Math.round(performance.now() - startedAt));
   // Entrega respuesta, evidencia, decisión y métricas con el contrato del laboratorio.

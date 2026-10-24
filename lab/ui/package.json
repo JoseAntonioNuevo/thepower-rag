@@ -1,0 +1,14 @@
+{
+  "name": "@thepower-rag/aula",
+  "private": true,
+  "type": "module",
+  "dependencies": {
+    "@thepower-rag/contracts": "workspace:*",
+    "react": "19.3.0",
+    "react-dom": "19.3.0"
+  },
+  "devDependencies": {
+    "@types/react": "19.3.0",
+    "@types/react-dom": "19.3.0"
+  }
+}

@@ -1,0 +1,2179 @@
+{
+  "frozen": {
+    "backend": "postgresql-pgvector",
+    "generator": "claude-sonnet-5-5",
+    "generationProvider": "anthropic",
+    "embedding": "openrouter:google/gemini-embedding-2:768",
+    "dimensions": 768,
+    "profile": "1a324082f837cc242c0837fb961c59189add2f06701292ecb848901305878d52",
+    "threshold": 0.722598,
+    "cragThresholds": {
+      "minChunkRelevance": 0.5,
+      "partialCoverageMin": 0.4,
+      "sufficientCoverageMin": 0.75
+    },
+    "startedAt": "2026-10-24T21:42:34.492Z",
+    "demoHash": "51ae443b03f6c3705211ff4cb40e2f78316075daf10a35f9ac7b0eca51c4afdb"
+  },
+  "status": "complete",
+  "results": [
+    {
+      "id": 1,
+      "question": "Devolví en un Zocopunto un pedido que pagué con Bizum. ¿Cuánto puede tardar en llegarme el dinero?",
+      "answerable": true,
+      "expectedDocuments": ["02-devoluciones", "06-pagos-y-reembolsos"],
+      "expectedFacts": ["3 días hábiles", "2 días hábiles"],
+      "rag": {
+        "question": "Devolví en un Zocopunto un pedido que pagué con Bizum. ¿Cuánto puede tardar en llegarme el dinero?",
+        "corpusVersion": "lab-ae3817b7bdcf",
+        "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+        "genModelId": "claude-sonnet-5-5",
+        "minSimilarity": 0.722598,
+        "maxCosineDistance": 0.27740200000000004,
+        "retrieved": [
+          {
+            "chunkId": "lab-ae3817b7bdcf:06-pagos-y-reembolsos:02",
+            "corpusVersion": "lab-ae3817b7bdcf",
+            "documentId": "06-pagos-y-reembolsos",
+            "ordinal": 2,
+            "title": "Pagos y reembolsos",
+            "section": "Plazos de abono de los reembolsos",
+            "content": "## Plazos de abono de los reembolsos\n\nUna vez ordenado el reembolso, el abono tarda 5 días hábiles en tarjeta, 2 días hábiles en Bizum y 24 horas en PayPal. El reembolso en saldo Zocomar es inmediato y puede elegirse en lugar del método original. En los pedidos pagados con ZocoPlazos se cancelan las cuotas pendientes y se devuelven a la tarjeta las ya pagadas.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.190854,
+            "similarity": 0.809146
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:02-devoluciones:02",
+            "corpusVersion": "lab-ae3817b7bdcf",
+            "documentId": "02-devoluciones",
+            "ordinal": 2,
+            "title": "Política de devoluciones",
+            "section": "Cómo iniciar una devolución",
+            "content": "## Cómo iniciar una devolución\n\nLa devolución se solicita desde «Mis pedidos», seleccionando el artículo y el motivo. La aplicación genera un código QR válido durante 10 días. Con ese código el paquete puede entregarse en cualquier Zocopunto o puede solicitarse una recogida a domicilio. No se aceptan devoluciones enviadas por cuenta propia sin código.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.221756,
+            "similarity": 0.778244
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:02-devoluciones:04",
+            "corpusVersion": "lab-ae3817b7bdcf",
+            "documentId": "02-devoluciones",
+            "ordinal": 4,
+            "title": "Política de devoluciones",
+            "section": "Reembolso de una devolución",
+            "content": "## Reembolso de una devolución\n\nEl almacén o el vendedor dispone de hasta 3 días hábiles desde la recepción del paquete para validar la devolución. Una vez validada, Zocomar ordena el reembolso por el mismo método de pago del pedido. Los plazos de abono de cada método de pago se detallan en la política de pagos y reembolsos.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.247117,
+            "similarity": 0.752883
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:02-devoluciones:03",
+            "corpusVersion": "lab-ae3817b7bdcf",
+            "documentId": "02-devoluciones",
+            "ordinal": 3,
+            "title": "Política de devoluciones",
+            "section": "Coste de la devolución",
+            "content": "## Coste de la devolución\n\nEntregar el paquete en un Zocopunto es gratuito. La recogida a domicilio cuesta 3,95 €, que se descuentan del reembolso. La devolución es siempre gratuita, por cualquier vía, si el artículo llegó defectuoso, dañado o no corresponde con lo pedido, y también en los productos de vendedores con el sello «Devolución gratuita».",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.254969,
+            "similarity": 0.745031
+          }
+        ],
+        "selected": [
+          {
+            "chunkId": "lab-ae3817b7bdcf:06-pagos-y-reembolsos:02",
+            "corpusVersion": "lab-ae3817b7bdcf",
+            "documentId": "06-pagos-y-reembolsos",
+            "ordinal": 2,
+            "title": "Pagos y reembolsos",
+            "section": "Plazos de abono de los reembolsos",
+            "content": "## Plazos de abono de los reembolsos\n\nUna vez ordenado el reembolso, el abono tarda 5 días hábiles en tarjeta, 2 días hábiles en Bizum y 24 horas en PayPal. El reembolso en saldo Zocomar es inmediato y puede elegirse en lugar del método original. En los pedidos pagados con ZocoPlazos se cancelan las cuotas pendientes y se devuelven a la tarjeta las ya pagadas.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.190854,
+            "similarity": 0.809146
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:02-devoluciones:02",
+            "corpusVersion": "lab-ae3817b7bdcf",
+            "documentId": "02-devoluciones",
+            "ordinal": 2,
+            "title": "Política de devoluciones",
+            "section": "Cómo iniciar una devolución",
+            "content": "## Cómo iniciar una devolución\n\nLa devolución se solicita desde «Mis pedidos», seleccionando el artículo y el motivo. La aplicación genera un código QR válido durante 10 días. Con ese código el paquete puede entregarse en cualquier Zocopunto o puede solicitarse una recogida a domicilio. No se aceptan devoluciones enviadas por cuenta propia sin código.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.221756,
+            "similarity": 0.778244
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:02-devoluciones:04",
+            "corpusVersion": "lab-ae3817b7bdcf",
+            "documentId": "02-devoluciones",
+            "ordinal": 4,
+            "title": "Política de devoluciones",
+            "section": "Reembolso de una devolución",
+            "content": "## Reembolso de una devolución\n\nEl almacén o el vendedor dispone de hasta 3 días hábiles desde la recepción del paquete para validar la devolución. Una vez validada, Zocomar ordena el reembolso por el mismo método de pago del pedido. Los plazos de abono de cada método de pago se detallan en la política de pagos y reembolsos.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.247117,
+            "similarity": 0.752883
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:02-devoluciones:03",
+            "corpusVersion": "lab-ae3817b7bdcf",
+            "documentId": "02-devoluciones",
+            "ordinal": 3,
+            "title": "Política de devoluciones",
+            "section": "Coste de la devolución",
+            "content": "## Coste de la devolución\n\nEntregar el paquete en un Zocopunto es gratuito. La recogida a domicilio cuesta 3,95 €, que se descuentan del reembolso. La devolución es siempre gratuita, por cualquier vía, si el artículo llegó defectuoso, dañado o no corresponde con lo pedido, y también en los productos de vendedores con el sello «Devolución gratuita».",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.254969,
+            "similarity": 0.745031
+          }
+        ],
+        "decision": "answer",
+        "generationCalled": true,
+        "retrievalCount": 1,
+        "answer": "El dinero puede tardar, en el caso más largo, unos 5 días hábiles desde que se recibe el paquete, repartidos en dos etapas:\n\n1. **Validación de la devolución:** el almacén o el vendedor dispone de hasta 3 días hábiles desde la recepción del paquete para validarla. [cite:lab-ae3817b7bdcf:02-devoluciones:04]\n2. **Abono por Bizum:** una vez ordenado el reembolso (que Zocomar hace por el mismo método de pago del pedido, es decir, Bizum), el abono tarda 2 días hábiles. [cite:lab-ae3817b7bdcf:06-pagos-y-reembolsos:02] [cite:lab-ae3817b7bdcf:02-devoluciones:04]\n\nLos documentos no indican cuánto tarda el paquete en llegar del Zocopunto al almacén, por lo que ese tiempo previo no puedo estimarlo. Tampoco precisan si la suma de ambas etapas es el total garantizado; el cálculo de 3 + 2 días hábiles es una deducción a partir de los plazos citados.\n\nComo alternativa, el reembolso en saldo Zocomar es inmediato y puede elegirse en lugar del método original. [cite:lab-ae3817b7bdcf:06-pagos-y-reembolsos:02]",
+        "citations": [
+          "lab-ae3817b7bdcf:02-devoluciones:04",
+          "lab-ae3817b7bdcf:06-pagos-y-reembolsos:02"
+        ],
+        "latencyMs": 4909
+      },
+      "crag": {
+        "question": "Devolví en un Zocopunto un pedido que pagué con Bizum. ¿Cuánto puede tardar en llegarme el dinero?",
+        "queries": [
+          "Devolví en un Zocopunto un pedido que pagué con Bizum. ¿Cuánto puede tardar en llegarme el dinero?"
+        ],
+        "retrievalCount": 1,
+        "reformulationCount": 0,
+        "finalStatus": "sufficient",
+        "decision": "answer",
+        "generationCalled": true,
+        "visitedNodes": ["retrieve", "rerank", "assess", "answer"],
+        "retained": [
+          {
+            "chunkId": "lab-ae3817b7bdcf:06-pagos-y-reembolsos:02",
+            "corpusVersion": "lab-ae3817b7bdcf",
+            "documentId": "06-pagos-y-reembolsos",
+            "ordinal": 2,
+            "title": "Pagos y reembolsos",
+            "section": "Plazos de abono de los reembolsos",
+            "content": "## Plazos de abono de los reembolsos\n\nUna vez ordenado el reembolso, el abono tarda 5 días hábiles en tarjeta, 2 días hábiles en Bizum y 24 horas en PayPal. El reembolso en saldo Zocomar es inmediato y puede elegirse en lugar del método original. En los pedidos pagados con ZocoPlazos se cancelan las cuotas pendientes y se devuelven a la tarjeta las ya pagadas.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.190854,
+            "similarity": 0.809146
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:02-devoluciones:04",
+            "corpusVersion": "lab-ae3817b7bdcf",
+            "documentId": "02-devoluciones",
+            "ordinal": 4,
+            "title": "Política de devoluciones",
+            "section": "Reembolso de una devolución",
+            "content": "## Reembolso de una devolución\n\nEl almacén o el vendedor dispone de hasta 3 días hábiles desde la recepción del paquete para validar la devolución. Una vez validada, Zocomar ordena el reembolso por el mismo método de pago del pedido. Los plazos de abono de cada método de pago se detallan en la política de pagos y reembolsos.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.247117,
+            "similarity": 0.752883
+          }
+        ],
+        "discarded": [
+          {
+            "chunkId": "lab-ae3817b7bdcf:02-devoluciones:02",
+            "attempt": 1,
+            "rerankScore": 0.2,
+            "reason": "Explica cómo entregar en un Zocopunto pero no aporta plazos de reembolso."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:02-devoluciones:03",
+            "attempt": 1,
+            "rerankScore": 0.15,
+            "reason": "Trata el coste de devolver en Zocopunto, no el plazo del dinero."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:06-pagos-y-reembolsos:00",
+            "attempt": 1,
+            "rerankScore": 0.15,
+            "reason": "Confirma que Bizum es método aceptado, sin dato de plazos."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:06-pagos-y-reembolsos:03",
+            "attempt": 1,
+            "rerankScore": 0.1,
+            "reason": "Habla de cargos duplicados y retenciones, no de reembolsos por devolución."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:02-devoluciones:00",
+            "attempt": 1,
+            "rerankScore": 0.05,
+            "reason": "Plazo para solicitar devoluciones, no el plazo de llegada del dinero."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:03-electronica-y-garantia:00",
+            "attempt": 1,
+            "rerankScore": 0,
+            "reason": "Plazos de devolución de electrónica, irrelevante para el tiempo del reembolso."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:02-devoluciones:06",
+            "attempt": 1,
+            "rerankScore": 0,
+            "reason": "Cambios de talla o color, no relacionado con el reembolso."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:07-vendedores-planes-y-comisiones:01",
+            "attempt": 1,
+            "rerankScore": 0,
+            "reason": "Liquidación a vendedores, no al comprador."
+          }
+        ],
+        "iterations": [
+          {
+            "attempt": 1,
+            "query": "Devolví en un Zocopunto un pedido que pagué con Bizum. ¿Cuánto puede tardar en llegarme el dinero?",
+            "retrievedIds": [
+              {
+                "chunkId": "lab-ae3817b7bdcf:06-pagos-y-reembolsos:02",
+                "cosineDistance": 0.190854,
+                "similarity": 0.809146
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:02-devoluciones:02",
+                "cosineDistance": 0.221756,
+                "similarity": 0.778244
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:02-devoluciones:04",
+                "cosineDistance": 0.247117,
+                "similarity": 0.752883
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:02-devoluciones:03",
+                "cosineDistance": 0.254969,
+                "similarity": 0.745031
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:02-devoluciones:00",
+                "cosineDistance": 0.266471,
+                "similarity": 0.733529
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:06-pagos-y-reembolsos:00",
+                "cosineDistance": 0.277779,
+                "similarity": 0.722221
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:03-electronica-y-garantia:00",
+                "cosineDistance": 0.284734,
+                "similarity": 0.715266
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:02-devoluciones:06",
+                "cosineDistance": 0.293129,
+                "similarity": 0.706871
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:06-pagos-y-reembolsos:03",
+                "cosineDistance": 0.293435,
+                "similarity": 0.706565
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:07-vendedores-planes-y-comisiones:01",
+                "cosineDistance": 0.30086,
+                "similarity": 0.69914
+              }
+            ],
+            "reranked": [
+              {
+                "chunkId": "lab-ae3817b7bdcf:06-pagos-y-reembolsos:02",
+                "rerankScore": 0.97,
+                "reason": "Indica que el abono en Bizum tarda 2 días hábiles una vez ordenado el reembolso."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:02-devoluciones:04",
+                "rerankScore": 0.8,
+                "reason": "Añade hasta 3 días hábiles de validación desde la recepción del paquete antes de ordenar el reembolso por el mismo método de pago."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:02-devoluciones:02",
+                "rerankScore": 0.2,
+                "reason": "Explica cómo entregar en un Zocopunto pero no aporta plazos de reembolso."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:02-devoluciones:03",
+                "rerankScore": 0.15,
+                "reason": "Trata el coste de devolver en Zocopunto, no el plazo del dinero."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:06-pagos-y-reembolsos:00",
+                "rerankScore": 0.15,
+                "reason": "Confirma que Bizum es método aceptado, sin dato de plazos."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:06-pagos-y-reembolsos:03",
+                "rerankScore": 0.1,
+                "reason": "Habla de cargos duplicados y retenciones, no de reembolsos por devolución."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:02-devoluciones:00",
+                "rerankScore": 0.05,
+                "reason": "Plazo para solicitar devoluciones, no el plazo de llegada del dinero."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:03-electronica-y-garantia:00",
+                "rerankScore": 0,
+                "reason": "Plazos de devolución de electrónica, irrelevante para el tiempo del reembolso."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:02-devoluciones:06",
+                "rerankScore": 0,
+                "reason": "Cambios de talla o color, no relacionado con el reembolso."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:07-vendedores-planes-y-comisiones:01",
+                "rerankScore": 0,
+                "reason": "Liquidación a vendedores, no al comprador."
+              }
+            ],
+            "assessment": {
+              "status": "sufficient",
+              "coverageScore": 0.95,
+              "maxChunkRelevance": 0.97,
+              "reason": "Los fragmentos 02-devoluciones:04 y 06-pagos:02 permiten estimar el total: hasta 3 días hábiles de validación tras recibir el paquete más 2 días hábiles de abono por Bizum.",
+              "gaps": [],
+              "usefulIds": [
+                "lab-ae3817b7bdcf:06-pagos-y-reembolsos:02",
+                "lab-ae3817b7bdcf:02-devoluciones:04"
+              ]
+            },
+            "route": "answer"
+          }
+        ],
+        "answer": "El tiempo total depende de dos fases:\n\n1. **Validación de la devolución:** el almacén o el vendedor dispone de hasta 3 días hábiles desde la recepción del paquete para validarla. Una vez validada, Zocomar ordena el reembolso por el mismo método de pago del pedido, es decir, por Bizum [cite:lab-ae3817b7bdcf:02-devoluciones:04].\n\n2. **Abono por Bizum:** una vez ordenado el reembolso, el abono tarda 2 días hábiles en Bizum [cite:lab-ae3817b7bdcf:06-pagos-y-reembolsos:02].\n\nSumando ambas fases, el dinero puede tardar hasta unos 5 días hábiles desde que el paquete llega al almacén o al vendedor (hasta 3 de validación y 2 de abono por Bizum). Esta suma es un cálculo a partir de los dos plazos, no una cifra indicada expresamente en los documentos.\n\nLos documentos no indican cuánto tarda el paquete en llegar desde el Zocopunto al almacén o vendedor, por lo que ese tiempo previo no puede estimarse con esta información. Tampoco aclaran si el plazo de 2 días hábiles empieza a contar justo en el momento de ordenar el reembolso o algo después, más allá de lo que indica el texto citado.",
+        "citations": [
+          "lab-ae3817b7bdcf:02-devoluciones:04",
+          "lab-ae3817b7bdcf:06-pagos-y-reembolsos:02"
+        ],
+        "latencyMs": 10965
+      },
+      "manualReview": "pending"
+    },
+    {
+      "id": 2,
+      "question": "Me compré unos cascos de botón hace 10 días, los he estrenado y no me convencen. ¿Los puedo devolver?",
+      "answerable": true,
+      "expectedDocuments": ["03-electronica-y-garantia"],
+      "expectedFacts": ["precinto higiénico", "garantía"],
+      "rag": {
+        "question": "Me compré unos cascos de botón hace 10 días, los he estrenado y no me convencen. ¿Los puedo devolver?",
+        "corpusVersion": "lab-ae3817b7bdcf",
+        "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+        "genModelId": "claude-sonnet-5-5",
+        "minSimilarity": 0.722598,
+        "maxCosineDistance": 0.27740200000000004,
+        "retrieved": [
+          {
+            "chunkId": "lab-ae3817b7bdcf:03-electronica-y-garantia:01",
+            "corpusVersion": "lab-ae3817b7bdcf",
+            "documentId": "03-electronica-y-garantia",
+            "ordinal": 1,
+            "title": "Electrónica: devoluciones especiales y garantía",
+            "section": "Artículos excluidos por higiene",
+            "content": "## Artículos excluidos por higiene\n\nLos auriculares intraauditivos, los cepillos de dientes eléctricos, las afeitadoras y las depiladoras no admiten devolución por desistimiento una vez retirado su precinto higiénico. En ese caso solo pueden devolverse si presentan un defecto, a través de la garantía.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.192341,
+            "similarity": 0.807659
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:03-electronica-y-garantia:00",
+            "corpusVersion": "lab-ae3817b7bdcf",
+            "documentId": "03-electronica-y-garantia",
+            "ordinal": 0,
+            "title": "Electrónica: devoluciones especiales y garantía",
+            "section": "Plazo de devolución de la electrónica",
+            "content": "## Plazo de devolución de la electrónica\n\nLos artículos de electrónica (móviles, tabletas, ordenadores, consolas, televisores, audio y pequeños electrodomésticos) siguen el plazo general si se devuelven con el precinto de fábrica intacto. Si el precinto se ha retirado o el dispositivo se ha encendido y configurado, el plazo de desistimiento se reduce a 14 días naturales desde la entrega, también para los miembros de Zocomar Plus.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.230482,
+            "similarity": 0.769518
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:03-electronica-y-garantia:03",
+            "corpusVersion": "lab-ae3817b7bdcf",
+            "documentId": "03-electronica-y-garantia",
+            "ordinal": 3,
+            "title": "Electrónica: devoluciones especiales y garantía",
+            "section": "Garantía legal",
+            "content": "## Garantía legal\n\nLos productos nuevos tienen 3 años de garantía legal desde la entrega y los reacondicionados con calificación A o B tienen 1 año. Durante la garantía, el comprador puede elegir entre reparación y sustitución; si ninguna de las dos es posible, se reembolsa el precio.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.253315,
+            "similarity": 0.746685
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:03-electronica-y-garantia:04",
+            "corpusVersion": "lab-ae3817b7bdcf",
+            "documentId": "03-electronica-y-garantia",
+            "ordinal": 4,
+            "title": "Electrónica: devoluciones especiales y garantía",
+            "section": "Cómo se tramita la garantía",
+            "content": "## Cómo se tramita la garantía\n\nLa reclamación se abre desde «Mis pedidos» > «Tengo un problema». El artículo se envía gratis al servicio técnico asociado, que emite un diagnóstico en un máximo de 15 días hábiles. Si la avería se debe a un golpe, a la humedad o a una manipulación, la reparación no está cubierta y se ofrece un presupuesto.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.255871,
+            "similarity": 0.744129
+          }
+        ],
+        "selected": [
+          {
+            "chunkId": "lab-ae3817b7bdcf:03-electronica-y-garantia:01",
+            "corpusVersion": "lab-ae3817b7bdcf",
+            "documentId": "03-electronica-y-garantia",
+            "ordinal": 1,
+            "title": "Electrónica: devoluciones especiales y garantía",
+            "section": "Artículos excluidos por higiene",
+            "content": "## Artículos excluidos por higiene\n\nLos auriculares intraauditivos, los cepillos de dientes eléctricos, las afeitadoras y las depiladoras no admiten devolución por desistimiento una vez retirado su precinto higiénico. En ese caso solo pueden devolverse si presentan un defecto, a través de la garantía.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.192341,
+            "similarity": 0.807659
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:03-electronica-y-garantia:00",
+            "corpusVersion": "lab-ae3817b7bdcf",
+            "documentId": "03-electronica-y-garantia",
+            "ordinal": 0,
+            "title": "Electrónica: devoluciones especiales y garantía",
+            "section": "Plazo de devolución de la electrónica",
+            "content": "## Plazo de devolución de la electrónica\n\nLos artículos de electrónica (móviles, tabletas, ordenadores, consolas, televisores, audio y pequeños electrodomésticos) siguen el plazo general si se devuelven con el precinto de fábrica intacto. Si el precinto se ha retirado o el dispositivo se ha encendido y configurado, el plazo de desistimiento se reduce a 14 días naturales desde la entrega, también para los miembros de Zocomar Plus.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.230482,
+            "similarity": 0.769518
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:03-electronica-y-garantia:03",
+            "corpusVersion": "lab-ae3817b7bdcf",
+            "documentId": "03-electronica-y-garantia",
+            "ordinal": 3,
+            "title": "Electrónica: devoluciones especiales y garantía",
+            "section": "Garantía legal",
+            "content": "## Garantía legal\n\nLos productos nuevos tienen 3 años de garantía legal desde la entrega y los reacondicionados con calificación A o B tienen 1 año. Durante la garantía, el comprador puede elegir entre reparación y sustitución; si ninguna de las dos es posible, se reembolsa el precio.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.253315,
+            "similarity": 0.746685
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:03-electronica-y-garantia:04",
+            "corpusVersion": "lab-ae3817b7bdcf",
+            "documentId": "03-electronica-y-garantia",
+            "ordinal": 4,
+            "title": "Electrónica: devoluciones especiales y garantía",
+            "section": "Cómo se tramita la garantía",
+            "content": "## Cómo se tramita la garantía\n\nLa reclamación se abre desde «Mis pedidos» > «Tengo un problema». El artículo se envía gratis al servicio técnico asociado, que emite un diagnóstico en un máximo de 15 días hábiles. Si la avería se debe a un golpe, a la humedad o a una manipulación, la reparación no está cubierta y se ofrece un presupuesto.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.255871,
+            "similarity": 0.744129
+          }
+        ],
+        "decision": "answer",
+        "generationCalled": true,
+        "retrievalCount": 1,
+        "answer": "Lo más probable es que no puedas devolverlos por desistimiento, aunque depende de un dato que no consta en tu mensaje.\n\n- Los cascos de botón son auriculares intraauditivos. Estos artículos no admiten devolución por desistimiento una vez retirado su precinto higiénico [cite:lab-ae3817b7bdcf:03-electronica-y-garantia:01]. Como los has estrenado, entiendo que ya has retirado ese precinto, así que la devolución por simple desacuerdo no sería posible.\n- Solo podrían devolverse si presentan un defecto, a través de la garantía [cite:lab-ae3817b7bdcf:03-electronica-y-garantia:01]. Que \"no te convenzan\" no es un defecto en sí.\n- Si llegaran a tener un defecto, los productos nuevos tienen 3 años de garantía legal desde la entrega; puedes elegir entre reparación y sustitución, y si ninguna es posible, se reembolsa el precio [cite:lab-ae3817b7bdcf:03-electronica-y-garantia:03]. La reclamación se abre desde «Mis pedidos» > «Tengo un problema» [cite:lab-ae3817b7bdcf:03-electronica-y-garantia:04].\n\nSobre el plazo: la regla general de electrónica con precinto retirado o dispositivo encendido reduce el desistimiento a 14 días naturales desde la entrega [cite:lab-ae3817b7bdcf:03-electronica-y-garantia:00]. Aunque estás dentro de ese plazo (10 días), la exclusión por higiene de los auriculares intraauditivos prevalece según los fragmentos disponibles, que no detallan cómo se concilian ambas reglas.\n\nNo consta en los datos qué ocurre si no retiraste el precinto higiénico, aunque los hayas estrenado; si en tu caso el precinto sigue intacto, convendría confirmarlo con el servicio de atención.",
+        "citations": [
+          "lab-ae3817b7bdcf:03-electronica-y-garantia:01",
+          "lab-ae3817b7bdcf:03-electronica-y-garantia:03",
+          "lab-ae3817b7bdcf:03-electronica-y-garantia:04",
+          "lab-ae3817b7bdcf:03-electronica-y-garantia:00"
+        ],
+        "latencyMs": 5560
+      },
+      "crag": {
+        "error": "El juez de CRAG no devolvió cada fragmento exactamente una vez."
+      },
+      "manualReview": "pending"
+    },
+    {
+      "id": 3,
+      "question": "¿A partir de qué importe es gratis el envío estándar a la península?",
+      "answerable": true,
+      "expectedDocuments": ["04-envios-vigente"],
+      "expectedFacts": ["39 €", "vendedor"],
+      "rag": {
+        "question": "¿A partir de qué importe es gratis el envío estándar a la península?",
+        "corpusVersion": "lab-ae3817b7bdcf",
+        "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+        "genModelId": "claude-sonnet-5-5",
+        "minSimilarity": 0.722598,
+        "maxCosineDistance": 0.27740200000000004,
+        "retrieved": [
+          {
+            "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:00",
+            "corpusVersion": "lab-ae3817b7bdcf",
+            "documentId": "04-envios-vigente",
+            "ordinal": 0,
+            "title": "Política de envíos (vigente desde el 1 de marzo de 2026)",
+            "section": "Envío estándar en España peninsular",
+            "content": "## Envío estándar en España peninsular\n\nEl envío estándar a España peninsular tarda de 2 a 4 días laborables y cuesta 3,99 €. Es gratuito cuando el importe de los artículos de un mismo vendedor alcanza 39 €. Si un pedido incluye artículos de varios vendedores, cada vendedor envía su propio paquete y el umbral de 39 € se calcula por separado para cada uno.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.220265,
+            "similarity": 0.779735
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:05-envios-2025-sustituida:01",
+            "corpusVersion": "lab-ae3817b7bdcf",
+            "documentId": "05-envios-2025-sustituida",
+            "ordinal": 1,
+            "title": "Política de envíos de 2025 (SUSTITUIDA el 1 de marzo de 2026)",
+            "section": "Envío estándar en 2025",
+            "content": "## Envío estándar en 2025\n\nEn 2025, el envío estándar a la península costaba 2,99 € y era gratuito a partir de 29 € por pedido completo, sumando los artículos de todos los vendedores.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.223517,
+            "similarity": 0.776483
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:05-envios-2025-sustituida:03",
+            "corpusVersion": "lab-ae3817b7bdcf",
+            "documentId": "05-envios-2025-sustituida",
+            "ordinal": 3,
+            "title": "Política de envíos de 2025 (SUSTITUIDA el 1 de marzo de 2026)",
+            "section": "Baleares y Portugal en 2025",
+            "content": "## Baleares y Portugal en 2025\n\nEn 2025 los envíos a Baleares costaban 4,99 € y eran gratuitos desde 49 €. Portugal continental tenía la misma tarifa que la península.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.256357,
+            "similarity": 0.743643
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:04",
+            "corpusVersion": "lab-ae3817b7bdcf",
+            "documentId": "04-envios-vigente",
+            "ordinal": 4,
+            "title": "Política de envíos (vigente desde el 1 de marzo de 2026)",
+            "section": "Ventajas de Zocomar Plus en el envío",
+            "content": "## Ventajas de Zocomar Plus en el envío\n\nLos miembros de Zocomar Plus tienen envío estándar gratuito sin importe mínimo en España peninsular y en Portugal continental, y en Baleares a partir de 29 € por vendedor. El envío exprés les cuesta 2,99 € por paquete.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.268985,
+            "similarity": 0.731015
+          }
+        ],
+        "selected": [
+          {
+            "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:00",
+            "corpusVersion": "lab-ae3817b7bdcf",
+            "documentId": "04-envios-vigente",
+            "ordinal": 0,
+            "title": "Política de envíos (vigente desde el 1 de marzo de 2026)",
+            "section": "Envío estándar en España peninsular",
+            "content": "## Envío estándar en España peninsular\n\nEl envío estándar a España peninsular tarda de 2 a 4 días laborables y cuesta 3,99 €. Es gratuito cuando el importe de los artículos de un mismo vendedor alcanza 39 €. Si un pedido incluye artículos de varios vendedores, cada vendedor envía su propio paquete y el umbral de 39 € se calcula por separado para cada uno.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.220265,
+            "similarity": 0.779735
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:05-envios-2025-sustituida:01",
+            "corpusVersion": "lab-ae3817b7bdcf",
+            "documentId": "05-envios-2025-sustituida",
+            "ordinal": 1,
+            "title": "Política de envíos de 2025 (SUSTITUIDA el 1 de marzo de 2026)",
+            "section": "Envío estándar en 2025",
+            "content": "## Envío estándar en 2025\n\nEn 2025, el envío estándar a la península costaba 2,99 € y era gratuito a partir de 29 € por pedido completo, sumando los artículos de todos los vendedores.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.223517,
+            "similarity": 0.776483
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:05-envios-2025-sustituida:03",
+            "corpusVersion": "lab-ae3817b7bdcf",
+            "documentId": "05-envios-2025-sustituida",
+            "ordinal": 3,
+            "title": "Política de envíos de 2025 (SUSTITUIDA el 1 de marzo de 2026)",
+            "section": "Baleares y Portugal en 2025",
+            "content": "## Baleares y Portugal en 2025\n\nEn 2025 los envíos a Baleares costaban 4,99 € y eran gratuitos desde 49 €. Portugal continental tenía la misma tarifa que la península.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.256357,
+            "similarity": 0.743643
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:04",
+            "corpusVersion": "lab-ae3817b7bdcf",
+            "documentId": "04-envios-vigente",
+            "ordinal": 4,
+            "title": "Política de envíos (vigente desde el 1 de marzo de 2026)",
+            "section": "Ventajas de Zocomar Plus en el envío",
+            "content": "## Ventajas de Zocomar Plus en el envío\n\nLos miembros de Zocomar Plus tienen envío estándar gratuito sin importe mínimo en España peninsular y en Portugal continental, y en Baleares a partir de 29 € por vendedor. El envío exprés les cuesta 2,99 € por paquete.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.268985,
+            "similarity": 0.731015
+          }
+        ],
+        "decision": "answer",
+        "generationCalled": true,
+        "retrievalCount": 1,
+        "answer": "Según la política vigente desde el 1 de marzo de 2026, el envío estándar a la península es gratuito cuando el importe de los artículos de un mismo vendedor alcanza 39 € [cite:lab-ae3817b7bdcf:04-envios-vigente:00]. Si el pedido incluye artículos de varios vendedores, cada uno envía su propio paquete y el umbral de 39 € se calcula por separado para cada vendedor [cite:lab-ae3817b7bdcf:04-envios-vigente:00]. Por debajo de ese importe, el envío cuesta 3,99 € [cite:lab-ae3817b7bdcf:04-envios-vigente:00].\n\nLos miembros de Zocomar Plus tienen envío estándar gratuito sin importe mínimo en la península [cite:lab-ae3817b7bdcf:04-envios-vigente:04].\n\nNota: el umbral de 29 € por pedido completo que aparece en otro documento corresponde a la política de 2025, que fue sustituida el 1 de marzo de 2026, por lo que ya no aplica [cite:lab-ae3817b7bdcf:05-envios-2025-sustituida:01].",
+        "citations": [
+          "lab-ae3817b7bdcf:04-envios-vigente:00",
+          "lab-ae3817b7bdcf:04-envios-vigente:04",
+          "lab-ae3817b7bdcf:05-envios-2025-sustituida:01"
+        ],
+        "latencyMs": 3247
+      },
+      "crag": {
+        "question": "¿A partir de qué importe es gratis el envío estándar a la península?",
+        "queries": ["¿A partir de qué importe es gratis el envío estándar a la península?"],
+        "retrievalCount": 1,
+        "reformulationCount": 0,
+        "finalStatus": "sufficient",
+        "decision": "answer",
+        "generationCalled": true,
+        "visitedNodes": ["retrieve", "rerank", "assess", "answer"],
+        "retained": [
+          {
+            "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:00",
+            "corpusVersion": "lab-ae3817b7bdcf",
+            "documentId": "04-envios-vigente",
+            "ordinal": 0,
+            "title": "Política de envíos (vigente desde el 1 de marzo de 2026)",
+            "section": "Envío estándar en España peninsular",
+            "content": "## Envío estándar en España peninsular\n\nEl envío estándar a España peninsular tarda de 2 a 4 días laborables y cuesta 3,99 €. Es gratuito cuando el importe de los artículos de un mismo vendedor alcanza 39 €. Si un pedido incluye artículos de varios vendedores, cada vendedor envía su propio paquete y el umbral de 39 € se calcula por separado para cada uno.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.220265,
+            "similarity": 0.779735
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:04",
+            "corpusVersion": "lab-ae3817b7bdcf",
+            "documentId": "04-envios-vigente",
+            "ordinal": 4,
+            "title": "Política de envíos (vigente desde el 1 de marzo de 2026)",
+            "section": "Ventajas de Zocomar Plus en el envío",
+            "content": "## Ventajas de Zocomar Plus en el envío\n\nLos miembros de Zocomar Plus tienen envío estándar gratuito sin importe mínimo en España peninsular y en Portugal continental, y en Baleares a partir de 29 € por vendedor. El envío exprés les cuesta 2,99 € por paquete.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.268985,
+            "similarity": 0.731015
+          }
+        ],
+        "discarded": [
+          {
+            "chunkId": "lab-ae3817b7bdcf:05-envios-2025-sustituida:01",
+            "attempt": 1,
+            "rerankScore": 0.1,
+            "reason": "Documento sustituido: el umbral de 29 € ya no está vigente."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:01",
+            "attempt": 1,
+            "rerankScore": 0.05,
+            "reason": "Trata del envío exprés, no del estándar."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:03",
+            "attempt": 1,
+            "rerankScore": 0.05,
+            "reason": "Condiciones de Portugal continental, no de la península."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:02",
+            "attempt": 1,
+            "rerankScore": 0.05,
+            "reason": "Condiciones de Baleares, no de la península."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:05-envios-2025-sustituida:00",
+            "attempt": 1,
+            "rerankScore": 0.05,
+            "reason": "Aviso de que la política de 2025 está sustituida y no debe usarse."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:05-envios-2025-sustituida:03",
+            "attempt": 1,
+            "rerankScore": 0,
+            "reason": "Condiciones antiguas de Baleares y Portugal; no aplica a la península ni es vigente."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:05-envios-2025-sustituida:02",
+            "attempt": 1,
+            "rerankScore": 0,
+            "reason": "Envío exprés de 2025, sustituido y fuera de la pregunta."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:12-promociones-y-cupones:00",
+            "attempt": 1,
+            "rerankScore": 0,
+            "reason": "Cupón de bienvenida sin relación con el umbral de envío gratuito."
+          }
+        ],
+        "iterations": [
+          {
+            "attempt": 1,
+            "query": "¿A partir de qué importe es gratis el envío estándar a la península?",
+            "retrievedIds": [
+              {
+                "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:00",
+                "cosineDistance": 0.220265,
+                "similarity": 0.779735
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:05-envios-2025-sustituida:01",
+                "cosineDistance": 0.223517,
+                "similarity": 0.776483
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:05-envios-2025-sustituida:03",
+                "cosineDistance": 0.256357,
+                "similarity": 0.743643
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:04",
+                "cosineDistance": 0.268985,
+                "similarity": 0.731015
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:01",
+                "cosineDistance": 0.281687,
+                "similarity": 0.718313
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:03",
+                "cosineDistance": 0.28739,
+                "similarity": 0.71261
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:05-envios-2025-sustituida:02",
+                "cosineDistance": 0.297854,
+                "similarity": 0.702146
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:02",
+                "cosineDistance": 0.302114,
+                "similarity": 0.697886
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:05-envios-2025-sustituida:00",
+                "cosineDistance": 0.313882,
+                "similarity": 0.686118
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:12-promociones-y-cupones:00",
+                "cosineDistance": 0.328592,
+                "similarity": 0.671408
+              }
+            ],
+            "reranked": [
+              {
+                "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:00",
+                "rerankScore": 1,
+                "reason": "Política vigente: envío estándar a la península gratis cuando los artículos de un mismo vendedor alcanzan 39 €, calculado por vendedor."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:04",
+                "rerankScore": 0.55,
+                "reason": "Vigente: miembros de Zocomar Plus tienen envío estándar gratuito sin mínimo en la península; matiza para ese tipo de cliente."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:05-envios-2025-sustituida:01",
+                "rerankScore": 0.1,
+                "reason": "Documento sustituido: el umbral de 29 € ya no está vigente."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:01",
+                "rerankScore": 0.05,
+                "reason": "Trata del envío exprés, no del estándar."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:03",
+                "rerankScore": 0.05,
+                "reason": "Condiciones de Portugal continental, no de la península."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:02",
+                "rerankScore": 0.05,
+                "reason": "Condiciones de Baleares, no de la península."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:05-envios-2025-sustituida:00",
+                "rerankScore": 0.05,
+                "reason": "Aviso de que la política de 2025 está sustituida y no debe usarse."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:05-envios-2025-sustituida:03",
+                "rerankScore": 0,
+                "reason": "Condiciones antiguas de Baleares y Portugal; no aplica a la península ni es vigente."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:05-envios-2025-sustituida:02",
+                "rerankScore": 0,
+                "reason": "Envío exprés de 2025, sustituido y fuera de la pregunta."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:12-promociones-y-cupones:00",
+                "rerankScore": 0,
+                "reason": "Cupón de bienvenida sin relación con el umbral de envío gratuito."
+              }
+            ],
+            "assessment": {
+              "status": "sufficient",
+              "coverageScore": 1,
+              "maxChunkRelevance": 1,
+              "reason": "El fragmento vigente indica que el envío estándar a la península es gratis desde 39 € por vendedor; la política de 2025 está sustituida y se descarta.",
+              "gaps": [],
+              "usefulIds": [
+                "lab-ae3817b7bdcf:04-envios-vigente:00",
+                "lab-ae3817b7bdcf:04-envios-vigente:04"
+              ]
+            },
+            "route": "answer"
+          }
+        ],
+        "answer": "El envío estándar a la península es gratuito cuando el importe de los artículos de un mismo vendedor alcanza 39 € [cite:lab-ae3817b7bdcf:04-envios-vigente:00]. Por debajo de ese importe, cuesta 3,99 € [cite:lab-ae3817b7bdcf:04-envios-vigente:00].\n\nConviene tener en cuenta dos matices:\n\n- Si el pedido incluye artículos de varios vendedores, cada uno envía su propio paquete y el umbral de 39 € se calcula por separado para cada vendedor [cite:lab-ae3817b7bdcf:04-envios-vigente:00].\n- Los miembros de Zocomar Plus tienen envío estándar gratuito en la península sin importe mínimo [cite:lab-ae3817b7bdcf:04-envios-vigente:04].",
+        "citations": [
+          "lab-ae3817b7bdcf:04-envios-vigente:00",
+          "lab-ae3817b7bdcf:04-envios-vigente:04"
+        ],
+        "latencyMs": 7934
+      },
+      "manualReview": "pending"
+    },
+    {
+      "id": 4,
+      "question": "Soy de Zocomar Plus y vivo en Mallorca. ¿Pago envío en un pedido de 35 € de un solo vendedor y lo puedo pedir exprés?",
+      "answerable": true,
+      "expectedDocuments": ["04-envios-vigente"],
+      "expectedFacts": ["29 €", "no está disponible"],
+      "rag": {
+        "question": "Soy de Zocomar Plus y vivo en Mallorca. ¿Pago envío en un pedido de 35 € de un solo vendedor y lo puedo pedir exprés?",
+        "corpusVersion": "lab-ae3817b7bdcf",
+        "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+        "genModelId": "claude-sonnet-5-5",
+        "minSimilarity": 0.722598,
+        "maxCosineDistance": 0.27740200000000004,
+        "retrieved": [
+          {
+            "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:04",
+            "corpusVersion": "lab-ae3817b7bdcf",
+            "documentId": "04-envios-vigente",
+            "ordinal": 4,
+            "title": "Política de envíos (vigente desde el 1 de marzo de 2026)",
+            "section": "Ventajas de Zocomar Plus en el envío",
+            "content": "## Ventajas de Zocomar Plus en el envío\n\nLos miembros de Zocomar Plus tienen envío estándar gratuito sin importe mínimo en España peninsular y en Portugal continental, y en Baleares a partir de 29 € por vendedor. El envío exprés les cuesta 2,99 € por paquete.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.141819,
+            "similarity": 0.858181
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:09-zocomar-plus:01",
+            "corpusVersion": "lab-ae3817b7bdcf",
+            "documentId": "09-zocomar-plus",
+            "ordinal": 1,
+            "title": "Zocomar Plus",
+            "section": "Ventajas de la suscripción",
+            "content": "## Ventajas de la suscripción\n\nPlus incluye envío estándar gratuito en las condiciones de la política de envíos vigente, envío exprés a precio reducido, un plazo de devolución ampliado a 45 días en los artículos que siguen el plazo general y acceso anticipado de 24 horas a las ofertas destacadas.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.213055,
+            "similarity": 0.786945
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:00",
+            "corpusVersion": "lab-ae3817b7bdcf",
+            "documentId": "04-envios-vigente",
+            "ordinal": 0,
+            "title": "Política de envíos (vigente desde el 1 de marzo de 2026)",
+            "section": "Envío estándar en España peninsular",
+            "content": "## Envío estándar en España peninsular\n\nEl envío estándar a España peninsular tarda de 2 a 4 días laborables y cuesta 3,99 €. Es gratuito cuando el importe de los artículos de un mismo vendedor alcanza 39 €. Si un pedido incluye artículos de varios vendedores, cada vendedor envía su propio paquete y el umbral de 39 € se calcula por separado para cada uno.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.247362,
+            "similarity": 0.752638
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:01",
+            "corpusVersion": "lab-ae3817b7bdcf",
+            "documentId": "04-envios-vigente",
+            "ordinal": 1,
+            "title": "Política de envíos (vigente desde el 1 de marzo de 2026)",
+            "section": "Envío exprés",
+            "content": "## Envío exprés\n\nEl envío exprés entrega en 24 horas laborables los pedidos confirmados antes de las 14:00 en España peninsular. Cuesta 6,99 € por paquete y no está disponible para las Islas Baleares ni para Portugal. Solo pueden usarlo los artículos marcados como «Exprés disponible».",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.247611,
+            "similarity": 0.752389
+          }
+        ],
+        "selected": [
+          {
+            "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:04",
+            "corpusVersion": "lab-ae3817b7bdcf",
+            "documentId": "04-envios-vigente",
+            "ordinal": 4,
+            "title": "Política de envíos (vigente desde el 1 de marzo de 2026)",
+            "section": "Ventajas de Zocomar Plus en el envío",
+            "content": "## Ventajas de Zocomar Plus en el envío\n\nLos miembros de Zocomar Plus tienen envío estándar gratuito sin importe mínimo en España peninsular y en Portugal continental, y en Baleares a partir de 29 € por vendedor. El envío exprés les cuesta 2,99 € por paquete.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.141819,
+            "similarity": 0.858181
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:09-zocomar-plus:01",
+            "corpusVersion": "lab-ae3817b7bdcf",
+            "documentId": "09-zocomar-plus",
+            "ordinal": 1,
+            "title": "Zocomar Plus",
+            "section": "Ventajas de la suscripción",
+            "content": "## Ventajas de la suscripción\n\nPlus incluye envío estándar gratuito en las condiciones de la política de envíos vigente, envío exprés a precio reducido, un plazo de devolución ampliado a 45 días en los artículos que siguen el plazo general y acceso anticipado de 24 horas a las ofertas destacadas.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.213055,
+            "similarity": 0.786945
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:00",
+            "corpusVersion": "lab-ae3817b7bdcf",
+            "documentId": "04-envios-vigente",
+            "ordinal": 0,
+            "title": "Política de envíos (vigente desde el 1 de marzo de 2026)",
+            "section": "Envío estándar en España peninsular",
+            "content": "## Envío estándar en España peninsular\n\nEl envío estándar a España peninsular tarda de 2 a 4 días laborables y cuesta 3,99 €. Es gratuito cuando el importe de los artículos de un mismo vendedor alcanza 39 €. Si un pedido incluye artículos de varios vendedores, cada vendedor envía su propio paquete y el umbral de 39 € se calcula por separado para cada uno.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.247362,
+            "similarity": 0.752638
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:01",
+            "corpusVersion": "lab-ae3817b7bdcf",
+            "documentId": "04-envios-vigente",
+            "ordinal": 1,
+            "title": "Política de envíos (vigente desde el 1 de marzo de 2026)",
+            "section": "Envío exprés",
+            "content": "## Envío exprés\n\nEl envío exprés entrega en 24 horas laborables los pedidos confirmados antes de las 14:00 en España peninsular. Cuesta 6,99 € por paquete y no está disponible para las Islas Baleares ni para Portugal. Solo pueden usarlo los artículos marcados como «Exprés disponible».",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.247611,
+            "similarity": 0.752389
+          }
+        ],
+        "decision": "answer",
+        "generationCalled": true,
+        "retrievalCount": 1,
+        "answer": "**Envío estándar:** No pagas. Como miembro de Zocomar Plus, en Baleares el envío estándar es gratuito a partir de 29 € por vendedor [cite:lab-ae3817b7bdcf:04-envios-vigente:04], y tu pedido de 35 € de un solo vendedor supera ese umbral.\n\n**Envío exprés:** No, no lo puedes pedir. El envío exprés no está disponible para las Islas Baleares [cite:lab-ae3817b7bdcf:04-envios-vigente:01]. Aunque Plus reduce su precio a 2,99 € por paquete [cite:lab-ae3817b7bdcf:04-envios-vigente:04], esa tarifa no te serviría, porque el servicio no llega a Mallorca.",
+        "citations": [
+          "lab-ae3817b7bdcf:04-envios-vigente:04",
+          "lab-ae3817b7bdcf:04-envios-vigente:01"
+        ],
+        "latencyMs": 2889
+      },
+      "crag": {
+        "question": "Soy de Zocomar Plus y vivo en Mallorca. ¿Pago envío en un pedido de 35 € de un solo vendedor y lo puedo pedir exprés?",
+        "queries": [
+          "Soy de Zocomar Plus y vivo en Mallorca. ¿Pago envío en un pedido de 35 € de un solo vendedor y lo puedo pedir exprés?"
+        ],
+        "retrievalCount": 1,
+        "reformulationCount": 0,
+        "finalStatus": "sufficient",
+        "decision": "answer",
+        "generationCalled": true,
+        "visitedNodes": ["retrieve", "rerank", "assess", "answer"],
+        "retained": [
+          {
+            "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:04",
+            "corpusVersion": "lab-ae3817b7bdcf",
+            "documentId": "04-envios-vigente",
+            "ordinal": 4,
+            "title": "Política de envíos (vigente desde el 1 de marzo de 2026)",
+            "section": "Ventajas de Zocomar Plus en el envío",
+            "content": "## Ventajas de Zocomar Plus en el envío\n\nLos miembros de Zocomar Plus tienen envío estándar gratuito sin importe mínimo en España peninsular y en Portugal continental, y en Baleares a partir de 29 € por vendedor. El envío exprés les cuesta 2,99 € por paquete.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.141819,
+            "similarity": 0.858181
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:01",
+            "corpusVersion": "lab-ae3817b7bdcf",
+            "documentId": "04-envios-vigente",
+            "ordinal": 1,
+            "title": "Política de envíos (vigente desde el 1 de marzo de 2026)",
+            "section": "Envío exprés",
+            "content": "## Envío exprés\n\nEl envío exprés entrega en 24 horas laborables los pedidos confirmados antes de las 14:00 en España peninsular. Cuesta 6,99 € por paquete y no está disponible para las Islas Baleares ni para Portugal. Solo pueden usarlo los artículos marcados como «Exprés disponible».",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.247611,
+            "similarity": 0.752389
+          }
+        ],
+        "discarded": [
+          {
+            "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:02",
+            "attempt": 1,
+            "rerankScore": 0.45,
+            "reason": "Trae las condiciones generales de Baleares (59 € por vendedor), pero Plus tiene umbral propio; solo da contexto de plazos y coste."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:09-zocomar-plus:01",
+            "attempt": 1,
+            "rerankScore": 0.3,
+            "reason": "Menciona envío estándar gratis y exprés reducido en general, sin datos concretos para Baleares; remite a la política vigente."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:00",
+            "attempt": 1,
+            "rerankScore": 0.2,
+            "reason": "Trata la península y el umbral general de 39 €, no aplicable a Baleares ni a Plus."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:05-envios-2025-sustituida:02",
+            "attempt": 1,
+            "rerankScore": 0.05,
+            "reason": "Política de 2025 sustituida; su disponibilidad exprés en Baleares ya no vale."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:01-zocomar-que-es:00",
+            "attempt": 1,
+            "rerankScore": 0.05,
+            "reason": "Describe el modelo de marketplace sin datos sobre costes de envío."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:05-envios-2025-sustituida:01",
+            "attempt": 1,
+            "rerankScore": 0.05,
+            "reason": "Condiciones estándar de 2025 sustituidas, no vigentes."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:07-vendedores-planes-y-comisiones:04",
+            "attempt": 1,
+            "rerankScore": 0.05,
+            "reason": "Plazos de preparación del vendedor, no responde sobre coste ni disponibilidad."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:02-devoluciones:00",
+            "attempt": 1,
+            "rerankScore": 0,
+            "reason": "Trata devoluciones, no envíos."
+          }
+        ],
+        "iterations": [
+          {
+            "attempt": 1,
+            "query": "Soy de Zocomar Plus y vivo en Mallorca. ¿Pago envío en un pedido de 35 € de un solo vendedor y lo puedo pedir exprés?",
+            "retrievedIds": [
+              {
+                "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:04",
+                "cosineDistance": 0.141819,
+                "similarity": 0.858181
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:09-zocomar-plus:01",
+                "cosineDistance": 0.213055,
+                "similarity": 0.786945
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:00",
+                "cosineDistance": 0.247362,
+                "similarity": 0.752638
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:01",
+                "cosineDistance": 0.247611,
+                "similarity": 0.752389
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:05-envios-2025-sustituida:02",
+                "cosineDistance": 0.247757,
+                "similarity": 0.752243
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:02",
+                "cosineDistance": 0.248965,
+                "similarity": 0.751035
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:01-zocomar-que-es:00",
+                "cosineDistance": 0.252443,
+                "similarity": 0.747557
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:02-devoluciones:00",
+                "cosineDistance": 0.256462,
+                "similarity": 0.743538
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:05-envios-2025-sustituida:01",
+                "cosineDistance": 0.261826,
+                "similarity": 0.738174
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:07-vendedores-planes-y-comisiones:04",
+                "cosineDistance": 0.267368,
+                "similarity": 0.732632
+              }
+            ],
+            "reranked": [
+              {
+                "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:04",
+                "rerankScore": 0.95,
+                "reason": "Indica que Plus en Baleares tiene envío gratis desde 29 € por vendedor, por lo que 35 € de un vendedor sale gratis."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:01",
+                "rerankScore": 0.85,
+                "reason": "Establece que el envío exprés no está disponible para Baleares, lo que responde que no se puede pedir exprés."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:02",
+                "rerankScore": 0.45,
+                "reason": "Trae las condiciones generales de Baleares (59 € por vendedor), pero Plus tiene umbral propio; solo da contexto de plazos y coste."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:09-zocomar-plus:01",
+                "rerankScore": 0.3,
+                "reason": "Menciona envío estándar gratis y exprés reducido en general, sin datos concretos para Baleares; remite a la política vigente."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:00",
+                "rerankScore": 0.2,
+                "reason": "Trata la península y el umbral general de 39 €, no aplicable a Baleares ni a Plus."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:05-envios-2025-sustituida:02",
+                "rerankScore": 0.05,
+                "reason": "Política de 2025 sustituida; su disponibilidad exprés en Baleares ya no vale."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:01-zocomar-que-es:00",
+                "rerankScore": 0.05,
+                "reason": "Describe el modelo de marketplace sin datos sobre costes de envío."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:05-envios-2025-sustituida:01",
+                "rerankScore": 0.05,
+                "reason": "Condiciones estándar de 2025 sustituidas, no vigentes."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:07-vendedores-planes-y-comisiones:04",
+                "rerankScore": 0.05,
+                "reason": "Plazos de preparación del vendedor, no responde sobre coste ni disponibilidad."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:02-devoluciones:00",
+                "rerankScore": 0,
+                "reason": "Trata devoluciones, no envíos."
+              }
+            ],
+            "assessment": {
+              "status": "sufficient",
+              "coverageScore": 1,
+              "maxChunkRelevance": 0.95,
+              "reason": "La política vigente cubre ambas partes: Plus en Baleares tiene envío estándar gratis desde 29 € por vendedor (35 € lo supera) y el exprés no está disponible en Baleares.",
+              "gaps": [],
+              "usefulIds": [
+                "lab-ae3817b7bdcf:04-envios-vigente:04",
+                "lab-ae3817b7bdcf:04-envios-vigente:01"
+              ]
+            },
+            "route": "answer"
+          }
+        ],
+        "answer": "**Envío estándar:** No pagas envío. Como miembro de Zocomar Plus, en Baleares tienes envío estándar gratuito a partir de 29 € por vendedor [cite:lab-ae3817b7bdcf:04-envios-vigente:04], y tu pedido de 35 € de un solo vendedor supera ese mínimo.\n\n**Envío exprés:** No lo puedes pedir. El envío exprés no está disponible para las Islas Baleares [cite:lab-ae3817b7bdcf:04-envios-vigente:01]. Aunque a los miembros Plus el exprés les cuesta 2,99 € por paquete [cite:lab-ae3817b7bdcf:04-envios-vigente:04], esa tarifa no te serviría en Mallorca, porque el servicio exprés se limita a España peninsular [cite:lab-ae3817b7bdcf:04-envios-vigente:01].",
+        "citations": [
+          "lab-ae3817b7bdcf:04-envios-vigente:04",
+          "lab-ae3817b7bdcf:04-envios-vigente:01"
+        ],
+        "latencyMs": 9015
+      },
+      "manualReview": "pending"
+    },
+    {
+      "id": 5,
+      "question": "Me habéis cobrado dos veces el mismo pedido, ¿qué hago?",
+      "answerable": true,
+      "expectedDocuments": ["06-pagos-y-reembolsos"],
+      "expectedFacts": ["7 días", "48 horas hábiles"],
+      "rag": {
+        "question": "Me habéis cobrado dos veces el mismo pedido, ¿qué hago?",
+        "corpusVersion": "lab-ae3817b7bdcf",
+        "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+        "genModelId": "claude-sonnet-5-5",
+        "minSimilarity": 0.722598,
+        "maxCosineDistance": 0.27740200000000004,
+        "retrieved": [
+          {
+            "chunkId": "lab-ae3817b7bdcf:06-pagos-y-reembolsos:03",
+            "corpusVersion": "lab-ae3817b7bdcf",
+            "documentId": "06-pagos-y-reembolsos",
+            "ordinal": 3,
+            "title": "Pagos y reembolsos",
+            "section": "Cargos duplicados y retenciones",
+            "content": "## Cargos duplicados y retenciones\n\nAl confirmar un pedido, el banco puede mostrar una retención temporal además del cargo definitivo. Las retenciones de pedidos cancelados o modificados se liberan solas en un máximo de 7 días naturales. Si aparecen dos cargos definitivos por el mismo pedido, Zocomar devuelve el cargo duplicado en 48 horas hábiles desde que el cliente lo comunica por el chat de atención al cliente.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.217465,
+            "similarity": 0.782535
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:06-pagos-y-reembolsos:02",
+            "corpusVersion": "lab-ae3817b7bdcf",
+            "documentId": "06-pagos-y-reembolsos",
+            "ordinal": 2,
+            "title": "Pagos y reembolsos",
+            "section": "Plazos de abono de los reembolsos",
+            "content": "## Plazos de abono de los reembolsos\n\nUna vez ordenado el reembolso, el abono tarda 5 días hábiles en tarjeta, 2 días hábiles en Bizum y 24 horas en PayPal. El reembolso en saldo Zocomar es inmediato y puede elegirse en lugar del método original. En los pedidos pagados con ZocoPlazos se cancelan las cuotas pendientes y se devuelven a la tarjeta las ya pagadas.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.340871,
+            "similarity": 0.659129
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:06-pagos-y-reembolsos:01",
+            "corpusVersion": "lab-ae3817b7bdcf",
+            "documentId": "06-pagos-y-reembolsos",
+            "ordinal": 1,
+            "title": "Pagos y reembolsos",
+            "section": "ZocoPlazos: pago en tres cuotas",
+            "content": "## ZocoPlazos: pago en tres cuotas\n\nZocoPlazos permite pagar en 3 cuotas mensuales sin intereses los pedidos de entre 90 € y 1.500 €. La primera cuota se cobra al confirmar el pedido. Solo está disponible con tarjeta y exige que la tarjeta caduque después de la última cuota.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.345986,
+            "similarity": 0.654014
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:02-devoluciones:05",
+            "corpusVersion": "lab-ae3817b7bdcf",
+            "documentId": "02-devoluciones",
+            "ordinal": 5,
+            "title": "Política de devoluciones",
+            "section": "Gastos de envío del pedido original",
+            "content": "## Gastos de envío del pedido original\n\nSi se devuelve el pedido completo dentro del plazo, se reembolsan también los gastos de envío estándar pagados. Los suplementos del envío exprés no se reembolsan, salvo que el artículo fuera defectuoso o erróneo. En las devoluciones parciales no se reembolsan gastos de envío.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.346011,
+            "similarity": 0.653989
+          }
+        ],
+        "selected": [
+          {
+            "chunkId": "lab-ae3817b7bdcf:06-pagos-y-reembolsos:03",
+            "corpusVersion": "lab-ae3817b7bdcf",
+            "documentId": "06-pagos-y-reembolsos",
+            "ordinal": 3,
+            "title": "Pagos y reembolsos",
+            "section": "Cargos duplicados y retenciones",
+            "content": "## Cargos duplicados y retenciones\n\nAl confirmar un pedido, el banco puede mostrar una retención temporal además del cargo definitivo. Las retenciones de pedidos cancelados o modificados se liberan solas en un máximo de 7 días naturales. Si aparecen dos cargos definitivos por el mismo pedido, Zocomar devuelve el cargo duplicado en 48 horas hábiles desde que el cliente lo comunica por el chat de atención al cliente.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.217465,
+            "similarity": 0.782535
+          }
+        ],
+        "decision": "answer",
+        "generationCalled": true,
+        "retrievalCount": 1,
+        "answer": "Lo primero es comprobar si se trata de un cargo duplicado real o de una retención temporal. Al confirmar un pedido, el banco puede mostrar una retención temporal además del cargo definitivo, y las retenciones de pedidos cancelados o modificados se liberan solas en un máximo de 7 días naturales [cite:lab-ae3817b7bdcf:06-pagos-y-reembolsos:03].\n\nSi en tu banco aparecen dos cargos definitivos por el mismo pedido, comunícalo por el chat de atención al cliente. Zocomar devuelve el cargo duplicado en 48 horas hábiles desde que lo comunicas [cite:lab-ae3817b7bdcf:06-pagos-y-reembolsos:03].\n\nLos datos suministrados no indican cómo distinguir en el extracto bancario una retención de un cargo definitivo, ni qué información o documentación hay que aportar en el chat; eso no puedo confirmártelo.",
+        "citations": ["lab-ae3817b7bdcf:06-pagos-y-reembolsos:03"],
+        "latencyMs": 3074
+      },
+      "crag": {
+        "error": "El juez de CRAG no devolvió cada fragmento exactamente una vez."
+      },
+      "manualReview": "pending"
+    },
+    {
+      "id": 6,
+      "question": "¿Qué descuento tienen los estudiantes universitarios en Zocomar?",
+      "answerable": false,
+      "expectedDocuments": [],
+      "expectedFacts": ["Rechazo: no existe un descuento para estudiantes."],
+      "rag": {
+        "question": "¿Qué descuento tienen los estudiantes universitarios en Zocomar?",
+        "corpusVersion": "lab-ae3817b7bdcf",
+        "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+        "genModelId": "claude-sonnet-5-5",
+        "minSimilarity": 0.722598,
+        "maxCosineDistance": 0.27740200000000004,
+        "retrieved": [
+          {
+            "chunkId": "lab-ae3817b7bdcf:09-zocomar-plus:00",
+            "corpusVersion": "lab-ae3817b7bdcf",
+            "documentId": "09-zocomar-plus",
+            "ordinal": 0,
+            "title": "Zocomar Plus",
+            "section": "Precio y prueba gratuita",
+            "content": "## Precio y prueba gratuita\n\nZocomar Plus cuesta 4,99 € al mes o 49 € al año. Cada cliente puede disfrutar una sola vez de una prueba gratuita de 30 días. La cuota se cobra al terminar la prueba si no se cancela antes.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.275886,
+            "similarity": 0.724114
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:12-promociones-y-cupones:02",
+            "corpusVersion": "lab-ae3817b7bdcf",
+            "documentId": "12-promociones-y-cupones",
+            "ordinal": 2,
+            "title": "Promociones, cupones y garantía de precio",
+            "section": "Garantía de precio",
+            "content": "## Garantía de precio\n\nSi el precio de un artículo vendido y enviado por Zocomar baja en los 7 días siguientes a la compra, el cliente puede solicitar la diferencia como saldo Zocomar desde «Mis pedidos». No se aplica a los artículos de otros vendedores ni a las ofertas flash.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.289234,
+            "similarity": 0.710766
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:11-atencion-al-cliente:00",
+            "corpusVersion": "lab-ae3817b7bdcf",
+            "documentId": "11-atencion-al-cliente",
+            "ordinal": 0,
+            "title": "Atención al cliente",
+            "section": "Canales y horarios",
+            "content": "## Canales y horarios\n\nEl chat de la aplicación atiende todos los días de 8:00 a 22:00. El teléfono gratuito, que aparece en la sección «Ayuda» de la aplicación, atiende de lunes a viernes de 9:00 a 19:00. Zocomar no ofrece atención por correo electrónico ni por redes sociales.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.307306,
+            "similarity": 0.692694
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:01-zocomar-que-es:03",
+            "corpusVersion": "lab-ae3817b7bdcf",
+            "documentId": "01-zocomar-que-es",
+            "ordinal": 3,
+            "title": "Qué es Zocomar y cómo funciona el marketplace",
+            "section": "Cuenta de cliente",
+            "content": "## Cuenta de cliente\n\nPara comprar hace falta una cuenta verificada con correo electrónico y teléfono móvil. Los menores de 18 años no pueden abrir una cuenta. Desde «Mis pedidos» se consultan los pedidos, se inician devoluciones y se abren disputas.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.320836,
+            "similarity": 0.679164
+          }
+        ],
+        "selected": [
+          {
+            "chunkId": "lab-ae3817b7bdcf:09-zocomar-plus:00",
+            "corpusVersion": "lab-ae3817b7bdcf",
+            "documentId": "09-zocomar-plus",
+            "ordinal": 0,
+            "title": "Zocomar Plus",
+            "section": "Precio y prueba gratuita",
+            "content": "## Precio y prueba gratuita\n\nZocomar Plus cuesta 4,99 € al mes o 49 € al año. Cada cliente puede disfrutar una sola vez de una prueba gratuita de 30 días. La cuota se cobra al terminar la prueba si no se cancela antes.",
+            "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+            "embeddingDimensions": 768,
+            "cosineDistance": 0.275886,
+            "similarity": 0.724114
+          }
+        ],
+        "decision": "answer",
+        "generationCalled": true,
+        "retrievalCount": 1,
+        "answer": "Los datos suministrados no mencionan ningún descuento para estudiantes universitarios en Zocomar, así que no puedo responder a esa parte de la pregunta.\n\nLo único que figura en los documentos sobre precios es que Zocomar Plus cuesta 4,99 € al mes o 49 € al año, y que cada cliente puede disfrutar una sola vez de una prueba gratuita de 30 días, cobrándose la cuota al terminarla si no se cancela antes [cite:lab-ae3817b7bdcf:09-zocomar-plus:00]. Ninguna de estas condiciones se refiere a tarifas para estudiantes.",
+        "citations": ["lab-ae3817b7bdcf:09-zocomar-plus:00"],
+        "latencyMs": 2388
+      },
+      "crag": {
+        "question": "¿Qué descuento tienen los estudiantes universitarios en Zocomar?",
+        "queries": [
+          "¿Qué descuento tienen los estudiantes universitarios en Zocomar?",
+          "Política de descuentos y tarifas especiales para estudiantes universitarios: porcentaje de descuento aplicable y condiciones de aplicación",
+          "Programa de beneficios para el colectivo estudiantil: bonificación porcentual sobre el precio de venta al público y requisito de acreditación mediante carné o matrícula universitaria vigente"
+        ],
+        "retrievalCount": 3,
+        "reformulationCount": 2,
+        "finalStatus": "insufficient",
+        "decision": "refuse",
+        "generationCalled": false,
+        "visitedNodes": [
+          "retrieve",
+          "rerank",
+          "assess",
+          "discard",
+          "reformulate",
+          "retrieve",
+          "rerank",
+          "assess",
+          "discard",
+          "reformulate",
+          "retrieve",
+          "rerank",
+          "assess",
+          "refuse"
+        ],
+        "retained": [],
+        "discarded": [
+          {
+            "chunkId": "lab-ae3817b7bdcf:12-promociones-y-cupones:02",
+            "attempt": 1,
+            "rerankScore": 0.1,
+            "reason": "Trata de la garantía de precio; no menciona descuentos para estudiantes."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:09-zocomar-plus:00",
+            "attempt": 1,
+            "rerankScore": 0.05,
+            "reason": "Precio y prueba gratuita de Plus; no hay tarifa ni descuento estudiantil."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:01-zocomar-que-es:03",
+            "attempt": 1,
+            "rerankScore": 0.02,
+            "reason": "Requisitos de cuenta; no habla de estudiantes ni descuentos."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:09-zocomar-plus:01",
+            "attempt": 1,
+            "rerankScore": 0.02,
+            "reason": "Ventajas de Plus; ningún descuento para universitarios."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:11-atencion-al-cliente:00",
+            "attempt": 1,
+            "rerankScore": 0,
+            "reason": "Canales de atención; sin relación con descuentos."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:01-zocomar-que-es:04",
+            "attempt": 1,
+            "rerankScore": 0,
+            "reason": "Indica que precios y stock se consultan en la app; no da ningún dato sobre descuentos."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:09-zocomar-plus:02",
+            "attempt": 1,
+            "rerankScore": 0,
+            "reason": "Cancelación y reembolso de la cuota; irrelevante."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:07-vendedores-planes-y-comisiones:00",
+            "attempt": 1,
+            "rerankScore": 0,
+            "reason": "Comisiones de vendedores; no afecta a descuentos de clientes."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:01-zocomar-que-es:01",
+            "attempt": 1,
+            "rerankScore": 0,
+            "reason": "Zonas de servicio; sin relación con descuentos."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:04",
+            "attempt": 1,
+            "rerankScore": 0,
+            "reason": "Ventajas de envío de Plus; no hay descuento estudiantil."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:12-promociones-y-cupones:00",
+            "attempt": 2,
+            "rerankScore": 0.1,
+            "reason": "Cupón de bienvenida para clientes nuevos, no un descuento específico para estudiantes universitarios."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:09-zocomar-plus:00",
+            "attempt": 2,
+            "rerankScore": 0.1,
+            "reason": "Precio de Zocomar Plus y prueba gratuita; no indica tarifa especial para estudiantes."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:02-devoluciones:01",
+            "attempt": 2,
+            "rerankScore": 0,
+            "reason": "Trata del estado de devolución de artículos; no menciona descuentos para estudiantes."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:12-promociones-y-cupones:02",
+            "attempt": 2,
+            "rerankScore": 0,
+            "reason": "Garantía de precio; sin relación con descuentos de estudiantes."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:05-envios-2025-sustituida:00",
+            "attempt": 2,
+            "rerankScore": 0,
+            "reason": "Documento de envíos sustituido y sin datos sobre estudiantes."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:12-promociones-y-cupones:03",
+            "attempt": 2,
+            "rerankScore": 0,
+            "reason": "Reglas de ofertas flash; no hay descuento para estudiantes."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:05-envios-2025-sustituida:03",
+            "attempt": 2,
+            "rerankScore": 0,
+            "reason": "Tarifas de envío de 2025 de un documento sustituido, sin relación con la pregunta."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:04",
+            "attempt": 2,
+            "rerankScore": 0,
+            "reason": "Ventajas de envío de Zocomar Plus; no menciona estudiantes."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:09-zocomar-plus:02",
+            "attempt": 2,
+            "rerankScore": 0,
+            "reason": "Cancelación y reembolso de la cuota de Plus; no trata descuentos de estudiantes."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:07-vendedores-planes-y-comisiones:00",
+            "attempt": 2,
+            "rerankScore": 0,
+            "reason": "Planes y comisiones para vendedores; irrelevante para descuentos a estudiantes."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:12-promociones-y-cupones:00",
+            "attempt": 3,
+            "rerankScore": 0.1,
+            "reason": "Describe el cupón de bienvenida para clientes nuevos, no un descuento para estudiantes universitarios."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:12-promociones-y-cupones:02",
+            "attempt": 3,
+            "rerankScore": 0.05,
+            "reason": "Trata la garantía de precio, sin relación con descuentos estudiantiles."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:12-promociones-y-cupones:03",
+            "attempt": 3,
+            "rerankScore": 0.05,
+            "reason": "Habla de ofertas flash, sin mención a estudiantes."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:09-zocomar-plus:01",
+            "attempt": 3,
+            "rerankScore": 0.05,
+            "reason": "Ventajas de Plus; no indica ningún beneficio para estudiantes."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:01-zocomar-que-es:04",
+            "attempt": 3,
+            "rerankScore": 0.05,
+            "reason": "Solo dice que precios y stock se consultan en la app; no aporta datos sobre descuentos."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:05-envios-2025-sustituida:00",
+            "attempt": 3,
+            "rerankScore": 0,
+            "reason": "Documento sustituido y sin relación con descuentos estudiantiles."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:07-vendedores-planes-y-comisiones:00",
+            "attempt": 3,
+            "rerankScore": 0,
+            "reason": "Planes y comisiones de vendedores; no tiene relación con la pregunta."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:06-pagos-y-reembolsos:01",
+            "attempt": 3,
+            "rerankScore": 0,
+            "reason": "Describe ZocoPlazos, sin relación con descuentos estudiantiles."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:04",
+            "attempt": 3,
+            "rerankScore": 0,
+            "reason": "Envío para miembros Plus; no menciona estudiantes."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:03-electronica-y-garantia:03",
+            "attempt": 3,
+            "rerankScore": 0,
+            "reason": "Garantía legal de productos; no tiene relación con la pregunta."
+          }
+        ],
+        "iterations": [
+          {
+            "attempt": 1,
+            "query": "¿Qué descuento tienen los estudiantes universitarios en Zocomar?",
+            "retrievedIds": [
+              {
+                "chunkId": "lab-ae3817b7bdcf:09-zocomar-plus:00",
+                "cosineDistance": 0.275886,
+                "similarity": 0.724114
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:12-promociones-y-cupones:02",
+                "cosineDistance": 0.289234,
+                "similarity": 0.710766
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:11-atencion-al-cliente:00",
+                "cosineDistance": 0.307306,
+                "similarity": 0.692694
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:01-zocomar-que-es:03",
+                "cosineDistance": 0.320836,
+                "similarity": 0.679164
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:01-zocomar-que-es:04",
+                "cosineDistance": 0.325672,
+                "similarity": 0.674328
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:09-zocomar-plus:01",
+                "cosineDistance": 0.327249,
+                "similarity": 0.672751
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:09-zocomar-plus:02",
+                "cosineDistance": 0.327337,
+                "similarity": 0.672663
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:07-vendedores-planes-y-comisiones:00",
+                "cosineDistance": 0.328127,
+                "similarity": 0.671873
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:01-zocomar-que-es:01",
+                "cosineDistance": 0.332519,
+                "similarity": 0.667481
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:04",
+                "cosineDistance": 0.338081,
+                "similarity": 0.661919
+              }
+            ],
+            "reranked": [
+              {
+                "chunkId": "lab-ae3817b7bdcf:12-promociones-y-cupones:02",
+                "rerankScore": 0.1,
+                "reason": "Trata de la garantía de precio; no menciona descuentos para estudiantes."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:09-zocomar-plus:00",
+                "rerankScore": 0.05,
+                "reason": "Precio y prueba gratuita de Plus; no hay tarifa ni descuento estudiantil."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:01-zocomar-que-es:03",
+                "rerankScore": 0.02,
+                "reason": "Requisitos de cuenta; no habla de estudiantes ni descuentos."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:09-zocomar-plus:01",
+                "rerankScore": 0.02,
+                "reason": "Ventajas de Plus; ningún descuento para universitarios."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:11-atencion-al-cliente:00",
+                "rerankScore": 0,
+                "reason": "Canales de atención; sin relación con descuentos."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:01-zocomar-que-es:04",
+                "rerankScore": 0,
+                "reason": "Indica que precios y stock se consultan en la app; no da ningún dato sobre descuentos."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:09-zocomar-plus:02",
+                "rerankScore": 0,
+                "reason": "Cancelación y reembolso de la cuota; irrelevante."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:07-vendedores-planes-y-comisiones:00",
+                "rerankScore": 0,
+                "reason": "Comisiones de vendedores; no afecta a descuentos de clientes."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:01-zocomar-que-es:01",
+                "rerankScore": 0,
+                "reason": "Zonas de servicio; sin relación con descuentos."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:04",
+                "rerankScore": 0,
+                "reason": "Ventajas de envío de Plus; no hay descuento estudiantil."
+              }
+            ],
+            "assessment": {
+              "status": "insufficient",
+              "coverageScore": 0,
+              "maxChunkRelevance": 0.1,
+              "reason": "Ningún fragmento menciona descuentos para estudiantes universitarios; solo hay información general de Plus, garantía de precio y otras políticas sin relación con lo preguntado.",
+              "gaps": [
+                "¿Existe algún descuento o tarifa especial para estudiantes universitarios en Zocomar y de cuánto es?",
+                "¿Qué requisitos o acreditación se exigen para acceder a ese descuento estudiantil, si existe?"
+              ],
+              "usefulIds": []
+            },
+            "route": "discard"
+          },
+          {
+            "attempt": 2,
+            "query": "Política de descuentos y tarifas especiales para estudiantes universitarios: porcentaje de descuento aplicable y condiciones de aplicación",
+            "retrievedIds": [
+              {
+                "chunkId": "lab-ae3817b7bdcf:02-devoluciones:01",
+                "cosineDistance": 0.375643,
+                "similarity": 0.624357
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:12-promociones-y-cupones:00",
+                "cosineDistance": 0.376754,
+                "similarity": 0.623246
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:12-promociones-y-cupones:02",
+                "cosineDistance": 0.376965,
+                "similarity": 0.623035
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:05-envios-2025-sustituida:00",
+                "cosineDistance": 0.378481,
+                "similarity": 0.621519
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:12-promociones-y-cupones:03",
+                "cosineDistance": 0.379589,
+                "similarity": 0.620411
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:05-envios-2025-sustituida:03",
+                "cosineDistance": 0.39629,
+                "similarity": 0.60371
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:04",
+                "cosineDistance": 0.403126,
+                "similarity": 0.596874
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:09-zocomar-plus:02",
+                "cosineDistance": 0.403129,
+                "similarity": 0.596871
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:07-vendedores-planes-y-comisiones:00",
+                "cosineDistance": 0.403318,
+                "similarity": 0.596682
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:09-zocomar-plus:00",
+                "cosineDistance": 0.403853,
+                "similarity": 0.596147
+              }
+            ],
+            "reranked": [
+              {
+                "chunkId": "lab-ae3817b7bdcf:12-promociones-y-cupones:00",
+                "rerankScore": 0.1,
+                "reason": "Cupón de bienvenida para clientes nuevos, no un descuento específico para estudiantes universitarios."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:09-zocomar-plus:00",
+                "rerankScore": 0.1,
+                "reason": "Precio de Zocomar Plus y prueba gratuita; no indica tarifa especial para estudiantes."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:02-devoluciones:01",
+                "rerankScore": 0,
+                "reason": "Trata del estado de devolución de artículos; no menciona descuentos para estudiantes."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:12-promociones-y-cupones:02",
+                "rerankScore": 0,
+                "reason": "Garantía de precio; sin relación con descuentos de estudiantes."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:05-envios-2025-sustituida:00",
+                "rerankScore": 0,
+                "reason": "Documento de envíos sustituido y sin datos sobre estudiantes."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:12-promociones-y-cupones:03",
+                "rerankScore": 0,
+                "reason": "Reglas de ofertas flash; no hay descuento para estudiantes."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:05-envios-2025-sustituida:03",
+                "rerankScore": 0,
+                "reason": "Tarifas de envío de 2025 de un documento sustituido, sin relación con la pregunta."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:04",
+                "rerankScore": 0,
+                "reason": "Ventajas de envío de Zocomar Plus; no menciona estudiantes."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:09-zocomar-plus:02",
+                "rerankScore": 0,
+                "reason": "Cancelación y reembolso de la cuota de Plus; no trata descuentos de estudiantes."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:07-vendedores-planes-y-comisiones:00",
+                "rerankScore": 0,
+                "reason": "Planes y comisiones para vendedores; irrelevante para descuentos a estudiantes."
+              }
+            ],
+            "assessment": {
+              "status": "insufficient",
+              "coverageScore": 0,
+              "maxChunkRelevance": 0.1,
+              "reason": "Ningún fragmento menciona descuentos para estudiantes universitarios; solo hay promociones generales sin relación con la pregunta.",
+              "gaps": [
+                "¿Existe algún descuento o tarifa especial para estudiantes universitarios y qué porcentaje es?",
+                "¿Qué condiciones o acreditación se exigen para aplicar el descuento de estudiante?"
+              ],
+              "usefulIds": []
+            },
+            "route": "discard"
+          },
+          {
+            "attempt": 3,
+            "query": "Programa de beneficios para el colectivo estudiantil: bonificación porcentual sobre el precio de venta al público y requisito de acreditación mediante carné o matrícula universitaria vigente",
+            "retrievedIds": [
+              {
+                "chunkId": "lab-ae3817b7bdcf:12-promociones-y-cupones:02",
+                "cosineDistance": 0.40734,
+                "similarity": 0.59266
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:12-promociones-y-cupones:00",
+                "cosineDistance": 0.41264,
+                "similarity": 0.58736
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:05-envios-2025-sustituida:00",
+                "cosineDistance": 0.413995,
+                "similarity": 0.586005
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:12-promociones-y-cupones:03",
+                "cosineDistance": 0.421816,
+                "similarity": 0.578184
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:07-vendedores-planes-y-comisiones:00",
+                "cosineDistance": 0.43363,
+                "similarity": 0.56637
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:09-zocomar-plus:01",
+                "cosineDistance": 0.442654,
+                "similarity": 0.557346
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:01-zocomar-que-es:04",
+                "cosineDistance": 0.44451,
+                "similarity": 0.55549
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:06-pagos-y-reembolsos:01",
+                "cosineDistance": 0.447177,
+                "similarity": 0.552823
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:04",
+                "cosineDistance": 0.447342,
+                "similarity": 0.552658
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:03-electronica-y-garantia:03",
+                "cosineDistance": 0.44767,
+                "similarity": 0.55233
+              }
+            ],
+            "reranked": [
+              {
+                "chunkId": "lab-ae3817b7bdcf:12-promociones-y-cupones:00",
+                "rerankScore": 0.1,
+                "reason": "Describe el cupón de bienvenida para clientes nuevos, no un descuento para estudiantes universitarios."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:12-promociones-y-cupones:02",
+                "rerankScore": 0.05,
+                "reason": "Trata la garantía de precio, sin relación con descuentos estudiantiles."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:12-promociones-y-cupones:03",
+                "rerankScore": 0.05,
+                "reason": "Habla de ofertas flash, sin mención a estudiantes."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:09-zocomar-plus:01",
+                "rerankScore": 0.05,
+                "reason": "Ventajas de Plus; no indica ningún beneficio para estudiantes."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:01-zocomar-que-es:04",
+                "rerankScore": 0.05,
+                "reason": "Solo dice que precios y stock se consultan en la app; no aporta datos sobre descuentos."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:05-envios-2025-sustituida:00",
+                "rerankScore": 0,
+                "reason": "Documento sustituido y sin relación con descuentos estudiantiles."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:07-vendedores-planes-y-comisiones:00",
+                "rerankScore": 0,
+                "reason": "Planes y comisiones de vendedores; no tiene relación con la pregunta."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:06-pagos-y-reembolsos:01",
+                "rerankScore": 0,
+                "reason": "Describe ZocoPlazos, sin relación con descuentos estudiantiles."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:04",
+                "rerankScore": 0,
+                "reason": "Envío para miembros Plus; no menciona estudiantes."
+              },
+              {
+                "chunkId": "lab-ae3817b7bdcf:03-electronica-y-garantia:03",
+                "rerankScore": 0,
+                "reason": "Garantía legal de productos; no tiene relación con la pregunta."
+              }
+            ],
+            "assessment": {
+              "status": "insufficient",
+              "coverageScore": 0,
+              "maxChunkRelevance": 0.1,
+              "reason": "Ningún fragmento menciona un programa o descuento para estudiantes universitarios; solo hay promociones generales sin relación con la pregunta.",
+              "gaps": [
+                "Si Zocomar ofrece algún descuento o programa de beneficios para estudiantes universitarios",
+                "Cuál es el porcentaje de descuento y cómo se acredita la condición de estudiante"
+              ],
+              "usefulIds": []
+            },
+            "route": "refuse"
+          }
+        ],
+        "answer": "No consta evidencia suficiente en la documentación de Zocomar tras agotar el límite de búsquedas y reformulaciones. No se llama al generador.",
+        "citations": [],
+        "latencyMs": 23441
+      },
+      "manualReview": "pending"
+    }
+  ],
+  "operations": [
+    {
+      "kind": "embedding",
+      "model": "openrouter:google/gemini-embedding-2:768",
+      "inputTokens": 28,
+      "outputTokens": null
+    },
+    {
+      "kind": "generation",
+      "model": "claude-sonnet-5-5",
+      "inputTokens": 1308,
+      "outputTokens": 465
+    },
+    {
+      "kind": "embedding",
+      "model": "openrouter:google/gemini-embedding-2:768",
+      "inputTokens": 28,
+      "outputTokens": null
+    },
+    {
+      "kind": "evaluation",
+      "model": "claude-sonnet-5-5",
+      "inputTokens": 3346,
+      "outputTokens": 893
+    },
+    {
+      "kind": "generation",
+      "model": "claude-sonnet-5-5",
+      "inputTokens": 803,
+      "outputTokens": 468
+    },
+    {
+      "kind": "embedding",
+      "model": "openrouter:google/gemini-embedding-2:768",
+      "inputTokens": 29,
+      "outputTokens": null
+    },
+    {
+      "kind": "generation",
+      "model": "claude-sonnet-5-5",
+      "inputTokens": 1318,
+      "outputTokens": 679
+    },
+    {
+      "kind": "embedding",
+      "model": "openrouter:google/gemini-embedding-2:768",
+      "inputTokens": 29,
+      "outputTokens": null
+    },
+    {
+      "kind": "evaluation",
+      "model": "claude-sonnet-5-5",
+      "inputTokens": 3359,
+      "outputTokens": 803
+    },
+    {
+      "kind": "embedding",
+      "model": "openrouter:google/gemini-embedding-2:768",
+      "inputTokens": 15,
+      "outputTokens": null
+    },
+    {
+      "kind": "generation",
+      "model": "claude-sonnet-5-5",
+      "inputTokens": 1221,
+      "outputTokens": 406
+    },
+    {
+      "kind": "embedding",
+      "model": "openrouter:google/gemini-embedding-2:768",
+      "inputTokens": 15,
+      "outputTokens": null
+    },
+    {
+      "kind": "evaluation",
+      "model": "claude-sonnet-5-5",
+      "inputTokens": 2988,
+      "outputTokens": 852
+    },
+    {
+      "kind": "generation",
+      "model": "claude-sonnet-5-5",
+      "inputTokens": 783,
+      "outputTokens": 296
+    },
+    {
+      "kind": "embedding",
+      "model": "openrouter:google/gemini-embedding-2:768",
+      "inputTokens": 33,
+      "outputTokens": null
+    },
+    {
+      "kind": "generation",
+      "model": "claude-sonnet-5-5",
+      "inputTokens": 1294,
+      "outputTokens": 269
+    },
+    {
+      "kind": "embedding",
+      "model": "openrouter:google/gemini-embedding-2:768",
+      "inputTokens": 33,
+      "outputTokens": null
+    },
+    {
+      "kind": "evaluation",
+      "model": "claude-sonnet-5-5",
+      "inputTokens": 3201,
+      "outputTokens": 932
+    },
+    {
+      "kind": "generation",
+      "model": "claude-sonnet-5-5",
+      "inputTokens": 786,
+      "outputTokens": 315
+    },
+    {
+      "kind": "embedding",
+      "model": "openrouter:google/gemini-embedding-2:768",
+      "inputTokens": 15,
+      "outputTokens": null
+    },
+    {
+      "kind": "generation",
+      "model": "claude-sonnet-5-5",
+      "inputTokens": 548,
+      "outputTokens": 333
+    },
+    {
+      "kind": "embedding",
+      "model": "openrouter:google/gemini-embedding-2:768",
+      "inputTokens": 15,
+      "outputTokens": null
+    },
+    {
+      "kind": "evaluation",
+      "model": "claude-sonnet-5-5",
+      "inputTokens": 3274,
+      "outputTokens": 309
+    },
+    {
+      "kind": "embedding",
+      "model": "openrouter:google/gemini-embedding-2:768",
+      "inputTokens": 12,
+      "outputTokens": null
+    },
+    {
+      "kind": "generation",
+      "model": "claude-sonnet-5-5",
+      "inputTokens": 473,
+      "outputTokens": 222
+    },
+    {
+      "kind": "embedding",
+      "model": "openrouter:google/gemini-embedding-2:768",
+      "inputTokens": 12,
+      "outputTokens": null
+    },
+    {
+      "kind": "evaluation",
+      "model": "claude-sonnet-5-5",
+      "inputTokens": 3057,
+      "outputTokens": 897
+    },
+    {
+      "kind": "reformulation",
+      "model": "claude-sonnet-5-5",
+      "inputTokens": 547,
+      "outputTokens": 59
+    },
+    {
+      "kind": "embedding",
+      "model": "openrouter:google/gemini-embedding-2:768",
+      "inputTokens": 18,
+      "outputTokens": null
+    },
+    {
+      "kind": "evaluation",
+      "model": "claude-sonnet-5-5",
+      "inputTokens": 3082,
+      "outputTokens": 944
+    },
+    {
+      "kind": "reformulation",
+      "model": "claude-sonnet-5-5",
+      "inputTokens": 559,
+      "outputTokens": 75
+    },
+    {
+      "kind": "embedding",
+      "model": "openrouter:google/gemini-embedding-2:768",
+      "inputTokens": 31,
+      "outputTokens": null
+    },
+    {
+      "kind": "evaluation",
+      "model": "claude-sonnet-5-5",
+      "inputTokens": 3035,
+      "outputTokens": 914
+    }
+  ],
+  "budget": {
+    "limitUsd": 5,
+    "reservedUsd": 0.5207666000000001,
+    "calls": 40,
+    "actualProviderUsd": null
+  }
+}

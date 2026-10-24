@@ -3,6 +3,8 @@
 // e índice HNSW vector_cosine_ops) y su doble en memoria con idéntico contrato para pruebas sin Docker.
 // Lectura del esquema SQL.
 import { readFileSync } from "node:fs";
+// La preparación del esquema también se puede detener y observar en el Aula.
+import type { AulaObserver } from "@thepower-rag/contracts";
 // Rutas de archivos.
 import path from "node:path";
 // Configuración del índice HNSW y dimensión fija de 768.
@@ -78,6 +80,9 @@ export interface LabVectorStore {
   rebuildFromEmptyIndex(input: {
     corpus: LabPreparedCorpus;
     embedder: LabEmbeddingProvider;
+    observer?: AulaObserver;
+    beforeWrite?: () => Promise<void>;
+    signal?: AbortSignal;
   }): Promise<LabRebuildReceipt>;
   // Busca los k vecinos más próximos usando distancia coseno (<=>) sobre vector(768).
   queryNearest(input: {
@@ -96,6 +101,35 @@ export function formatPgVectorLiteral(vector: readonly number[]): string {
   assertVector768(vector, "formatPgVectorLiteral");
   // Literal de texto para `$1::vector(768)`.
   return `[${vector.map((value) => Number(value.toFixed(6))).join(",")}]`;
+}
+
+// Consulta compartida: el inspector muestra exactamente el SQL y los parámetros que ejecuta el almacén.
+export function labNearestQuery(input: {
+  queryVector: readonly number[];
+  corpusVersion: string;
+  embeddingModel: string;
+  topK: number;
+}) {
+  const vectorLiteral = formatPgVectorLiteral(input.queryVector);
+  return {
+    sql: `SELECT
+        chunk_id,
+        corpus_version,
+        document_id,
+        ordinal,
+        title,
+        section,
+        content,
+        embedding_model,
+        embedding_dimensions,
+        (embedding <=> $1::vector(768)) AS cosine_distance,
+        (1 - (embedding <=> $1::vector(768))) AS similarity
+      FROM lab_chunks
+      WHERE corpus_version = $2 AND embedding_model = $3
+      ORDER BY embedding <=> $1::vector(768) ASC
+      LIMIT $4`,
+    parameters: [vectorLiteral, input.corpusVersion, input.embeddingModel, input.topK],
+  };
 }
 
 // Separa `lab/schema.sql` en sentencias ejecutables ignorando comentarios `--` de línea completa.
@@ -133,6 +167,9 @@ export class PgVectorDatabaseStore implements LabVectorStore {
   public async rebuildFromEmptyIndex(input: {
     corpus: LabPreparedCorpus;
     embedder: LabEmbeddingProvider;
+    observer?: AulaObserver;
+    beforeWrite?: () => Promise<void>;
+    signal?: AbortSignal;
   }): Promise<LabRebuildReceipt> {
     // Verifica que el proveedor de embeddings sea de 768 dimensiones.
     if (input.embedder.dimensions !== LAB_EMBEDDING_DIMENSIONS) {
@@ -141,10 +178,12 @@ export class PgVectorDatabaseStore implements LabVectorStore {
     }
     // Lee y aplica las sentencias de `lab/schema.sql` (CREATE EXTENSION vector, tablas e índice HNSW).
     const statements = parseLabSchemaStatements(readFileSync(this.schemaPath, "utf8"));
+    await input.observer?.before("schema", { statements });
     for (const statement of statements) {
       // Aplica cada sentencia de preparación del esquema mediante la conexión inyectada.
       await this.sql.query(statement);
     }
+    await input.observer?.after("schema", { statementsApplied: statements.length });
     // Calcula y valida todo antes de tocar el índice anterior: un fallo de API lo conserva.
     const vectors = await input.embedder.embed(
       input.corpus.chunks.map((chunk) => `${chunk.title} ${chunk.section}\n${chunk.content}`),
@@ -156,7 +195,10 @@ export class PgVectorDatabaseStore implements LabVectorStore {
     }
     // Valida las 768 componentes finitas de cada vector antes de entrar en la transacción.
     for (const vector of vectors) assertVector768(vector, "reconstrucción PostgreSQL");
-    // El ejecutor del CLI mantiene una sola conexión; rollback conserva la versión anterior.
+    // La pausa docente ocurre antes de abrir la transacción.
+    await input.beforeWrite?.();
+    input.signal?.throwIfAborted();
+    // El ejecutor mantiene una conexión; no se pausa mientras hay bloqueos de escritura.
     await this.sql.query("BEGIN");
     try {
       // Vacía las tablas para garantizar reconstrucción desde índice vacío.
@@ -232,6 +274,7 @@ export class PgVectorDatabaseStore implements LabVectorStore {
         );
       }
       // Publica el índice completo solo después de comprobarlo en la misma transacción.
+      input.signal?.throwIfAborted();
       await this.sql.query("COMMIT");
       // Devuelve el recibo verificado.
       return {
@@ -259,7 +302,7 @@ export class PgVectorDatabaseStore implements LabVectorStore {
     topK: number;
   }): Promise<LabVectorHit[]> {
     // Valida que la consulta tenga exactamente 768 dimensiones.
-    const vectorLiteral = formatPgVectorLiteral(input.queryVector);
+    const statement = labNearestQuery(input);
     // Consulta parametrizada ordenando por menor distancia coseno (`embedding <=> $1::vector(768) ASC`).
     const rows = await this.sql.query<{
       chunk_id: string;
@@ -273,25 +316,7 @@ export class PgVectorDatabaseStore implements LabVectorStore {
       embedding_dimensions: number;
       cosine_distance: number;
       similarity: number;
-    }>(
-      `SELECT
-        chunk_id,
-        corpus_version,
-        document_id,
-        ordinal,
-        title,
-        section,
-        content,
-        embedding_model,
-        embedding_dimensions,
-        (embedding <=> $1::vector(768)) AS cosine_distance,
-        (1 - (embedding <=> $1::vector(768))) AS similarity
-      FROM lab_chunks
-      WHERE corpus_version = $2 AND embedding_model = $3
-      ORDER BY embedding <=> $1::vector(768) ASC
-      LIMIT $4`,
-      [vectorLiteral, input.corpusVersion, input.embeddingModel, input.topK],
-    );
+    }>(statement.sql, statement.parameters);
     // Convierte cada fila al contrato `LabVectorHit`.
     return rows.map((row) => ({
       chunkId: String(row.chunk_id),
@@ -342,6 +367,9 @@ export class InMemoryPgVectorStore implements LabVectorStore {
   public async rebuildFromEmptyIndex(input: {
     corpus: LabPreparedCorpus;
     embedder: LabEmbeddingProvider;
+    observer?: AulaObserver;
+    beforeWrite?: () => Promise<void>;
+    signal?: AbortSignal;
   }): Promise<LabRebuildReceipt> {
     // Exige 768 dimensiones exactas.
     if (input.embedder.dimensions !== LAB_EMBEDDING_DIMENSIONS) {

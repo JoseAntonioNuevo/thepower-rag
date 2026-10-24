@@ -1,0 +1,261 @@
+{
+  "backend": "postgresql-pgvector",
+  "generator": "claude-sonnet-5-5",
+  "generationProvider": "anthropic",
+  "embedding": "openrouter:google/gemini-embedding-2:768",
+  "dimensions": 768,
+  "profile": "1a324082f837cc242c0837fb961c59189add2f06701292ecb848901305878d52",
+  "result": {
+    "question": "Me compré unos cascos de botón hace 10 días, los he estrenado y no me convencen. ¿Los puedo devolver?",
+    "queries": [
+      "Me compré unos cascos de botón hace 10 días, los he estrenado y no me convencen. ¿Los puedo devolver?"
+    ],
+    "retrievalCount": 1,
+    "reformulationCount": 0,
+    "finalStatus": "sufficient",
+    "decision": "answer",
+    "generationCalled": true,
+    "visitedNodes": ["retrieve", "rerank", "assess", "answer"],
+    "retained": [
+      {
+        "chunkId": "lab-ae3817b7bdcf:03-electronica-y-garantia:01",
+        "corpusVersion": "lab-ae3817b7bdcf",
+        "documentId": "03-electronica-y-garantia",
+        "ordinal": 1,
+        "title": "Electrónica: devoluciones especiales y garantía",
+        "section": "Artículos excluidos por higiene",
+        "content": "## Artículos excluidos por higiene\n\nLos auriculares intraauditivos, los cepillos de dientes eléctricos, las afeitadoras y las depiladoras no admiten devolución por desistimiento una vez retirado su precinto higiénico. En ese caso solo pueden devolverse si presentan un defecto, a través de la garantía.",
+        "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+        "embeddingDimensions": 768,
+        "cosineDistance": 0.192341,
+        "similarity": 0.807659
+      },
+      {
+        "chunkId": "lab-ae3817b7bdcf:03-electronica-y-garantia:03",
+        "corpusVersion": "lab-ae3817b7bdcf",
+        "documentId": "03-electronica-y-garantia",
+        "ordinal": 3,
+        "title": "Electrónica: devoluciones especiales y garantía",
+        "section": "Garantía legal",
+        "content": "## Garantía legal\n\nLos productos nuevos tienen 3 años de garantía legal desde la entrega y los reacondicionados con calificación A o B tienen 1 año. Durante la garantía, el comprador puede elegir entre reparación y sustitución; si ninguna de las dos es posible, se reembolsa el precio.",
+        "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+        "embeddingDimensions": 768,
+        "cosineDistance": 0.253315,
+        "similarity": 0.746685
+      },
+      {
+        "chunkId": "lab-ae3817b7bdcf:03-electronica-y-garantia:00",
+        "corpusVersion": "lab-ae3817b7bdcf",
+        "documentId": "03-electronica-y-garantia",
+        "ordinal": 0,
+        "title": "Electrónica: devoluciones especiales y garantía",
+        "section": "Plazo de devolución de la electrónica",
+        "content": "## Plazo de devolución de la electrónica\n\nLos artículos de electrónica (móviles, tabletas, ordenadores, consolas, televisores, audio y pequeños electrodomésticos) siguen el plazo general si se devuelven con el precinto de fábrica intacto. Si el precinto se ha retirado o el dispositivo se ha encendido y configurado, el plazo de desistimiento se reduce a 14 días naturales desde la entrega, también para los miembros de Zocomar Plus.",
+        "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+        "embeddingDimensions": 768,
+        "cosineDistance": 0.230482,
+        "similarity": 0.769518
+      }
+    ],
+    "discarded": [
+      {
+        "chunkId": "lab-ae3817b7bdcf:03-electronica-y-garantia:04",
+        "attempt": 1,
+        "rerankScore": 0.4,
+        "reason": "Explica la tramitación de garantía, útil solo si hubiera avería; no responde directamente al caso."
+      },
+      {
+        "chunkId": "lab-ae3817b7bdcf:02-devoluciones:00",
+        "attempt": 1,
+        "rerankScore": 0.35,
+        "reason": "Plazo general de 30 días, pero remite a categorías con exclusiones propias que prevalecen."
+      },
+      {
+        "chunkId": "lab-ae3817b7bdcf:02-devoluciones:01",
+        "attempt": 1,
+        "rerankScore": 0.3,
+        "reason": "Condiciones generales de estado del artículo; la categoría de auriculares tiene exclusión propia que prevalece."
+      },
+      {
+        "chunkId": "lab-ae3817b7bdcf:02-devoluciones:02",
+        "attempt": 1,
+        "rerankScore": 0.15,
+        "reason": "Cómo iniciar una devolución; no aporta el dato de si procede."
+      },
+      {
+        "chunkId": "lab-ae3817b7bdcf:02-devoluciones:03",
+        "attempt": 1,
+        "rerankScore": 0.1,
+        "reason": "Coste de la devolución; irrelevante si no procede el desistimiento."
+      },
+      {
+        "chunkId": "lab-ae3817b7bdcf:03-electronica-y-garantia:02",
+        "attempt": 1,
+        "rerankScore": 0.05,
+        "reason": "Trata de móviles, tabletas y ordenadores con bloqueo de activación; no aplica a cascos."
+      },
+      {
+        "chunkId": "lab-ae3817b7bdcf:02-devoluciones:06",
+        "attempt": 1,
+        "rerankScore": 0.02,
+        "reason": "Cambios de talla o color; no tiene relación con la consulta."
+      }
+    ],
+    "iterations": [
+      {
+        "attempt": 1,
+        "query": "Me compré unos cascos de botón hace 10 días, los he estrenado y no me convencen. ¿Los puedo devolver?",
+        "retrievedIds": [
+          {
+            "chunkId": "lab-ae3817b7bdcf:03-electronica-y-garantia:01",
+            "cosineDistance": 0.192341,
+            "similarity": 0.807659
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:03-electronica-y-garantia:00",
+            "cosineDistance": 0.230482,
+            "similarity": 0.769518
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:03-electronica-y-garantia:03",
+            "cosineDistance": 0.253315,
+            "similarity": 0.746685
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:03-electronica-y-garantia:04",
+            "cosineDistance": 0.255871,
+            "similarity": 0.744129
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:02-devoluciones:01",
+            "cosineDistance": 0.276214,
+            "similarity": 0.723786
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:02-devoluciones:02",
+            "cosineDistance": 0.282094,
+            "similarity": 0.717906
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:02-devoluciones:00",
+            "cosineDistance": 0.287702,
+            "similarity": 0.712298
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:02-devoluciones:03",
+            "cosineDistance": 0.297799,
+            "similarity": 0.702201
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:03-electronica-y-garantia:02",
+            "cosineDistance": 0.303894,
+            "similarity": 0.696106
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:02-devoluciones:06",
+            "cosineDistance": 0.306765,
+            "similarity": 0.693235
+          }
+        ],
+        "reranked": [
+          {
+            "chunkId": "lab-ae3817b7bdcf:03-electronica-y-garantia:01",
+            "rerankScore": 0.95,
+            "reason": "Los auriculares intraauditivos estrenados (precinto retirado) no admiten devolución por desistimiento; solo por defecto vía garantía."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:03-electronica-y-garantia:03",
+            "rerankScore": 0.6,
+            "reason": "La garantía legal es la única vía si hay defecto; indica cobertura y opciones, aunque 'no convencen' no es defecto."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:03-electronica-y-garantia:00",
+            "rerankScore": 0.55,
+            "reason": "Plazo de electrónica con precinto retirado: 14 días desde la entrega, por lo que a los 10 días aún estaría en plazo; pero depende de la exclusión higiénica."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:03-electronica-y-garantia:04",
+            "rerankScore": 0.4,
+            "reason": "Explica la tramitación de garantía, útil solo si hubiera avería; no responde directamente al caso."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:02-devoluciones:00",
+            "rerankScore": 0.35,
+            "reason": "Plazo general de 30 días, pero remite a categorías con exclusiones propias que prevalecen."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:02-devoluciones:01",
+            "rerankScore": 0.3,
+            "reason": "Condiciones generales de estado del artículo; la categoría de auriculares tiene exclusión propia que prevalece."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:02-devoluciones:02",
+            "rerankScore": 0.15,
+            "reason": "Cómo iniciar una devolución; no aporta el dato de si procede."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:02-devoluciones:03",
+            "rerankScore": 0.1,
+            "reason": "Coste de la devolución; irrelevante si no procede el desistimiento."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:03-electronica-y-garantia:02",
+            "rerankScore": 0.05,
+            "reason": "Trata de móviles, tabletas y ordenadores con bloqueo de activación; no aplica a cascos."
+          },
+          {
+            "chunkId": "lab-ae3817b7bdcf:02-devoluciones:06",
+            "rerankScore": 0.02,
+            "reason": "Cambios de talla o color; no tiene relación con la consulta."
+          }
+        ],
+        "assessment": {
+          "status": "sufficient",
+          "coverageScore": 0.9,
+          "maxChunkRelevance": 0.95,
+          "reason": "La documentación indica que los auriculares intraauditivos con el precinto retirado no admiten desistimiento y solo se devuelven por defecto en garantía, lo que responde el caso.",
+          "gaps": [],
+          "usefulIds": [
+            "lab-ae3817b7bdcf:03-electronica-y-garantia:01",
+            "lab-ae3817b7bdcf:03-electronica-y-garantia:03",
+            "lab-ae3817b7bdcf:03-electronica-y-garantia:00"
+          ]
+        },
+        "route": "answer"
+      }
+    ],
+    "answer": "Por lo que indican los documentos, probablemente no podrás devolverlos por desistimiento, aunque tienes una vía alternativa si hay un defecto:\n\n- **Exclusión por higiene:** los auriculares intraauditivos (los \"de botón\") no admiten devolución por desistimiento una vez retirado su precinto higiénico. Como los has estrenado, lo normal es que el precinto ya esté retirado. [cite:lab-ae3817b7bdcf:03-electronica-y-garantia:01]\n- **El plazo no te salva:** aunque estás dentro de los 14 días naturales que se aplican a la electrónica con precinto retirado o dispositivo encendido y configurado (llevas 10), la exclusión por higiene prevalece en este tipo de artículo. [cite:lab-ae3817b7bdcf:03-electronica-y-garantia:00]\n- **Única vía: garantía por defecto.** En ese caso solo pueden devolverse si presentan un defecto, a través de la garantía. [cite:lab-ae3817b7bdcf:03-electronica-y-garantia:01] Los productos nuevos tienen 3 años de garantía legal desde la entrega (1 año si son reacondicionados con calificación A o B), y puedes elegir entre reparación y sustitución; si ninguna es posible, se reembolsa el precio. [cite:lab-ae3817b7bdcf:03-electronica-y-garantia:03]\n\nQue no te convenzan (por sonido, comodidad, etc.) no es un defecto según lo que figura en los documentos, así que en ese caso no aplicaría la garantía.\n\nLo que los documentos no aclaran: si el precinto higiénico de tus cascos estaba intacto o no (si no lo retiraste, la situación podría ser distinta, pero esto no se detalla en los fragmentos), ni qué se considera exactamente \"defecto\".",
+    "citations": [
+      "lab-ae3817b7bdcf:03-electronica-y-garantia:01",
+      "lab-ae3817b7bdcf:03-electronica-y-garantia:00",
+      "lab-ae3817b7bdcf:03-electronica-y-garantia:03"
+    ],
+    "latencyMs": 12335
+  },
+  "operations": [
+    {
+      "kind": "embedding",
+      "model": "openrouter:google/gemini-embedding-2:768",
+      "inputTokens": 29,
+      "outputTokens": null
+    },
+    {
+      "kind": "evaluation",
+      "model": "claude-sonnet-5-5",
+      "inputTokens": 3768,
+      "outputTokens": 942
+    },
+    {
+      "kind": "generation",
+      "model": "claude-sonnet-5-5",
+      "inputTokens": 1049,
+      "outputTokens": 645
+    }
+  ],
+  "budget": {
+    "limitUsd": 5,
+    "reservedUsd": 0.7922472000000003,
+    "calls": 54,
+    "actualProviderUsd": null
+  }
+}

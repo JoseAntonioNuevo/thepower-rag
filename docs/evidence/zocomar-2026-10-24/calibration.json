@@ -1,0 +1,361 @@
+{
+  "profile": "1a324082f837cc242c0837fb961c59189add2f06701292ecb848901305878d52",
+  "threshold": 0.722598,
+  "validationHash": "f68cd0d60830b2d28300791b08aa3204837af30196d92fde0a9c5d12396e9a1d",
+  "rows": [
+    {
+      "id": 1,
+      "answerable": true,
+      "score": 0.763838,
+      "hits": [
+        {
+          "chunkId": "lab-ae3817b7bdcf:08-garantia-zocomar-y-disputas:02",
+          "corpusVersion": "lab-ae3817b7bdcf",
+          "documentId": "08-garantia-zocomar-y-disputas",
+          "ordinal": 2,
+          "title": "Garantía Zocomar y disputas",
+          "section": "Cómo se resuelve una disputa",
+          "content": "## Cómo se resuelve una disputa\n\nEl vendedor tiene 48 horas para responder a la disputa. Si no responde o no hay acuerdo, el comprador puede pedir la mediación de Zocomar, que resuelve en un máximo de 10 días hábiles. Si la resolución es favorable al comprador, el reembolso se ordena ese mismo día.",
+          "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+          "embeddingDimensions": 768,
+          "cosineDistance": 0.236162,
+          "similarity": 0.763838
+        },
+        {
+          "chunkId": "lab-ae3817b7bdcf:08-garantia-zocomar-y-disputas:01",
+          "corpusVersion": "lab-ae3817b7bdcf",
+          "documentId": "08-garantia-zocomar-y-disputas",
+          "ordinal": 1,
+          "title": "Garantía Zocomar y disputas",
+          "section": "Cuándo abrir una disputa",
+          "content": "## Cuándo abrir una disputa\n\nPor un pedido no recibido, la disputa puede abrirse desde el tercer día posterior a la fecha máxima de entrega y hasta 30 días después de esa fecha. Si el artículo llegó dañado o no corresponde con lo pedido, el plazo para abrirla es de 30 días desde la entrega.",
+          "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+          "embeddingDimensions": 768,
+          "cosineDistance": 0.27996,
+          "similarity": 0.72004
+        },
+        {
+          "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:05",
+          "corpusVersion": "lab-ae3817b7bdcf",
+          "documentId": "04-envios-vigente",
+          "ordinal": 5,
+          "title": "Política de envíos (vigente desde el 1 de marzo de 2026)",
+          "section": "Retrasos y pedidos no recibidos",
+          "content": "## Retrasos y pedidos no recibidos\n\nSi un paquete no llega en la fecha máxima indicada en el seguimiento, el comprador puede abrir una disputa con la Garantía Zocomar. Los plazos y la cobertura se detallan en la política de la Garantía Zocomar.",
+          "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+          "embeddingDimensions": 768,
+          "cosineDistance": 0.300888,
+          "similarity": 0.699112
+        },
+        {
+          "chunkId": "lab-ae3817b7bdcf:11-atencion-al-cliente:01",
+          "corpusVersion": "lab-ae3817b7bdcf",
+          "documentId": "11-atencion-al-cliente",
+          "ordinal": 1,
+          "title": "Atención al cliente",
+          "section": "Tiempos de respuesta",
+          "content": "## Tiempos de respuesta\n\nEl objetivo de primera respuesta del chat es de 5 minutos. Las reclamaciones formales presentadas desde «Ayuda» > «Reclamación» se responden por escrito en un máximo de 30 días naturales.",
+          "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+          "embeddingDimensions": 768,
+          "cosineDistance": 0.340232,
+          "similarity": 0.659768
+        }
+      ]
+    },
+    {
+      "id": 2,
+      "answerable": true,
+      "score": 0.813693,
+      "hits": [
+        {
+          "chunkId": "lab-ae3817b7bdcf:07-vendedores-planes-y-comisiones:00",
+          "corpusVersion": "lab-ae3817b7bdcf",
+          "documentId": "07-vendedores-planes-y-comisiones",
+          "ordinal": 0,
+          "title": "Vender en Zocomar: planes, comisiones y pagos",
+          "section": "Planes para vendedores",
+          "content": "## Planes para vendedores\n\nEl Plan Básico no tiene cuota mensual y aplica una comisión del 12 % sobre el precio de venta con IVA. El Plan Pro cuesta 39 € al mes más IVA y reduce la comisión al 8 %. En la categoría de electrónica la comisión es del 7 % en los dos planes.",
+          "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+          "embeddingDimensions": 768,
+          "cosineDistance": 0.186307,
+          "similarity": 0.813693
+        },
+        {
+          "chunkId": "lab-ae3817b7bdcf:07-vendedores-planes-y-comisiones:02",
+          "corpusVersion": "lab-ae3817b7bdcf",
+          "documentId": "07-vendedores-planes-y-comisiones",
+          "ordinal": 2,
+          "title": "Vender en Zocomar: planes, comisiones y pagos",
+          "section": "Sello «Devolución gratuita»",
+          "content": "## Sello «Devolución gratuita»\n\nLos vendedores con una valoración media igual o superior a 4,5 y una tasa de incidencias inferior al 2 % pueden activar el sello «Devolución gratuita». Con el sello activo, el vendedor asume el coste de todas las devoluciones de sus artículos.",
+          "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+          "embeddingDimensions": 768,
+          "cosineDistance": 0.299495,
+          "similarity": 0.700505
+        },
+        {
+          "chunkId": "lab-ae3817b7bdcf:07-vendedores-planes-y-comisiones:01",
+          "corpusVersion": "lab-ae3817b7bdcf",
+          "documentId": "07-vendedores-planes-y-comisiones",
+          "ordinal": 1,
+          "title": "Vender en Zocomar: planes, comisiones y pagos",
+          "section": "Liquidación de las ventas",
+          "content": "## Liquidación de las ventas\n\nZocomar paga a los vendedores cada 14 días por transferencia. Cada venta entra en la liquidación cuando han pasado 7 días desde la entrega sin una devolución ni una disputa abierta.",
+          "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+          "embeddingDimensions": 768,
+          "cosineDistance": 0.305569,
+          "similarity": 0.694431
+        },
+        {
+          "chunkId": "lab-ae3817b7bdcf:07-vendedores-planes-y-comisiones:04",
+          "corpusVersion": "lab-ae3817b7bdcf",
+          "documentId": "07-vendedores-planes-y-comisiones",
+          "ordinal": 4,
+          "title": "Vender en Zocomar: planes, comisiones y pagos",
+          "section": "Plazos de preparación",
+          "content": "## Plazos de preparación\n\nEl vendedor debe entregar el paquete al transportista en un máximo de 2 días laborables desde la confirmación del pedido, o de 1 día laborable para los artículos con «Exprés disponible».",
+          "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+          "embeddingDimensions": 768,
+          "cosineDistance": 0.328933,
+          "similarity": 0.671067
+        }
+      ]
+    },
+    {
+      "id": 3,
+      "answerable": true,
+      "score": 0.839294,
+      "hits": [
+        {
+          "chunkId": "lab-ae3817b7bdcf:11-atencion-al-cliente:00",
+          "corpusVersion": "lab-ae3817b7bdcf",
+          "documentId": "11-atencion-al-cliente",
+          "ordinal": 0,
+          "title": "Atención al cliente",
+          "section": "Canales y horarios",
+          "content": "## Canales y horarios\n\nEl chat de la aplicación atiende todos los días de 8:00 a 22:00. El teléfono gratuito, que aparece en la sección «Ayuda» de la aplicación, atiende de lunes a viernes de 9:00 a 19:00. Zocomar no ofrece atención por correo electrónico ni por redes sociales.",
+          "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+          "embeddingDimensions": 768,
+          "cosineDistance": 0.160706,
+          "similarity": 0.839294
+        },
+        {
+          "chunkId": "lab-ae3817b7bdcf:01-zocomar-que-es:04",
+          "corpusVersion": "lab-ae3817b7bdcf",
+          "documentId": "01-zocomar-que-es",
+          "ordinal": 4,
+          "title": "Qué es Zocomar y cómo funciona el marketplace",
+          "section": "Información que no está en esta documentación",
+          "content": "## Información que no está en esta documentación\n\nEl estado de cada pedido, el stock disponible y los precios del catálogo cambian continuamente y se consultan en la aplicación, no en estas políticas.",
+          "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+          "embeddingDimensions": 768,
+          "cosineDistance": 0.290513,
+          "similarity": 0.709487
+        },
+        {
+          "chunkId": "lab-ae3817b7bdcf:01-zocomar-que-es:01",
+          "corpusVersion": "lab-ae3817b7bdcf",
+          "documentId": "01-zocomar-que-es",
+          "ordinal": 1,
+          "title": "Qué es Zocomar y cómo funciona el marketplace",
+          "section": "Zonas de servicio",
+          "content": "## Zonas de servicio\n\nZocomar vende y entrega en España peninsular, en las Islas Baleares y en Portugal continental. No realiza entregas en Canarias, Ceuta, Melilla, Azores ni Madeira. Los plazos y precios de cada zona se detallan en la política de envíos vigente.",
+          "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+          "embeddingDimensions": 768,
+          "cosineDistance": 0.305329,
+          "similarity": 0.694671
+        },
+        {
+          "chunkId": "lab-ae3817b7bdcf:06-pagos-y-reembolsos:03",
+          "corpusVersion": "lab-ae3817b7bdcf",
+          "documentId": "06-pagos-y-reembolsos",
+          "ordinal": 3,
+          "title": "Pagos y reembolsos",
+          "section": "Cargos duplicados y retenciones",
+          "content": "## Cargos duplicados y retenciones\n\nAl confirmar un pedido, el banco puede mostrar una retención temporal además del cargo definitivo. Las retenciones de pedidos cancelados o modificados se liberan solas en un máximo de 7 días naturales. Si aparecen dos cargos definitivos por el mismo pedido, Zocomar devuelve el cargo duplicado en 48 horas hábiles desde que el cliente lo comunica por el chat de atención al cliente.",
+          "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+          "embeddingDimensions": 768,
+          "cosineDistance": 0.313626,
+          "similarity": 0.686374
+        }
+      ]
+    },
+    {
+      "id": 4,
+      "answerable": true,
+      "score": 0.830219,
+      "hits": [
+        {
+          "chunkId": "lab-ae3817b7bdcf:12-promociones-y-cupones:03",
+          "corpusVersion": "lab-ae3817b7bdcf",
+          "documentId": "12-promociones-y-cupones",
+          "ordinal": 3,
+          "title": "Promociones, cupones y garantía de precio",
+          "section": "Ofertas flash",
+          "content": "## Ofertas flash\n\nLas ofertas flash duran como máximo 24 horas o hasta agotar las unidades reservadas. Un mismo cliente puede comprar como máximo 2 unidades de cada oferta flash.",
+          "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+          "embeddingDimensions": 768,
+          "cosineDistance": 0.169781,
+          "similarity": 0.830219
+        },
+        {
+          "chunkId": "lab-ae3817b7bdcf:12-promociones-y-cupones:02",
+          "corpusVersion": "lab-ae3817b7bdcf",
+          "documentId": "12-promociones-y-cupones",
+          "ordinal": 2,
+          "title": "Promociones, cupones y garantía de precio",
+          "section": "Garantía de precio",
+          "content": "## Garantía de precio\n\nSi el precio de un artículo vendido y enviado por Zocomar baja en los 7 días siguientes a la compra, el cliente puede solicitar la diferencia como saldo Zocomar desde «Mis pedidos». No se aplica a los artículos de otros vendedores ni a las ofertas flash.",
+          "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+          "embeddingDimensions": 768,
+          "cosineDistance": 0.342412,
+          "similarity": 0.657588
+        },
+        {
+          "chunkId": "lab-ae3817b7bdcf:03-electronica-y-garantia:03",
+          "corpusVersion": "lab-ae3817b7bdcf",
+          "documentId": "03-electronica-y-garantia",
+          "ordinal": 3,
+          "title": "Electrónica: devoluciones especiales y garantía",
+          "section": "Garantía legal",
+          "content": "## Garantía legal\n\nLos productos nuevos tienen 3 años de garantía legal desde la entrega y los reacondicionados con calificación A o B tienen 1 año. Durante la garantía, el comprador puede elegir entre reparación y sustitución; si ninguna de las dos es posible, se reembolsa el precio.",
+          "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+          "embeddingDimensions": 768,
+          "cosineDistance": 0.36648,
+          "similarity": 0.63352
+        },
+        {
+          "chunkId": "lab-ae3817b7bdcf:10-productos-prohibidos-y-restringidos:01",
+          "corpusVersion": "lab-ae3817b7bdcf",
+          "documentId": "10-productos-prohibidos-y-restringidos",
+          "ordinal": 1,
+          "title": "Productos prohibidos y restringidos",
+          "section": "Productos restringidos por edad",
+          "content": "## Productos restringidos por edad\n\nLas bebidas alcohólicas y los cuchillos de cocina con una hoja de más de 11 cm solo se entregan a mayores de 18 años. El repartidor pide un documento de identidad en la entrega y, si el destinatario no lo acredita, el paquete vuelve al vendedor y se reembolsa sin los gastos de envío.",
+          "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+          "embeddingDimensions": 768,
+          "cosineDistance": 0.381006,
+          "similarity": 0.618994
+        }
+      ]
+    },
+    {
+      "id": 5,
+      "answerable": false,
+      "score": 0.681357,
+      "hits": [
+        {
+          "chunkId": "lab-ae3817b7bdcf:08-garantia-zocomar-y-disputas:00",
+          "corpusVersion": "lab-ae3817b7bdcf",
+          "documentId": "08-garantia-zocomar-y-disputas",
+          "ordinal": 0,
+          "title": "Garantía Zocomar y disputas",
+          "section": "Qué cubre la Garantía Zocomar",
+          "content": "## Qué cubre la Garantía Zocomar\n\nLa Garantía Zocomar protege al comprador cuando un pedido no llega, llega dañado o no corresponde con la descripción y el vendedor no lo resuelve. Cubre hasta 2.500 € por pedido. No cubre los pagos hechos fuera de Zocomar ni los daños causados por el comprador.",
+          "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+          "embeddingDimensions": 768,
+          "cosineDistance": 0.318643,
+          "similarity": 0.681357
+        },
+        {
+          "chunkId": "lab-ae3817b7bdcf:12-promociones-y-cupones:02",
+          "corpusVersion": "lab-ae3817b7bdcf",
+          "documentId": "12-promociones-y-cupones",
+          "ordinal": 2,
+          "title": "Promociones, cupones y garantía de precio",
+          "section": "Garantía de precio",
+          "content": "## Garantía de precio\n\nSi el precio de un artículo vendido y enviado por Zocomar baja en los 7 días siguientes a la compra, el cliente puede solicitar la diferencia como saldo Zocomar desde «Mis pedidos». No se aplica a los artículos de otros vendedores ni a las ofertas flash.",
+          "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+          "embeddingDimensions": 768,
+          "cosineDistance": 0.329874,
+          "similarity": 0.670126
+        },
+        {
+          "chunkId": "lab-ae3817b7bdcf:01-zocomar-que-es:01",
+          "corpusVersion": "lab-ae3817b7bdcf",
+          "documentId": "01-zocomar-que-es",
+          "ordinal": 1,
+          "title": "Qué es Zocomar y cómo funciona el marketplace",
+          "section": "Zonas de servicio",
+          "content": "## Zonas de servicio\n\nZocomar vende y entrega en España peninsular, en las Islas Baleares y en Portugal continental. No realiza entregas en Canarias, Ceuta, Melilla, Azores ni Madeira. Los plazos y precios de cada zona se detallan en la política de envíos vigente.",
+          "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+          "embeddingDimensions": 768,
+          "cosineDistance": 0.337531,
+          "similarity": 0.662469
+        },
+        {
+          "chunkId": "lab-ae3817b7bdcf:11-atencion-al-cliente:00",
+          "corpusVersion": "lab-ae3817b7bdcf",
+          "documentId": "11-atencion-al-cliente",
+          "ordinal": 0,
+          "title": "Atención al cliente",
+          "section": "Canales y horarios",
+          "content": "## Canales y horarios\n\nEl chat de la aplicación atiende todos los días de 8:00 a 22:00. El teléfono gratuito, que aparece en la sección «Ayuda» de la aplicación, atiende de lunes a viernes de 9:00 a 19:00. Zocomar no ofrece atención por correo electrónico ni por redes sociales.",
+          "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+          "embeddingDimensions": 768,
+          "cosineDistance": 0.341089,
+          "similarity": 0.658911
+        }
+      ]
+    },
+    {
+      "id": 6,
+      "answerable": false,
+      "score": 0.660216,
+      "hits": [
+        {
+          "chunkId": "lab-ae3817b7bdcf:01-zocomar-que-es:00",
+          "corpusVersion": "lab-ae3817b7bdcf",
+          "documentId": "01-zocomar-que-es",
+          "ordinal": 0,
+          "title": "Qué es Zocomar y cómo funciona el marketplace",
+          "section": "Modelo de marketplace",
+          "content": "## Modelo de marketplace\n\nZocomar es un marketplace en línea ficticio que reúne a vendedores profesionales independientes y a compradores particulares. Zocomar no fabrica productos: cada ficha indica qué vendedor vende y envía el artículo. Algunos productos se venden y envían desde el almacén propio de Zocomar en Getafe (Madrid); en ese caso la ficha muestra «Vendido y enviado por Zocomar».",
+          "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+          "embeddingDimensions": 768,
+          "cosineDistance": 0.339784,
+          "similarity": 0.660216
+        },
+        {
+          "chunkId": "lab-ae3817b7bdcf:11-atencion-al-cliente:00",
+          "corpusVersion": "lab-ae3817b7bdcf",
+          "documentId": "11-atencion-al-cliente",
+          "ordinal": 0,
+          "title": "Atención al cliente",
+          "section": "Canales y horarios",
+          "content": "## Canales y horarios\n\nEl chat de la aplicación atiende todos los días de 8:00 a 22:00. El teléfono gratuito, que aparece en la sección «Ayuda» de la aplicación, atiende de lunes a viernes de 9:00 a 19:00. Zocomar no ofrece atención por correo electrónico ni por redes sociales.",
+          "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+          "embeddingDimensions": 768,
+          "cosineDistance": 0.400345,
+          "similarity": 0.599655
+        },
+        {
+          "chunkId": "lab-ae3817b7bdcf:05-envios-2025-sustituida:02",
+          "corpusVersion": "lab-ae3817b7bdcf",
+          "documentId": "05-envios-2025-sustituida",
+          "ordinal": 2,
+          "title": "Política de envíos de 2025 (SUSTITUIDA el 1 de marzo de 2026)",
+          "section": "Envío exprés en 2025",
+          "content": "## Envío exprés en 2025\n\nEn 2025 el envío exprés costaba 5,99 € y estaba disponible también para Baleares, con entrega en 48 horas.",
+          "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+          "embeddingDimensions": 768,
+          "cosineDistance": 0.404569,
+          "similarity": 0.595431
+        },
+        {
+          "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:01",
+          "corpusVersion": "lab-ae3817b7bdcf",
+          "documentId": "04-envios-vigente",
+          "ordinal": 1,
+          "title": "Política de envíos (vigente desde el 1 de marzo de 2026)",
+          "section": "Envío exprés",
+          "content": "## Envío exprés\n\nEl envío exprés entrega en 24 horas laborables los pedidos confirmados antes de las 14:00 en España peninsular. Cuesta 6,99 € por paquete y no está disponible para las Islas Baleares ni para Portugal. Solo pueden usarlo los artículos marcados como «Exprés disponible».",
+          "embeddingModel": "openrouter:google/gemini-embedding-2:768",
+          "embeddingDimensions": 768,
+          "cosineDistance": 0.408468,
+          "similarity": 0.591532
+        }
+      ]
+    }
+  ]
+}

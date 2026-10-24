@@ -30,7 +30,7 @@ URL pública: https://rag-thepower.josenuevo.dev · Perfil local real: `bun run 
 5. **Variante de contexto completo (`RAG_CONTEXT_MODE=complete`):**
    - Presenta después `apps/api/src/course-context.ts` y `docs/rag-contexto-completo.md` como una **variante de ingeniería** útil únicamente cuando todo el corpus verificado cabe holgadamente en la ventana (máximo 200 fragmentos y 32 000 caracteres), explicando por qué el ejercicio de S10 exige el recorrido semántico con umbral previo y no cargar toda la base de datos en el prompt.
 6. **Laboratorio reproducible del ejercicio (`lab/`):**
-   - Ejecuta `bun run lab:demo` para mostrar la reconstrucción desde los 10 documentos ficticios de AetherCloud e índice vacío sobre `vector(768)` e índice HNSW (`lab/schema.sql`), la respuesta citada y el rechazo previo sin llamar al generador.
+   - Ejecuta `bun run lab:demo` para mostrar la reconstrucción desde los documentos ficticios del laboratorio (AetherCloud en S10; Zocomar desde el 24 de octubre) e índice vacío sobre `vector(768)` e índice HNSW (`lab/schema.sql`), la respuesta citada y el rechazo previo sin llamar al generador.
 
 ---
 
@@ -44,12 +44,13 @@ URL pública: https://rag-thepower.josenuevo.dev · Perfil local real: `bun run 
      - `assess`: valora por separado si los fragmentos útiles (`score >= 0,50`) cubren toda la pregunta (`cobertura >= 0,75` sin lagunas → `sufficient`; `0,40–0,74` o con laguna → `partial`; `< 0,40` → `insufficient`).
 2. **Demostración de evidencia suficiente y parcial:**
    - Pregunta simple (_«¿Cómo modela LangGraph un agente con estado y nodos?»_): 1 búsqueda, `rank` y `assess` declaran `sufficient` con S5 y responde con cita.
-   - Pregunta compuesta (_«¿Cómo modela LangGraph el estado de un agente y cómo se observa esa ejecución?»_ en la demo o el caso mTLS + SEV-1 en `bun run lab:demo`): muestra cómo un fragmento individual tiene relevancia alta (`0,80 >= 0,50`) pero la cobertura global de la pregunta es `partial` (`0,50 < 0,75`), por lo que `retain` conserva el primer fragmento, `reformulate` busca la laguna y la segunda búsqueda une ambas fuentes sin duplicar IDs.
+   - Pregunta compuesta (_«¿Cómo modela LangGraph el estado de un agente y cómo se observa esa ejecución?»_ en el guion local o el reembolso con Bizum en `bun run lab:demo`, con la valoración simulada): muestra cómo un fragmento individual tiene relevancia alta (`0,80 >= 0,50`) pero la cobertura global de la pregunta es `partial` (`0,50 < 0,75`), por lo que `retain` conserva el primer fragmento, `reformulate` busca la laguna y la segunda búsqueda une ambas fuentes sin duplicar IDs.
 3. **Límite de 3 búsquedas, 2 reformulaciones y 20 segundos:**
-   - Pregunta por un dato inexistente (beca de 1991 o pago con criptomonedas en `lab/`): el grafo agota 3 búsquedas y 2 reformulaciones y termina en `refuse` con **0 llamadas al generador**.
+   - Pregunta por un dato inexistente (beca de 1991 en el guion o el descuento para estudiantes en Zocomar): el grafo agota 3 búsquedas y 2 reformulaciones y termina en `refuse` con **0 llamadas al generador**.
 4. **Lectura de métricas y resultados de comparación:**
    - Muestra ambas tablas de 20 preguntas (14 respondibles + 6 sin respuesta):
-     - **Laboratorio reproducible (`lab/eval/resultados-laboratorio.md`):** RAG básico `16/20` (`10/14` respondibles, `6/6` rechazos, **`1,00` recuperaciones medias**) frente a CRAG `17/20` (`11/14` respondibles, `6/6` rechazos, **`1,80` recuperaciones medias**).
+     - **Laboratorio Zocomar con modelos reales (24/10/2026, `docs/evidence/zocomar-lab-2026-10-24.md`):** RAG básico `14/14` y `6/6` (**`1,00` recuperaciones medias**, mediana `3,2 s`) frente a CRAG `14/14` y `6/6` (**`1,60` recuperaciones medias**, mediana `8,9 s`). Empate en acierto; CRAG gana margen (`0,65` frente a `0,014`) y contexto limpio (la política sustituida entra en 3 de 14 respuestas de RAG y en ninguna de CRAG).
+     - `lab/eval/resultados-laboratorio.md` es el respaldo determinista sin red: no mide modelos.
      - **Lote histórico cloud del 3 de octubre (`material/comparacion/resultados/tabla-resultados.md`, etiquetado como histórico):** RAG `17/20` (`11/14`, `6/6`, **`0,95` recuperaciones medias**, mediana `1,193 s`) frente a CRAG `18/20` (`13/14`, `5/6`, **`1,55` recuperaciones medias**, mediana `4,304 s`).
 
 ---

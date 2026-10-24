@@ -43,6 +43,7 @@ export {
 // Reordenamiento en escala [0, 1], formato Qwen3-Reranker-0.6B, suficiencia y reformulación.
 export {
   assessLabEvidence,
+  decideLabSufficiency,
   formatQwen3RerankerPrompt,
   reformulateLabQuery,
   rerankLabCandidates,
@@ -66,9 +67,11 @@ export {
 } from "./crag-graph";
 // Conjuntos de validación (6) y test (20: 14+6) y comparador entre RAG básico y CRAG.
 export {
+  LAB_DEMO_CASES,
   LAB_TEST_SET_20,
   LAB_VALIDATION_SET,
   runLabComparison20,
+  type LabDemoCase,
   type LabEvaluatedQuestion,
   type LabEvaluationCase,
   type LabEvaluationReport,

@@ -8,6 +8,7 @@ import path from "node:path";
 // Módulos del laboratorio reproducible.
 import {
   InMemoryPgVectorStore,
+  LAB_DEMO_CASES,
   PgVectorDatabaseStore,
   createDeterministic768EmbeddingProvider,
   prepareLabCorpusFromDirectory,
@@ -52,7 +53,10 @@ async function createBunPostgresExecutor(databaseUrl: string): Promise<PostgresS
 }
 
 // Formatea el informe de evaluación de las 20 preguntas como tabla Markdown para `lab/eval/resultados-laboratorio.md`.
-function formatLabEvaluationMarkdown(report: LabEvaluationReport): string {
+function formatLabEvaluationMarkdown(
+  report: LabEvaluationReport,
+  counts: { documents: number; chunks: number },
+): string {
   // Filas de la tabla de detalle (40 ejecuciones: 20 en RAG básico y 20 en CRAG).
   const detailRows = report.items
     .map(
@@ -63,33 +67,29 @@ function formatLabEvaluationMarkdown(report: LabEvaluationReport): string {
 
   // Documento Markdown completo.
   return [
-    "# Evaluación ejecutada del laboratorio reproducible (S10 y S11)",
+    "# Respaldo offline del laboratorio: RAG básico y CRAG sobre Zocomar",
     "",
-    "Resultados obtenidos reconstruyendo el sistema desde los **10 documentos ficticios en bruto de AetherCloud** e **índice vacío** con vectores de **768 dimensiones** (`vector(768)` e índice HNSW `vector_cosine_ops`).",
+    "> **Respaldo determinista, no medición de modelos.** Embeddings léxicos de 768 dimensiones, reordenador por reglas y respuesta extractiva. No llama a ningún proveedor. Sirve para enseñar el recorrido sin red; la comparación con modelos reales está en `lab/.local/zocomar/evaluation.json` (`bun run lab:real eval`).",
+    "",
+    `Reconstruido desde los **${String(counts.documents)} documentos ficticios de Zocomar** (un marketplace inventado) e **índice vacío** con vectores de **768 dimensiones** (\`vector(768)\` e índice HNSW \`vector_cosine_ops\`).`,
     "",
     "## Configuración congelada",
     "",
-    `- **Versión del corpus:** \`${report.corpusVersion}\` (10 documentos Markdown, 20 fragmentos)`,
-    `- **Modelo generativo (\`GEN_MODEL_ID\`):** \`${report.config.genModelId}\``,
-    `- **Modelo de embeddings (\`EMBEDDING_MODEL_ID\`):** \`${report.config.embeddingModelId}\` (\`vector(${String(report.config.dimensions)})\`, HNSW \`m=16, ef_construction=64\`)`,
-    `- **Modelo de reordenamiento (\`RERANKER_MODEL_ID\`):** \`${report.config.rerankerModelId}\` (escala \`[0, 1]\`)`,
+    `- **Versión del corpus:** \`${report.corpusVersion}\` (${String(counts.documents)} documentos Markdown, ${String(counts.chunks)} fragmentos)`,
+    `- **Generador:** \`${report.config.genModelId}\``,
+    `- **Embeddings:** \`${report.config.embeddingModelId}\` (\`vector(${String(report.config.dimensions)})\`, HNSW \`m=16, ef_construction=64\`)`,
+    `- **Reordenador:** \`${report.config.rerankerModelId}\` (escala \`[0, 1]\`)`,
     `- **Umbral previo S10 (RAG básico):** similitud coseno \`>= ${report.config.minSimilarity.toFixed(2)}\` (distancia coseno \`<=> <= ${report.config.maxCosineDistance.toFixed(2)}\`)`,
     `- **Umbrales S11 (CRAG):** relevancia de fragmento \`>= ${report.config.cragMinChunkRelevance.toFixed(2)}\`, cobertura parcial \`>= ${report.config.cragPartialCoverageMin.toFixed(2)}\`, cobertura suficiente \`>= ${report.config.cragSufficientCoverageMin.toFixed(2)}\``,
     "",
-    "## Resumen comparativo sobre 20 preguntas nuevas (14 respondibles + 6 sin respuesta)",
+    "## Resumen sobre las 20 preguntas del test (14 respondibles + 6 sin respuesta)",
     "",
     "| Etapa | Total correctas | Respondibles (sobre 14) | Rechazos correctos (sobre 6) | Recuperaciones medias | Reformulaciones medias | Mediana latencia | Media latencia |",
     "|---|---:|---:|---:|---:|---:|---:|---:|",
     `| RAG básico (S10) | ${String(report.ragSummary.totalCorrect)}/20 | ${String(report.ragSummary.answerableCorrect)}/${String(report.ragSummary.answerableTotal)} | ${String(report.ragSummary.refusalCorrect)}/${String(report.ragSummary.refusalTotal)} | ${report.ragSummary.averageRetrievals.toFixed(2)} | ${report.ragSummary.averageReformulations.toFixed(2)} | ${String(report.ragSummary.medianLatencyMs)} ms | ${String(report.ragSummary.meanLatencyMs)} ms |`,
     `| CRAG (S11) | ${String(report.cragSummary.totalCorrect)}/20 | ${String(report.cragSummary.answerableCorrect)}/${String(report.cragSummary.answerableTotal)} | ${String(report.cragSummary.refusalCorrect)}/${String(report.cragSummary.refusalTotal)} | ${report.cragSummary.averageRetrievals.toFixed(2)} | ${report.cragSummary.averageReformulations.toFixed(2)} | ${String(report.cragSummary.medianLatencyMs)} ms | ${String(report.cragSummary.meanLatencyMs)} ms |`,
     "",
-    "## Lectura docente de los resultados",
-    "",
-    "- **Control previo en S10:** las 6 preguntas sin soporte documental (licencias Windows Server, sede en Tokio, GPUs H200, vacaciones, código SWIFT en CHF y conector SAP R/3) quedan por debajo del umbral de similitud `0,25` (`distancia coseno > 0,75`, calibrado con los 6 casos de validación) y se rechazan sin invocar al generador (`6/6`).",
-    "- **Preguntas de varias secciones o varios documentos (casos 5, 10 y 14):** en las preguntas que exigen reunir dos secciones o dos documentos distintos (como el caso 14, que une `02-autenticacion-mtls-tokens` y `06-respuesta-a-incidentes`), el corte único del RAG básico deja fuera una de las partes (`10/14` respondibles). En CRAG, los nodos separados `rerank` (hasta 10 candidatos en `[0, 1]`) y `assess` conservan los fragmentos relevantes (`>= 0,50`) y completan la cobertura (`11/14` respondibles, `17/20` total).",
-    "- **Trade-offs reales conservados (casos 3, 8 y 9):** CRAG no acierta el 100 %: en los casos 3 y 8 el umbral de suficiencia (`0,75`) considera parcial la cobertura tras agotar las 2 reformulaciones y rechaza por prudencia, y las recuperaciones medias suben de `1,00` a `" +
-      report.cragSummary.averageRetrievals.toFixed(2) +
-      "` búsquedas por pregunta (`3` búsquedas y `2` reformulaciones en cada una de las 6 preguntas sin respuesta).",
+    "La corrección automática exige los hechos esperados y citar los documentos esperados. Las reglas léxicas no entienden sinónimos, versiones ni excepciones: estos números no estiman la calidad de un juez real.",
     "",
     "## Detalle de las 40 ejecuciones (20 RAG básico + 20 CRAG)",
     "",
@@ -110,7 +110,7 @@ async function main(): Promise<void> {
     EMBEDDING_MODEL_ID: "fixture-token-hash-768-v1",
     RERANKER_MODEL_ID: "fixture-lexical-reranker-v1",
   });
-  // Prepara los 10 documentos ficticios de AetherCloud.
+  // Prepara los documentos ficticios de Zocomar.
   const corpus = prepareLabCorpusFromDirectory(sourcesDir);
   // Proveedor de embeddings de 768 dimensiones.
   const embedder = createDeterministic768EmbeddingProvider(config.embeddingModelId);
@@ -122,7 +122,7 @@ async function main(): Promise<void> {
     : new InMemoryPgVectorStore();
   // Presenta el resultado de este paso en la terminal para que pueda contrastarse durante la demostración.
   console.log(
-    "[lab] RESPALDO OFFLINE: embeddings léxicos y respuesta extractiva; no llama a Gemini ni a Qwen. Ruta real: bun run lab:real preflight",
+    "[lab] RESPALDO OFFLINE: embeddings léxicos, reglas y respuesta extractiva; no llama a ningún modelo. Ruta real: bun run lab:real preflight",
   );
 
   // Reconstruye desde índice vacío.
@@ -146,7 +146,14 @@ async function main(): Promise<void> {
     mkdirSync(evalDir, { recursive: true });
     const markdownPath = path.join(evalDir, "resultados-laboratorio.md");
     // Persiste el resultado en la ruta del recorrido para poder revisarlo después.
-    writeFileSync(markdownPath, formatLabEvaluationMarkdown(report), "utf8");
+    writeFileSync(
+      markdownPath,
+      formatLabEvaluationMarkdown(report, {
+        documents: corpus.documents.length,
+        chunks: corpus.chunks.length,
+      }),
+      "utf8",
+    );
     // Presenta el resultado de este paso en la terminal para que pueda contrastarse durante la demostración.
     console.log(
       `[lab] Evaluación 20 preguntas completada: RAG=${String(report.ragSummary.totalCorrect)}/20 (${String(report.ragSummary.answerableCorrect)}/14 respondibles, ${String(report.ragSummary.refusalCorrect)}/6 rechazos, ${report.ragSummary.averageRetrievals.toFixed(2)} búsquedas medias) | CRAG=${String(report.cragSummary.totalCorrect)}/20 (${String(report.cragSummary.answerableCorrect)}/14 respondibles, ${String(report.cragSummary.refusalCorrect)}/6 rechazos, ${report.cragSummary.averageRetrievals.toFixed(2)} búsquedas medias).`,
@@ -158,9 +165,10 @@ async function main(): Promise<void> {
   }
 
   // Modo `demo`: muestra respuesta y rechazo en S10, y suficiente, parcial (2 búsquedas) y límite en S11.
+  const [bizum, , , , , students] = LAB_DEMO_CASES;
+  // Caso de RAG básico con evidencia.
   const s10Answer = await runLabBasicRag({
-    question:
-      "¿Con qué algoritmo se cifran los volúmenes en reposo y qué periodo de enfriamiento exige destruir una CMK?",
+    question: "¿En qué horario atiende el chat de la aplicación de Zocomar?",
     corpusVersion: corpus.corpusVersion,
     config,
     store,
@@ -171,9 +179,9 @@ async function main(): Promise<void> {
     `[S10 RAG respuesta] decision=${s10Answer.decision}, gen=${String(s10Answer.generationCalled)}, citas=${s10Answer.citations.join(",")}`,
   );
 
-  // Ejecuta recuperación, corte de similitud y generación condicionada para este caso RAG.
+  // Caso de RAG básico sin evidencia: rechaza antes de generar.
   const s10Refuse = await runLabBasicRag({
-    question: "¿Qué coste mensual tienen las licencias de Windows Server 2025 en AetherCloud?",
+    question: students!.question,
     corpusVersion: corpus.corpusVersion,
     config,
     store,
@@ -184,10 +192,9 @@ async function main(): Promise<void> {
     `[S10 RAG rechazo] decision=${s10Refuse.decision}, gen=${String(s10Refuse.generationCalled)}, citas=${String(s10Refuse.citations.length)}`,
   );
 
-  // Ejecuta el recorrido correctivo con reranking, evaluación y límites de reformulación.
-  const s11Rerank = await runLabCrag({
-    question:
-      "¿Cómo se autentican los clientes mTLS con X-Aether-Tenant y qué tiempo máximo de primera respuesta aplica si cae todo el plano de datos en un incidente SEV-1?",
+  // Ejecuta el recorrido correctivo con las reglas léxicas por defecto.
+  const s11Rules = await runLabCrag({
+    question: bizum!.question,
     corpusVersion: corpus.corpusVersion,
     config,
     store,
@@ -195,48 +202,45 @@ async function main(): Promise<void> {
   });
   // Presenta el resultado de este paso en la terminal para que pueda contrastarse durante la demostración.
   console.log(
-    `[S11 CRAG suficiente tras rerank] decision=${s11Rerank.decision}, búsquedas=${String(s11Rerank.retrievalCount)}, reformulaciones=${String(s11Rerank.reformulationCount)}, nodos=${s11Rerank.visitedNodes.join("->")}, citas=${s11Rerank.citations.join(",")}`,
+    `[S11 CRAG con reglas] decision=${s11Rules.decision}, búsquedas=${String(s11Rules.retrievalCount)}, reformulaciones=${String(s11Rules.reformulationCount)}, nodos=${s11Rules.visitedNodes.join("->")}, citas=${s11Rules.citations.join(",")}`,
   );
 
-  // Ejecuta el recorrido correctivo con reranking, evaluación y límites de reformulación.
+  // Simula la valoración del juez para enseñar sin red la ruta parcial y la segunda búsqueda.
   const s11Partial = await runLabCrag({
-    question:
-      "¿Cómo se autentican los clientes mTLS con X-Aether-Tenant y qué tiempo máximo de primera respuesta aplica si cae todo el plano de datos en un incidente SEV-1?",
+    question: bizum!.question,
     corpusVersion: corpus.corpusVersion,
     config,
     store,
     embedder,
-    // Simula la valoración de cobertura para mostrar la ruta parcial y la segunda recuperación.
+    // Valoración simulada: devoluciones cubre la validación; falta el plazo de abono de Bizum.
     assessor: ({ reranked, attempt }) => {
-      // Busca el aspecto de autenticación dentro de la evidencia recuperada.
-      const mtls = reranked.find((item) =>
-        item.hit.documentId.includes("02-autenticacion-mtls-tokens"),
-      );
-      // Busca el aspecto de incidentes que faltaba en el primer intento.
-      const sev = reranked.find((item) =>
-        item.hit.documentId.includes("06-respuesta-a-incidentes"),
-      );
-      if (attempt === 1 && mtls) {
+      // Fragmento de la política de devoluciones sobre el reembolso.
+      const refund = reranked.find((item) => item.hit.documentId === "02-devoluciones");
+      // Fragmento de la política de pagos con el plazo de Bizum.
+      const payments = reranked.find((item) => item.hit.documentId === "06-pagos-y-reembolsos");
+      // Primera pasada: parcial, con la laguna nombrada.
+      if (attempt === 1 && refund) {
+        // Conserva devoluciones y pide el plazo de abono.
         return {
           status: "partial",
           coverageScore: 0.5,
-          maxChunkRelevance: mtls.rerankScore,
+          maxChunkRelevance: refund.rerankScore,
           reason:
-            "Relevancia alta en mTLS (0.85), pero falta cubrir la respuesta a incidentes SEV-1.",
-          gaps: [
-            "Falta evidencia documental sobre: tiempo máximo de primera respuesta en incidente SEV-1",
-          ],
-          usefulIds: [mtls.hit.chunkId],
+            "Devoluciones explica la validación, pero remite a la política de pagos para el abono.",
+          gaps: ["Plazo de abono de un reembolso pagado con Bizum"],
+          usefulIds: [refund.hit.chunkId],
         };
       }
-      // Simula cobertura de ambos aspectos y excluye ids ausentes de la lista de evidencia útil.
+      // Pasadas siguientes: suficiente con los dos documentos.
       return {
         status: "sufficient",
         coverageScore: 0.9,
-        maxChunkRelevance: Math.max(mtls?.rerankScore ?? 0.8, sev?.rerankScore ?? 0.85),
-        reason: "Ambos aspectos (mTLS y SEV-1) cubiertos sin lagunas.",
+        maxChunkRelevance: Math.max(refund?.rerankScore ?? 0.8, payments?.rerankScore ?? 0.85),
+        reason: "Validación y abono de Bizum cubiertos sin lagunas.",
         gaps: [],
-        usefulIds: [mtls?.hit.chunkId, sev?.hit.chunkId].filter((id): id is string => Boolean(id)),
+        usefulIds: [refund?.hit.chunkId, payments?.hit.chunkId].filter((id): id is string =>
+          Boolean(id),
+        ),
       };
     },
   });
@@ -245,9 +249,9 @@ async function main(): Promise<void> {
     `[S11 CRAG parcial->segunda búsqueda] decision=${s11Partial.decision}, búsquedas=${String(s11Partial.retrievalCount)}, reformulaciones=${String(s11Partial.reformulationCount)}, nodos=${s11Partial.visitedNodes.join("->")}, citas=${s11Partial.citations.join(",")}`,
   );
 
-  // Ejecuta el recorrido correctivo con reranking, evaluación y límites de reformulación.
+  // Dato ausente: el grafo agota sus búsquedas y rechaza sin generar.
   const s11Limit = await runLabCrag({
-    question: "¿Qué descuento ofrece AetherCloud por pagar con criptomonedas?",
+    question: students!.question,
     corpusVersion: corpus.corpusVersion,
     config,
     store,
