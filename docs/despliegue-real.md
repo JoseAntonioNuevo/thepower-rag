@@ -2,6 +2,10 @@
 
 Verificado el 3 de octubre de 2026. URL: https://rag-thepower.josenuevo.dev.
 
+## Cierre de la migración a ThePower Shop: publicación del 26 de octubre de 2026
+
+La versión `483fa8fd-1858-4090-8fe3-b2ea266a02c6` (deployment `e00355b5-b8c1-4af8-8e74-164780bb9cb7`, 100 %) publica el commit `d9da3ff`. Las variables y los bindings son los de `9b4284ca`; cambia el código. El rechazo de CRAG ya no nombra el corpus del curso («No hay evidencia suficiente en los documentos consultados»), la cabecera de la tienda describe la investigación con el pedido, la normativa y la foto o la nota de voz, y la biblioteca ya no habla de grupos. La demo local sigue `CHAT_CORPUS`, lo que no afecta a producción. Health en verde en las cuatro etapas, con el chat en `thepower-shop`. El cliente servido (`assets/index-0gxffQqf.js`) es byte a byte el del build. No se lanzó ningún turno ni investigación de pago. Recibos en `activation-receipts/thepower-shop/cierre/`.
+
 ## Investigación de S12 sobre ThePower Shop: publicación del 26 de octubre de 2026
 
 La versión `9b4284ca-79c8-4e61-8afb-55a3f40be4e9` (deployment `df9129d7-a81f-4403-8642-1d72ad437074`, 100 %) publica el commit `6d9c6bf`: la investigación lee las políticas de la tienda, usa `get_order` sobre pedidos ficticios y busca normativa de consumo. Respecto a `ee30b88b` solo cambia la variable `RESEARCH_ALLOWED_DOMAINS` (`europa.eu,eur-lex.europa.eu,www.boe.es`); los bindings son los mismos. Health en verde en las cuatro etapas, con la investigación durable activa. Antes de publicar, `RESEARCH_DB` tenía 9 trabajos y la cuenta de la investigación 1 USD de presupuesto, 0 reservado y 0,480609 USD desconocidos retenidos, es decir, 0,519391 USD disponibles. Recibos en `activation-receipts/thepower-shop/investigacion/`. Decisión en [decisions.md](decisions.md).
