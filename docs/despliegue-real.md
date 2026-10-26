@@ -2,6 +2,10 @@
 
 Verificado el 3 de octubre de 2026. URL: https://rag-thepower.josenuevo.dev.
 
+## Interfaz más clara: publicación del 26 de octubre de 2026
+
+La versión `ee30b88b-a37c-47a5-8b5a-89c2ac10fa5b` (deployment `f6400c9b-6cad-486b-b2ef-ca6bbb329d3c`, 100 %) publica el commit `0a81041`. Solo cambia el cliente: el Worker (`index.js`) y todas las variables son los de `caf33c27`. Mientras `/api/health` responde, la página ya no enseña textos del curso. Las etapas del chat no tienen selector de grupo ni guion de CRAG, y los grafos del modo clase usan nombres llanos con las salidas etiquetadas. Health en verde en las cuatro etapas, con el chat en `thepower-shop`. El cliente servido (`assets/index-CosqMTpS.js`) es el del build. Recibos en `activation-receipts/thepower-shop/interfaz/`.
+
 ## ThePower Shop: publicación del 26 de octubre de 2026
 
 La tienda se renombró de «Zocomar» a ThePower Shop. Desde la versión `caf33c27-69ff-4774-9355-60fd4bf81609` (deployment `93fe07ab-479c-4d29-b564-f8baea459070`, 100 %), el chat lee el corpus `cc140d7876624`, con el perfil `p3d2b914bd60c`, el índice `thepower-ai-course-rag-3d2b914bd60c` (54 vectores) y el umbral calibrado 0,68771. La biblioteca de documentos (`/api/corpus`) se publicó en el mismo despliegue. Health en verde para las cuatro etapas, la tienda y el curso. [Recibo](evidence/thepower-shop-web-2026-10-25.md#thepower-shop-publicado-26-de-octubre-de-2026).
