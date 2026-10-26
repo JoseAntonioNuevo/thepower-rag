@@ -26,7 +26,7 @@ S10, el 22 de octubre de 2026, cubre las dos primeras etapas. S11, el 27 de octu
 
 1. **Sin RAG.** Conversación sin documentos. En demo es un stream sin modelo. En real llama a la API de Claude.
 2. **RAG básico.** La configuración de referencia de S10 (`RAG_CONTEXT_MODE=semantic`) embebe la consulta, busca en Vectorize con filtro de grupo, aplica el umbral calibrado (`0,50`) antes de llamar al modelo y responde con citas o rechaza sin generar. La variante `RAG_CONTEXT_MODE=complete` lee de D1 todos los fragmentos autorizados del curso cuando se quiere mostrar contexto completo sobre un corpus pequeño.
-3. **CRAG.** Un grafo correctivo con nodos separados de reordenamiento (`rank`, escala `[0, 1]`) y valoración de suficiencia (`assess`, umbrales `CRAG_SCORE_THRESHOLDS`), tres búsquedas y dos reformulaciones como máximo, un solo plazo por turno (20 s por defecto; 60 s en el perfil Sonnet) y la ordenación validada. En demo usa guiones. En real, si falta configuración o una sesión de gasto, no llama al proveedor y no usa otra etapa.
+3. **CRAG.** Un grafo correctivo con nodos separados de reordenamiento (`rank`, escala `[0, 1]`) y valoración de suficiencia (`assess`, umbrales `CRAG_SCORE_THRESHOLDS`), tres búsquedas y dos reformulaciones como máximo, un solo plazo por turno (20 s por defecto; 60 s en el perfil Sonnet) y la ordenación validada. En demo recorre el índice léxico de prueba de la tienda (con `CHAT_CORPUS=course`, los guiones S5, S6 y S16). En real, si falta configuración o una sesión de gasto, no llama al proveedor y no usa otra etapa.
 4. **Investigación.** Sobre ThePower Shop: plan acotado que separa la política de la tienda, los datos de un pedido (`get_order`) y la normativa externa (`europa.eu`, `eur-lex.europa.eu` y `www.boe.es`), conversaciones aisladas, Workflow asíncrono y un presupuesto propio. Admite imagen PNG/JPEG, audio WAV corto y voz opcional. El caso de clase es la foto del pedido `TPS-20481` y una nota de voz (`apps/api/fixtures/media/`). La demostración local usa guiones; producción usa Tavily y los adaptadores reales configurados.
 
 ## Arquitectura
@@ -63,10 +63,10 @@ La aplicación queda en `http://localhost:5173/`. El perfil de `apps/web/wrangle
 Recorrido local:
 
 1. Sin RAG: escribe una pregunta y observa el stream etiquetado. No hay fuentes.
-2. Cambia a RAG básico. La conversación anterior se vacía. Pregunta cómo modela LangGraph un agente con estado y nodos. La respuesta cita la ficha y muestra la traza.
-3. Pregunta qué beca interna de 1991 cubre el programa. No consta y no llama a un modelo.
-4. En audiencia General, pregunta cuándo es la clase. Pide elegir L/X o M/J. En M/J, la pregunta por la clase de RAG S10 debe mostrar 2026-10-22 y no el calendario L/X.
-5. En CRAG elige un guion o escribe su pregunta. El selector no cambia de guion mientras la respuesta está en curso. El recorrido suficiente cita S5. El parcial cita S5 y S6. El rechazo de la beca de 1991 repite el descarte sin claves duplicadas y no llama a un modelo. El detalle está en `docs/crag-demo-walkthrough.md`.
+2. Cambia a RAG básico. La conversación anterior se vacía. Pregunta «¿En qué horario atiende el chat de la aplicación?». La respuesta cita la política de atención al cliente de ThePower Shop y muestra la traza.
+3. Pregunta «¿Cuántos días tengo para devolver un producto?». La demo responde «no consta» sin llamar a un modelo: el índice léxico de prueba compara tokens, la política de devoluciones queda en 0,28 y no alcanza el umbral 0,33. Es el ejemplo de por qué el modo real usa embeddings semánticos.
+4. Pregunta qué beca interna de 1991 cubre la tienda. No consta y no llama a un modelo.
+5. Cambia a CRAG y repite las preguntas. La de horario recorre buscar, reordenar, valorar y responder. La de la beca descarta, reformula, vuelve a buscar y rechaza. Los guiones de CRAG del curso (S5, S6 y S16) solo se usan con `CHAT_CORPUS=course`; su detalle está en `docs/crag-demo-walkthrough.md`.
 
 ## Comprobaciones
 

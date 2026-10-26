@@ -6,7 +6,7 @@ El [guion de 60 minutos](aula/guion-aula.md) permite enseñar indexación, consu
 
 ## S11 · CRAG con la tienda ThePower Shop · 27 de octubre
 
-El laboratorio pasa de AetherCloud a **ThePower Shop**, una tienda en línea inventada de 12 políticas, y CRAG usa un juez real con el mismo modelo que el generador. El [test real del 24/10](../docs/evidence/thepower-shop-lab-2026-10-24.md) dio **14/14 y 6/6 en RAG básico y en CRAG**: empate en acierto. CRAG gana margen de decisión (0,65 frente a 0,014) y contexto limpio (la política sustituida entra en 3 de 14 respuestas de RAG y en ninguna de CRAG), a cambio de unas tres veces más latencia. El [guion](guiones/S11-guion-profesor.md), el [enunciado](ejercicios/S11-enunciado.md), la [referencia de corrección](ejercicios/S11-solucion-profesor.md) y la [guía de apoyo](ejercicios/laboratorio-apoyo.md) están actualizados, con sus PDF. **La presentación `S11-crag.pptx` no se ha actualizado**: el guion indica qué decir en las diapositivas 4, 12, 13 y 15. `S10-S11-alumno.zip` y `S10-S11-profesor.zip` se regeneraron el 25/10 con este material y las reglas de `material/S10/fuentes/empaquetar.py`; `S10-S11-demo-codigo.zip` conserva su contenido anterior.
+El laboratorio pasa de AetherCloud a **ThePower Shop**, una tienda en línea inventada de 12 políticas, y CRAG usa un juez real con el mismo modelo que el generador. El [test real del 24/10](../docs/evidence/thepower-shop-lab-2026-10-24.md) dio **14/14 y 6/6 en RAG básico y en CRAG**: empate en acierto. CRAG gana margen de decisión (0,65 frente a 0,014) y contexto limpio (la política sustituida entra en 3 de 14 respuestas de RAG y en ninguna de CRAG), a cambio de unas tres veces más latencia. El [guion](guiones/S11-guion-profesor.md), el [enunciado](ejercicios/S11-enunciado.md), la [referencia de corrección](ejercicios/S11-solucion-profesor.md) y la [guía de apoyo](ejercicios/laboratorio-apoyo.md) están actualizados, con sus PDF. **La presentación `S11-crag.pptx` no se ha actualizado**: el guion indica qué decir en las diapositivas 4, 12, 13 y 15. `S10-S11-alumno.zip` y `S10-S11-profesor.zip` se regeneraron el 25/10 con este material y las reglas de `material/S10/fuentes/empaquetar.py`; el del profesor se volvió a generar el 26/10 con el material de S12 y las mismas reglas, que dejan fuera los archivos privados de `.build` y los resultados en bruto. `S10-S11-demo-codigo.zip` conserva su contenido anterior.
 
 ## S10 · versión para impartir el 22 de octubre
 
@@ -15,10 +15,12 @@ La presentación canónica tiene **24 diapositivas**, el QR nuevo de Laura y not
 ## S12 · Deep Research y multimodal · 29 de octubre
 
 El [paquete de S12](S12/README.md) contiene la presentación editable y su PDF,
-el guion del profesor en Markdown y PDF, los tiempos de los 90 minutos y el
-respaldo de imagen y voz del ensayo real. La sesión explica primero los conceptos
-y termina con la aplicación, la evidencia guardada y el ejercicio. Los ZIP de
-S10/S11 conservan su contenido anterior; los archivos de S12 están en su carpeta.
+el guion del profesor en Markdown y PDF, los tiempos de los 90 minutos y una
+captura de respaldo de la demo local. Desde el 26/10 el caso de la clase es la
+tienda ThePower Shop: foto y nota de voz de un pedido, políticas de la tienda,
+la herramienta `get_order` y la normativa europea de consumo. La sesión explica
+primero los conceptos y termina con la aplicación, qué comprobar en una ejecución
+real y el ejercicio. `S10-S11-profesor.zip` incluye también la carpeta de S12.
 
 Material actualizado y sincronizado con el código del repositorio para las dos sesiones de RAG del programa AI Engineer (cohorte M/J, 18:30–20:00 `Europe/Madrid`).
 

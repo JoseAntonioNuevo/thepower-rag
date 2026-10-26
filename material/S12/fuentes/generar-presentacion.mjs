@@ -242,7 +242,7 @@ for (const [i, s] of data.slides.entries()) {
         slide,
         path.resolve(output, s.image),
         { left: 64, top: 225, width: 1152, height: 175 },
-        "Captura sintética: Dimension mismatch, expected 1024, got 768",
+        "Captura sintética: pedido TPS-20481, auriculares, Bizum, entregado el 20/10",
       );
       // Añade las explicaciones debajo de la ilustración con filas más compactas.
       rows(slide, s.rows, { x: 64, y: 426, width: 1152, gap: 62, labelWidth: 266, fontSize: 25 });
@@ -258,9 +258,9 @@ for (const [i, s] of data.slides.entries()) {
       // Inserta la imagen que acompaña la evidencia de esta diapositiva.
       await picture(
         slide,
-        path.join(output, "respaldo/informe-parcial-ensayo-20261011.png"),
+        path.join(output, "respaldo/informe-demo-local.png"),
         { left: 789, top: 204, width: 397, height: 430 },
-        "Captura del ensayo real del 11 de octubre: informe parcial y reproductor de voz",
+        "Captura de la demo local: informe con fuentes de la tienda, del pedido y de la web",
       );
     } else {
       // Las composiciones restantes reutilizan el helper de filas con sus parámetros de espacio.
@@ -281,7 +281,7 @@ for (const [i, s] of data.slides.entries()) {
     text(slide, `${i + 1}`, 1182, 690, 40, 22, 14, C.muted);
   }
   // Construye las notas con horario, explicación, acciones y comprobaciones de la entrada actual.
-  slide.speakerNotes.text = `${String(i + 1).padStart(2, "0")} · ${s.title.replace(/\n/g, " ")}\n${start}–${end} (${s.minutes} min, Europe/Madrid)\n\nEXPLICACIÓN\n${s.explain}\n\nACCIÓN\n${s.action}\n\nPREGUNTA AL GRUPO\n${s.question}\n\nRESPUESTA ESPERADA\n${s.answer}\n\nTRANSICIÓN\n${s.transition}\n\nFUENTES\n${s.sources.join("\n")}\nDocumentación externa consultada: 18/10/2026. Los ensayos de producción citados son del 11/10/2026.`;
+  slide.speakerNotes.text = `${String(i + 1).padStart(2, "0")} · ${s.title.replace(/\n/g, " ")}\n${start}–${end} (${s.minutes} min, Europe/Madrid)\n\nEXPLICACIÓN\n${s.explain}\n\nACCIÓN\n${s.action}\n\nPREGUNTA AL GRUPO\n${s.question}\n\nRESPUESTA ESPERADA\n${s.answer}\n\nTRANSICIÓN\n${s.transition}\n\nFUENTES\n${s.sources.join("\n")}\nDocumentación externa consultada: 18/10/2026. La demo de la tienda es local y usa guiones.`;
 }
 // Carga el finalizador que validará integridad y geometría antes de entregar el PowerPoint.
 const { finalizePresentation } = await import(

@@ -6,7 +6,7 @@ Guion del profesor · José Antonio Nuevo
 
 ## Preparación de la sesión
 
-El objetivo es explicar cómo combinar imagen, audio, memoria, herramientas e investigación asíncrona en un agente. El alumno debe poder identificar de dónde sale cada dato y qué queda sin comprobar. La primera hora desarrolla los conceptos. La última media hora utiliza la aplicación de 3-rag y la evidencia del ensayo real ya guardado.
+El objetivo es explicar cómo combinar imagen, audio, memoria, herramientas e investigación asíncrona en un agente. El alumno debe poder identificar de dónde sale cada dato y qué queda sin comprobar. La primera hora desarrolla los conceptos. La última media hora utiliza la aplicación de 3-rag con el caso de ThePower Shop y explica qué comprobar en una ejecución real.
 
 Este guion acompaña las 24 diapositivas de S12. Las notas del PowerPoint contienen la explicación, la acción, la pregunta y la transición de cada bloque. Los tiempos incluyen participación y demostración. El ensayo oral del profesor permite ajustar el ritmo antes del directo.
 
@@ -17,14 +17,14 @@ Este guion acompaña las 24 diapositivas de S12. Las notas del PowerPoint contie
 - Foto sintética del pedido `apps/api/fixtures/media/pedido-auriculares.png` (pedido TPS-20481, auriculares intraauditivos, Bizum).
 - Nota de voz sintética `apps/api/fixtures/media/nota-de-voz-devolucion.wav`.
 - Imagen válida no reconocida por el guion `apps/api/fixtures/media/unknown-square.png`.
-- Respaldo junto a este documento: `respaldo/informe-parcial-ensayo-20261011.png` y `respaldo/voz-ensayo-20261011.mp3`.
+- Respaldo junto a este documento: `respaldo/informe-demo-local.png`, captura del informe de la demo local con el caso de la tienda.
 - Pantalla compartida y opción de compartir sonido comprobadas. Ningún archivo de entorno o consola con credenciales a la vista.
 
 ### Alcance del enunciado y de la aplicación
 
 El temario exige procesamiento de archivos y visión, imagen a texto, audio, TTS y Deep Research. El ejercicio comunicado concreta Gemini para multimodalidad y voz, y Gemini Deep Research mediante Interactions API. La referencia del agente es `deep-research-preview-04-2026`; los modelos se eligen mediante configuración y se comprueba su disponibilidad antes de gastar. La versión actual del SDK documenta `background=True`, creación de una interacción y consultas posteriores por su ID.
 
-La aplicación existente enseña el mismo recorrido con un grafo de investigación propio. El ensayo real del 11 de octubre utilizó Claude Haiku 5.5, Tavily, Whisper y Aura-2 es. No implementa Gemini Interactions y su `jobId` no es un `interaction_id` de Gemini. Esta diferencia se explica en las diapositivas 16 y 21. El enunciado publicado sigue siendo la autoridad para evaluar la entrega.
+La aplicación existente enseña el mismo recorrido con un grafo de investigación propio. La configuración publicada usa Claude Haiku 5.5, Tavily, Whisper y Aura-2 es. No implementa Gemini Interactions y su `jobId` no es un `interaction_id` de Gemini. Esta diferencia se explica en las diapositivas 16 y 21. El enunciado publicado sigue siendo la autoridad para evaluar la entrega.
 
 No se necesita una nueva web, voz en tiempo real o varios agentes. El enunciado permite un terminal o notebook. Los archivos son ficticios. Una simulación sirve para explicar y ensayar fallos, pero no sustituye la investigación real solicitada.
 
@@ -54,7 +54,7 @@ No se necesita una nueva web, voz en tiempo real o varios agentes. El enunciado 
 | 20          | 19:27-19:30 | El grafo del ejercicio                       | 3       |
 | 21          | 19:30-19:34 | La aplicación que ya tenemos                 | 4       |
 | 22          | 19:34-19:49 | Demostración del caso completo               | 15      |
-| 23          | 19:49-19:54 | Lo observado en el ensayo real               | 5       |
+| 23          | 19:49-19:54 | Qué comprobar en una ejecución real          | 5       |
 | 24          | 19:54-20:00 | Ejercicio y preguntas finales                | 6       |
 
 Total: **90 minutos**, de 18:30 a 20:00.
@@ -103,7 +103,7 @@ Mantén el QR visible durante dos minutos. La misma imagen original se conserva 
 
 **Explicación para el profesor**
 
-Lee el objetivo como un comportamiento observable. El alumno no tiene que construir una interfaz web ni varios agentes. Puede entregar un terminal o notebook que recorra las capacidades. Durante la primera hora separaremos cada responsabilidad para que después resulte sencillo encontrar un fallo. La última media hora se dedica a la aplicación existente, un resultado real guardado y las condiciones del ejercicio. Distingue siempre el diseño del agente, el proveedor de modelos y la infraestructura que lo ejecuta.
+Lee el objetivo como un comportamiento observable. El alumno no tiene que construir una interfaz web ni varios agentes. Puede entregar un terminal o notebook que recorra las capacidades. Durante la primera hora separaremos cada responsabilidad para que después resulte sencillo encontrar un fallo. La última media hora se dedica a la aplicación existente, a cómo se comprueba una ejecución real y a las condiciones del ejercicio. Distingue siempre el diseño del agente, el proveedor de modelos y la infraestructura que lo ejecuta.
 
 **Acción y participación**
 
@@ -355,7 +355,7 @@ Señala el agente de referencia del enunciado, deep-research-preview-04-2026, en
 
 **Explicación para el profesor**
 
-Explica por qué una investigación autónoma necesita condiciones de parada. Los valores de la diapositiva proceden del contrato actual de la app, no son un estándar de Deep Research ni el límite universal de Gemini. Visión, transcripción y voz tienen su propia contabilidad y comparten el plazo global. Reservar un máximo antes de enviar permite rechazar una nueva llamada cuando no hay presupuesto. Tokens medidos, un precio estimado y un importe facturado son datos diferentes. Una petición enviada cuyo resultado se desconoce no debe repetirse a ciegas. En el aula principal usaremos el modo local sin gasto y evidencia real anterior.
+Explica por qué una investigación autónoma necesita condiciones de parada. Los valores de la diapositiva proceden del contrato actual de la app, no son un estándar de Deep Research ni el límite universal de Gemini. Visión, transcripción y voz tienen su propia contabilidad y comparten el plazo global. Reservar un máximo antes de enviar permite rechazar una nueva llamada cuando no hay presupuesto. Tokens medidos, un precio estimado y un importe facturado son datos diferentes. Una petición enviada cuyo resultado se desconoce no debe repetirse a ciegas. En el aula usaremos el modo local sin gasto.
 
 **Acción y participación**
 
@@ -373,11 +373,11 @@ Pregunta qué límite debería detener una ronda con tiempo disponible pero sin 
 
 **Explicación para el profesor**
 
-Define text to speech como síntesis de voz a partir de texto. En la app no pedimos al TTS que invente un resumen. Primero seleccionamos frases que han pasado la verificación y después generamos el audio. Esto facilita comparar lo escrito con lo hablado. Si el informe es parcial, la locución puede indicarlo. La generación y la reproducción son pasos distintos: un MP3 correcto no prueba que el alumno haya compartido el sonido de su ordenador. En el modo offline, la salida de prueba es un tono rotulado y no voz neural. El MP3 guardado del ensayo real sí permite escuchar una síntesis anterior.
+Define text to speech como síntesis de voz a partir de texto. En la app no pedimos al TTS que invente un resumen. Primero seleccionamos frases que han pasado la verificación y después generamos el audio. Esto facilita comparar lo escrito con lo hablado. Si el informe es parcial, la locución puede indicarlo. La generación y la reproducción son pasos distintos: un MP3 correcto no prueba que el alumno haya compartido el sonido de su ordenador. En el modo offline, la salida de prueba es un tono rotulado y no voz neural. En una ejecución real, el MP3 sí es voz neural generada con Aura.
 
 **Acción y participación**
 
-Recuerda ensayar la opción de compartir audio en la reunión. Si no funciona, muestra el texto de la locución y el archivo guardado.
+Recuerda ensayar la opción de compartir audio en la reunión. Si no funciona, muestra el texto de la locución y el reproductor en pantalla.
 
 **Pregunta:** ¿Por qué conservar el texto exacto que se convierte en voz?
 
@@ -427,7 +427,7 @@ Pide que identifiquen dónde probarían una contradicción entre imagen y audio,
 
 **Explicación para el profesor**
 
-Presenta las decisiones de la app después de haber explicado las responsabilidades. LangGraph controla la investigación y consulta las políticas de la tienda, la herramienta de pedidos y la web. El ensayo real se hizo con Claude para texto e imagen, Whisper para audio y Aura para voz. La fábrica actual permite configurar el proveedor generativo, pero no prometemos compatibilidad universal con cualquier modelo de visión. La persistencia utiliza servicios de Cloudflare. Estos nombres describen nuestra implementación y no requisitos conceptuales de multimodalidad. La ruta Gemini/Interactions del enunciado no queda implementada por el hecho de que esta app tenga un grafo equivalente.
+Presenta las decisiones de la app después de haber explicado las responsabilidades. LangGraph controla la investigación y consulta las políticas de la tienda, la herramienta de pedidos y la web. La configuración publicada usa Claude Haiku para texto e imagen, Whisper para audio y Aura para voz. La fábrica actual permite configurar el proveedor generativo, pero no prometemos compatibilidad universal con cualquier modelo de visión. La persistencia utiliza servicios de Cloudflare. Estos nombres describen nuestra implementación y no requisitos conceptuales de multimodalidad. La ruta Gemini/Interactions del enunciado no queda implementada por el hecho de que esta app tenga un grafo equivalente.
 
 **Acción y participación**
 
@@ -445,7 +445,7 @@ Abre la app local en 127.0.0.1:5191 y la etapa Investigación. Mantén los secre
 
 **Explicación para el profesor**
 
-Usa el perfil local de investigación con sus guiones rotulados. Adjunta pedido-auriculares.png y nota-de-voz-devolucion.wav, marca Generar voz y envía sin escribir la pregunta. Muestra que la observación y la intención se conservan por separado, que aparecen plan y fuentes y que el resultado se guarda. El tono offline es una prueba técnica, no una voz neural. Recarga y comprueba el mismo informe. Haz un seguimiento breve con «¿y ese pedido?» y después abre otra conversación para mostrar aislamiento. El guion detallado y los tiempos de corte están en el apartado de demostración del documento del profesor. La consulta a get_order y las fuentes del caso real se pueden recorrer en el respaldo guardado.
+Usa el perfil local de investigación con sus guiones rotulados. Adjunta pedido-auriculares.png y nota-de-voz-devolucion.wav, marca Generar voz y envía sin escribir la pregunta. Muestra que la observación y la intención se conservan por separado, que aparecen plan y fuentes y que el resultado se guarda. El tono offline es una prueba técnica, no una voz neural. Recarga y comprueba el mismo informe. Haz un seguimiento breve con «¿y ese pedido?» y después abre otra conversación para mostrar aislamiento. El guion detallado y los tiempos de corte están en el apartado de demostración del documento del profesor. Si la app falla, la captura de respaldo enseña el mismo informe con la consulta a get_order y sus fuentes.
 
 **Acción y participación**
 
@@ -457,21 +457,21 @@ Usa el perfil local de investigación con sus guiones rotulados. Adjunta pedido-
 
 **Transición:** Ahora distinguimos esta demostración de los resultados reales ya conservados.
 
-### 23. Lo observado en el ensayo real
+### 23. Qué comprobar en una ejecución real
 
 **19:49-19:54 · 5 minutos**
 
 **Explicación para el profesor**
 
-Explica que estas cifras proceden del ensayo del 11 de octubre, no de la sesión que acabamos de ejecutar. Los dos trabajos recorrieron imagen, audio, herramienta del curso, búsqueda, lectura y voz. El segundo completó sus 18 operaciones y mantuvo un informe parcial porque faltaba evidencia sobre la configuración concreta. Reproduce el MP3 guardado y señala el texto de la voz. La recarga recuperó informe y audio, y se comprobó que no creó operaciones pagadas adicionales. No presentes las reservas de presupuesto como una factura ni uses dos ejemplos para afirmar una precisión general. El documento de despliegue contiene la identidad y los límites de esa evidencia histórica.
+Explica que la demostración de hoy usa guiones locales y no proveedores reales: sirve para ver el recorrido, no para medir un modelo. En una ejecución real con la foto y la nota de voz hay tres comprobaciones. La identidad: un único ID de trabajo que, al recargar, devuelve el mismo informe y la misma voz sin crear operaciones de pago nuevas. Las tres vías: un fragmento de las políticas, el resultado de get_order y al menos una página oficial leída, cada una sosteniendo solo su parte del informe. El dinero: la reserva previa no supera el tope de 0,25 USD por trabajo y una llamada sin resultado conocido queda como desconocida, nunca como cero. No presentes una reserva como factura ni un ejemplo como una precisión general.
 
 **Acción y participación**
 
-Abre respaldo/informe-parcial-ensayo-20261011.png y reproduce respaldo/voz-ensayo-20261011.mp3. Si no puedes compartir sonido, lee el texto de la captura.
+Señala en la captura de la demo local (respaldo/informe-demo-local.png) una fuente de cada tipo (política, pedido y web) y el reproductor de voz. Si quieres enseñar una ejecución real, lánzala antes de clase desde tu navegador en la web publicada, con la foto y la nota de voz, y deja visibles su fecha y su ID.
 
-**Pregunta:** ¿Cómo puede haber 8 afirmaciones verificadas y seguir faltando una respuesta completa?
+**Pregunta:** ¿Cómo sabemos que recargar no ha lanzado otra investigación?
 
-**Respuesta esperada:** Las frases comprobadas no necesariamente cubren todas las subpreguntas del usuario.
+**Respuesta esperada:** Porque vuelve el mismo ID de trabajo y su registro no tiene operaciones de pago nuevas.
 
 **Transición:** Terminamos traduciendo lo aprendido a una entrega pequeña y comprobable.
 
@@ -522,7 +522,7 @@ Resultado esperado: la observación conserva el pedido `TPS-20481`, el producto,
 1. Leer la pregunta fusionada y comprobar que no se ha perdido la intención del audio.
 2. Recorrer plan, pasos y fuentes. Señalar las tres vías: políticas de la tienda, `get_order` y normativa europea. Señalar también la diferencia entre una búsqueda y una página leída.
 3. Leer un extracto y la frase del informe que respalda. Preguntar qué parte del caso no permite concluir.
-4. Mostrar el texto de voz y el reproductor. En offline, el audio es un tono de prueba rotulado. Reservar el MP3 real para la siguiente diapositiva.
+4. Mostrar el texto de voz y el reproductor. En offline, el audio es un tono de prueba rotulado, no voz neural.
 
 Resultado esperado: informe del guion, fuentes visibles y estado final diferenciado de cobertura. No atribuir esta ejecución a Claude, Whisper, Tavily o Aura reales.
 
@@ -541,25 +541,29 @@ Resultado esperado: la recarga recupera el resultado guardado. La memoria conser
 3. Mostrar que el perfil de prueba no reconoce el archivo. Debe explicarlo sin inventar la lectura del pedido.
 4. Si hay tiempo, preguntar por el pedido `TPS-30117`, que pertenece a otra cuenta: `get_order` lo rechaza sin enseñar sus datos. También se puede contrastar con la descripción de un archivo mal formado, que se rechaza en la admisión antes de investigar.
 
-Cambiar de conversación prueba separación funcional del hilo. Las pruebas de acceso entre propietarios y el control de autorización tienen evidencia adicional en el código y en el ensayo registrado.
+Cambiar de conversación prueba separación funcional del hilo. Las pruebas de acceso entre propietarios y el control de autorización están en el código y en sus pruebas (`apps/api/src/research-phase2-http.test.ts`).
 
 ### 19:47-19:49 · Comprobación del aprendizaje
 
-Pedir que identifiquen un dato de imagen, uno de audio, uno de la herramienta y una afirmación respaldada por una fuente. Preguntar qué cambiaría si la transcripción nombrara otro pedido. Pasar a la evidencia real a las 19:49.
+Pedir que identifiquen un dato de imagen, uno de audio, uno de la herramienta y una afirmación respaldada por una fuente. Preguntar qué cambiaría si la transcripción nombrara otro pedido. Pasar a las comprobaciones de una ejecución real a las 19:49.
 
 ### Tiempo de corte y respaldo
 
 Si una operación no muestra un estado útil en 90 segundos, conservar el ID y pasar al respaldo. Si la app no arranca tras dos minutos de diagnóstico, recorrer la captura y los pasos del guion. No cambiar proveedores, dependencias, cuentas ni presupuestos en directo para recuperar la demostración.
 
-La captura de respaldo muestra parte del informe real y el reproductor al final. El MP3 permite reproducir la voz del ensayo anterior. No son una grabación de la demo de hoy. Mantener visible la fecha del 11/10/2026 al utilizarlos.
+La captura de respaldo muestra el informe de la demo local con el caso de la tienda y el reproductor al final. Es un guion de prueba, no una ejecución con proveedores reales ni una grabación de la demo de hoy.
 
-## Lectura de la evidencia real
+## Qué comprobar en una ejecución real
 
-Los ensayos del 11/10/2026 recorrieron visión, transcripción, curso, herramienta S12, búsqueda, lectura y síntesis de voz. Un ejemplo produjo un informe completo con 7 afirmaciones verificadas en 48,712 s. Otro terminó en 45,158 s con 8 afirmaciones verificadas y un informe parcial. Este último completó las 18 operaciones registradas. La ausencia de evidencia sobre la configuración concreta impidió cerrar todas las subpreguntas.
+La investigación trabaja sobre ThePower Shop desde el 26/10/2026 y no hay un ensayo real guardado de este caso: la demostración principal es local y usa guiones. Los ensayos del 11/10 eran del caso anterior (el error de dimensiones con el material del curso) y se han retirado del material.
 
-El MP3 final duraba 24,504 s y se recuperó después de recargar. El navegador lo reprodujo hasta el final. También se registró que una petición anónima de medios obtenía 403 y que recuperar el resultado no añadía operaciones pagadas. Son observaciones históricas y acotadas. No demuestran una precisión general del sistema, la disponibilidad actual de los servicios ni aceptación física del sonido compartido en nuestra reunión.
+Si se lanza una ejecución real con la foto del pedido y la nota de voz, se comprueban tres cosas:
 
-No convertir reservas de presupuesto en coste facturado. El ensayo conserva cargos desconocidos como tales. Las cifras de saldo histórico no son el presupuesto disponible de hoy y no se utilizan para autorizar una nueva ejecución.
+1. **Identidad.** Un único ID de trabajo. Al recargar vuelven el mismo informe y la misma voz, y el registro del trabajo no tiene operaciones de pago nuevas.
+2. **Tres vías con su autoridad.** Un fragmento de las políticas de la tienda, el resultado de `get_order` para `TPS-20481` y al menos una página oficial leída de `europa.eu`, `eur-lex.europa.eu` o `www.boe.es`. Cada fuente sostiene solo su parte: la web no puede documentar una política de la tienda ni un dato del pedido.
+3. **Dinero.** La reserva previa no supera el tope de 0,25 USD por trabajo. Una llamada enviada sin resultado conocido queda como desconocida, nunca como cero. Una reserva no es una factura.
+
+Para hacerla, el profesor la lanza desde su navegador en la web publicada (la investigación pública exige Turnstile), antes de clase o en directo, y deja visibles su fecha y su ID. El 26/10/2026 la cuenta de la investigación tenía 0,519391 USD disponibles. Un trabajo con imagen, audio y voz reservó unos 0,11 USD en los ensayos anteriores.
 
 ## Referencia de Gemini para explicar el ejercicio
 
@@ -612,12 +616,12 @@ Rutas relativas a la raíz de `3-rag`, salvo la guía general del directorio pad
 - `../GUIA-DE-CLASES-2026.md`, apartado S12: concreción del ejercicio enviado.
 - `docs/s12-research-phase1.md`: grafo de investigación y política de fuentes.
 - `docs/s12-research-phase2.md`: memoria, checkpoints y trabajos durables.
-- `docs/s12-research-phase3.md`: admisión, fusión, modalidades y demo offline. Algunas secciones preceden al ensayo real posterior.
-- `docs/s12-cloud-deployment.md`, apartado Ensayo real de extremo a extremo: referencia posterior para los resultados del 11/10.
+- `docs/s12-research-phase3.md`: admisión, fusión, modalidades y demo offline. Describe el caso anterior; el caso de la tienda está en `docs/decisions.md`.
+- `docs/s12-cloud-deployment.md`: publicación de la investigación durable, sus recursos y sus límites de gasto.
 - `apps/api/src/research-graph.ts` y `research-gather.ts`: nodos y obtención de evidencia.
 - `apps/api/src/research-tool.ts`: herramienta `get_order` sobre los pedidos ficticios de `corpus/thepower-shop/pedidos.json`.
 - `apps/api/src/research-multimodal.ts` y `research-perception-real.ts`: lectura de medios y proveedores.
 - `packages/research/src/fusion.ts`, `report.ts` y `speech-script.ts`: fusión, verificación y texto hablado.
 - `packages/contracts/src/research.ts` y `media.ts`: límites actuales del laboratorio.
 
-Las notas de cada diapositiva señalan sus fuentes concretas. La documentación del proveedor se consultó al preparar este material. Los resultados históricos se mantienen con su fecha y no se presentan como una nueva ejecución.
+Las notas de cada diapositiva señalan sus fuentes concretas. La documentación del proveedor se consultó al preparar este material. No se presenta ninguna ejecución real del caso de la tienda: la demo es local y con guiones.

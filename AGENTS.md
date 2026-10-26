@@ -44,7 +44,7 @@ Corpus del chat (`CHAT_CORPUS`, `apps/api/src/chat-corpus.ts`): `course` (por de
 
 Modos de ejecución (`APP_MODE`):
 
-- `demo` (por defecto en `bun run dev`): sin red ni claves. Sin RAG es un stream etiquetado; RAG usa un índice léxico de 128 dimensiones (`fixture-token-hash-v1`, umbral 0,33) que **no** es semántico ni Vectorize; CRAG e investigación usan guiones.
+- `demo` (por defecto en `bun run dev`): sin red ni claves. Sigue `CHAT_CORPUS` (la tienda en `wrangler.jsonc`). Sin RAG es un stream etiquetado; RAG usa un índice léxico de 128 dimensiones (`fixture-token-hash-v1`, umbral 0,33) que **no** es semántico ni Vectorize; CRAG recorre ese índice con la tienda y usa los guiones S5/S6/S16 solo con `course`; la investigación usa guiones.
 - `real`: proveedor de modelos, Workers AI, Vectorize, D1 y R2. Si falta configuración, la API responde 409 y **nunca** cae a la demo.
 
 ## Mapa del repositorio

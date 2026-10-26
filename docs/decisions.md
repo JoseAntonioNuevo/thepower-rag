@@ -201,3 +201,9 @@ El usuario pidió que la investigación dejara el flujo de las clases y trabajar
 - **Conflicto entre medios:** ya no se comparan cifras de dimensiones sino números de pedido: si la foto y el audio nombran pedidos distintos, se pide aclaración antes de investigar.
 
 Publicado en la versión `9b4284ca-79c8-4e61-8afb-55a3f40be4e9` (commit `6d9c6bf`). Los nueve trabajos del ensayo del 11/10 siguen en `RESEARCH_DB`; su resultado guardado usa el esquema anterior y la web ya no lo presenta. El corpus del curso sigue en D1, R2 y Vectorize, pero producción ya no lo lee (el chat y la investigación usan la tienda); borrarlo necesita una autorización expresa.
+
+## La demo local del chat sigue `CHAT_CORPUS` (26 de octubre de 2026)
+
+Tras pasar la investigación a la tienda, la demo local (`bun run dev`) todavía enseñaba el material del curso en Sin RAG, RAG básico y CRAG, porque el perfil `demo` ignoraba `CHAT_CORPUS`. Ahora lo respeta: `wrangler.jsonc` fija `CHAT_CORPUS=thepower-shop` en el nivel superior y en los entornos `local` y `research`, y `demoChatFixture` (`apps/api/src/fixture.ts`) elige los fragmentos preparados de la tienda o los del curso. RAG básico usa el mismo índice léxico de prueba con los fragmentos de la tienda. Los guiones de CRAG (S5, S6 y S16) son preguntas del curso y solo se usan con `CHAT_CORPUS=course`; con la tienda, CRAG recorre ese índice léxico. El texto del stream de Sin RAG deja de nombrar el curso.
+
+El mismo día el usuario pidió no hacer ensayos y dejar todo completado y desplegado. El material de S12 retiró la evidencia del 11/10, que era del caso anterior: la diapositiva 23 explica qué comprobar en una ejecución real y su captura es la de la demo local, rotulada como informe de prueba (`material/S12/VERIFICACION.md`).

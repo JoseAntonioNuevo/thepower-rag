@@ -55,7 +55,7 @@
         ["Continuidad", "La conversación conserva contexto y puede producir voz"]
       ],
       "takeaway": "60 minutos de conceptos y 30 de aplicación, evidencia y ejercicio",
-      "explain": "Lee el objetivo como un comportamiento observable. El alumno no tiene que construir una interfaz web ni varios agentes. Puede entregar un terminal o notebook que recorra las capacidades. Durante la primera hora separaremos cada responsabilidad para que después resulte sencillo encontrar un fallo. La última media hora se dedica a la aplicación existente, un resultado real guardado y las condiciones del ejercicio. Distingue siempre el diseño del agente, el proveedor de modelos y la infraestructura que lo ejecuta.",
+      "explain": "Lee el objetivo como un comportamiento observable. El alumno no tiene que construir una interfaz web ni varios agentes. Puede entregar un terminal o notebook que recorra las capacidades. Durante la primera hora separaremos cada responsabilidad para que después resulte sencillo encontrar un fallo. La última media hora se dedica a la aplicación existente, a cómo se comprueba una ejecución real y a las condiciones del ejercicio. Distingue siempre el diseño del agente, el proveedor de modelos y la infraestructura que lo ejecuta.",
       "action": "Señala los cuatro resultados que comprobarás al final. Relaciona memoria y herramientas con las sesiones previas de LangGraph.",
       "question": "¿Qué prueba sencilla nos demostraría que el audio realmente ha influido en la respuesta?",
       "answer": "Cambiar la intención del audio manteniendo la imagen y comprobar que cambia la pregunta o la ruta del agente.",
@@ -324,7 +324,7 @@
       "sources": [
         "packages/research/src/report.ts",
         "packages/research/src/evidence.ts",
-        "docs/s12-cloud-deployment.md#ensayo-real-de-extremo-a-extremo"
+        "docs/despliegue-real.md"
       ]
     },
     {
@@ -386,7 +386,7 @@
         ["Dinero", "Presupuesto separado y consumo desconocido visible"]
       ],
       "takeaway": "Estos son límites del laboratorio, no garantías de rendimiento",
-      "explain": "Explica por qué una investigación autónoma necesita condiciones de parada. Los valores de la diapositiva proceden del contrato actual de la app, no son un estándar de Deep Research ni el límite universal de Gemini. Visión, transcripción y voz tienen su propia contabilidad y comparten el plazo global. Reservar un máximo antes de enviar permite rechazar una nueva llamada cuando no hay presupuesto. Tokens medidos, un precio estimado y un importe facturado son datos diferentes. Una petición enviada cuyo resultado se desconoce no debe repetirse a ciegas. En el aula principal usaremos el modo local sin gasto y evidencia real anterior.",
+      "explain": "Explica por qué una investigación autónoma necesita condiciones de parada. Los valores de la diapositiva proceden del contrato actual de la app, no son un estándar de Deep Research ni el límite universal de Gemini. Visión, transcripción y voz tienen su propia contabilidad y comparten el plazo global. Reservar un máximo antes de enviar permite rechazar una nueva llamada cuando no hay presupuesto. Tokens medidos, un precio estimado y un importe facturado son datos diferentes. Una petición enviada cuyo resultado se desconoce no debe repetirse a ciegas. En el aula usaremos el modo local sin gasto.",
       "action": "Pregunta qué límite debería detener una ronda con tiempo disponible pero sin presupuesto. No muestres claves ni pantallas de facturación durante el directo.",
       "question": "Si se agota el tiempo local después de enviar una llamada, ¿podemos escribir coste cero?",
       "answer": "El proveedor pudo procesarla. El consumo debe quedar como desconocido hasta poder conciliarlo.",
@@ -410,8 +410,8 @@
         ["Reproducción", "El usuario pulsa reproducir y puede volver a escuchar"]
       ],
       "takeaway": "Un fallo de voz conserva el informe escrito",
-      "explain": "Define text to speech como síntesis de voz a partir de texto. En la app no pedimos al TTS que invente un resumen. Primero seleccionamos frases que han pasado la verificación y después generamos el audio. Esto facilita comparar lo escrito con lo hablado. Si el informe es parcial, la locución puede indicarlo. La generación y la reproducción son pasos distintos: un MP3 correcto no prueba que el alumno haya compartido el sonido de su ordenador. En el modo offline, la salida de prueba es un tono rotulado y no voz neural. El MP3 guardado del ensayo real sí permite escuchar una síntesis anterior.",
-      "action": "Recuerda ensayar la opción de compartir audio en la reunión. Si no funciona, muestra el texto de la locución y el archivo guardado.",
+      "explain": "Define text to speech como síntesis de voz a partir de texto. En la app no pedimos al TTS que invente un resumen. Primero seleccionamos frases que han pasado la verificación y después generamos el audio. Esto facilita comparar lo escrito con lo hablado. Si el informe es parcial, la locución puede indicarlo. La generación y la reproducción son pasos distintos: un MP3 correcto no prueba que el alumno haya compartido el sonido de su ordenador. En el modo offline, la salida de prueba es un tono rotulado y no voz neural. En una ejecución real, el MP3 sí es voz neural generada con Aura.",
+      "action": "Recuerda ensayar la opción de compartir audio en la reunión. Si no funciona, muestra el texto de la locución y el reproductor en pantalla.",
       "question": "¿Por qué conservar el texto exacto que se convierte en voz?",
       "answer": "Permite detectar una diferencia entre el informe, el guion hablado y el audio que finalmente se reproduce.",
       "transition": "Reunimos ahora los fallos que conviene diseñar de antemano.",
@@ -475,22 +475,18 @@
       "columns": ["Capacidad", "Implementación de la demo"],
       "rows": [
         ["Investigación", "Grafo propio con LangGraph: políticas, pedidos y web"],
-        ["Texto y visión", "Proveedor configurado · ensayo con Claude Haiku 5.5"],
+        ["Texto y visión", "Proveedor configurado · Claude Haiku 5.5 publicado"],
         ["Búsqueda y lectura", "Tavily y páginas oficiales de consumo (UE y BOE)"],
         ["Audio y voz", "Whisper para STT y Aura-2 es para TTS"],
         ["Persistencia", "D1, R2 y Workflows en Cloudflare"]
       ],
       "takeaway": "Gemini es la referencia del enunciado y la app muestra otra implementación",
-      "explain": "Presenta las decisiones de la app después de haber explicado las responsabilidades. LangGraph controla la investigación y consulta las políticas de la tienda, la herramienta de pedidos y la web. El ensayo real se hizo con Claude para texto e imagen, Whisper para audio y Aura para voz. La fábrica actual permite configurar el proveedor generativo, pero no prometemos compatibilidad universal con cualquier modelo de visión. La persistencia utiliza servicios de Cloudflare. Estos nombres describen nuestra implementación y no requisitos conceptuales de multimodalidad. La ruta Gemini/Interactions del enunciado no queda implementada por el hecho de que esta app tenga un grafo equivalente.",
+      "explain": "Presenta las decisiones de la app después de haber explicado las responsabilidades. LangGraph controla la investigación y consulta las políticas de la tienda, la herramienta de pedidos y la web. La configuración publicada usa Claude Haiku para texto e imagen, Whisper para audio y Aura para voz. La fábrica actual permite configurar el proveedor generativo, pero no prometemos compatibilidad universal con cualquier modelo de visión. La persistencia utiliza servicios de Cloudflare. Estos nombres describen nuestra implementación y no requisitos conceptuales de multimodalidad. La ruta Gemini/Interactions del enunciado no queda implementada por el hecho de que esta app tenga un grafo equivalente.",
       "action": "Abre la app local en 127.0.0.1:5191 y la etapa Investigación. Mantén los secretos y las configuraciones operativas fuera de la pantalla compartida.",
       "question": "Si cambiamos el proveedor, ¿desaparecen las necesidades de validar archivos y aislar conversaciones?",
       "answer": "Esas responsabilidades siguen perteneciendo al sistema.",
       "transition": "Vamos a observar cada parte con la foto y la nota de voz del caso.",
-      "sources": [
-        "AGENTS.md#runtime",
-        "apps/api/src/model.ts",
-        "docs/s12-cloud-deployment.md#ensayo-real-de-extremo-a-extremo"
-      ]
+      "sources": ["AGENTS.md#runtime", "apps/api/src/model.ts", "docs/despliegue-real.md"]
     },
     {
       "title": "Demostración del caso completo",
@@ -503,8 +499,8 @@
         ["3 · Resultado", "Leer el informe y el texto de voz"],
         ["4 · Continuidad", "Recargar, preguntar «¿y ese pedido?» y abrir otro hilo"]
       ],
-      "takeaway": "Demo principal local sin gasto · ensayo real guardado a continuación",
-      "explain": "Usa el perfil local de investigación con sus guiones rotulados. Adjunta pedido-auriculares.png y nota-de-voz-devolucion.wav, marca Generar voz y envía sin escribir la pregunta. Muestra que la observación y la intención se conservan por separado, que aparecen plan y fuentes y que el resultado se guarda. El tono offline es una prueba técnica, no una voz neural. Recarga y comprueba el mismo informe. Haz un seguimiento breve con «¿y ese pedido?» y después abre otra conversación para mostrar aislamiento. El guion detallado y los tiempos de corte están en el apartado de demostración del documento del profesor. La consulta a get_order y las fuentes del caso real se pueden recorrer en el respaldo guardado.",
+      "takeaway": "Demo principal local sin gasto · a continuación, qué comprobar en una ejecución real",
+      "explain": "Usa el perfil local de investigación con sus guiones rotulados. Adjunta pedido-auriculares.png y nota-de-voz-devolucion.wav, marca Generar voz y envía sin escribir la pregunta. Muestra que la observación y la intención se conservan por separado, que aparecen plan y fuentes y que el resultado se guarda. El tono offline es una prueba técnica, no una voz neural. Recarga y comprueba el mismo informe. Haz un seguimiento breve con «¿y ese pedido?» y después abre otra conversación para mostrar aislamiento. El guion detallado y los tiempos de corte están en el apartado de demostración del documento del profesor. Si la app falla, la captura de respaldo enseña el mismo informe con la consulta a get_order y sus fuentes.",
       "action": "19:34–19:37 entradas y origen; 19:37–19:41 proceso e informe; 19:41–19:44 recarga y memoria; 19:44–19:47 archivo desconocido e hilo nuevo; 19:47–19:49 preguntas. Si un paso no responde en 90 segundos, pasa al respaldo.",
       "question": "¿Qué parte del resultado procede de la imagen y cuál de una fuente leída?",
       "answer": "El pedido, el producto y el pago proceden de la imagen. Lo que dicen la tienda y la normativa debe apoyarse en una fuente admitida.",
@@ -516,25 +512,25 @@
       ]
     },
     {
-      "title": "Lo observado en el ensayo real",
+      "title": "Qué comprobar en una ejecución real",
       "layout": "evidence",
       "minutes": 5,
-      "subtitle": "Ejecuciones guardadas del 11 de octubre de 2026",
+      "subtitle": "La demo local enseña el recorrido; un trabajo real se comprueba así",
       "rows": [
-        ["48,712 s", "Informe completo con 7 afirmaciones verificadas"],
-        ["45,158 s", "Informe parcial con 8 afirmaciones verificadas"],
-        ["24,504 s", "Audio real recuperado y reproducido tras la recarga"]
+        ["1 ID", "El mismo trabajo al recargar, sin operaciones de pago nuevas"],
+        ["3 vías", "Políticas, get_order y normativa, cada una con su fuente"],
+        ["0,25 USD", "Tope por trabajo; lo desconocido queda retenido"]
       ],
-      "takeaway": "Son ejemplos del recorrido y no una tasa general de precisión",
-      "explain": "Explica que estas cifras proceden del ensayo del 11 de octubre, no de la sesión que acabamos de ejecutar. Los dos trabajos recorrieron imagen, audio, herramienta del curso, búsqueda, lectura y voz. El segundo completó sus 18 operaciones y mantuvo un informe parcial porque faltaba evidencia sobre la configuración concreta. Reproduce el MP3 guardado y señala el texto de la voz. La recarga recuperó informe y audio, y se comprobó que no creó operaciones pagadas adicionales. No presentes las reservas de presupuesto como una factura ni uses dos ejemplos para afirmar una precisión general. El documento de despliegue contiene la identidad y los límites de esa evidencia histórica.",
-      "action": "Abre respaldo/informe-parcial-ensayo-20261011.png y reproduce respaldo/voz-ensayo-20261011.mp3. Si no puedes compartir sonido, lee el texto de la captura.",
-      "question": "¿Cómo puede haber 8 afirmaciones verificadas y seguir faltando una respuesta completa?",
-      "answer": "Las frases comprobadas no necesariamente cubren todas las subpreguntas del usuario.",
+      "takeaway": "Son comprobaciones del recorrido, no una tasa general de precisión",
+      "explain": "Explica que la demostración de hoy usa guiones locales y no proveedores reales: sirve para ver el recorrido, no para medir un modelo. En una ejecución real con la foto y la nota de voz hay tres comprobaciones. La identidad: un único ID de trabajo que, al recargar, devuelve el mismo informe y la misma voz sin crear operaciones de pago nuevas. Las tres vías: un fragmento de las políticas, el resultado de get_order y al menos una página oficial leída, cada una sosteniendo solo su parte del informe. El dinero: la reserva previa no supera el tope de 0,25 USD por trabajo y una llamada sin resultado conocido queda como desconocida, nunca como cero. No presentes una reserva como factura ni un ejemplo como una precisión general.",
+      "action": "Señala en la captura de la demo local (respaldo/informe-demo-local.png) una fuente de cada tipo (política, pedido y web) y el reproductor de voz. Si quieres enseñar una ejecución real, lánzala antes de clase desde tu navegador en la web publicada, con la foto y la nota de voz, y deja visibles su fecha y su ID.",
+      "question": "¿Cómo sabemos que recargar no ha lanzado otra investigación?",
+      "answer": "Porque vuelve el mismo ID de trabajo y su registro no tiene operaciones de pago nuevas.",
       "transition": "Terminamos traduciendo lo aprendido a una entrega pequeña y comprobable.",
       "sources": [
-        "docs/s12-cloud-deployment.md#ensayo-real-de-extremo-a-extremo",
-        "material/S12/respaldo/informe-parcial-ensayo-20261011.png",
-        "material/S12/respaldo/voz-ensayo-20261011.mp3"
+        "docs/despliegue-real.md",
+        "material/S12/respaldo/informe-demo-local.png",
+        "apps/api/src/research-money.ts"
       ]
     },
     {

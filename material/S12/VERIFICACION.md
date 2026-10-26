@@ -51,6 +51,18 @@ El profesor debe hacer el ensayo oral de 90 minutos y comprobar el sonido compar
 
 Los materiales quedan guardados localmente, sin commit, push, envío por correo ni publicación en Google Slides en esta tarea.
 
+## Actualización del 26/10/2026: caso de ThePower Shop
+
+La investigación de la aplicación pasó del material del curso a la tienda ficticia ThePower Shop (`docs/decisions.md`). El material de S12 se adaptó al nuevo caso: foto del pedido `TPS-20481`, nota de voz del cliente, políticas de la tienda, herramienta `get_order` y normativa europea de consumo en `europa.eu`, `eur-lex.europa.eu` y `www.boe.es`.
+
+- Los ensayos del 11/10/2026 eran del caso anterior y se retiraron: la captura `informe-parcial-ensayo-20261011.png`, el MP3 `voz-ensayo-20261011.mp3` y sus cifras. No se ha hecho un ensayo real del caso de la tienda.
+- La diapositiva 23 pasa a llamarse «Qué comprobar en una ejecución real» (identidad del trabajo, tres vías con su fuente y tope de 0,25 USD) y muestra una captura de la demo local, rotulada como informe de prueba.
+- `respaldo/informe-demo-local.png` es una captura del informe de la demo local (`bun run dev:research`) con la foto y la nota de voz del caso.
+- Los textos de `fuentes/contenido.json`, las diapositivas y notas del PPTX, el guion y los dos generadores se actualizaron con sustituciones exactas, de modo que dicen lo mismo. El pie de las notas ya no cita ensayos de producción.
+- El guion en Markdown y PDF se regeneró con `fuentes/generar-guion.py` (ReportLab): 18 páginas. El PDF de las diapositivas se exportó con LibreOffice usando Arial del sistema: 24 páginas, con `pdffonts` mostrando ArialMT y Arial-BoldMT incrustadas. Se revisaron visualmente las diapositivas 3, 6, 17, 18, 21, 22 y 23.
+- La validación del paquete PPTX (`validate.py` de la skill de presentaciones, con el original como referencia) pasó sin errores.
+- `S10-S11-profesor.zip` se regeneró con las reglas de `material/S10/fuentes/empaquetar.py` y la carpeta de S12: 241 archivos, sin los archivos privados de `.build`.
+
 ## Memoria OpenViking pendiente
 
 La skill se consultó antes de la primera edición. Se resolvió la raíz real `3-rag` y el selector de workspace terminó con código 1 y sin cuenta. No fue posible verificar un `account_id`, leer decisiones de ese tenant ni realizar el cierre remoto. No se tomó una cuenta de otro producto ni se cambió infraestructura.
