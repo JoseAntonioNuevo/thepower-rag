@@ -1,7 +1,7 @@
 // GUÍA DE LECTURA · scripts/calibrate-live.ts
 // Calibra el umbral de similitud del RAG real contra Vectorize remoto. Con el curso usa 8 preguntas de
-// desarrollo (5 con respuesta y 3 sin ella); con --corpus=zocomar, las 6 de validación de la tienda
-// (lab/src/evaluation.ts) y escribe en activation-receipts/zocomar. Solo con --execute; nunca usa el
+// desarrollo (5 con respuesta y 3 sin ella); con --corpus=thepower-shop, las 6 de validación de la tienda
+// (lab/src/evaluation.ts) y escribe en activation-receipts/thepower-shop. Solo con --execute; nunca usa el
 // test reservado de comparación.
 // Lectura de archivos.
 import { readFileSync } from "node:fs";
@@ -30,18 +30,21 @@ import { LAB_VALIDATION_SET } from "../lab/src/evaluation";
 
 // Raíz.
 const root = path.resolve(import.meta.dirname, "..");
-// --corpus=zocomar: la tienda del chat; sin la opción, el curso.
+// --corpus=thepower-shop: la tienda del chat; sin la opción, el curso.
 const corpusFlag = process.argv.find((item) => item.startsWith("--corpus="));
 // Corpus pedido.
 const corpusName = corpusFlag === undefined ? "course" : corpusFlag.slice("--corpus=".length);
 // Solo hay dos corpus.
-if (corpusName !== "course" && corpusName !== "zocomar")
+if (corpusName !== "course" && corpusName !== "thepower-shop")
   // Detiene antes de leer nada.
-  throw new Error("--corpus debe ser course o zocomar.");
-// ¿Tienda Zocomar?
-const store = corpusName === "zocomar";
+  throw new Error("--corpus debe ser course o thepower-shop.");
+// ¿Tienda ThePower Shop?
+const store = corpusName === "thepower-shop";
 // Carpeta de recibos del corpus: la tienda no toca la calibración ni la sesión del curso.
-const receipts = path.join(root, store ? "activation-receipts/zocomar" : "activation-receipts");
+const receipts = path.join(
+  root,
+  store ? "activation-receipts/thepower-shop" : "activation-receipts",
+);
 // Sin --execute no hay red.
 if (!process.argv.includes("--execute")) {
   // Mensaje.
@@ -62,7 +65,7 @@ const auth = parsed.auth;
 // Corpus preparado.
 const corpus = JSON.parse(
   readFileSync(
-    path.join(root, store ? "corpus/prepared/zocomar.json" : "corpus/prepared/corpus.json"),
+    path.join(root, store ? "corpus/prepared/thepower-shop.json" : "corpus/prepared/corpus.json"),
     "utf8",
   ),
 ) as PreparedCorpus;

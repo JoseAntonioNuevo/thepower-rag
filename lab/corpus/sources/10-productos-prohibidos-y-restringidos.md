@@ -2,7 +2,7 @@
 
 ## Productos prohibidos
 
-En Zocomar no se pueden vender medicamentos, productos sanitarios que requieran receta, armas ni sus réplicas, animales vivos, tabaco, productos de vapeo con nicotina, entradas para espectáculos ni productos falsificados.
+En ThePower Shop no se pueden vender medicamentos, productos sanitarios que requieran receta, armas ni sus réplicas, animales vivos, tabaco, productos de vapeo con nicotina, entradas para espectáculos ni productos falsificados.
 
 ## Productos restringidos por edad
 

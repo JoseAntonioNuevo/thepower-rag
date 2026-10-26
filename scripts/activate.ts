@@ -66,22 +66,25 @@ const read = argv.includes("--read");
 const profileFlag = argv.find((item) => item.startsWith("--profile="));
 // Perfil pedido.
 const profileId = profileFlag === undefined ? null : profileFlag.slice("--profile=".length);
-// --corpus=zocomar: la tienda del chat; sin la opción, el curso. Solo la forma con «=», para que
+// --corpus=thepower-shop: la tienda del chat; sin la opción, el curso. Solo la forma con «=», para que
 // el valor no se confunda con el comando.
 const corpusFlag = argv.find((item) => item.startsWith("--corpus="));
 // Corpus pedido.
 const corpusName = corpusFlag === undefined ? "course" : corpusFlag.slice("--corpus=".length);
-// ¿Tienda Zocomar?
-const store = corpusName === "zocomar";
+// ¿Tienda ThePower Shop?
+const store = corpusName === "thepower-shop";
 // Corpus preparado, fuentes y carpeta de recibos de cada corpus: la tienda no toca los del curso.
 const preparedPath = path.join(
   root,
-  store ? "corpus/prepared/zocomar.json" : "corpus/prepared/corpus.json",
+  store ? "corpus/prepared/thepower-shop.json" : "corpus/prepared/corpus.json",
 );
-const sourcesDir = path.join(root, store ? "corpus/zocomar/sources" : "corpus/sources");
-const receiptsRoot = path.join(root, store ? "activation-receipts/zocomar" : "activation-receipts");
+const sourcesDir = path.join(root, store ? "corpus/thepower-shop/sources" : "corpus/sources");
+const receiptsRoot = path.join(
+  root,
+  store ? "activation-receipts/thepower-shop" : "activation-receipts",
+);
 // Con la tienda solo se crea su índice y se ingesta: elegir el perfil activo y la verificación
-// de cinco turnos son del curso y no se ejecutan sobre Zocomar.
+// de cinco turnos son del curso y no se ejecutan sobre ThePower Shop.
 const STORE_COMMANDS: readonly string[] = ["plan", "status", "provision", "ingest", "resume"];
 
 // Comando desconocido.
@@ -92,13 +95,13 @@ if (!ACTIVATION_COMMANDS.includes(command)) {
   process.exitCode = 2;
 } else if (corpusName !== "course" && !store) {
   // Corpus desconocido: no se adivina.
-  console.log("--corpus debe ser course o zocomar");
+  console.log("--corpus debe ser course o thepower-shop");
   // Código 2.
   process.exitCode = 2;
 } else if (store && !STORE_COMMANDS.includes(command)) {
   // Comando no admitido con la tienda.
   console.log(
-    `con --corpus=zocomar solo se admiten ${STORE_COMMANDS.join(", ")}; select-active, probe-embeddings, migrate y verify son del curso`,
+    `con --corpus=thepower-shop solo se admiten ${STORE_COMMANDS.join(", ")}; select-active, probe-embeddings, migrate y verify son del curso`,
   );
   // Código 2.
   process.exitCode = 2;

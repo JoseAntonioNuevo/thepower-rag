@@ -1,5 +1,5 @@
 // GUÍA DE LECTURA · scripts/lab-pgvector.test.ts
-// Pruebas del laboratorio reproducible de S10 y S11: reconstrucción desde 12 documentos de Zocomar e
+// Pruebas del laboratorio reproducible de S10 y S11: reconstrucción desde 12 documentos de ThePower Shop e
 // índice vacío, esquema PostgreSQL/pgvector con vector(768) e índice HNSW, umbral de RAG básico,
 // grafo CRAG con nodos separados retrieve -> rerank -> assess y evaluación de 20 preguntas (14+6).
 // Rutas de archivos.
@@ -26,7 +26,7 @@ import {
   type PostgresSqlExecutor,
 } from "../lab/src/index";
 
-// Carpeta con los 12 documentos ficticios de Zocomar, un marketplace inventado.
+// Carpeta con los 12 documentos ficticios de ThePower Shop, un marketplace inventado.
 const sourcesDir = path.join(import.meta.dirname, "../lab/corpus/sources");
 
 // Grupo de pruebas del laboratorio S10 y S11.
@@ -125,7 +125,7 @@ describe("laboratorio reproducible S10 y S11 (pgvector 768 + HNSW + CRAG)", () =
     expect(allSql).toContain("TRUNCATE TABLE lab_corpus_versions CASCADE");
 
     // Verifica que la consulta usa el operador de distancia coseno `<=>` con `::vector(768)`.
-    const [qVec] = await embedder.embed(["zonas de envío de Zocomar"]);
+    const [qVec] = await embedder.embed(["zonas de envío de ThePower Shop"]);
     // Recupera los vecinos del corpus y modelo solicitados ordenados por distancia coseno.
     const hits = await pgStore.queryNearest({
       queryVector: qVec!,
@@ -158,7 +158,7 @@ describe("laboratorio reproducible S10 y S11 (pgvector 768 + HNSW + CRAG)", () =
     let genCalls = 0;
     // Ejecuta recuperación, corte de similitud y generación condicionada para este caso RAG.
     const answered = await runLabBasicRag({
-      question: "¿En qué horario atiende el chat de la aplicación de Zocomar?",
+      question: "¿En qué horario atiende el chat de la aplicación de ThePower Shop?",
       corpusVersion: corpus.corpusVersion,
       config,
       store,
@@ -186,7 +186,7 @@ describe("laboratorio reproducible S10 y S11 (pgvector 768 + HNSW + CRAG)", () =
     let refusedGenCalls = 0;
     // Ejecuta recuperación, corte de similitud y generación condicionada para este caso RAG.
     const refused = await runLabBasicRag({
-      question: "¿Qué descuento tienen los estudiantes universitarios en Zocomar?",
+      question: "¿Qué descuento tienen los estudiantes universitarios en ThePower Shop?",
       corpusVersion: corpus.corpusVersion,
       config,
       store,

@@ -2,7 +2,7 @@
 
 Guion de 60 minutos para el laboratorio local. La consola ejecuta el mismo pipeline que `lab:real`: archivos Markdown, troceado, embeddings de proveedor, PostgreSQL con pgvector, selección por umbral, prompt, generación en streaming y citas. Cada paso se detiene **antes** de operar y enseña su entrada; al terminar muestra la salida observada.
 
-Los datos de ejecución, vectores, SQL, tokens y respuestas son reales. Este guion se ensayó con **AetherCloud, un corpus ficticio de diez documentos** (ahora en `lab/corpus/aethercloud-s10/`). Desde el 24 de octubre la consola indexa **Zocomar** (12 políticas de una tienda ficticia) y sus botones proponen el reembolso con Bizum y el descuento para estudiantes; las preguntas de AetherCloud de este guion ya no tienen documentos detrás. Una ejecución guardada es un registro de una llamada anterior, con fecha e identificador; abrirla no llama de nuevo al modelo. La consola distingue el registro de la observación en directo.
+Los datos de ejecución, vectores, SQL, tokens y respuestas son reales. Este guion se ensayó con **AetherCloud, un corpus ficticio de diez documentos** (ahora en `lab/corpus/aethercloud-s10/`). Desde el 24 de octubre la consola indexa **ThePower Shop** (12 políticas de una tienda ficticia) y sus botones proponen el reembolso con Bizum y el descuento para estudiantes; las preguntas de AetherCloud de este guion ya no tienen documentos detrás. Una ejecución guardada es un registro de una llamada anterior, con fecha e identificador; abrirla no llama de nuevo al modelo. La consola distingue el registro de la observación en directo.
 
 ## Preparación del profesor
 
@@ -54,7 +54,7 @@ Para enseñar lo que guarda la web publicada, TablePlus 6.8 trae un driver **Clo
 
 El token lo crea el profesor en el panel de Cloudflare (**Account API tokens → Create custom token**) y lo pega en TablePlus, que lo guarda en el llavero. Con `D1 Read` cualquier `INSERT`, `UPDATE` o `DELETE` falla en Cloudflare: no hay forma de tocar producción desde la clase. El permiso vale para todas las bases D1 de la cuenta, así que en clase solo se abre esta; la de investigación (`thepower-ai-course-research-d1`) guarda conversaciones de S12.
 
-Abre [consultas-d1-tableplus.sql](consultas-d1-tableplus.sql). Cada bloque lee D1 en el momento de ejecutarlo; no hay notificaciones en vivo, se repite el bloque. D1 guarda el texto de los 123 fragmentos (69 del curso y 54 de Zocomar), sus documentos, los perfiles con modelo BGE-M3, 1024 dimensiones, coseno, 900/80 caracteres, el mapa fragmento → vector y el diario de ingesta. Los vectores están en Vectorize. Una pregunta en el chat no añade filas de RAG: solo cambia `public_budget` (bloque **11**), que sube un turno y la reserva del peor caso. La traza de cada respuesta vive en el panel de la web.
+Abre [consultas-d1-tableplus.sql](consultas-d1-tableplus.sql). Cada bloque lee D1 en el momento de ejecutarlo; no hay notificaciones en vivo, se repite el bloque. Todos los bloques se limitan a la tienda: 12 documentos y 54 fragmentos, su perfil (BGE-M3, 1024 dimensiones, coseno, 900/80 caracteres), el mapa fragmento → vector y el diario de ingesta. El corpus del curso sigue en D1 porque lo lee la investigación de S12, pero la hoja no lo muestra. Los vectores están en Vectorize. Una pregunta en el chat no añade filas de RAG: solo cambia `public_budget` (bloque **11**), que sube un turno y la reserva del peor caso. La traza de cada respuesta vive en el panel de la web.
 
 ## Recorridos del laboratorio en TablePlus
 

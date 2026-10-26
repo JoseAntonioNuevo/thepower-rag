@@ -38,6 +38,8 @@ import { conversationStatus, prefersReducedMotion } from "./chat-motion";
 import { CourseAnswer } from "./course-answer";
 // Utilidades del panel CRAG.
 import { acceptScenarioChange, discardedRowKey, retainedRowKey } from "./crag-panel";
+// Biblioteca de documentos y fragmentos de D1.
+import { CorpusBrowser } from "./corpus-browser";
 // Modo clase: tipos de los pasos y grafo en directo.
 import type { ClassEvent } from "./class-mode";
 import { ClassModeView, type ClassModels } from "./class-mode-view";
@@ -85,12 +87,12 @@ const EXAMPLES: Record<ChatMode, string> = {
   research: DEMO_RESEARCH_QUESTION,
 };
 
-// Preguntas de ejemplo con la tienda Zocomar. Son casos de demostración, nunca del test de 20.
+// Preguntas de ejemplo con la tienda ThePower Shop. Son casos de demostración, nunca del test de 20.
 // La investigación sigue con el material del curso.
 const STORE_EXAMPLES: Record<ChatMode, string> = {
-  "sin-rag": "¿Cuántos días tengo para devolver un pedido en Zocomar?",
+  "sin-rag": "¿Cuántos días tengo para devolver un pedido en ThePower Shop?",
   rag: "¿A partir de qué importe es gratis el envío estándar a la península?",
-  crag: "Devolví en un Zocopunto un pedido que pagué con Bizum. ¿Cuánto puede tardar en llegarme el dinero?",
+  crag: "Devolví en un punto ThePower Shop un pedido que pagué con Bizum. ¿Cuánto puede tardar en llegarme el dinero?",
   research: DEMO_RESEARCH_QUESTION,
 };
 
@@ -590,7 +592,7 @@ function ChatPane({
   mode: ChatMode;
   // Grupo.
   audience: Audience;
-  // Si el chat consulta la tienda Zocomar en lugar del curso.
+  // Si el chat consulta la tienda ThePower Shop en lugar del curso.
   store: boolean;
   // Si se pueden elegir escenarios.
   allowScenario: boolean;
@@ -1381,6 +1383,10 @@ export function App() {
   const [classMode, setClassMode] = useState(() => flagFromUrl("clase") || flagFromUrl("lento"));
   // Modo lento del grafo: un paso cada pocos segundos, aunque lleguen antes.
   const [slowMode, setSlowMode] = useState(() => flagFromUrl("lento"));
+  // Pantalla: el chat o la biblioteca de documentos (también con ?documentos).
+  const [screen, setScreen] = useState<"chat" | "library">(() =>
+    flagFromUrl("documentos") ? "library" : "chat",
+  );
   // Callback estable.
   const onBusy = useCallback((value: boolean) => {
     // Actualiza.
@@ -1418,7 +1424,7 @@ export function App() {
   }, []);
 
   // ¿El chat consulta la tienda? Solo lo dice /api/health; la investigación sigue con el curso.
-  const store = health?.chatCorpus?.id === "zocomar";
+  const store = health?.chatCorpus?.id === "thepower-shop";
   // Con la tienda, el chat no tiene grupos: siempre «General». La investigación conserva el grupo.
   const chatAudience: Audience = store && mode !== "research" ? "program" : audience;
   // Selector de grupo: con la tienda solo se muestra en la investigación.
@@ -1446,12 +1452,14 @@ export function App() {
       <header className="masthead">
         {/* Título. */}
         <h1>
-          {store ? "Zocomar: RAG, CRAG e investigación" : "The Power RAG, CRAG e investigación"}
+          {store
+            ? "ThePower Shop: RAG, CRAG e investigación"
+            : "The Power RAG, CRAG e investigación"}
         </h1>
         {/* Descripción según el corpus del chat. */}
         {store ? (
           <p>
-            Sin RAG, RAG básico y CRAG consultan las políticas de Zocomar, una tienda en línea
+            Sin RAG, RAG básico y CRAG consultan las políticas de ThePower Shop, una tienda en línea
             ficticia: devoluciones, envíos, pagos, garantías y vendedores. La investigación sigue
             usando el material del curso, con su temario, ejercicios y calendario de cada grupo.
           </p>
@@ -1464,98 +1472,122 @@ export function App() {
           </p>
         )}
       </header>
-      {/* Barra de herramientas. */}
-      <div className="toolbar">
-        {/* Etapa. */}
-        <div>
-          {/* Selector de etapa. */}
-          <SegmentedChoice
-            legend="Etapa"
-            name="stage"
-            value={mode}
-            options={STAGES}
-            disabled={busy}
-            onChange={(nextMode) => {
-              // Cambia.
-              choose(nextMode, audience);
-            }}
-          />
-          {/* Estado de la etapa. */}
-          <p className="stage-note">{capabilityNote(health?.capabilities[mode].status)}</p>
-        </div>
-        {/* Grupo: con la tienda, solo para la investigación. */}
-        {showGroups ? (
-          <div>
-            {/* Selector de grupo. */}
-            <SegmentedChoice
-              legend="Grupo del curso"
-              name="audience"
-              value={audience}
-              options={AUDIENCES}
-              disabled={busy}
-              onChange={(nextAudience) => {
-                // Cambia.
-                choose(mode, nextAudience);
-              }}
-            />
-            {/* Leyenda de los grupos. */}
-            <p className="group-note">L/X, lunes y miércoles. M/J, martes y jueves.</p>
-          </div>
-        ) : null}
-        {/* Modo clase: solo en las etapas con grafo. */}
-        {mode === "rag" || mode === "crag" ? (
-          <div className="class-switch">
-            {/* Interruptor con rebote de transitions.dev. */}
-            <button
-              type="button"
-              role="switch"
-              className="t-toggle"
-              aria-checked={classMode}
-              aria-labelledby="modo-clase-etiqueta"
-              data-on={classMode ? "true" : "false"}
-              onClick={(event) => {
-                // Activa los fotogramas solo tras la primera interacción.
-                event.currentTarget.classList.add("is-init");
-                // Alterna.
-                setClassMode((current) => !current);
-              }}
-            >
-              {/* Pulgar. */}
-              <span className="t-toggle-thumb" />
-            </button>
-            {/* Etiqueta. */}
-            <span id="modo-clase-etiqueta">Modo clase: grafo en directo</span>
-          </div>
-        ) : null}
-      </div>
-      {/* Investigación durable o chat, con clave para reiniciar al cambiar. */}
-      {health?.durableResearch && mode === "research" ? (
-        // Con investigación durable configurada: la mesa de investigación.
-        <ResearchDesk
-          key={audience}
-          audience={audience}
-          allowScenario={health.execution === "demo"}
-          onBusy={onBusy}
-        />
-      ) : (
-        // En el resto de modos: el chat.
-        <ChatPane
-          key={conversationKey(mode, chatAudience, epoch)}
-          mode={mode}
-          audience={chatAudience}
-          store={store}
-          allowScenario={health?.execution === "demo"}
-          onBusy={onBusy}
-          classMode={classMode}
-          slow={slowMode}
-          onSlowChange={setSlowMode}
-          models={{
-            embedding: health?.corpus.embedding ?? null,
-            generator: health?.modelConfiguration?.generator ?? null,
-            evaluator: health?.modelConfiguration?.evaluator ?? null,
+      {/* Biblioteca de documentos: sustituye a la barra y al chat, que siguen montados y ocultos. */}
+      {screen === "library" ? (
+        <CorpusBrowser
+          onClose={() => {
+            setScreen("chat");
           }}
         />
-      )}
+      ) : null}
+      {/* Chat y barra: ocultos (no desmontados) mientras se ve la biblioteca. */}
+      <div hidden={screen === "library"}>
+        {/* Barra de herramientas. */}
+        <div className="toolbar">
+          {/* Etapa. */}
+          <div>
+            {/* Selector de etapa. */}
+            <SegmentedChoice
+              legend="Etapa"
+              name="stage"
+              value={mode}
+              options={STAGES}
+              disabled={busy}
+              onChange={(nextMode) => {
+                // Cambia.
+                choose(nextMode, audience);
+              }}
+            />
+            {/* Estado de la etapa. */}
+            <p className="stage-note">{capabilityNote(health?.capabilities[mode].status)}</p>
+          </div>
+          {/* Grupo: con la tienda, solo para la investigación. */}
+          {showGroups ? (
+            <div>
+              {/* Selector de grupo. */}
+              <SegmentedChoice
+                legend="Grupo del curso"
+                name="audience"
+                value={audience}
+                options={AUDIENCES}
+                disabled={busy}
+                onChange={(nextAudience) => {
+                  // Cambia.
+                  choose(mode, nextAudience);
+                }}
+              />
+              {/* Leyenda de los grupos. */}
+              <p className="group-note">L/X, lunes y miércoles. M/J, martes y jueves.</p>
+            </div>
+          ) : null}
+          {/* Acceso a la biblioteca de documentos y fragmentos de la base de datos. */}
+          <div className="library-open">
+            <button
+              type="button"
+              className="class-button"
+              disabled={busy}
+              onClick={() => {
+                setScreen("library");
+              }}
+            >
+              Ver documentos y fragmentos
+            </button>
+          </div>
+          {/* Modo clase: solo en las etapas con grafo. */}
+          {mode === "rag" || mode === "crag" ? (
+            <div className="class-switch">
+              {/* Interruptor con rebote de transitions.dev. */}
+              <button
+                type="button"
+                role="switch"
+                className="t-toggle"
+                aria-checked={classMode}
+                aria-labelledby="modo-clase-etiqueta"
+                data-on={classMode ? "true" : "false"}
+                onClick={(event) => {
+                  // Activa los fotogramas solo tras la primera interacción.
+                  event.currentTarget.classList.add("is-init");
+                  // Alterna.
+                  setClassMode((current) => !current);
+                }}
+              >
+                {/* Pulgar. */}
+                <span className="t-toggle-thumb" />
+              </button>
+              {/* Etiqueta. */}
+              <span id="modo-clase-etiqueta">Modo clase: grafo en directo</span>
+            </div>
+          ) : null}
+        </div>
+        {/* Investigación durable o chat, con clave para reiniciar al cambiar. */}
+        {health?.durableResearch && mode === "research" ? (
+          // Con investigación durable configurada: la mesa de investigación.
+          <ResearchDesk
+            key={audience}
+            audience={audience}
+            allowScenario={health.execution === "demo"}
+            onBusy={onBusy}
+          />
+        ) : (
+          // En el resto de modos: el chat.
+          <ChatPane
+            key={conversationKey(mode, chatAudience, epoch)}
+            mode={mode}
+            audience={chatAudience}
+            store={store}
+            allowScenario={health?.execution === "demo"}
+            onBusy={onBusy}
+            classMode={classMode}
+            slow={slowMode}
+            onSlowChange={setSlowMode}
+            models={{
+              embedding: health?.corpus.embedding ?? null,
+              generator: health?.modelConfiguration?.generator ?? null,
+              evaluator: health?.modelConfiguration?.evaluator ?? null,
+            }}
+          />
+        )}
+      </div>
     </main>
   );
 }

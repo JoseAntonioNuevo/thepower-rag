@@ -2,7 +2,7 @@
 
 ## Plazo general de desistimiento
 
-El comprador puede devolver la mayoría de los artículos en un plazo de 30 días naturales contados desde la fecha de entrega que figura en el seguimiento del pedido. Los miembros de Zocomar Plus disponen de 45 días naturales. Algunas categorías tienen plazos o exclusiones propios, que se describen en sus documentos específicos y prevalecen sobre esta regla general.
+El comprador puede devolver la mayoría de los artículos en un plazo de 30 días naturales contados desde la fecha de entrega que figura en el seguimiento del pedido. Los miembros de ThePower Shop Plus disponen de 45 días naturales. Algunas categorías tienen plazos o exclusiones propios, que se describen en sus documentos específicos y prevalecen sobre esta regla general.
 
 ## Estado en que debe devolverse el artículo
 
@@ -10,15 +10,15 @@ El artículo debe devolverse completo, con todos sus accesorios, manuales y emba
 
 ## Cómo iniciar una devolución
 
-La devolución se solicita desde «Mis pedidos», seleccionando el artículo y el motivo. La aplicación genera un código QR válido durante 10 días. Con ese código el paquete puede entregarse en cualquier Zocopunto o puede solicitarse una recogida a domicilio. No se aceptan devoluciones enviadas por cuenta propia sin código.
+La devolución se solicita desde «Mis pedidos», seleccionando el artículo y el motivo. La aplicación genera un código QR válido durante 10 días. Con ese código el paquete puede entregarse en cualquier punto ThePower Shop o puede solicitarse una recogida a domicilio. No se aceptan devoluciones enviadas por cuenta propia sin código.
 
 ## Coste de la devolución
 
-Entregar el paquete en un Zocopunto es gratuito. La recogida a domicilio cuesta 3,95 €, que se descuentan del reembolso. La devolución es siempre gratuita, por cualquier vía, si el artículo llegó defectuoso, dañado o no corresponde con lo pedido, y también en los productos de vendedores con el sello «Devolución gratuita».
+Entregar el paquete en un punto ThePower Shop es gratuito. La recogida a domicilio cuesta 3,95 €, que se descuentan del reembolso. La devolución es siempre gratuita, por cualquier vía, si el artículo llegó defectuoso, dañado o no corresponde con lo pedido, y también en los productos de vendedores con el sello «Devolución gratuita».
 
 ## Reembolso de una devolución
 
-El almacén o el vendedor dispone de hasta 3 días hábiles desde la recepción del paquete para validar la devolución. Una vez validada, Zocomar ordena el reembolso por el mismo método de pago del pedido. Los plazos de abono de cada método de pago se detallan en la política de pagos y reembolsos.
+El almacén o el vendedor dispone de hasta 3 días hábiles desde la recepción del paquete para validar la devolución. Una vez validada, ThePower Shop ordena el reembolso por el mismo método de pago del pedido. Los plazos de abono de cada método de pago se detallan en la política de pagos y reembolsos.
 
 ## Gastos de envío del pedido original
 
@@ -26,4 +26,4 @@ Si se devuelve el pedido completo dentro del plazo, se reembolsan también los g
 
 ## Cambios de talla o color
 
-Zocomar no tramita cambios directos. Para cambiar de talla o de color hay que devolver el artículo y hacer un pedido nuevo. Los vendedores de moda con el sello «Cambio fácil» reservan la nueva talla durante 7 días si el pedido nuevo se hace desde la misma solicitud de devolución.
+ThePower Shop no tramita cambios directos. Para cambiar de talla o de color hay que devolver el artículo y hacer un pedido nuevo. Los vendedores de moda con el sello «Cambio fácil» reservan la nueva talla durante 7 días si el pedido nuevo se hace desde la misma solicitud de devolución.

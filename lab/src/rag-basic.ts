@@ -176,7 +176,7 @@ export async function runLabBasicRag(input: {
       generationCalled: false,
       retrievalCount: 1,
       answer:
-        "No consta información suficiente en la documentación de Zocomar para responder a esta consulta (ningún fragmento superó el umbral calibrado previo a la generación).",
+        "No consta información suficiente en la documentación de ThePower Shop para responder a esta consulta (ningún fragmento superó el umbral calibrado previo a la generación).",
       citations: [],
       latencyMs,
     };

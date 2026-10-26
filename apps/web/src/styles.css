@@ -2019,3 +2019,180 @@ button.class-button {
     transition: none;
   }
 }
+
+/* ===== Biblioteca: documentos y fragmentos de la base de datos ===== */
+
+/* Acceso a la biblioteca en la barra de herramientas. */
+.library-open {
+  align-self: end;
+}
+
+/* Hoja de la biblioteca. */
+.library {
+  margin-top: 28px;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--sheet);
+}
+
+/* Cabecera: título y origen a la izquierda, acciones a la derecha. */
+.library-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+}
+.library-head h2 {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 1.3rem;
+}
+.library-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+/* Notas y errores. */
+.library-note {
+  margin: 4px 0 0;
+  color: var(--ink-soft);
+  font-size: 0.88rem;
+}
+.library-error {
+  margin: 10px 0 0;
+  color: #9f1d1d;
+  font-size: 0.9rem;
+}
+
+/* Selector de corpus. */
+.library-corpora {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 12px;
+}
+
+/* Cuerpo: una columna en móvil, dos en escritorio. */
+.library-body {
+  display: grid;
+  gap: 16px;
+  margin-top: 14px;
+}
+
+/* Lista de documentos. */
+.library-list ul {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Documento de la lista: botón a todo el ancho; el color cambia con los tokens (cambio de estado). */
+button.library-doc {
+  display: grid;
+  gap: 2px;
+  width: 100%;
+  min-height: 0;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  background: var(--sheet);
+  color: var(--ink);
+  text-align: left;
+  transition:
+    background-color var(--duration-fast) var(--ease-smooth-out),
+    border-color var(--duration-fast) var(--ease-smooth-out);
+}
+button.library-doc:hover:not(:disabled) {
+  border-color: var(--navy);
+}
+button.library-doc[aria-current="true"] {
+  border-color: var(--navy);
+  background: #e4edf8;
+}
+.library-doc-title {
+  font-weight: 600;
+}
+.library-doc-meta {
+  color: #57534e;
+  font-size: 0.8rem;
+}
+
+/* Cabecera del documento abierto. */
+.library-doc-head h3 {
+  margin: 0;
+  font-family: var(--font-serif);
+  font-size: 1.15rem;
+}
+
+/* Fragmentos uno tras otro. */
+.library-chunks {
+  display: grid;
+  gap: 10px;
+  margin: 12px 0 0;
+  padding: 0;
+  list-style: none;
+}
+.library-chunk {
+  padding: 10px 12px;
+  border: 1px solid var(--line);
+  border-left: 4px solid var(--navy);
+  border-radius: 0;
+  background: var(--paper);
+}
+.library-chunk-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 4px 12px;
+}
+.library-chunk-title {
+  font-weight: 600;
+}
+.library-chunk-id {
+  display: block;
+  margin-top: 2px;
+  color: #78716c;
+  font-size: 0.76rem;
+  overflow-wrap: anywhere;
+}
+
+/* Texto completo del fragmento tal como está guardado (saltos de línea incluidos). */
+.library-chunk-text {
+  margin: 8px 0 0;
+  font-family: var(--font-serif);
+  font-size: 0.98rem;
+  white-space: pre-wrap;
+}
+
+/* Solapamiento con el fragmento anterior. */
+.library-chunk-text mark {
+  border-radius: 3px;
+  background: #fde7b0;
+  color: inherit;
+}
+
+/* Escritorio: lista a la izquierda con su propio scroll y fragmentos a la derecha. */
+@media (min-width: 800px) {
+  .library-body {
+    grid-template-columns: minmax(240px, 320px) 1fr;
+    align-items: start;
+  }
+  .library-list {
+    position: sticky;
+    top: 12px;
+    max-height: calc(100vh - 24px);
+    overflow-y: auto;
+  }
+}
+
+/* Movimiento reducido: la selección cambia sin transición. */
+@media (prefers-reduced-motion: reduce) {
+  button.library-doc {
+    transition: none;
+  }
+}

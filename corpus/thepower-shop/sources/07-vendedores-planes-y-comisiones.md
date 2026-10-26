@@ -1,9 +1,9 @@
 ---
 id: 07-vendedores-planes-y-comisiones
-title: Vender en Zocomar: planes, comisiones y pagos
+title: Vender en ThePower Shop: planes, comisiones y pagos
 audience: program
 verified: 2026-10-24
-source: lab/corpus/sources/07-vendedores-planes-y-comisiones.md (tienda ficticia Zocomar)
+source: lab/corpus/sources/07-vendedores-planes-y-comisiones.md (tienda ficticia ThePower Shop)
 ---
 
 ## Planes para vendedores
@@ -12,7 +12,7 @@ El Plan Básico no tiene cuota mensual y aplica una comisión del 12 % sobre el 
 
 ## Liquidación de las ventas
 
-Zocomar paga a los vendedores cada 14 días por transferencia. Cada venta entra en la liquidación cuando han pasado 7 días desde la entrega sin una devolución ni una disputa abierta.
+ThePower Shop paga a los vendedores cada 14 días por transferencia. Cada venta entra en la liquidación cuando han pasado 7 días desde la entrega sin una devolución ni una disputa abierta.
 
 ## Sello «Devolución gratuita»
 

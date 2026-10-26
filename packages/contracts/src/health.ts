@@ -13,8 +13,8 @@ const capabilitySchema = z.object({
   missing: z.array(z.string()),
 });
 
-// Corpus que consulta el chat: el material del curso o la tienda ficticia Zocomar.
-export const chatCorpusIdSchema = z.enum(["course", "zocomar"]);
+// Corpus que consulta el chat: el material del curso o la tienda ficticia ThePower Shop.
+export const chatCorpusIdSchema = z.enum(["course", "thepower-shop"]);
 // Tipo del identificador del corpus del chat.
 export type ChatCorpusId = z.infer<typeof chatCorpusIdSchema>;
 

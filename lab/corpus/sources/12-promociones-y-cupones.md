@@ -10,7 +10,7 @@ Si se devuelve un artículo comprado con un cupón, el reembolso descuenta la pa
 
 ## Garantía de precio
 
-Si el precio de un artículo vendido y enviado por Zocomar baja en los 7 días siguientes a la compra, el cliente puede solicitar la diferencia como saldo Zocomar desde «Mis pedidos». No se aplica a los artículos de otros vendedores ni a las ofertas flash.
+Si el precio de un artículo vendido y enviado por ThePower Shop baja en los 7 días siguientes a la compra, el cliente puede solicitar la diferencia como saldo ThePower Shop desde «Mis pedidos». No se aplica a los artículos de otros vendedores ni a las ofertas flash.
 
 ## Ofertas flash
 

@@ -2,17 +2,21 @@
 
 Verificado el 3 de octubre de 2026. URL: https://rag-thepower.josenuevo.dev.
 
+## ThePower Shop: publicación del 26 de octubre de 2026
+
+La tienda se renombró de «Zocomar» a ThePower Shop. Desde la versión `caf33c27-69ff-4774-9355-60fd4bf81609` (deployment `93fe07ab-479c-4d29-b564-f8baea459070`, 100 %), el chat lee el corpus `cc140d7876624`, con el perfil `p3d2b914bd60c`, el índice `thepower-ai-course-rag-3d2b914bd60c` (54 vectores) y el umbral calibrado 0,68771. La biblioteca de documentos (`/api/corpus`) se publicó en el mismo despliegue. Health en verde para las cuatro etapas, la tienda y el curso. [Recibo](evidence/thepower-shop-web-2026-10-25.md#thepower-shop-publicado-26-de-octubre-de-2026).
+
 ## Modo clase: publicación del 26 de octubre de 2026
 
-La versión vigente es `758f276d-65f4-4bf8-94e8-ae9eac8c7dfe` (deployment `2818ad5f-ff1c-4869-aa75-cf5eae418827`, 100 %). Añade los nombres legibles de los fragmentos y la guía «Cómo leer este paso». [Recibo](evidence/zocomar-web-2026-10-25.md#nombres-legibles-y-guía-por-paso-publicados-26-de-octubre-de-2026).
+La versión vigente es `758f276d-65f4-4bf8-94e8-ae9eac8c7dfe` (deployment `2818ad5f-ff1c-4869-aa75-cf5eae418827`, 100 %). Añade los nombres legibles de los fragmentos y la guía «Cómo leer este paso». [Recibo](evidence/thepower-shop-web-2026-10-25.md#nombres-legibles-y-guía-por-paso-publicados-26-de-octubre-de-2026).
 
-Desde la versión `17692356-cfb8-4621-9215-2feabf76b6ad` (deployment `935edaa5-400f-41b4-b6bb-e4d7a2b9f327`, 100 %) el grafo tiene además modo lento (`?lento`), línea de pasos y explicación por nodo. Solo cambió el cliente. [Recibo](evidence/zocomar-web-2026-10-25.md#modo-lento-publicado-26-de-octubre-de-2026).
+Desde la versión `17692356-cfb8-4621-9215-2feabf76b6ad` (deployment `935edaa5-400f-41b4-b6bb-e4d7a2b9f327`, 100 %) el grafo tiene además modo lento (`?lento`), línea de pasos y explicación por nodo. Solo cambió el cliente. [Recibo](evidence/thepower-shop-web-2026-10-25.md#modo-lento-publicado-26-de-octubre-de-2026).
 
-La versión `cfbccfcf-735b-42bd-8800-128b2622545e` (deployment `75a19b23-bf0e-4518-a4a5-ba0ea353a0b3`, 100 %) añade el modo clase (`?clase`): grafo en directo de RAG básico y CRAG, inspector de cada paso y repetición sin llamadas nuevas. Variables y bindings sin cambios respecto a `35d435a0`: Haiku 5.5 genera y Sonnet 5.5 evalúa. Health en verde. [Recibo](evidence/zocomar-web-2026-10-25.md#modo-clase-publicado-26-de-octubre-de-2026).
+La versión `cfbccfcf-735b-42bd-8800-128b2622545e` (deployment `75a19b23-bf0e-4518-a4a5-ba0ea353a0b3`, 100 %) añade el modo clase (`?clase`): grafo en directo de RAG básico y CRAG, inspector de cada paso y repetición sin llamadas nuevas. Variables y bindings sin cambios respecto a `35d435a0`: Haiku 5.5 genera y Sonnet 5.5 evalúa. Health en verde. [Recibo](evidence/thepower-shop-web-2026-10-25.md#modo-clase-publicado-26-de-octubre-de-2026).
 
-## Zocomar en el chat: publicación del 25 de octubre de 2026
+## ThePower Shop en el chat: publicación del 25 de octubre de 2026
 
-La versión `faa8a19c-3254-470a-b51b-54f44f00089c` (deployment `4315ee3f-e258-4110-a73a-8c16ed835417`, 100 %) sirve Sin RAG, RAG básico y CRAG sobre la tienda ficticia Zocomar (`CHAT_CORPUS=zocomar`). Usa el índice `thepower-ai-course-rag-eb8d9e84d3ba`, el perfil `peb8d9e84d3ba` con 54 vectores y el umbral calibrado 0,661926, con `RAG_CONTEXT_MODE=semantic`. La investigación de S12 sigue leyendo el curso. Health en verde para las cuatro etapas. Un turno RAG y uno CRAG reales respondieron 200 desde el navegador del usuario; el navegador automatizado del agente no supera Turnstile (600010). [Recibo, calibración, presupuesto y límites](evidence/zocomar-web-2026-10-25.md).
+La versión `faa8a19c-3254-470a-b51b-54f44f00089c` (deployment `4315ee3f-e258-4110-a73a-8c16ed835417`, 100 %) sirve Sin RAG, RAG básico y CRAG sobre la tienda ficticia ThePower Shop (`CHAT_CORPUS=thepower-shop`). Usa el índice `thepower-ai-course-rag-eb8d9e84d3ba`, el perfil `peb8d9e84d3ba` con 54 vectores y el umbral calibrado 0,661926, con `RAG_CONTEXT_MODE=semantic`. La investigación de S12 sigue leyendo el curso. Health en verde para las cuatro etapas. Un turno RAG y uno CRAG reales respondieron 200 desde el navegador del usuario; el navegador automatizado del agente no supera Turnstile (600010). [Recibo, calibración, presupuesto y límites](evidence/thepower-shop-web-2026-10-25.md).
 
 ## Turnstile: publicación del 23 de octubre de 2026
 

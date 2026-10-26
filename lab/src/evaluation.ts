@@ -1,6 +1,6 @@
 // GUÍA DE LECTURA · lab/src/evaluation.ts
 // Conjuntos separados de validación (6 preguntas para calibrar umbrales) y de test (20 preguntas:
-// 14 respondibles y 6 sin respuesta), casos de demostración sobre los 12 documentos de Zocomar
+// 14 respondibles y 6 sin respuesta), casos de demostración sobre los 12 documentos de ThePower Shop
 // (un marketplace inventado) y ejecutor comparativo entre el RAG básico de S10 y el CRAG de S11.
 // Configuración del laboratorio.
 import type { LabConfig } from "./config";
@@ -21,7 +21,7 @@ export interface LabEvaluationCase {
   id: number;
   // Pregunta formulada al sistema.
   question: string;
-  // true si tiene respuesta en los documentos de Zocomar; false si debe rechazarse.
+  // true si tiene respuesta en los documentos de ThePower Shop; false si debe rechazarse.
   answerable: boolean;
   // Prefijos de `documentId` que respaldan la respuesta (vacío en preguntas no respondibles).
   expectedDocuments: string[];
@@ -36,7 +36,7 @@ export const LAB_VALIDATION_SET: readonly LabEvaluationCase[] = [
     id: 1,
     question: "¿Cuánto tiempo tiene el vendedor para responder a una disputa?",
     answerable: true,
-    expectedDocuments: ["08-garantia-zocomar-y-disputas"],
+    expectedDocuments: ["08-garantia-thepower-shop-y-disputas"],
     expectedFactsOrRefusal: ["48 horas"],
   },
   {
@@ -48,7 +48,7 @@ export const LAB_VALIDATION_SET: readonly LabEvaluationCase[] = [
   },
   {
     id: 3,
-    question: "¿En qué horario atiende el chat de la aplicación de Zocomar?",
+    question: "¿En qué horario atiende el chat de la aplicación de ThePower Shop?",
     answerable: true,
     expectedDocuments: ["11-atencion-al-cliente"],
     expectedFactsOrRefusal: ["8:00", "22:00"],
@@ -62,7 +62,7 @@ export const LAB_VALIDATION_SET: readonly LabEvaluationCase[] = [
   },
   {
     id: 5,
-    question: "¿Qué seguro de viaje ofrece Zocomar a sus clientes?",
+    question: "¿Qué seguro de viaje ofrece ThePower Shop a sus clientes?",
     answerable: false,
     expectedDocuments: [],
     expectedFactsOrRefusal: ["Rechazo: la documentación no menciona seguros de viaje."],
@@ -88,7 +88,7 @@ export const LAB_DEMO_CASES: readonly LabDemoCase[] = [
   {
     id: 1,
     question:
-      "Devolví en un Zocopunto un pedido que pagué con Bizum. ¿Cuánto puede tardar en llegarme el dinero?",
+      "Devolví en un punto ThePower Shop un pedido que pagué con Bizum. ¿Cuánto puede tardar en llegarme el dinero?",
     answerable: true,
     expectedDocuments: ["02-devoluciones", "06-pagos-y-reembolsos"],
     expectedFactsOrRefusal: ["3 días hábiles", "2 días hábiles"],
@@ -117,7 +117,7 @@ export const LAB_DEMO_CASES: readonly LabDemoCase[] = [
   {
     id: 4,
     question:
-      "Soy de Zocomar Plus y vivo en Mallorca. ¿Pago envío en un pedido de 35 € de un solo vendedor y lo puedo pedir exprés?",
+      "Soy de ThePower Shop Plus y vivo en Mallorca. ¿Pago envío en un pedido de 35 € de un solo vendedor y lo puedo pedir exprés?",
     answerable: true,
     expectedDocuments: ["04-envios-vigente"],
     expectedFactsOrRefusal: ["29 €", "no está disponible"],
@@ -134,7 +134,7 @@ export const LAB_DEMO_CASES: readonly LabDemoCase[] = [
   },
   {
     id: 6,
-    question: "¿Qué descuento tienen los estudiantes universitarios en Zocomar?",
+    question: "¿Qué descuento tienen los estudiantes universitarios en ThePower Shop?",
     answerable: false,
     expectedDocuments: [],
     expectedFactsOrRefusal: ["Rechazo: no existe un descuento para estudiantes."],
@@ -144,7 +144,7 @@ export const LAB_DEMO_CASES: readonly LabDemoCase[] = [
 ] as const;
 
 // Conjunto de test de 20 preguntas (14 respondibles y 6 sin respuesta) para comparar RAG básico y CRAG.
-// Se redactó antes de ejecutar ningún modelo sobre el corpus de Zocomar y no se ajusta después.
+// Se redactó antes de ejecutar ningún modelo sobre el corpus de ThePower Shop y no se ajusta después.
 export const LAB_TEST_SET_20: readonly LabEvaluationCase[] = [
   {
     id: 1,
@@ -156,7 +156,7 @@ export const LAB_TEST_SET_20: readonly LabEvaluationCase[] = [
   },
   {
     id: 2,
-    question: "¿Cuántos días tiene un miembro de Zocomar Plus para devolver unas zapatillas?",
+    question: "¿Cuántos días tiene un miembro de ThePower Shop Plus para devolver unas zapatillas?",
     answerable: true,
     expectedDocuments: ["02-devoluciones"],
     expectedFactsOrRefusal: ["45 días"],
@@ -186,7 +186,7 @@ export const LAB_TEST_SET_20: readonly LabEvaluationCase[] = [
   {
     id: 6,
     question:
-      "Si devuelvo un pedido pagado con ZocoPlazos, ¿qué pasa con las cuotas y cuánto tarda el almacén en validar la devolución?",
+      "Si devuelvo un pedido pagado con Plazos ThePower Shop, ¿qué pasa con las cuotas y cuánto tarda el almacén en validar la devolución?",
     answerable: true,
     expectedDocuments: ["06-pagos-y-reembolsos", "02-devoluciones"],
     expectedFactsOrRefusal: ["cuotas pendientes", "3 días hábiles"],
@@ -209,9 +209,9 @@ export const LAB_TEST_SET_20: readonly LabEvaluationCase[] = [
   {
     id: 9,
     question:
-      "Mi paquete no llega y ya ha pasado la fecha máxima de entrega: ¿desde cuándo puedo reclamar y hasta qué importe me cubre Zocomar?",
+      "Mi paquete no llega y ya ha pasado la fecha máxima de entrega: ¿desde cuándo puedo reclamar y hasta qué importe me cubre ThePower Shop?",
     answerable: true,
-    expectedDocuments: ["08-garantia-zocomar-y-disputas"],
+    expectedDocuments: ["08-garantia-thepower-shop-y-disputas"],
     expectedFactsOrRefusal: ["tercer día", "2.500 €"],
   },
   {
@@ -247,21 +247,21 @@ export const LAB_TEST_SET_20: readonly LabEvaluationCase[] = [
   {
     id: 14,
     question:
-      "Si cancelo Zocomar Plus anual a los 10 días sin haber usado nada, ¿me devuelven la cuota? ¿Y si fuera mensual?",
+      "Si cancelo ThePower Shop Plus anual a los 10 días sin haber usado nada, ¿me devuelven la cuota? ¿Y si fuera mensual?",
     answerable: true,
-    expectedDocuments: ["09-zocomar-plus"],
+    expectedDocuments: ["09-thepower-shop-plus"],
     expectedFactsOrRefusal: ["proporcional", "mensual no se reembolsa"],
   },
   {
     id: 15,
-    question: "¿Cuál es el NIF de la empresa que opera Zocomar?",
+    question: "¿Cuál es el NIF de la empresa que opera ThePower Shop?",
     answerable: false,
     expectedDocuments: [],
-    expectedFactsOrRefusal: ["Rechazo: no consta la identidad fiscal de Zocomar."],
+    expectedFactsOrRefusal: ["Rechazo: no consta la identidad fiscal de ThePower Shop."],
   },
   {
     id: 16,
-    question: "¿Cuánto cobra al mes un repartidor de Zocomar?",
+    question: "¿Cuánto cobra al mes un repartidor de ThePower Shop?",
     answerable: false,
     expectedDocuments: [],
     expectedFactsOrRefusal: ["Rechazo: no consta información salarial."],
@@ -275,7 +275,7 @@ export const LAB_TEST_SET_20: readonly LabEvaluationCase[] = [
   },
   {
     id: 18,
-    question: "¿Cuál es la dirección de la oficina central de Zocomar en Lisboa?",
+    question: "¿Cuál es la dirección de la oficina central de ThePower Shop en Lisboa?",
     answerable: false,
     expectedDocuments: [],
     expectedFactsOrRefusal: ["Rechazo: no consta ninguna oficina en Lisboa."],

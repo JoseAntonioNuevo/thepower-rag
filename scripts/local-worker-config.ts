@@ -58,7 +58,7 @@ export interface LocalWorkerConfig {
   vars: Record<string, string>;
   // Bindings.
   bindings: Record<RagBindingName, BindingView>;
-  // Índice de Vectorize de la tienda Zocomar (solo lo usa el chat con CHAT_CORPUS=zocomar).
+  // Índice de Vectorize de la tienda ThePower Shop (solo lo usa el chat con CHAT_CORPUS=thepower-shop).
   storeBinding: BindingView;
   // Capacidades.
   assessment: Assessment;
@@ -206,7 +206,7 @@ export function inspectBindings(
   const vector = Array.isArray(section?.vectorize)
     ? (section.vectorize.map(record).find((item) => item?.binding === "VECTORIZE") ?? null)
     : null;
-  // Vectorize con binding VECTORIZE_STORE (tienda Zocomar).
+  // Vectorize con binding VECTORIZE_STORE (tienda ThePower Shop).
   const storeVector = Array.isArray(section?.vectorize)
     ? (section.vectorize.map(record).find((item) => item?.binding === "VECTORIZE_STORE") ?? null)
     : null;
@@ -376,8 +376,8 @@ export function ragDeclarationReady(config: LocalWorkerConfig): { ok: boolean; m
   const chatCorpus = chatCorpusId(config.vars.CHAT_CORPUS);
   // Valor desconocido.
   if (chatCorpus === null) missing.push("CHAT_CORPUS");
-  // Tienda Zocomar.
-  if (chatCorpus === "zocomar") {
+  // Tienda ThePower Shop.
+  if (chatCorpus === "thepower-shop") {
     // Cada variable de la tienda.
     for (const name of STORE_SETTING_VARIABLES) {
       // Ausente o marcador.
@@ -476,7 +476,7 @@ export function formatPreflight(
     `corpus del chat (CHAT_CORPUS): ${chatCorpus ?? `desconocido (${config.vars.CHAT_CORPUS ?? ""})`}; la investigación usa el curso`,
   );
   // Con la tienda, sus nombres y su binding.
-  if (chatCorpus === "zocomar") {
+  if (chatCorpus === "thepower-shop") {
     // Cada variable.
     for (const name of STORE_SETTING_VARIABLES)
       // Presente o ausente.

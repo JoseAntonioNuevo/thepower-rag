@@ -3,7 +3,7 @@ id: 05-envios-2025-sustituida
 title: Política de envíos de 2025 (SUSTITUIDA el 1 de marzo de 2026)
 audience: program
 verified: 2026-10-24
-source: lab/corpus/sources/05-envios-2025-sustituida.md (tienda ficticia Zocomar)
+source: lab/corpus/sources/05-envios-2025-sustituida.md (tienda ficticia ThePower Shop)
 ---
 
 ## Aviso de vigencia

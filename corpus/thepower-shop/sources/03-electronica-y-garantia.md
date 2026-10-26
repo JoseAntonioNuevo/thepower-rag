@@ -3,12 +3,12 @@ id: 03-electronica-y-garantia
 title: Electrónica: devoluciones especiales y garantía
 audience: program
 verified: 2026-10-24
-source: lab/corpus/sources/03-electronica-y-garantia.md (tienda ficticia Zocomar)
+source: lab/corpus/sources/03-electronica-y-garantia.md (tienda ficticia ThePower Shop)
 ---
 
 ## Plazo de devolución de la electrónica
 
-Los artículos de electrónica (móviles, tabletas, ordenadores, consolas, televisores, audio y pequeños electrodomésticos) siguen el plazo general si se devuelven con el precinto de fábrica intacto. Si el precinto se ha retirado o el dispositivo se ha encendido y configurado, el plazo de desistimiento se reduce a 14 días naturales desde la entrega, también para los miembros de Zocomar Plus.
+Los artículos de electrónica (móviles, tabletas, ordenadores, consolas, televisores, audio y pequeños electrodomésticos) siguen el plazo general si se devuelven con el precinto de fábrica intacto. Si el precinto se ha retirado o el dispositivo se ha encendido y configurado, el plazo de desistimiento se reduce a 14 días naturales desde la entrega, también para los miembros de ThePower Shop Plus.
 
 ## Artículos excluidos por higiene
 

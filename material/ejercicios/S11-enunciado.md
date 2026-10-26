@@ -67,14 +67,14 @@ Construir un grafo de estados en **LangGraph** (en Python o en LangGraph.js) que
 
 ### 2.1 Referencia del laboratorio: un empate es un resultado válido
 
-El laboratorio del repositorio (`lab/`, tienda ficticia **Zocomar**: 12 políticas, `vector(768)` + HNSW, Gemini Embedding 2 y Sonnet en las dos etapas) ejecutó este protocolo el 24 de octubre de 2026 con modelos reales:
+El laboratorio del repositorio (`lab/`, tienda ficticia **ThePower Shop**: 12 políticas, `vector(768)` + HNSW, Gemini Embedding 2 y Sonnet en las dos etapas) ejecutó este protocolo el 24 de octubre de 2026 con modelos reales:
 
 | Etapa      | Respondibles | Rechazos correctos | Búsquedas medias | Latencia mediana (con respuesta) |
 | ---------- | -----------: | -----------------: | ---------------: | -------------------------------: |
 | RAG básico |        14/14 |                6/6 |             1,00 |                            3,2 s |
 | CRAG       |        14/14 |                6/6 |             1,60 |                            8,9 s |
 
-Empataron en acierto. La diferencia estuvo en el margen (0,014 de similitud en RAG frente a 0,65 de relevancia en el juez de CRAG) y en el contexto (RAG pasó una política sustituida al generador en 3 de 14 respuestas; CRAG, en ninguna), a cambio de casi tres veces más latencia. Tu resultado puede ser otro: lo que se evalúa es el método y la honestidad del análisis, no que CRAG gane. Evidencia: `docs/evidence/zocomar-lab-2026-10-24.md`.
+Empataron en acierto. La diferencia estuvo en el margen (0,014 de similitud en RAG frente a 0,65 de relevancia en el juez de CRAG) y en el contexto (RAG pasó una política sustituida al generador en 3 de 14 respuestas; CRAG, en ninguna), a cambio de casi tres veces más latencia. Tu resultado puede ser otro: lo que se evalúa es el método y la honestidad del análisis, no que CRAG gane. Evidencia: `docs/evidence/thepower-shop-lab-2026-10-24.md`.
 
 ---
 
@@ -91,5 +91,5 @@ _(Opcional: búsqueda web pública como último recurso con fuentes marcadas y l
 
 ## 4. Material de apoyo incluido en este repositorio
 
-- **Laboratorio de referencia (`lab/`):** corpus Zocomar en `lab/corpus/sources/`; `lab/src/crag-graph.ts` (LangGraph con `retrieve` → `rerank` → `assess` → `retain`/`discard` → `reformulate` → `answer`/`refuse`); `lab/src/reranker.ts` (escala `[0, 1]`, plantilla de `Qwen3-Reranker-0.6B`, umbrales calibrados y `decideLabSufficiency`); `apps/api/src/lab-models.ts` (juez y reformulador con un modelo real); `bun run lab:real compare` y `eval` para comparar con modelos reales. `lab/eval/resultados-laboratorio.md` es el respaldo determinista sin red: no mide modelos.
+- **Laboratorio de referencia (`lab/`):** corpus ThePower Shop en `lab/corpus/sources/`; `lab/src/crag-graph.ts` (LangGraph con `retrieve` → `rerank` → `assess` → `retain`/`discard` → `reformulate` → `answer`/`refuse`); `lab/src/reranker.ts` (escala `[0, 1]`, plantilla de `Qwen3-Reranker-0.6B`, umbrales calibrados y `decideLabSufficiency`); `apps/api/src/lab-models.ts` (juez y reformulador con un modelo real); `bun run lab:real compare` y `eval` para comparar con modelos reales. `lab/eval/resultados-laboratorio.md` es el respaldo determinista sin red: no mide modelos.
 - **Guía de apoyo:** consulta [`laboratorio-apoyo.md`](laboratorio-apoyo.md).

@@ -61,15 +61,15 @@
         // Recuperación semántica con filtro, puntuaciones y umbral: la comparación RAG/CRAG de S11
         // necesita que RAG básico busque. "complete" solo existe para el curso y bloquea la tienda.
         "RAG_CONTEXT_MODE": "semantic",
-        // Corpus del chat (Sin RAG, RAG y CRAG): la tienda ficticia Zocomar. La investigación de S12
+        // Corpus del chat (Sin RAG, RAG y CRAG): la tienda ficticia ThePower Shop. La investigación de S12
         // sigue con el curso (CORPUS_VERSION, INDEX_PROFILE y VECTORIZE). Volver al curso: "course".
-        "CHAT_CORPUS": "zocomar",
-        // Versión y perfil de Zocomar (corpus/prepared/zocomar.json, BGE-M3 de 1024 dimensiones).
-        "STORE_CORPUS_VERSION": "cb7dabfb11854",
-        "STORE_INDEX_PROFILE": "peb8d9e84d3ba",
-        // Umbral calibrado el 25/10/2026 con calibrate-live --corpus=zocomar: 6 preguntas de
-        // validación, positivas desde 0,7357 y negativas hasta 0,5882 (activation-receipts/zocomar).
-        "STORE_MIN_RETRIEVAL_SCORE": "0.661926",
+        "CHAT_CORPUS": "thepower-shop",
+        // Versión y perfil de ThePower Shop (corpus/prepared/thepower-shop.json, BGE-M3 de 1024 dimensiones).
+        "STORE_CORPUS_VERSION": "cc140d7876624",
+        "STORE_INDEX_PROFILE": "p3d2b914bd60c",
+        // Umbral calibrado el 26/10/2026 con calibrate-live --corpus=thepower-shop: 6 preguntas de
+        // validación, positivas desde 0,7427 y negativas hasta 0,6327 (activation-receipts/thepower-shop).
+        "STORE_MIN_RETRIEVAL_SCORE": "0.68771",
         // Proveedor fijo de producción: no cambiarlo sin petición expresa del usuario.
         "LLM_PROVIDER": "anthropic",
         // Desde el 26/10/2026 Haiku genera (Sin RAG, RAG y respuesta final de CRAG) y Sonnet evalúa
@@ -124,17 +124,17 @@
         "binding": "AI",
         "remote": true,
       },
-      // Índices vectoriales: el del curso (también lo usa la investigación) y el de la tienda Zocomar.
+      // Índices vectoriales: el del curso (también lo usa la investigación) y el de la tienda ThePower Shop.
       "vectorize": [
         {
           "binding": "VECTORIZE",
           "index_name": "thepower-ai-course-rag-76509a5f9743",
           "remote": true,
         },
-        // Índice de Zocomar, creado e ingerido el 25/10/2026 (perfil peb8d9e84d3ba, 54 vectores).
+        // Índice de ThePower Shop, creado e ingerido el 26/10/2026 (perfil p3d2b914bd60c, 54 vectores).
         {
           "binding": "VECTORIZE_STORE",
-          "index_name": "thepower-ai-course-rag-eb8d9e84d3ba",
+          "index_name": "thepower-ai-course-rag-3d2b914bd60c",
           "remote": true,
         },
       ],

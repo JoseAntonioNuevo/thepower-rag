@@ -1,5 +1,5 @@
 // GUÍA DE LECTURA · scripts/lab-real.ts
-// Recorrido real y repetible de S10 y S11 sobre la tienda ficticia Zocomar: PostgreSQL local,
+// Recorrido real y repetible de S10 y S11 sobre la tienda ficticia ThePower Shop: PostgreSQL local,
 // embeddings, calibración, RAG básico, CRAG con juez real y comparación de ambos con citas.
 // preflight/status no consumen modelos; los demás comandos requieren --execute y tope autorizado.
 import { closeSync, existsSync, mkdirSync, openSync, readFileSync, unlinkSync } from "node:fs";
@@ -30,7 +30,7 @@ import {
 
 // Todas las rutas pertenecen a este laboratorio; nunca se toma DATABASE_URL de otra aplicación.
 const root = path.resolve(import.meta.dirname, "..");
-// Guarda manifiestos, calibración, diario de gasto y recibos del corpus actual (Zocomar).
+// Guarda manifiestos, calibración, diario de gasto y recibos del corpus actual (ThePower Shop).
 const local = path.join(root, LAB_LOCAL_DIR);
 // Omite los argumentos del ejecutable y conserva solo las opciones del alumno.
 const args = process.argv.slice(2);
@@ -152,7 +152,7 @@ async function main(): Promise<void> {
     };
     // Inyecta el adaptador SQL en el almacén pgvector, sin cambiar la lógica de recuperación.
     const store = new PgVectorDatabaseStore(executor);
-    // Prepara únicamente los documentos ficticios de Zocomar del directorio del laboratorio.
+    // Prepara únicamente los documentos ficticios de ThePower Shop del directorio del laboratorio.
     const corpus = prepareLabCorpusFromDirectory(path.join(root, "lab/corpus/sources"));
     // La huella liga la versión documental, el modelo de embeddings y sus 768 dimensiones.
     const profile = labHash({

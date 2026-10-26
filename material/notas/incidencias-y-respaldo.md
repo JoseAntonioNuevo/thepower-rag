@@ -3,7 +3,7 @@
 El diseño de la clase cuenta con tres capas independientes para que ninguna incidencia detenga la explicación:
 
 1. **Demostrador web en vivo (`https://rag-thepower.josenuevo.dev` o `bun run dev:real`).**
-2. **Laboratorio reproducible local (`bun run lab:demo` y `bun run lab:eval`, deterministas sobre Zocomar), recibos reales de Zocomar (`docs/evidence/zocomar-2026-10-24/`) y demostrador local (`bun run dev` con `APP_MODE=demo`).**
+2. **Laboratorio reproducible local (`bun run lab:demo` y `bun run lab:eval`, deterministas sobre ThePower Shop), recibos reales de ThePower Shop (`docs/evidence/thepower-shop-2026-10-24/`) y demostrador local (`bun run dev` con `APP_MODE=demo`).**
 3. **Capturas fechadas (`material/evidencias/capturas/`) y PDFs de respaldo (`material/presentaciones/*.pdf`).**
 
 ---
@@ -64,4 +64,4 @@ PY
 ## 3. El dominio público pide desafío interactivo de Turnstile o agota cuota
 
 - Si Turnstile muestra el widget interactivo, resuélvelo o explica en 1 minuto por qué existe (`material/notas/proteger-un-chat-publico.md`: 6 peticiones/60 s por sesión y 120/60 s por IP para proteger el presupuesto público D1).
-- Si deseas continuar sin esperas de red, pasa inmediatamente a `bun run dev` (`http://localhost:5173/`) y a `bun run lab:demo`. Para la comparación real de S11, abre los recibos de `docs/evidence/zocomar-2026-10-24/` y di que son del ensayo del 24 de octubre. Nunca desactives la protección del Worker de producción ni ejecutes `wrangler deploy` durante la clase.
+- Si deseas continuar sin esperas de red, pasa inmediatamente a `bun run dev` (`http://localhost:5173/`) y a `bun run lab:demo`. Para la comparación real de S11, abre los recibos de `docs/evidence/thepower-shop-2026-10-24/` y di que son del ensayo del 24 de octubre. Nunca desactives la protección del Worker de producción ni ejecutes `wrangler deploy` durante la clase.

@@ -3,12 +3,12 @@ id: 10-productos-prohibidos-y-restringidos
 title: Productos prohibidos y restringidos
 audience: program
 verified: 2026-10-24
-source: lab/corpus/sources/10-productos-prohibidos-y-restringidos.md (tienda ficticia Zocomar)
+source: lab/corpus/sources/10-productos-prohibidos-y-restringidos.md (tienda ficticia ThePower Shop)
 ---
 
 ## Productos prohibidos
 
-En Zocomar no se pueden vender medicamentos, productos sanitarios que requieran receta, armas ni sus réplicas, animales vivos, tabaco, productos de vapeo con nicotina, entradas para espectáculos ni productos falsificados.
+En ThePower Shop no se pueden vender medicamentos, productos sanitarios que requieran receta, armas ni sus réplicas, animales vivos, tabaco, productos de vapeo con nicotina, entradas para espectáculos ni productos falsificados.
 
 ## Productos restringidos por edad
 

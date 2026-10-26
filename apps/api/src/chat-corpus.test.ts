@@ -1,5 +1,5 @@
 // GUÍA DE LECTURA · apps/api/src/chat-corpus.test.ts
-// Pruebas sin red del corpus del chat: CHAT_CORPUS elige el curso o la tienda Zocomar para Sin RAG,
+// Pruebas sin red del corpus del chat: CHAT_CORPUS elige el curso o la tienda ThePower Shop para Sin RAG,
 // RAG básico y CRAG; la investigación de S12 sigue leyendo el curso; la tienda no pide grupo ni
 // calendario; los prompts cambian de papel pero conservan las reglas de DATOS y citas.
 // Esquema de salud.
@@ -35,7 +35,7 @@ const storeEnv: WorkerEnv = {
   INDEX_PROFILE: "p-curso",
   MIN_RETRIEVAL_SCORE: "0.5",
   // Tienda: lo que lee el chat.
-  CHAT_CORPUS: "zocomar",
+  CHAT_CORPUS: "thepower-shop",
   STORE_CORPUS_VERSION: "tienda-v",
   STORE_INDEX_PROFILE: "p-tienda",
   STORE_MIN_RETRIEVAL_SCORE: "0.2",
@@ -104,7 +104,7 @@ function mockModel(text: string, calls: { count: number; prompt: string }): Lang
 
 // Fragmento de la tienda con su vector léxico.
 function storeChunk(text: string): IndexedChunk {
-  // Política de atención al cliente de Zocomar.
+  // Política de atención al cliente de ThePower Shop.
   return {
     documentId: "11-atencion-al-cliente",
     chunkId: "tienda-v:11-atencion-al-cliente:00",
@@ -136,7 +136,7 @@ describe("corpus del chat · diagnóstico", () => {
     // Diagnóstico.
     const assessment = assessWorker(storeEnv);
     // Chat con la tienda.
-    expect(assessment.chatCorpus).toBe("zocomar");
+    expect(assessment.chatCorpus).toBe("thepower-shop");
     expect(assessment.chatRetrieval).toMatchObject({
       corpusVersion: "tienda-v",
       indexProfile: "p-tienda",
@@ -168,7 +168,7 @@ describe("corpus del chat · diagnóstico", () => {
   // La demo siempre trae el curso.
   it("la demo informa del curso aunque CHAT_CORPUS diga tienda", () => {
     // Demo.
-    const assessment = assessWorker({ CHAT_CORPUS: "zocomar" });
+    const assessment = assessWorker({ CHAT_CORPUS: "thepower-shop" });
     // Curso.
     expect(assessment.chatCorpus).toBe("course");
   });
@@ -235,22 +235,24 @@ describe("corpus del chat · prompts", () => {
   // La tienda cambia el papel y conserva las reglas.
   it("cambia el papel y conserva DATOS, PERMITIDOS y citas", () => {
     // Prompts de la tienda.
-    const store = chatPrompts("zocomar");
+    const store = chatPrompts("thepower-shop");
     // Ids propios.
     expect([store.sinRag.id, store.rag.id, store.crag.id]).toEqual([
-      "sin-rag-zocomar-v1",
-      "rag-zocomar-v1",
-      "crag-zocomar-v1",
+      "sin-rag-thepower-shop-v1",
+      "rag-thepower-shop-v1",
+      "crag-thepower-shop-v1",
     ]);
     // Papel de la tienda.
-    expect(store.rag.text).toContain("Zocomar");
+    expect(store.rag.text).toContain("ThePower Shop");
     // Mismas reglas que el curso salvo la primera línea.
     expect(store.rag.text.split("\n").slice(1)).toEqual(RAG_PROMPT.text.split("\n").slice(1));
     expect(store.crag.text).toContain("La pregunta del cliente es la original");
     // El curso conserva sus ids.
     expect(chatPrompts("course").crag.id).toBe(CRAG_PROMPT.id);
     // El sistema con evidencia lleva el papel de la tienda.
-    expect(ragSystem([storeChunk("Atiende de 8:00 a 22:00.")], "zocomar")).toContain("Zocomar");
+    expect(ragSystem([storeChunk("Atiende de 8:00 a 22:00.")], "thepower-shop")).toContain(
+      "ThePower Shop",
+    );
   });
 });
 
@@ -282,10 +284,10 @@ describe("corpus del chat · /api/chat y /api/health", () => {
     expect(raw).not.toContain("Elige el grupo");
     // Una llamada con el papel y la evidencia de la tienda.
     expect(calls.count).toBe(1);
-    expect(calls.prompt).toContain("Zocomar");
+    expect(calls.prompt).toContain("ThePower Shop");
     expect(calls.prompt).toContain("8:00 a 22:00");
     // Id del prompt de la tienda en los metadatos.
-    expect(raw).toContain("rag-zocomar-v1");
+    expect(raw).toContain("rag-thepower-shop-v1");
 
     // Con el curso, la misma pregunta pide grupo y no llama al modelo.
     const courseCalls = { count: 0, prompt: "" };
@@ -312,7 +314,7 @@ describe("corpus del chat · /api/chat y /api/health", () => {
     expect(response.status).toBe(200);
     await response.text();
     // Papel de la tienda.
-    expect(calls.prompt).toContain("Zocomar");
+    expect(calls.prompt).toContain("ThePower Shop");
     expect(calls.prompt).toContain("no inventes plazos");
   });
 
@@ -327,7 +329,7 @@ describe("corpus del chat · /api/chat y /api/health", () => {
     expect(body.corpus.profileId).toBe("p-curso");
     // Corpus del chat.
     expect(body.chatCorpus).toMatchObject({
-      id: "zocomar",
+      id: "thepower-shop",
       version: "tienda-v",
       profileId: "p-tienda",
       minScore: 0.2,

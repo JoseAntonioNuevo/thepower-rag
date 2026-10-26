@@ -2,7 +2,7 @@
 
 ## Canales y horarios
 
-El chat de la aplicación atiende todos los días de 8:00 a 22:00. El teléfono gratuito, que aparece en la sección «Ayuda» de la aplicación, atiende de lunes a viernes de 9:00 a 19:00. Zocomar no ofrece atención por correo electrónico ni por redes sociales.
+El chat de la aplicación atiende todos los días de 8:00 a 22:00. El teléfono gratuito, que aparece en la sección «Ayuda» de la aplicación, atiende de lunes a viernes de 9:00 a 19:00. ThePower Shop no ofrece atención por correo electrónico ni por redes sociales.
 
 ## Tiempos de respuesta
 

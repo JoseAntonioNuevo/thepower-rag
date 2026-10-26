@@ -471,7 +471,7 @@ describe("grafo CRAG", () => {
     expect(clarify.counts).toEqual({ retrieve: 0, rank: 0, rewrite: 0, generate: 0 });
   });
 
-  // Un corpus sin grupos (la tienda Zocomar) no confunde «horario» o «qué día» con el calendario.
+  // Un corpus sin grupos (la tienda ThePower Shop) no confunde «horario» o «qué día» con el calendario.
   it("no pide grupo con un corpus sin calendarios", async () => {
     // Pregunta de la tienda que parece de calendario.
     const question = "¿Qué día de la semana se publican las ofertas flash?";

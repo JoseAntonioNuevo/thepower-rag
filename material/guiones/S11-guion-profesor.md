@@ -1,18 +1,18 @@
 > **Referencia en vivo y laboratorio:** para el recorrido sobre el asistente publicado y el laboratorio PostgreSQL/pgvector (`lab/`), consulta también [`recorrido-cloud.md`](recorrido-cloud.md). Este guion articula los 90 minutos de S11 sobre las 16 diapositivas de `material/presentaciones/S11-crag.pptx`.
 >
-> **Aviso sobre la presentación:** el PPTX no se ha actualizado con el laboratorio Zocomar. Las diapositivas **4, 13 y 15** muestran todavía el ejemplo guionizado del curso, el laboratorio AetherCloud y los números del respaldo determinista. Este guion indica en cada una qué decir y qué proyectar en su lugar. La diapositiva 12 muestra «20 s»: el asistente publicado usa 60 s con Sonnet.
+> **Aviso sobre la presentación:** el PPTX no se ha actualizado con el laboratorio ThePower Shop. Las diapositivas **4, 13 y 15** muestran todavía el ejemplo guionizado del curso, el laboratorio AetherCloud y los números del respaldo determinista. Este guion indica en cada una qué decir y qué proyectar en su lugar. La diapositiva 12 muestra «20 s»: el asistente publicado usa 60 s con Sonnet.
 
 # Guion S11 · Corrective RAG (CRAG): reordenamiento, suficiencia, grafo y métricas
 
 **Fecha:** martes 27 de octubre de 2026 · **Cohorte:** M/J · **Horario:** 18:30–20:00 `Europe/Madrid` (90 minutos con preguntas).  
 **Presentación:** `material/presentaciones/S11-crag.pptx` (`material/presentaciones/S11-crag.pdf`), 16 diapositivas en cuatro secciones: Inicio (1–3), RAG avanzado y CRAG (4–12), Demo (13) y Evaluación y métricas (14–16).  
-**Laboratorio:** `lab/` con la tienda ficticia **Zocomar** (`bun run lab:real compare`, `demo` y `eval` con modelos reales; `bun run lab:demo` y `lab:eval` como respaldo sin red).  
+**Laboratorio:** `lab/` con la tienda ficticia **ThePower Shop** (`bun run lab:real compare`, `demo` y `eval` con modelos reales; `bun run lab:demo` y `lab:eval` como respaldo sin red).  
 **Demostrador del curso:** `bun run dev` en `http://localhost:5173/` para los seis guiones deterministas del grafo.  
-**Evidencia de hoy:** [`docs/evidence/zocomar-lab-2026-10-24.md`](../../docs/evidence/zocomar-lab-2026-10-24.md) y los recibos de `docs/evidence/zocomar-2026-10-24/`.
+**Evidencia de hoy:** [`docs/evidence/thepower-shop-lab-2026-10-24.md`](../../docs/evidence/thepower-shop-lab-2026-10-24.md) y los recibos de `docs/evidence/thepower-shop-2026-10-24/`.
 
 **Temario de thePower para S11:** RAG avanzado (superar las limitaciones del RAG básico con técnicas de autocorrección y reordenamiento de resultados) · Corrective RAG · Evaluación y métricas específicas de sistemas RAG. Ejercicio: construir un CRAG completo desde cero.
 
-**Reparto del tiempo:** 20 min de conceptos (diapositivas 1–12), 55 min de demo (diapositiva 13: guiones locales y comparación real en Zocomar) y 15 min de resultados, ejercicio y dudas (diapositivas 14–16). El QR solo se muestra al inicio.
+**Reparto del tiempo:** 20 min de conceptos (diapositivas 1–12), 55 min de demo (diapositiva 13: guiones locales y comparación real en ThePower Shop) y 15 min de resultados, ejercicio y dudas (diapositivas 14–16). El QR solo se muestra al inicio.
 
 **Mensaje de la sesión, con datos reales:** con un buen generador y un corpus pequeño y limpio, el RAG básico ya acierta; CRAG acierta igual, pero con margen y con un contexto limpio, y lo paga en latencia. CRAG es un seguro, no una mejora gratis en cada respuesta.
 
@@ -26,7 +26,7 @@
 
 Explica:
 
-> En S10 construimos un RAG de una sola búsqueda con umbral previo. Hoy le añadimos una capa de decisión: un grafo de **Corrective RAG (CRAG)** en LangGraph que juzga si la evidencia cubre la pregunta y, si no, la corrige. Suficiente → responder; parcial → conservar y reformular; insuficiente → descartar y reformular. Todo con límites en el código. Para medirlo con modelos reales usamos un corpus nuevo, **Zocomar**, una tienda inventada.
+> En S10 construimos un RAG de una sola búsqueda con umbral previo. Hoy le añadimos una capa de decisión: un grafo de **Corrective RAG (CRAG)** en LangGraph que juzga si la evidencia cubre la pregunta y, si no, la corrige. Suficiente → responder; parcial → conservar y reformular; insuficiente → descartar y reformular. Todo con límites en el código. Para medirlo con modelos reales usamos un corpus nuevo, **ThePower Shop**, una tienda inventada.
 
 ### Diapositiva 2 · Evalúa la clase anterior (QR)
 
@@ -38,7 +38,7 @@ Mientras responden, pide que recuerden una pregunta que el RAG de S10 rechazó a
 
 ### Diapositiva 3 · Lo que pide el temario, en tres bloques
 
-Presenta el temario de thePower tal como está en la ficha del programa y su reparto: conceptos (20 min), Corrective RAG en vivo (55 min: guiones locales y comparación real en Zocomar) y evaluación con resultados reales (15 min).
+Presenta el temario de thePower tal como está en la ficha del programa y su reparto: conceptos (20 min), Corrective RAG en vivo (55 min: guiones locales y comparación real en ThePower Shop) y evaluación con resultados reales (15 min).
 
 ---
 
@@ -112,7 +112,7 @@ Recorre las dos columnas con los guiones que se ejecutarán en local:
 1. **Parcial (`partial-s5-s6`):** S5 (`0,800`) es útil, pero falta observabilidad (cobertura `0,50`); `retain` conserva S5, `reformulate` busca «observabilidad Langfuse y LangSmith de un agente», la búsqueda 2 trae S6 (`0,860`) y `answer` cita las dos sin duplicar.
 2. **Insuficiente (`irrelevant-then-s6`):** S16 (`0,200 < 0,50`) se descarta con motivo e intento; se reformula desde la pregunta original y S6 (`0,880`) responde. S16 nunca entra en el prompt.
 
-Avisa: en el test real de Zocomar **ninguna respondible necesitó la ruta parcial**; la reformulación solo apareció en las preguntas sin respuesta. Las rutas existen y se enseñan con los guiones, pero no siempre se activan.
+Avisa: en el test real de ThePower Shop **ninguna respondible necesitó la ruta parcial**; la reformulación solo apareció en las preguntas sin respuesta. Las rutas existen y se enseñan con los guiones, pero no siempre se activan.
 
 ### Diapositiva 11 · La pregunta original nunca se sobrescribe
 
@@ -134,7 +134,7 @@ Con el extracto de `Annotation.Root` de `lab/src/crag-graph.ts`:
 
 ## 20–75 min · Demo en vivo (Diapositiva 13)
 
-La diapositiva 13 lista los seis guiones y nombra el laboratorio AetherCloud con `bun run lab:demo`. Úsala como índice de la primera parte; la segunda parte es el laboratorio **Zocomar** con modelos reales.
+La diapositiva 13 lista los seis guiones y nombra el laboratorio AetherCloud con `bun run lab:demo`. Úsala como índice de la primera parte; la segunda parte es el laboratorio **ThePower Shop** con modelos reales.
 
 ### Parte 1 · Seis guiones del grafo (unos 20 min, sin coste)
 
@@ -149,9 +149,9 @@ En local (`bun run dev`, `http://localhost:5173/`, etapa **CRAG**). Los guiones 
 
 En el panel **Traza de la clase** señala los pasos `retrieve`, `rank` y `assess`, la consulta original frente a la reformulada y los conservados y descartados. Con **Modo clase** activado (interruptor de la barra o `?clase` en la URL) el mismo recorrido se ve como grafo: el nodo activo en azul, lo recorrido en verde y un inspector con los candidatos, la nota del juez y las lagunas. **Repetir paso a paso** vuelve a recorrer los pasos ya recibidos sin llamar a nada. Los guiones enseñan el recorrido; **no miden calidad**.
 
-### Parte 2 · Zocomar: RAG frente a CRAG con modelos reales (unos 35 min)
+### Parte 2 · ThePower Shop: RAG frente a CRAG con modelos reales (unos 35 min)
 
-Presenta el corpus (2–3 min). **Zocomar** es un marketplace inventado: 12 políticas en `lab/corpus/sources/` (devoluciones, electrónica y garantía, envíos vigentes, envíos de 2025 sustituidos, pagos, vendedores, disputas, Plus, productos restringidos, atención al cliente y promociones), 54 fragmentos, PostgreSQL + pgvector `vector(768)` con HNSW, Gemini Embedding 2 y Sonnet. Las políticas reproducen fallos típicos de una documentación real:
+Presenta el corpus (2–3 min). **ThePower Shop** es un marketplace inventado: 12 políticas en `lab/corpus/sources/` (devoluciones, electrónica y garantía, envíos vigentes, envíos de 2025 sustituidos, pagos, vendedores, disputas, Plus, productos restringidos, atención al cliente y promociones), 54 fragmentos, PostgreSQL + pgvector `vector(768)` con HNSW, Gemini Embedding 2 y Sonnet. Las políticas reproducen fallos típicos de una documentación real:
 
 - **Remite a otro documento:** devoluciones dice que el plazo de abono está en la política de pagos.
 - **Excepción por categoría:** electrónica abierta, 14 días; auriculares intraauditivos sin precinto, sin devolución.
@@ -167,15 +167,15 @@ docker compose -f lab/docker-compose.yml up -d
 bun run lab:real status
 ```
 
-Debe mostrar 54 vectores de 768 dimensiones y el índice HNSW. Después, en la misma terminal, una pregunta en las dos etapas:
+Debe mostrar 54 vectores de 768 dimensiones, la versión `lab-0d7f87fe2504` y el índice HNSW. El índice se reconstruyó el 26/10 tras renombrar la tienda, con el umbral recalibrado a 0,752989. Las cifras de la tabla de casos son del ensayo del 24/10 con el nombre anterior, así que lanza una comparación antes de clase para tener las actuales. Después, en la misma terminal, una pregunta en las dos etapas:
 
 ```bash
-bun run lab:real compare --question '¿Qué descuento tienen los estudiantes universitarios en Zocomar?' --execute --max-spend-usd 5 --brief
+bun run lab:real compare --question '¿Qué descuento tienen los estudiantes universitarios en ThePower Shop?' --execute --max-spend-usd 5 --brief
 ```
 
-El tope de 5 USD es el del diario `lab/.local/zocomar`, autorizado el 24 de octubre de 2026; tras el ensayo hay 2,7741628 USD reservados. Cada comparación reserva entre 0,05 y 0,2 USD (más en las preguntas sin respuesta, que agotan tres búsquedas).
+El tope de 5 USD es el del diario `lab/.local/thepower-shop`, autorizado el 24 de octubre de 2026; tras el ensayo hay 2,7741628 USD reservados. Cada comparación reserva entre 0,05 y 0,2 USD (más en las preguntas sin respuesta, que agotan tres búsquedas).
 
-Casos recomendados, con lo que ocurrió en el ensayo real (`docs/evidence/zocomar-2026-10-24/`):
+Casos recomendados, con lo que ocurrió en el ensayo real (`docs/evidence/thepower-shop-2026-10-24/`):
 
 | Caso                                         | Qué enseña               | RAG en el ensayo                                                                                                | CRAG en el ensayo                                        |
 | -------------------------------------------- | ------------------------ | --------------------------------------------------------------------------------------------------------------- | -------------------------------------------------------- |
@@ -186,18 +186,18 @@ Casos recomendados, con lo que ocurrió en el ensayo real (`docs/evidence/zocoma
 
 En cada caso señala: vecinos con su **similitud**, **relevancia del juez**, ruta y las dos respuestas. Dilo claramente: **en acierto suelen empatar**; la diferencia está en el margen y en lo que llega al generador.
 
-Si falla la red o el presupuesto, abre los recibos guardados (`docs/evidence/zocomar-2026-10-24/demo-*.json`) o ejecuta el respaldo `bun run lab:demo`, y di qué estás proyectando.
+Si falla la red o el presupuesto, abre los recibos guardados (`docs/evidence/thepower-shop-2026-10-24/demo-*.json`) o ejecuta el respaldo `bun run lab:demo`, y di qué estás proyectando.
 
 ### Parte 3 · La web en modo clase: el caso de los auriculares
 
-En el laboratorio RAG y CRAG empatan porque Gemini recupera bien. En la web, con BGE-M3 y el umbral 0,661926, la medición del 26/10 (`docs/evidence/zocomar-crag-casos-2026-10-26.md`) encontró un caso claro. Abre la web con `?lento` (modo clase con modo lento: un paso cada 3,5 s, con la frase de qué hace cada nodo), elige **RAG básico** y pregunta:
+En el laboratorio RAG y CRAG empatan porque Gemini recupera bien. En la web, con BGE-M3 y el umbral 0,68771, la medición del 26/10, repetida tras renombrar la tienda, (`docs/evidence/thepower-shop-crag-casos-2026-10-26.md`) encontró un caso claro. Abre la web con `?lento` (modo clase con modo lento: un paso cada 3,5 s, con la frase de qué hace cada nodo), elige **RAG básico** y pregunta:
 
 > Compré unos auriculares de botón hace 12 días, los he probado y no me convencen. Tengo 30 días para devolverlos, ¿verdad?
 
-- **RAG básico:** el grafo pasa por Embedding, Vectorize y Umbral y termina en **No consta**. En el inspector, los cuatro vecinos quedan por debajo del corte (el mejor, 0,613) y ninguno es la exclusión por higiene.
+- **RAG básico:** el grafo pasa por Embedding, Vectorize y Umbral y termina en **No consta**. En el inspector, los cuatro vecinos quedan por debajo del corte (el mejor, 0,618) y ninguno es la exclusión por higiene.
 - **CRAG**, con la misma pregunta: el inspector de **Buscar** muestra diez candidatos, con la exclusión por higiene (`03-electronica-y-garantia:01`) en 5.º lugar. El **Juez** le da la nota alta y **Decidir** responde con ella.
 
-Remata con la idea de que bajar el umbral no lo arregla. Con un corte en 0,60 RAG respondería con la regla general (30 días) o con la de electrónica desprecintada (14 días), las dos falsas para auriculares intraauditivos. Lo que salva a CRAG es leer más candidatos y juzgarlos con el texto delante.
+Remata con la idea de que bajar el umbral no lo arregla. Una pregunta de calibración sin respuesta llega a 0,633, por encima del mejor vecino de esta (0,618): ningún corte fijo deja pasar la buena sin dejar pasar ruido. Y aunque pasaran los cuatro primeros, RAG respondería con la regla general (30 días) o con la de electrónica desprecintada (14 días), las dos falsas para auriculares intraauditivos. Lo que salva a CRAG es leer más candidatos y juzgarlos con el texto delante.
 
 El modo clase está publicado desde el 26/10 (versión `cfbccfcf`). Las respuestas de CRAG para este caso todavía no se han ejecutado con modelos: ensáyalo antes de la clase. Turnstile pide la casilla a una persona; en el navegador automatizado falla.
 
@@ -216,11 +216,11 @@ Tercera pieza del temario: **evaluación y métricas específicas de sistemas RA
 
 Añade dos lecturas que hoy resultan decisivas: el **margen de decisión** (cuánto separa la señal las preguntas con respuesta de las que no la tienen) y el **contexto que llega al generador** (fragmentos obsoletos o irrelevantes).
 
-Protocolo: desarrollo → validación (calibrar) → congelar → test de **20 preguntas nuevas (14 + 6)**. Ajustar después de ver el test lo convierte en validación. En Zocomar, las dos correcciones del juez se hicieron con los casos de demostración, **antes** de abrir el test.
+Protocolo: desarrollo → validación (calibrar) → congelar → test de **20 preguntas nuevas (14 + 6)**. Ajustar después de ver el test lo convierte en validación. En ThePower Shop, las dos correcciones del juez se hicieron con los casos de demostración, **antes** de abrir el test.
 
-### Diapositiva 15 · Resultados (proyecta los de Zocomar)
+### Diapositiva 15 · Resultados (proyecta los de ThePower Shop)
 
-La diapositiva muestra el 16/20 → 17/20 del **respaldo determinista** de AetherCloud, que no mide modelos reales. **Proyecta en su lugar** [`docs/evidence/zocomar-lab-2026-10-24.md`](../../docs/evidence/zocomar-lab-2026-10-24.md) y explica:
+La diapositiva muestra el 16/20 → 17/20 del **respaldo determinista** de AetherCloud, que no mide modelos reales. **Proyecta en su lugar** [`docs/evidence/thepower-shop-lab-2026-10-24.md`](../../docs/evidence/thepower-shop-lab-2026-10-24.md) y explica:
 
 | Etapa      | Respondibles | Rechazos correctos | Búsquedas medias | Mediana con respuesta | Mediana sin respuesta |
 | ---------- | -----------: | -----------------: | ---------------: | --------------------: | --------------------: |
@@ -234,7 +234,7 @@ La diapositiva muestra el 16/20 → 17/20 del **respaldo determinista** de Aethe
 
 Conclusión para el alumno: con este corpus y este generador, **CRAG no mejora el acierto; compra margen y contexto limpio a cambio de latencia**. Un generador más débil o un corpus con más ruido podrían cambiar el resultado; no se ha medido. Veinte preguntas son una muestra pequeña: no es una tasa general.
 
-Si preguntan por el lote histórico del asistente del 3 de octubre (17/20 → 18/20), es de una configuración anterior y otro corpus; no se mezcla con Zocomar.
+Si preguntan por el lote histórico del asistente del 3 de octubre (17/20 → 18/20), es de una configuración anterior y otro corpus; no se mezcla con ThePower Shop.
 
 ### Diapositiva 16 · Construir un CRAG completo desde cero
 

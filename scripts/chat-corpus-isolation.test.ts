@@ -1,7 +1,7 @@
 // GUÍA DE LECTURA · scripts/chat-corpus-isolation.test.ts
 // Aislamiento de la investigación de S12: ningún módulo research-*.ts de la API lee la configuración
 // del chat (CHAT_CORPUS, variables STORE_*, VECTORIZE_STORE ni chatRetrieval). Así, cambiar el chat a
-// la tienda Zocomar no puede cambiar qué corpus consulta la investigación.
+// la tienda ThePower Shop no puede cambiar qué corpus consulta la investigación.
 // Lectura de archivos.
 import { readdirSync, readFileSync } from "node:fs";
 // Rutas.

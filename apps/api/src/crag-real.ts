@@ -75,10 +75,10 @@ const REWRITE_PROMPT = [
   "La consulta tiene que ser distinta de las anteriores.",
 ].join("\n");
 
-// Evaluador con la tienda Zocomar: mismo esquema y pasos, con las reglas del juez del laboratorio
+// Evaluador con la tienda ThePower Shop: mismo esquema y pasos, con las reglas del juez del laboratorio
 // sobre políticas sustituidas, remisiones entre documentos y lagunas (apps/api/src/lab-models.ts).
 const STORE_EVALUATOR_PROMPT = [
-  "Eres el evaluador de la documentación de Zocomar, una tienda en línea ficticia que se usa en clase.",
+  "Eres el evaluador de la documentación de ThePower Shop, una tienda en línea ficticia que se usa en clase.",
   ...EVALUATOR_PROMPT.split("\n").slice(1, -1),
   "Un fragmento de un documento sustituido, archivado o no vigente no sirve para describir las condiciones actuales: puntúalo con 0.20 o menos, salvo que la pregunta pida expresamente las condiciones antiguas.",
   "Si un fragmento remite a otro documento para un dato que la pregunta necesita, o la pregunta trata de una categoría, un tipo de cliente o una zona con condiciones propias y solo hay regla general, esa parte es una laguna.",
@@ -364,7 +364,7 @@ export function createRealCragPorts(input: {
               }),
               // Instrucciones y prompt con la pregunta, la consulta y los fragmentos empaquetados.
               schemaName: "crag-evidence",
-              system: input.corpus === "zocomar" ? STORE_EVALUATOR_PROMPT : EVALUATOR_PROMPT,
+              system: input.corpus === "thepower-shop" ? STORE_EVALUATOR_PROMPT : EVALUATOR_PROMPT,
               prompt: `Pregunta original:\n${question}\n\nConsulta de búsqueda:\n${query}\n\nFragmentos:\n${packed}`,
               // Tope de salida, reintentos en 0 y señal.
               maxOutputTokens: 1600,
@@ -413,7 +413,7 @@ export function createRealCragPorts(input: {
               model: input.evaluator,
               schema: rewriteSchema,
               schemaName: "crag-query",
-              system: input.corpus === "zocomar" ? STORE_REWRITE_PROMPT : REWRITE_PROMPT,
+              system: input.corpus === "thepower-shop" ? STORE_REWRITE_PROMPT : REWRITE_PROMPT,
               // Pregunta original, consulta anterior y lagunas nombradas.
               prompt: `Pregunta original:\n${question}\n\nConsulta anterior:\n${query}\n\nLagunas:\n${gaps.join("\n") || "sin laguna nombrada"}`,
               // Tope de salida, sin reintentos y con señal.

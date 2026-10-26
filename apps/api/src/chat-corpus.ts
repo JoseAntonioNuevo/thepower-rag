@@ -1,5 +1,5 @@
 // GUÍA DE LECTURA · apps/api/src/chat-corpus.ts
-// Corpus del chat (Sin RAG, RAG básico y CRAG): el material del curso o la tienda ficticia Zocomar.
+// Corpus del chat (Sin RAG, RAG básico y CRAG): el material del curso o la tienda ficticia ThePower Shop.
 // Lo elige CHAT_CORPUS. La investigación de S12 no pasa por aquí: siempre lee el curso con
 // CORPUS_VERSION, INDEX_PROFILE y el binding VECTORIZE, aunque el chat use la tienda.
 // Identificador del corpus del chat, compartido con la interfaz.
@@ -29,7 +29,7 @@ export function chatCorpusId(value: string | undefined): ChatCorpusId | null {
   // Sin valor: el comportamiento de siempre.
   if (trimmed === "") return "course";
   // Solo dos corpus conocidos; no se adivina otro.
-  return trimmed === "course" || trimmed === "zocomar" ? trimmed : null;
+  return trimmed === "course" || trimmed === "thepower-shop" ? trimmed : null;
 }
 
 // ¿Usa grupos y calendario? Solo el curso: la tienda no tiene L/X ni M/J y no debe pedirlos.
@@ -47,5 +47,5 @@ export function chatVectorBinding(corpus: ChatCorpusId): "VECTORIZE" | "VECTORIZ
 // Nombre visible de cada corpus en la interfaz y en /api/health.
 export const CHAT_CORPUS_LABELS: Record<ChatCorpusId, string> = {
   course: "Material del curso AI Engineer",
-  zocomar: "Zocomar, tienda en línea ficticia",
+  "thepower-shop": "ThePower Shop, tienda en línea ficticia",
 };

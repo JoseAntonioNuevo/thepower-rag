@@ -1,14 +1,14 @@
 ---
-id: 09-zocomar-plus
-title: Zocomar Plus
+id: 09-thepower-shop-plus
+title: ThePower Shop Plus
 audience: program
 verified: 2026-10-24
-source: lab/corpus/sources/09-zocomar-plus.md (tienda ficticia Zocomar)
+source: lab/corpus/sources/09-thepower-shop-plus.md (tienda ficticia ThePower Shop)
 ---
 
 ## Precio y prueba gratuita
 
-Zocomar Plus cuesta 4,99 € al mes o 49 € al año. Cada cliente puede disfrutar una sola vez de una prueba gratuita de 30 días. La cuota se cobra al terminar la prueba si no se cancela antes.
+ThePower Shop Plus cuesta 4,99 € al mes o 49 € al año. Cada cliente puede disfrutar una sola vez de una prueba gratuita de 30 días. La cuota se cobra al terminar la prueba si no se cancela antes.
 
 ## Ventajas de la suscripción
 

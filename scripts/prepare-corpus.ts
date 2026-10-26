@@ -1,7 +1,7 @@
 // GUÍA DE LECTURA · scripts/prepare-corpus.ts
 // Prepara un corpus: por defecto el del curso (corpus/sources → corpus/prepared/corpus.json y
-// corpus/COVERAGE.md); con --corpus zocomar, la tienda ficticia del chat (corpus/zocomar/sources →
-// corpus/prepared/zocomar.json, sin informe de cobertura del temario). No llama a ningún proveedor.
+// corpus/COVERAGE.md); con --corpus thepower-shop, la tienda ficticia del chat (corpus/thepower-shop/sources →
+// corpus/prepared/thepower-shop.json, sin informe de cobertura del temario). No llama a ningún proveedor.
 // Ejecuta comandos (vp fmt).
 import { execFileSync } from "node:child_process";
 // Lectura y escritura de archivos.
@@ -19,7 +19,7 @@ import {
 
 // Raíz del repositorio.
 const root = path.resolve(import.meta.dirname, "..");
-// Corpus pedido: --corpus zocomar o --corpus=zocomar; sin la opción, el del curso.
+// Corpus pedido: --corpus thepower-shop o --corpus=thepower-shop; sin la opción, el del curso.
 const corpusFlagIndex = process.argv.findIndex(
   (arg) => arg === "--corpus" || arg.startsWith("--corpus="),
 );
@@ -29,14 +29,14 @@ const corpusName =
     ? "course"
     : (process.argv[corpusFlagIndex]!.split("=")[1] ?? process.argv[corpusFlagIndex + 1] ?? "");
 // Solo hay dos corpus preparados; cualquier otro nombre se rechaza antes de leer archivos.
-if (corpusName !== "course" && corpusName !== "zocomar") {
+if (corpusName !== "course" && corpusName !== "thepower-shop") {
   // Detiene el script sin escribir nada.
-  throw new Error("--corpus debe ser course o zocomar.");
+  throw new Error("--corpus debe ser course o thepower-shop.");
 }
 // ¿Es la tienda ficticia del chat?
-const store = corpusName === "zocomar";
+const store = corpusName === "thepower-shop";
 // Carpeta de las fuentes.
-const sourceRoot = path.join(root, store ? "corpus/zocomar/sources" : "corpus/sources");
+const sourceRoot = path.join(root, store ? "corpus/thepower-shop/sources" : "corpus/sources");
 
 // Recorre una carpeta y devuelve los Markdown con su ruta relativa y su texto.
 function collect(directory: string): SourceFile[] {
@@ -89,9 +89,9 @@ const publicCorpus = {
 const preparedDir = path.join(root, "corpus/prepared");
 // La crea si no existe.
 mkdirSync(preparedDir, { recursive: true });
-// Escribe corpus.json (curso) o zocomar.json (tienda).
+// Escribe corpus.json (curso) o thepower-shop.json (tienda).
 writeFileSync(
-  path.join(preparedDir, store ? "zocomar.json" : "corpus.json"),
+  path.join(preparedDir, store ? "thepower-shop.json" : "corpus.json"),
   `${JSON.stringify(publicCorpus, null, 2)}\n`,
 );
 // La tienda no tiene temario ni calendarios: solo el curso escribe el informe de cobertura.

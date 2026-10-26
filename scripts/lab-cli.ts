@@ -67,11 +67,11 @@ function formatLabEvaluationMarkdown(
 
   // Documento Markdown completo.
   return [
-    "# Respaldo offline del laboratorio: RAG básico y CRAG sobre Zocomar",
+    "# Respaldo offline del laboratorio: RAG básico y CRAG sobre ThePower Shop",
     "",
-    "> **Respaldo determinista, no medición de modelos.** Embeddings léxicos de 768 dimensiones, reordenador por reglas y respuesta extractiva. No llama a ningún proveedor. Sirve para enseñar el recorrido sin red; la comparación con modelos reales está en `lab/.local/zocomar/evaluation.json` (`bun run lab:real eval`).",
+    "> **Respaldo determinista, no medición de modelos.** Embeddings léxicos de 768 dimensiones, reordenador por reglas y respuesta extractiva. No llama a ningún proveedor. Sirve para enseñar el recorrido sin red; la comparación con modelos reales está en `lab/.local/thepower-shop/evaluation.json` (`bun run lab:real eval`).",
     "",
-    `Reconstruido desde los **${String(counts.documents)} documentos ficticios de Zocomar** (un marketplace inventado) e **índice vacío** con vectores de **768 dimensiones** (\`vector(768)\` e índice HNSW \`vector_cosine_ops\`).`,
+    `Reconstruido desde los **${String(counts.documents)} documentos ficticios de ThePower Shop** (un marketplace inventado) e **índice vacío** con vectores de **768 dimensiones** (\`vector(768)\` e índice HNSW \`vector_cosine_ops\`).`,
     "",
     "## Configuración congelada",
     "",
@@ -110,7 +110,7 @@ async function main(): Promise<void> {
     EMBEDDING_MODEL_ID: "fixture-token-hash-768-v1",
     RERANKER_MODEL_ID: "fixture-lexical-reranker-v1",
   });
-  // Prepara los documentos ficticios de Zocomar.
+  // Prepara los documentos ficticios de ThePower Shop.
   const corpus = prepareLabCorpusFromDirectory(sourcesDir);
   // Proveedor de embeddings de 768 dimensiones.
   const embedder = createDeterministic768EmbeddingProvider(config.embeddingModelId);
@@ -168,7 +168,7 @@ async function main(): Promise<void> {
   const [bizum, , , , , students] = LAB_DEMO_CASES;
   // Caso de RAG básico con evidencia.
   const s10Answer = await runLabBasicRag({
-    question: "¿En qué horario atiende el chat de la aplicación de Zocomar?",
+    question: "¿En qué horario atiende el chat de la aplicación de ThePower Shop?",
     corpusVersion: corpus.corpusVersion,
     config,
     store,

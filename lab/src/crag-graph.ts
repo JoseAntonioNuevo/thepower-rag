@@ -428,7 +428,7 @@ export async function runLabCrag(input: {
           terminal: "refuse" as const,
           generationCalled: false,
           answerText:
-            "No consta evidencia suficiente en la documentación de Zocomar y la reformulación no produjo una consulta nueva.",
+            "No consta evidencia suficiente en la documentación de ThePower Shop y la reformulación no produjo una consulta nueva.",
           visitedNodes: [...state.visitedNodes, "reformulate"],
         };
       }
@@ -513,7 +513,7 @@ export async function runLabCrag(input: {
         terminal: "refuse" as const,
         generationCalled: false,
         answerText:
-          "No consta evidencia suficiente en la documentación de Zocomar tras agotar el límite de búsquedas y reformulaciones. No se llama al generador.",
+          "No consta evidencia suficiente en la documentación de ThePower Shop tras agotar el límite de búsquedas y reformulaciones. No se llama al generador.",
         citations: [],
         visitedNodes: [...state.visitedNodes, "refuse"],
       };

@@ -2,19 +2,19 @@
 
 ## Métodos de pago aceptados
 
-Zocomar acepta tarjeta de débito o crédito (Visa y Mastercard), Bizum, PayPal y saldo Zocomar. La transferencia bancaria solo está disponible para pedidos de más de 300 €, y el pedido no se prepara hasta recibirla. No se acepta el pago contra reembolso.
+ThePower Shop acepta tarjeta de débito o crédito (Visa y Mastercard), Bizum, PayPal y saldo ThePower Shop. La transferencia bancaria solo está disponible para pedidos de más de 300 €, y el pedido no se prepara hasta recibirla. No se acepta el pago contra reembolso.
 
-## ZocoPlazos: pago en tres cuotas
+## Plazos ThePower Shop: pago en tres cuotas
 
-ZocoPlazos permite pagar en 3 cuotas mensuales sin intereses los pedidos de entre 90 € y 1.500 €. La primera cuota se cobra al confirmar el pedido. Solo está disponible con tarjeta y exige que la tarjeta caduque después de la última cuota.
+Plazos ThePower Shop permite pagar en 3 cuotas mensuales sin intereses los pedidos de entre 90 € y 1.500 €. La primera cuota se cobra al confirmar el pedido. Solo está disponible con tarjeta y exige que la tarjeta caduque después de la última cuota.
 
 ## Plazos de abono de los reembolsos
 
-Una vez ordenado el reembolso, el abono tarda 5 días hábiles en tarjeta, 2 días hábiles en Bizum y 24 horas en PayPal. El reembolso en saldo Zocomar es inmediato y puede elegirse en lugar del método original. En los pedidos pagados con ZocoPlazos se cancelan las cuotas pendientes y se devuelven a la tarjeta las ya pagadas.
+Una vez ordenado el reembolso, el abono tarda 5 días hábiles en tarjeta, 2 días hábiles en Bizum y 24 horas en PayPal. El reembolso en saldo ThePower Shop es inmediato y puede elegirse en lugar del método original. En los pedidos pagados con Plazos ThePower Shop se cancelan las cuotas pendientes y se devuelven a la tarjeta las ya pagadas.
 
 ## Cargos duplicados y retenciones
 
-Al confirmar un pedido, el banco puede mostrar una retención temporal además del cargo definitivo. Las retenciones de pedidos cancelados o modificados se liberan solas en un máximo de 7 días naturales. Si aparecen dos cargos definitivos por el mismo pedido, Zocomar devuelve el cargo duplicado en 48 horas hábiles desde que el cliente lo comunica por el chat de atención al cliente.
+Al confirmar un pedido, el banco puede mostrar una retención temporal además del cargo definitivo. Las retenciones de pedidos cancelados o modificados se liberan solas en un máximo de 7 días naturales. Si aparecen dos cargos definitivos por el mismo pedido, ThePower Shop devuelve el cargo duplicado en 48 horas hábiles desde que el cliente lo comunica por el chat de atención al cliente.
 
 ## Facturas
 

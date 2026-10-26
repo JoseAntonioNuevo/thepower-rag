@@ -79,7 +79,7 @@ import {
 // Contexto completo del curso (modo complete).
 import { readCourseContext, completeContextOutcome, CourseContextError } from "./course-context";
 // Origen, Turnstile y límites de peticiones.
-import { protectChat } from "./chat-protection";
+import { limitPublicRead, protectChat } from "./chat-protection";
 // Presupuesto público por turno.
 import { reservePublicTurn } from "./public-budget";
 // Fábrica del modelo generador.
@@ -102,6 +102,14 @@ import {
 } from "./stores";
 // Embeddings con Workers AI.
 import { embedWithWorkersAi, type EmbeddingRunner } from "./vectors";
+// Biblioteca de documentos y fragmentos de D1.
+import {
+  DOCUMENT_ID_PATTERN,
+  corpusOptions,
+  listChunks,
+  listDocuments,
+  type ReadDatabase,
+} from "./corpus-browser";
 // Pasos del RAG básico para el modo clase.
 import { NO_RAG_TIMINGS, ragRetrievalSteps, type RagTimings } from "./rag-steps";
 
@@ -126,7 +134,7 @@ export interface AppDeps {
 }
 
 // Error JSON sin caché con su estado HTTP.
-function jsonError(body: ErrorResponse, status: 400 | 409 | 501 | 502): Response {
+function jsonError(body: ErrorResponse, status: 400 | 404 | 409 | 501 | 502): Response {
   // Response.json con cabecera no-store.
   return Response.json(body, { status, headers: { "cache-control": "no-store" } });
 }
@@ -192,6 +200,95 @@ export function createApp(deps: AppDeps = {}) {
   app.route("/api/research", researchRoutes());
 
   // GET /api/health: estado de la configuración sin llamar a proveedores.
+  // Biblioteca: corpus disponibles y documentos del pedido, leídos de D1 en el momento.
+  app.get("/api/corpus", async (context) => {
+    // Cupo por red en el perfil público.
+    const limited = await limitPublicRead(context.req.raw, context.env);
+    if (limited) return limited;
+    // Demo o real.
+    const demo = assessWorker(context.env).execution === "demo";
+    // Corpus disponibles y el pedido (por defecto, el del chat).
+    const options = corpusOptions(context.env, demo);
+    const requested = context.req.query("corpus");
+    const option =
+      requested === undefined ? options[0] : options.find((item) => item.key === requested);
+    // Corpus desconocido o sin versión.
+    if (option === undefined) {
+      return jsonError(
+        { error: "configuration", message: "Ese corpus no está disponible.", missing: [] },
+        404,
+      );
+    }
+    // En real hace falta D1.
+    const database = demo ? null : (context.env.DB as ReadDatabase | undefined);
+    if (database === undefined) {
+      return jsonError(
+        { error: "configuration", message: "Falta la base de datos.", missing: ["DB"] },
+        409,
+      );
+    }
+    // Lectura sin caché: es la base de datos en este momento.
+    try {
+      return Response.json(await listDocuments({ option, options, database }), {
+        headers: { "cache-control": "no-store" },
+      });
+    } catch {
+      return jsonError({ error: "provider", message: "No se pudo leer la base de datos." }, 502);
+    }
+  });
+
+  // Biblioteca: fragmentos de un documento, en orden.
+  app.get("/api/corpus/:corpus/:documentId", async (context) => {
+    // Cupo por red en el perfil público.
+    const limited = await limitPublicRead(context.req.raw, context.env);
+    if (limited) return limited;
+    // Id de documento con el formato de las fichas.
+    const documentId = context.req.param("documentId");
+    if (!DOCUMENT_ID_PATTERN.test(documentId)) {
+      return jsonError(
+        {
+          error: "invalid_request",
+          message: "Id de documento no válido.",
+          issues: [{ path: "documentId", message: "Solo letras minúsculas, números y guiones." }],
+        },
+        400,
+      );
+    }
+    // Demo o real, y el corpus pedido.
+    const demo = assessWorker(context.env).execution === "demo";
+    const option = corpusOptions(context.env, demo).find(
+      (item) => item.key === context.req.param("corpus"),
+    );
+    if (option === undefined) {
+      return jsonError(
+        { error: "configuration", message: "Ese corpus no está disponible.", missing: [] },
+        404,
+      );
+    }
+    // En real hace falta D1.
+    const database = demo ? null : (context.env.DB as ReadDatabase | undefined);
+    if (database === undefined) {
+      return jsonError(
+        { error: "configuration", message: "Falta la base de datos.", missing: ["DB"] },
+        409,
+      );
+    }
+    // Lectura sin caché.
+    try {
+      const body = await listChunks({ option, documentId, database });
+      // Documento inexistente en ese corpus.
+      if (body === null) {
+        return jsonError(
+          { error: "configuration", message: "Ese documento no está en el corpus.", missing: [] },
+          404,
+        );
+      }
+      return Response.json(body, { headers: { "cache-control": "no-store" } });
+    } catch {
+      return jsonError({ error: "provider", message: "No se pudo leer la base de datos." }, 502);
+    }
+  });
+
   app.get("/api/health", async (context) => {
     // Capacidades según el entorno.
     const assessment = assessWorker(context.env);

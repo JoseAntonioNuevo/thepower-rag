@@ -50,7 +50,7 @@
         "ordinal": 0,
         "title": "Electrónica: devoluciones especiales y garantía",
         "section": "Plazo de devolución de la electrónica",
-        "content": "## Plazo de devolución de la electrónica\n\nLos artículos de electrónica (móviles, tabletas, ordenadores, consolas, televisores, audio y pequeños electrodomésticos) siguen el plazo general si se devuelven con el precinto de fábrica intacto. Si el precinto se ha retirado o el dispositivo se ha encendido y configurado, el plazo de desistimiento se reduce a 14 días naturales desde la entrega, también para los miembros de Zocomar Plus.",
+        "content": "## Plazo de devolución de la electrónica\n\nLos artículos de electrónica (móviles, tabletas, ordenadores, consolas, televisores, audio y pequeños electrodomésticos) siguen el plazo general si se devuelven con el precinto de fábrica intacto. Si el precinto se ha retirado o el dispositivo se ha encendido y configurado, el plazo de desistimiento se reduce a 14 días naturales desde la entrega, también para los miembros de ThePower Shop Plus.",
         "embeddingModel": "openrouter:google/gemini-embedding-2:768",
         "embeddingDimensions": 768,
         "cosineDistance": 0.230482,

@@ -37,6 +37,23 @@ export type {
   RunMetadata,
   TraceEvent,
 } from "./domain";
+// Biblioteca de documentos y fragmentos guardados en D1.
+export {
+  corpusChunkSchema,
+  corpusChunksResponseSchema,
+  corpusDocumentSchema,
+  corpusDocumentsResponseSchema,
+  corpusKeySchema,
+  corpusOptionSchema,
+} from "./corpus";
+// Tipos de la biblioteca.
+export type {
+  CorpusChunk,
+  CorpusChunksResponse,
+  CorpusDocument,
+  CorpusDocumentsResponse,
+  CorpusKey,
+} from "./corpus";
 // Esquema de las respuestas de error.
 export { errorResponseSchema } from "./errors";
 // Tipo de una respuesta de error.

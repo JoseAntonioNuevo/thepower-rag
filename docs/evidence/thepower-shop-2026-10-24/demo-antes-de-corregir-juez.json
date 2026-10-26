@@ -19,12 +19,12 @@
   "results": [
     {
       "id": 1,
-      "question": "Devolví en un Zocopunto un pedido que pagué con Bizum. ¿Cuánto puede tardar en llegarme el dinero?",
+      "question": "Devolví en un punto ThePower Shop un pedido que pagué con Bizum. ¿Cuánto puede tardar en llegarme el dinero?",
       "answerable": true,
       "expectedDocuments": ["02-devoluciones", "06-pagos-y-reembolsos"],
       "expectedFacts": ["3 días hábiles", "2 días hábiles"],
       "rag": {
-        "question": "Devolví en un Zocopunto un pedido que pagué con Bizum. ¿Cuánto puede tardar en llegarme el dinero?",
+        "question": "Devolví en un punto ThePower Shop un pedido que pagué con Bizum. ¿Cuánto puede tardar en llegarme el dinero?",
         "corpusVersion": "lab-ae3817b7bdcf",
         "embeddingModel": "openrouter:google/gemini-embedding-2:768",
         "genModelId": "claude-sonnet-5-5",
@@ -38,7 +38,7 @@
             "ordinal": 2,
             "title": "Pagos y reembolsos",
             "section": "Plazos de abono de los reembolsos",
-            "content": "## Plazos de abono de los reembolsos\n\nUna vez ordenado el reembolso, el abono tarda 5 días hábiles en tarjeta, 2 días hábiles en Bizum y 24 horas en PayPal. El reembolso en saldo Zocomar es inmediato y puede elegirse en lugar del método original. En los pedidos pagados con ZocoPlazos se cancelan las cuotas pendientes y se devuelven a la tarjeta las ya pagadas.",
+            "content": "## Plazos de abono de los reembolsos\n\nUna vez ordenado el reembolso, el abono tarda 5 días hábiles en tarjeta, 2 días hábiles en Bizum y 24 horas en PayPal. El reembolso en saldo ThePower Shop es inmediato y puede elegirse en lugar del método original. En los pedidos pagados con Plazos ThePower Shop se cancelan las cuotas pendientes y se devuelven a la tarjeta las ya pagadas.",
             "embeddingModel": "openrouter:google/gemini-embedding-2:768",
             "embeddingDimensions": 768,
             "cosineDistance": 0.190854,
@@ -51,7 +51,7 @@
             "ordinal": 2,
             "title": "Política de devoluciones",
             "section": "Cómo iniciar una devolución",
-            "content": "## Cómo iniciar una devolución\n\nLa devolución se solicita desde «Mis pedidos», seleccionando el artículo y el motivo. La aplicación genera un código QR válido durante 10 días. Con ese código el paquete puede entregarse en cualquier Zocopunto o puede solicitarse una recogida a domicilio. No se aceptan devoluciones enviadas por cuenta propia sin código.",
+            "content": "## Cómo iniciar una devolución\n\nLa devolución se solicita desde «Mis pedidos», seleccionando el artículo y el motivo. La aplicación genera un código QR válido durante 10 días. Con ese código el paquete puede entregarse en cualquier punto ThePower Shop o puede solicitarse una recogida a domicilio. No se aceptan devoluciones enviadas por cuenta propia sin código.",
             "embeddingModel": "openrouter:google/gemini-embedding-2:768",
             "embeddingDimensions": 768,
             "cosineDistance": 0.221756,
@@ -64,7 +64,7 @@
             "ordinal": 4,
             "title": "Política de devoluciones",
             "section": "Reembolso de una devolución",
-            "content": "## Reembolso de una devolución\n\nEl almacén o el vendedor dispone de hasta 3 días hábiles desde la recepción del paquete para validar la devolución. Una vez validada, Zocomar ordena el reembolso por el mismo método de pago del pedido. Los plazos de abono de cada método de pago se detallan en la política de pagos y reembolsos.",
+            "content": "## Reembolso de una devolución\n\nEl almacén o el vendedor dispone de hasta 3 días hábiles desde la recepción del paquete para validar la devolución. Una vez validada, ThePower Shop ordena el reembolso por el mismo método de pago del pedido. Los plazos de abono de cada método de pago se detallan en la política de pagos y reembolsos.",
             "embeddingModel": "openrouter:google/gemini-embedding-2:768",
             "embeddingDimensions": 768,
             "cosineDistance": 0.247117,
@@ -77,7 +77,7 @@
             "ordinal": 3,
             "title": "Política de devoluciones",
             "section": "Coste de la devolución",
-            "content": "## Coste de la devolución\n\nEntregar el paquete en un Zocopunto es gratuito. La recogida a domicilio cuesta 3,95 €, que se descuentan del reembolso. La devolución es siempre gratuita, por cualquier vía, si el artículo llegó defectuoso, dañado o no corresponde con lo pedido, y también en los productos de vendedores con el sello «Devolución gratuita».",
+            "content": "## Coste de la devolución\n\nEntregar el paquete en un punto ThePower Shop es gratuito. La recogida a domicilio cuesta 3,95 €, que se descuentan del reembolso. La devolución es siempre gratuita, por cualquier vía, si el artículo llegó defectuoso, dañado o no corresponde con lo pedido, y también en los productos de vendedores con el sello «Devolución gratuita».",
             "embeddingModel": "openrouter:google/gemini-embedding-2:768",
             "embeddingDimensions": 768,
             "cosineDistance": 0.254969,
@@ -92,7 +92,7 @@
             "ordinal": 2,
             "title": "Pagos y reembolsos",
             "section": "Plazos de abono de los reembolsos",
-            "content": "## Plazos de abono de los reembolsos\n\nUna vez ordenado el reembolso, el abono tarda 5 días hábiles en tarjeta, 2 días hábiles en Bizum y 24 horas en PayPal. El reembolso en saldo Zocomar es inmediato y puede elegirse en lugar del método original. En los pedidos pagados con ZocoPlazos se cancelan las cuotas pendientes y se devuelven a la tarjeta las ya pagadas.",
+            "content": "## Plazos de abono de los reembolsos\n\nUna vez ordenado el reembolso, el abono tarda 5 días hábiles en tarjeta, 2 días hábiles en Bizum y 24 horas en PayPal. El reembolso en saldo ThePower Shop es inmediato y puede elegirse en lugar del método original. En los pedidos pagados con Plazos ThePower Shop se cancelan las cuotas pendientes y se devuelven a la tarjeta las ya pagadas.",
             "embeddingModel": "openrouter:google/gemini-embedding-2:768",
             "embeddingDimensions": 768,
             "cosineDistance": 0.190854,
@@ -105,7 +105,7 @@
             "ordinal": 2,
             "title": "Política de devoluciones",
             "section": "Cómo iniciar una devolución",
-            "content": "## Cómo iniciar una devolución\n\nLa devolución se solicita desde «Mis pedidos», seleccionando el artículo y el motivo. La aplicación genera un código QR válido durante 10 días. Con ese código el paquete puede entregarse en cualquier Zocopunto o puede solicitarse una recogida a domicilio. No se aceptan devoluciones enviadas por cuenta propia sin código.",
+            "content": "## Cómo iniciar una devolución\n\nLa devolución se solicita desde «Mis pedidos», seleccionando el artículo y el motivo. La aplicación genera un código QR válido durante 10 días. Con ese código el paquete puede entregarse en cualquier punto ThePower Shop o puede solicitarse una recogida a domicilio. No se aceptan devoluciones enviadas por cuenta propia sin código.",
             "embeddingModel": "openrouter:google/gemini-embedding-2:768",
             "embeddingDimensions": 768,
             "cosineDistance": 0.221756,
@@ -118,7 +118,7 @@
             "ordinal": 4,
             "title": "Política de devoluciones",
             "section": "Reembolso de una devolución",
-            "content": "## Reembolso de una devolución\n\nEl almacén o el vendedor dispone de hasta 3 días hábiles desde la recepción del paquete para validar la devolución. Una vez validada, Zocomar ordena el reembolso por el mismo método de pago del pedido. Los plazos de abono de cada método de pago se detallan en la política de pagos y reembolsos.",
+            "content": "## Reembolso de una devolución\n\nEl almacén o el vendedor dispone de hasta 3 días hábiles desde la recepción del paquete para validar la devolución. Una vez validada, ThePower Shop ordena el reembolso por el mismo método de pago del pedido. Los plazos de abono de cada método de pago se detallan en la política de pagos y reembolsos.",
             "embeddingModel": "openrouter:google/gemini-embedding-2:768",
             "embeddingDimensions": 768,
             "cosineDistance": 0.247117,
@@ -131,7 +131,7 @@
             "ordinal": 3,
             "title": "Política de devoluciones",
             "section": "Coste de la devolución",
-            "content": "## Coste de la devolución\n\nEntregar el paquete en un Zocopunto es gratuito. La recogida a domicilio cuesta 3,95 €, que se descuentan del reembolso. La devolución es siempre gratuita, por cualquier vía, si el artículo llegó defectuoso, dañado o no corresponde con lo pedido, y también en los productos de vendedores con el sello «Devolución gratuita».",
+            "content": "## Coste de la devolución\n\nEntregar el paquete en un punto ThePower Shop es gratuito. La recogida a domicilio cuesta 3,95 €, que se descuentan del reembolso. La devolución es siempre gratuita, por cualquier vía, si el artículo llegó defectuoso, dañado o no corresponde con lo pedido, y también en los productos de vendedores con el sello «Devolución gratuita».",
             "embeddingModel": "openrouter:google/gemini-embedding-2:768",
             "embeddingDimensions": 768,
             "cosineDistance": 0.254969,
@@ -141,7 +141,7 @@
         "decision": "answer",
         "generationCalled": true,
         "retrievalCount": 1,
-        "answer": "El dinero puede tardar, en el caso más largo, unos 5 días hábiles desde que se recibe el paquete, repartidos en dos etapas:\n\n1. **Validación de la devolución:** el almacén o el vendedor dispone de hasta 3 días hábiles desde la recepción del paquete para validarla. [cite:lab-ae3817b7bdcf:02-devoluciones:04]\n2. **Abono por Bizum:** una vez ordenado el reembolso (que Zocomar hace por el mismo método de pago del pedido, es decir, Bizum), el abono tarda 2 días hábiles. [cite:lab-ae3817b7bdcf:06-pagos-y-reembolsos:02] [cite:lab-ae3817b7bdcf:02-devoluciones:04]\n\nLos documentos no indican cuánto tarda el paquete en llegar del Zocopunto al almacén, por lo que ese tiempo previo no puedo estimarlo. Tampoco precisan si la suma de ambas etapas es el total garantizado; el cálculo de 3 + 2 días hábiles es una deducción a partir de los plazos citados.\n\nComo alternativa, el reembolso en saldo Zocomar es inmediato y puede elegirse en lugar del método original. [cite:lab-ae3817b7bdcf:06-pagos-y-reembolsos:02]",
+        "answer": "El dinero puede tardar, en el caso más largo, unos 5 días hábiles desde que se recibe el paquete, repartidos en dos etapas:\n\n1. **Validación de la devolución:** el almacén o el vendedor dispone de hasta 3 días hábiles desde la recepción del paquete para validarla. [cite:lab-ae3817b7bdcf:02-devoluciones:04]\n2. **Abono por Bizum:** una vez ordenado el reembolso (que ThePower Shop hace por el mismo método de pago del pedido, es decir, Bizum), el abono tarda 2 días hábiles. [cite:lab-ae3817b7bdcf:06-pagos-y-reembolsos:02] [cite:lab-ae3817b7bdcf:02-devoluciones:04]\n\nLos documentos no indican cuánto tarda el paquete en llegar del punto ThePower Shop al almacén, por lo que ese tiempo previo no puedo estimarlo. Tampoco precisan si la suma de ambas etapas es el total garantizado; el cálculo de 3 + 2 días hábiles es una deducción a partir de los plazos citados.\n\nComo alternativa, el reembolso en saldo ThePower Shop es inmediato y puede elegirse en lugar del método original. [cite:lab-ae3817b7bdcf:06-pagos-y-reembolsos:02]",
         "citations": [
           "lab-ae3817b7bdcf:02-devoluciones:04",
           "lab-ae3817b7bdcf:06-pagos-y-reembolsos:02"
@@ -149,9 +149,9 @@
         "latencyMs": 4909
       },
       "crag": {
-        "question": "Devolví en un Zocopunto un pedido que pagué con Bizum. ¿Cuánto puede tardar en llegarme el dinero?",
+        "question": "Devolví en un punto ThePower Shop un pedido que pagué con Bizum. ¿Cuánto puede tardar en llegarme el dinero?",
         "queries": [
-          "Devolví en un Zocopunto un pedido que pagué con Bizum. ¿Cuánto puede tardar en llegarme el dinero?"
+          "Devolví en un punto ThePower Shop un pedido que pagué con Bizum. ¿Cuánto puede tardar en llegarme el dinero?"
         ],
         "retrievalCount": 1,
         "reformulationCount": 0,
@@ -167,7 +167,7 @@
             "ordinal": 2,
             "title": "Pagos y reembolsos",
             "section": "Plazos de abono de los reembolsos",
-            "content": "## Plazos de abono de los reembolsos\n\nUna vez ordenado el reembolso, el abono tarda 5 días hábiles en tarjeta, 2 días hábiles en Bizum y 24 horas en PayPal. El reembolso en saldo Zocomar es inmediato y puede elegirse en lugar del método original. En los pedidos pagados con ZocoPlazos se cancelan las cuotas pendientes y se devuelven a la tarjeta las ya pagadas.",
+            "content": "## Plazos de abono de los reembolsos\n\nUna vez ordenado el reembolso, el abono tarda 5 días hábiles en tarjeta, 2 días hábiles en Bizum y 24 horas en PayPal. El reembolso en saldo ThePower Shop es inmediato y puede elegirse en lugar del método original. En los pedidos pagados con Plazos ThePower Shop se cancelan las cuotas pendientes y se devuelven a la tarjeta las ya pagadas.",
             "embeddingModel": "openrouter:google/gemini-embedding-2:768",
             "embeddingDimensions": 768,
             "cosineDistance": 0.190854,
@@ -180,7 +180,7 @@
             "ordinal": 4,
             "title": "Política de devoluciones",
             "section": "Reembolso de una devolución",
-            "content": "## Reembolso de una devolución\n\nEl almacén o el vendedor dispone de hasta 3 días hábiles desde la recepción del paquete para validar la devolución. Una vez validada, Zocomar ordena el reembolso por el mismo método de pago del pedido. Los plazos de abono de cada método de pago se detallan en la política de pagos y reembolsos.",
+            "content": "## Reembolso de una devolución\n\nEl almacén o el vendedor dispone de hasta 3 días hábiles desde la recepción del paquete para validar la devolución. Una vez validada, ThePower Shop ordena el reembolso por el mismo método de pago del pedido. Los plazos de abono de cada método de pago se detallan en la política de pagos y reembolsos.",
             "embeddingModel": "openrouter:google/gemini-embedding-2:768",
             "embeddingDimensions": 768,
             "cosineDistance": 0.247117,
@@ -192,13 +192,13 @@
             "chunkId": "lab-ae3817b7bdcf:02-devoluciones:02",
             "attempt": 1,
             "rerankScore": 0.2,
-            "reason": "Explica cómo entregar en un Zocopunto pero no aporta plazos de reembolso."
+            "reason": "Explica cómo entregar en un punto ThePower Shop pero no aporta plazos de reembolso."
           },
           {
             "chunkId": "lab-ae3817b7bdcf:02-devoluciones:03",
             "attempt": 1,
             "rerankScore": 0.15,
-            "reason": "Trata el coste de devolver en Zocopunto, no el plazo del dinero."
+            "reason": "Trata el coste de devolver en punto ThePower Shop, no el plazo del dinero."
           },
           {
             "chunkId": "lab-ae3817b7bdcf:06-pagos-y-reembolsos:00",
@@ -240,7 +240,7 @@
         "iterations": [
           {
             "attempt": 1,
-            "query": "Devolví en un Zocopunto un pedido que pagué con Bizum. ¿Cuánto puede tardar en llegarme el dinero?",
+            "query": "Devolví en un punto ThePower Shop un pedido que pagué con Bizum. ¿Cuánto puede tardar en llegarme el dinero?",
             "retrievedIds": [
               {
                 "chunkId": "lab-ae3817b7bdcf:06-pagos-y-reembolsos:02",
@@ -307,12 +307,12 @@
               {
                 "chunkId": "lab-ae3817b7bdcf:02-devoluciones:02",
                 "rerankScore": 0.2,
-                "reason": "Explica cómo entregar en un Zocopunto pero no aporta plazos de reembolso."
+                "reason": "Explica cómo entregar en un punto ThePower Shop pero no aporta plazos de reembolso."
               },
               {
                 "chunkId": "lab-ae3817b7bdcf:02-devoluciones:03",
                 "rerankScore": 0.15,
-                "reason": "Trata el coste de devolver en Zocopunto, no el plazo del dinero."
+                "reason": "Trata el coste de devolver en punto ThePower Shop, no el plazo del dinero."
               },
               {
                 "chunkId": "lab-ae3817b7bdcf:06-pagos-y-reembolsos:00",
@@ -359,7 +359,7 @@
             "route": "answer"
           }
         ],
-        "answer": "El tiempo total depende de dos fases:\n\n1. **Validación de la devolución:** el almacén o el vendedor dispone de hasta 3 días hábiles desde la recepción del paquete para validarla. Una vez validada, Zocomar ordena el reembolso por el mismo método de pago del pedido, es decir, por Bizum [cite:lab-ae3817b7bdcf:02-devoluciones:04].\n\n2. **Abono por Bizum:** una vez ordenado el reembolso, el abono tarda 2 días hábiles en Bizum [cite:lab-ae3817b7bdcf:06-pagos-y-reembolsos:02].\n\nSumando ambas fases, el dinero puede tardar hasta unos 5 días hábiles desde que el paquete llega al almacén o al vendedor (hasta 3 de validación y 2 de abono por Bizum). Esta suma es un cálculo a partir de los dos plazos, no una cifra indicada expresamente en los documentos.\n\nLos documentos no indican cuánto tarda el paquete en llegar desde el Zocopunto al almacén o vendedor, por lo que ese tiempo previo no puede estimarse con esta información. Tampoco aclaran si el plazo de 2 días hábiles empieza a contar justo en el momento de ordenar el reembolso o algo después, más allá de lo que indica el texto citado.",
+        "answer": "El tiempo total depende de dos fases:\n\n1. **Validación de la devolución:** el almacén o el vendedor dispone de hasta 3 días hábiles desde la recepción del paquete para validarla. Una vez validada, ThePower Shop ordena el reembolso por el mismo método de pago del pedido, es decir, por Bizum [cite:lab-ae3817b7bdcf:02-devoluciones:04].\n\n2. **Abono por Bizum:** una vez ordenado el reembolso, el abono tarda 2 días hábiles en Bizum [cite:lab-ae3817b7bdcf:06-pagos-y-reembolsos:02].\n\nSumando ambas fases, el dinero puede tardar hasta unos 5 días hábiles desde que el paquete llega al almacén o al vendedor (hasta 3 de validación y 2 de abono por Bizum). Esta suma es un cálculo a partir de los dos plazos, no una cifra indicada expresamente en los documentos.\n\nLos documentos no indican cuánto tarda el paquete en llegar desde el punto ThePower Shop al almacén o vendedor, por lo que ese tiempo previo no puede estimarse con esta información. Tampoco aclaran si el plazo de 2 días hábiles empieza a contar justo en el momento de ordenar el reembolso o algo después, más allá de lo que indica el texto citado.",
         "citations": [
           "lab-ae3817b7bdcf:02-devoluciones:04",
           "lab-ae3817b7bdcf:06-pagos-y-reembolsos:02"
@@ -402,7 +402,7 @@
             "ordinal": 0,
             "title": "Electrónica: devoluciones especiales y garantía",
             "section": "Plazo de devolución de la electrónica",
-            "content": "## Plazo de devolución de la electrónica\n\nLos artículos de electrónica (móviles, tabletas, ordenadores, consolas, televisores, audio y pequeños electrodomésticos) siguen el plazo general si se devuelven con el precinto de fábrica intacto. Si el precinto se ha retirado o el dispositivo se ha encendido y configurado, el plazo de desistimiento se reduce a 14 días naturales desde la entrega, también para los miembros de Zocomar Plus.",
+            "content": "## Plazo de devolución de la electrónica\n\nLos artículos de electrónica (móviles, tabletas, ordenadores, consolas, televisores, audio y pequeños electrodomésticos) siguen el plazo general si se devuelven con el precinto de fábrica intacto. Si el precinto se ha retirado o el dispositivo se ha encendido y configurado, el plazo de desistimiento se reduce a 14 días naturales desde la entrega, también para los miembros de ThePower Shop Plus.",
             "embeddingModel": "openrouter:google/gemini-embedding-2:768",
             "embeddingDimensions": 768,
             "cosineDistance": 0.230482,
@@ -456,7 +456,7 @@
             "ordinal": 0,
             "title": "Electrónica: devoluciones especiales y garantía",
             "section": "Plazo de devolución de la electrónica",
-            "content": "## Plazo de devolución de la electrónica\n\nLos artículos de electrónica (móviles, tabletas, ordenadores, consolas, televisores, audio y pequeños electrodomésticos) siguen el plazo general si se devuelven con el precinto de fábrica intacto. Si el precinto se ha retirado o el dispositivo se ha encendido y configurado, el plazo de desistimiento se reduce a 14 días naturales desde la entrega, también para los miembros de Zocomar Plus.",
+            "content": "## Plazo de devolución de la electrónica\n\nLos artículos de electrónica (móviles, tabletas, ordenadores, consolas, televisores, audio y pequeños electrodomésticos) siguen el plazo general si se devuelven con el precinto de fábrica intacto. Si el precinto se ha retirado o el dispositivo se ha encendido y configurado, el plazo de desistimiento se reduce a 14 días naturales desde la entrega, también para los miembros de ThePower Shop Plus.",
             "embeddingModel": "openrouter:google/gemini-embedding-2:768",
             "embeddingDimensions": 768,
             "cosineDistance": 0.230482,
@@ -565,8 +565,8 @@
             "documentId": "04-envios-vigente",
             "ordinal": 4,
             "title": "Política de envíos (vigente desde el 1 de marzo de 2026)",
-            "section": "Ventajas de Zocomar Plus en el envío",
-            "content": "## Ventajas de Zocomar Plus en el envío\n\nLos miembros de Zocomar Plus tienen envío estándar gratuito sin importe mínimo en España peninsular y en Portugal continental, y en Baleares a partir de 29 € por vendedor. El envío exprés les cuesta 2,99 € por paquete.",
+            "section": "Ventajas de ThePower Shop Plus en el envío",
+            "content": "## Ventajas de ThePower Shop Plus en el envío\n\nLos miembros de ThePower Shop Plus tienen envío estándar gratuito sin importe mínimo en España peninsular y en Portugal continental, y en Baleares a partir de 29 € por vendedor. El envío exprés les cuesta 2,99 € por paquete.",
             "embeddingModel": "openrouter:google/gemini-embedding-2:768",
             "embeddingDimensions": 768,
             "cosineDistance": 0.268985,
@@ -619,8 +619,8 @@
             "documentId": "04-envios-vigente",
             "ordinal": 4,
             "title": "Política de envíos (vigente desde el 1 de marzo de 2026)",
-            "section": "Ventajas de Zocomar Plus en el envío",
-            "content": "## Ventajas de Zocomar Plus en el envío\n\nLos miembros de Zocomar Plus tienen envío estándar gratuito sin importe mínimo en España peninsular y en Portugal continental, y en Baleares a partir de 29 € por vendedor. El envío exprés les cuesta 2,99 € por paquete.",
+            "section": "Ventajas de ThePower Shop Plus en el envío",
+            "content": "## Ventajas de ThePower Shop Plus en el envío\n\nLos miembros de ThePower Shop Plus tienen envío estándar gratuito sin importe mínimo en España peninsular y en Portugal continental, y en Baleares a partir de 29 € por vendedor. El envío exprés les cuesta 2,99 € por paquete.",
             "embeddingModel": "openrouter:google/gemini-embedding-2:768",
             "embeddingDimensions": 768,
             "cosineDistance": 0.268985,
@@ -630,7 +630,7 @@
         "decision": "answer",
         "generationCalled": true,
         "retrievalCount": 1,
-        "answer": "Según la política vigente desde el 1 de marzo de 2026, el envío estándar a la península es gratuito cuando el importe de los artículos de un mismo vendedor alcanza 39 € [cite:lab-ae3817b7bdcf:04-envios-vigente:00]. Si el pedido incluye artículos de varios vendedores, cada uno envía su propio paquete y el umbral de 39 € se calcula por separado para cada vendedor [cite:lab-ae3817b7bdcf:04-envios-vigente:00]. Por debajo de ese importe, el envío cuesta 3,99 € [cite:lab-ae3817b7bdcf:04-envios-vigente:00].\n\nLos miembros de Zocomar Plus tienen envío estándar gratuito sin importe mínimo en la península [cite:lab-ae3817b7bdcf:04-envios-vigente:04].\n\nNota: el umbral de 29 € por pedido completo que aparece en otro documento corresponde a la política de 2025, que fue sustituida el 1 de marzo de 2026, por lo que ya no aplica [cite:lab-ae3817b7bdcf:05-envios-2025-sustituida:01].",
+        "answer": "Según la política vigente desde el 1 de marzo de 2026, el envío estándar a la península es gratuito cuando el importe de los artículos de un mismo vendedor alcanza 39 € [cite:lab-ae3817b7bdcf:04-envios-vigente:00]. Si el pedido incluye artículos de varios vendedores, cada uno envía su propio paquete y el umbral de 39 € se calcula por separado para cada vendedor [cite:lab-ae3817b7bdcf:04-envios-vigente:00]. Por debajo de ese importe, el envío cuesta 3,99 € [cite:lab-ae3817b7bdcf:04-envios-vigente:00].\n\nLos miembros de ThePower Shop Plus tienen envío estándar gratuito sin importe mínimo en la península [cite:lab-ae3817b7bdcf:04-envios-vigente:04].\n\nNota: el umbral de 29 € por pedido completo que aparece en otro documento corresponde a la política de 2025, que fue sustituida el 1 de marzo de 2026, por lo que ya no aplica [cite:lab-ae3817b7bdcf:05-envios-2025-sustituida:01].",
         "citations": [
           "lab-ae3817b7bdcf:04-envios-vigente:00",
           "lab-ae3817b7bdcf:04-envios-vigente:04",
@@ -667,8 +667,8 @@
             "documentId": "04-envios-vigente",
             "ordinal": 4,
             "title": "Política de envíos (vigente desde el 1 de marzo de 2026)",
-            "section": "Ventajas de Zocomar Plus en el envío",
-            "content": "## Ventajas de Zocomar Plus en el envío\n\nLos miembros de Zocomar Plus tienen envío estándar gratuito sin importe mínimo en España peninsular y en Portugal continental, y en Baleares a partir de 29 € por vendedor. El envío exprés les cuesta 2,99 € por paquete.",
+            "section": "Ventajas de ThePower Shop Plus en el envío",
+            "content": "## Ventajas de ThePower Shop Plus en el envío\n\nLos miembros de ThePower Shop Plus tienen envío estándar gratuito sin importe mínimo en España peninsular y en Portugal continental, y en Baleares a partir de 29 € por vendedor. El envío exprés les cuesta 2,99 € por paquete.",
             "embeddingModel": "openrouter:google/gemini-embedding-2:768",
             "embeddingDimensions": 768,
             "cosineDistance": 0.268985,
@@ -790,7 +790,7 @@
               {
                 "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:04",
                 "rerankScore": 0.55,
-                "reason": "Vigente: miembros de Zocomar Plus tienen envío estándar gratuito sin mínimo en la península; matiza para ese tipo de cliente."
+                "reason": "Vigente: miembros de ThePower Shop Plus tienen envío estándar gratuito sin mínimo en la península; matiza para ese tipo de cliente."
               },
               {
                 "chunkId": "lab-ae3817b7bdcf:05-envios-2025-sustituida:01",
@@ -847,7 +847,7 @@
             "route": "answer"
           }
         ],
-        "answer": "El envío estándar a la península es gratuito cuando el importe de los artículos de un mismo vendedor alcanza 39 € [cite:lab-ae3817b7bdcf:04-envios-vigente:00]. Por debajo de ese importe, cuesta 3,99 € [cite:lab-ae3817b7bdcf:04-envios-vigente:00].\n\nConviene tener en cuenta dos matices:\n\n- Si el pedido incluye artículos de varios vendedores, cada uno envía su propio paquete y el umbral de 39 € se calcula por separado para cada vendedor [cite:lab-ae3817b7bdcf:04-envios-vigente:00].\n- Los miembros de Zocomar Plus tienen envío estándar gratuito en la península sin importe mínimo [cite:lab-ae3817b7bdcf:04-envios-vigente:04].",
+        "answer": "El envío estándar a la península es gratuito cuando el importe de los artículos de un mismo vendedor alcanza 39 € [cite:lab-ae3817b7bdcf:04-envios-vigente:00]. Por debajo de ese importe, cuesta 3,99 € [cite:lab-ae3817b7bdcf:04-envios-vigente:00].\n\nConviene tener en cuenta dos matices:\n\n- Si el pedido incluye artículos de varios vendedores, cada uno envía su propio paquete y el umbral de 39 € se calcula por separado para cada vendedor [cite:lab-ae3817b7bdcf:04-envios-vigente:00].\n- Los miembros de ThePower Shop Plus tienen envío estándar gratuito en la península sin importe mínimo [cite:lab-ae3817b7bdcf:04-envios-vigente:04].",
         "citations": [
           "lab-ae3817b7bdcf:04-envios-vigente:00",
           "lab-ae3817b7bdcf:04-envios-vigente:04"
@@ -858,12 +858,12 @@
     },
     {
       "id": 4,
-      "question": "Soy de Zocomar Plus y vivo en Mallorca. ¿Pago envío en un pedido de 35 € de un solo vendedor y lo puedo pedir exprés?",
+      "question": "Soy de ThePower Shop Plus y vivo en Mallorca. ¿Pago envío en un pedido de 35 € de un solo vendedor y lo puedo pedir exprés?",
       "answerable": true,
       "expectedDocuments": ["04-envios-vigente"],
       "expectedFacts": ["29 €", "no está disponible"],
       "rag": {
-        "question": "Soy de Zocomar Plus y vivo en Mallorca. ¿Pago envío en un pedido de 35 € de un solo vendedor y lo puedo pedir exprés?",
+        "question": "Soy de ThePower Shop Plus y vivo en Mallorca. ¿Pago envío en un pedido de 35 € de un solo vendedor y lo puedo pedir exprés?",
         "corpusVersion": "lab-ae3817b7bdcf",
         "embeddingModel": "openrouter:google/gemini-embedding-2:768",
         "genModelId": "claude-sonnet-5-5",
@@ -876,8 +876,8 @@
             "documentId": "04-envios-vigente",
             "ordinal": 4,
             "title": "Política de envíos (vigente desde el 1 de marzo de 2026)",
-            "section": "Ventajas de Zocomar Plus en el envío",
-            "content": "## Ventajas de Zocomar Plus en el envío\n\nLos miembros de Zocomar Plus tienen envío estándar gratuito sin importe mínimo en España peninsular y en Portugal continental, y en Baleares a partir de 29 € por vendedor. El envío exprés les cuesta 2,99 € por paquete.",
+            "section": "Ventajas de ThePower Shop Plus en el envío",
+            "content": "## Ventajas de ThePower Shop Plus en el envío\n\nLos miembros de ThePower Shop Plus tienen envío estándar gratuito sin importe mínimo en España peninsular y en Portugal continental, y en Baleares a partir de 29 € por vendedor. El envío exprés les cuesta 2,99 € por paquete.",
             "embeddingModel": "openrouter:google/gemini-embedding-2:768",
             "embeddingDimensions": 768,
             "cosineDistance": 0.141819,
@@ -888,7 +888,7 @@
             "corpusVersion": "lab-ae3817b7bdcf",
             "documentId": "09-zocomar-plus",
             "ordinal": 1,
-            "title": "Zocomar Plus",
+            "title": "ThePower Shop Plus",
             "section": "Ventajas de la suscripción",
             "content": "## Ventajas de la suscripción\n\nPlus incluye envío estándar gratuito en las condiciones de la política de envíos vigente, envío exprés a precio reducido, un plazo de devolución ampliado a 45 días en los artículos que siguen el plazo general y acceso anticipado de 24 horas a las ofertas destacadas.",
             "embeddingModel": "openrouter:google/gemini-embedding-2:768",
@@ -930,8 +930,8 @@
             "documentId": "04-envios-vigente",
             "ordinal": 4,
             "title": "Política de envíos (vigente desde el 1 de marzo de 2026)",
-            "section": "Ventajas de Zocomar Plus en el envío",
-            "content": "## Ventajas de Zocomar Plus en el envío\n\nLos miembros de Zocomar Plus tienen envío estándar gratuito sin importe mínimo en España peninsular y en Portugal continental, y en Baleares a partir de 29 € por vendedor. El envío exprés les cuesta 2,99 € por paquete.",
+            "section": "Ventajas de ThePower Shop Plus en el envío",
+            "content": "## Ventajas de ThePower Shop Plus en el envío\n\nLos miembros de ThePower Shop Plus tienen envío estándar gratuito sin importe mínimo en España peninsular y en Portugal continental, y en Baleares a partir de 29 € por vendedor. El envío exprés les cuesta 2,99 € por paquete.",
             "embeddingModel": "openrouter:google/gemini-embedding-2:768",
             "embeddingDimensions": 768,
             "cosineDistance": 0.141819,
@@ -942,7 +942,7 @@
             "corpusVersion": "lab-ae3817b7bdcf",
             "documentId": "09-zocomar-plus",
             "ordinal": 1,
-            "title": "Zocomar Plus",
+            "title": "ThePower Shop Plus",
             "section": "Ventajas de la suscripción",
             "content": "## Ventajas de la suscripción\n\nPlus incluye envío estándar gratuito en las condiciones de la política de envíos vigente, envío exprés a precio reducido, un plazo de devolución ampliado a 45 días en los artículos que siguen el plazo general y acceso anticipado de 24 horas a las ofertas destacadas.",
             "embeddingModel": "openrouter:google/gemini-embedding-2:768",
@@ -980,7 +980,7 @@
         "decision": "answer",
         "generationCalled": true,
         "retrievalCount": 1,
-        "answer": "**Envío estándar:** No pagas. Como miembro de Zocomar Plus, en Baleares el envío estándar es gratuito a partir de 29 € por vendedor [cite:lab-ae3817b7bdcf:04-envios-vigente:04], y tu pedido de 35 € de un solo vendedor supera ese umbral.\n\n**Envío exprés:** No, no lo puedes pedir. El envío exprés no está disponible para las Islas Baleares [cite:lab-ae3817b7bdcf:04-envios-vigente:01]. Aunque Plus reduce su precio a 2,99 € por paquete [cite:lab-ae3817b7bdcf:04-envios-vigente:04], esa tarifa no te serviría, porque el servicio no llega a Mallorca.",
+        "answer": "**Envío estándar:** No pagas. Como miembro de ThePower Shop Plus, en Baleares el envío estándar es gratuito a partir de 29 € por vendedor [cite:lab-ae3817b7bdcf:04-envios-vigente:04], y tu pedido de 35 € de un solo vendedor supera ese umbral.\n\n**Envío exprés:** No, no lo puedes pedir. El envío exprés no está disponible para las Islas Baleares [cite:lab-ae3817b7bdcf:04-envios-vigente:01]. Aunque Plus reduce su precio a 2,99 € por paquete [cite:lab-ae3817b7bdcf:04-envios-vigente:04], esa tarifa no te serviría, porque el servicio no llega a Mallorca.",
         "citations": [
           "lab-ae3817b7bdcf:04-envios-vigente:04",
           "lab-ae3817b7bdcf:04-envios-vigente:01"
@@ -988,9 +988,9 @@
         "latencyMs": 2889
       },
       "crag": {
-        "question": "Soy de Zocomar Plus y vivo en Mallorca. ¿Pago envío en un pedido de 35 € de un solo vendedor y lo puedo pedir exprés?",
+        "question": "Soy de ThePower Shop Plus y vivo en Mallorca. ¿Pago envío en un pedido de 35 € de un solo vendedor y lo puedo pedir exprés?",
         "queries": [
-          "Soy de Zocomar Plus y vivo en Mallorca. ¿Pago envío en un pedido de 35 € de un solo vendedor y lo puedo pedir exprés?"
+          "Soy de ThePower Shop Plus y vivo en Mallorca. ¿Pago envío en un pedido de 35 € de un solo vendedor y lo puedo pedir exprés?"
         ],
         "retrievalCount": 1,
         "reformulationCount": 0,
@@ -1005,8 +1005,8 @@
             "documentId": "04-envios-vigente",
             "ordinal": 4,
             "title": "Política de envíos (vigente desde el 1 de marzo de 2026)",
-            "section": "Ventajas de Zocomar Plus en el envío",
-            "content": "## Ventajas de Zocomar Plus en el envío\n\nLos miembros de Zocomar Plus tienen envío estándar gratuito sin importe mínimo en España peninsular y en Portugal continental, y en Baleares a partir de 29 € por vendedor. El envío exprés les cuesta 2,99 € por paquete.",
+            "section": "Ventajas de ThePower Shop Plus en el envío",
+            "content": "## Ventajas de ThePower Shop Plus en el envío\n\nLos miembros de ThePower Shop Plus tienen envío estándar gratuito sin importe mínimo en España peninsular y en Portugal continental, y en Baleares a partir de 29 € por vendedor. El envío exprés les cuesta 2,99 € por paquete.",
             "embeddingModel": "openrouter:google/gemini-embedding-2:768",
             "embeddingDimensions": 768,
             "cosineDistance": 0.141819,
@@ -1079,7 +1079,7 @@
         "iterations": [
           {
             "attempt": 1,
-            "query": "Soy de Zocomar Plus y vivo en Mallorca. ¿Pago envío en un pedido de 35 € de un solo vendedor y lo puedo pedir exprés?",
+            "query": "Soy de ThePower Shop Plus y vivo en Mallorca. ¿Pago envío en un pedido de 35 € de un solo vendedor y lo puedo pedir exprés?",
             "retrievedIds": [
               {
                 "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:04",
@@ -1198,7 +1198,7 @@
             "route": "answer"
           }
         ],
-        "answer": "**Envío estándar:** No pagas envío. Como miembro de Zocomar Plus, en Baleares tienes envío estándar gratuito a partir de 29 € por vendedor [cite:lab-ae3817b7bdcf:04-envios-vigente:04], y tu pedido de 35 € de un solo vendedor supera ese mínimo.\n\n**Envío exprés:** No lo puedes pedir. El envío exprés no está disponible para las Islas Baleares [cite:lab-ae3817b7bdcf:04-envios-vigente:01]. Aunque a los miembros Plus el exprés les cuesta 2,99 € por paquete [cite:lab-ae3817b7bdcf:04-envios-vigente:04], esa tarifa no te serviría en Mallorca, porque el servicio exprés se limita a España peninsular [cite:lab-ae3817b7bdcf:04-envios-vigente:01].",
+        "answer": "**Envío estándar:** No pagas envío. Como miembro de ThePower Shop Plus, en Baleares tienes envío estándar gratuito a partir de 29 € por vendedor [cite:lab-ae3817b7bdcf:04-envios-vigente:04], y tu pedido de 35 € de un solo vendedor supera ese mínimo.\n\n**Envío exprés:** No lo puedes pedir. El envío exprés no está disponible para las Islas Baleares [cite:lab-ae3817b7bdcf:04-envios-vigente:01]. Aunque a los miembros Plus el exprés les cuesta 2,99 € por paquete [cite:lab-ae3817b7bdcf:04-envios-vigente:04], esa tarifa no te serviría en Mallorca, porque el servicio exprés se limita a España peninsular [cite:lab-ae3817b7bdcf:04-envios-vigente:01].",
         "citations": [
           "lab-ae3817b7bdcf:04-envios-vigente:04",
           "lab-ae3817b7bdcf:04-envios-vigente:01"
@@ -1228,7 +1228,7 @@
             "ordinal": 3,
             "title": "Pagos y reembolsos",
             "section": "Cargos duplicados y retenciones",
-            "content": "## Cargos duplicados y retenciones\n\nAl confirmar un pedido, el banco puede mostrar una retención temporal además del cargo definitivo. Las retenciones de pedidos cancelados o modificados se liberan solas en un máximo de 7 días naturales. Si aparecen dos cargos definitivos por el mismo pedido, Zocomar devuelve el cargo duplicado en 48 horas hábiles desde que el cliente lo comunica por el chat de atención al cliente.",
+            "content": "## Cargos duplicados y retenciones\n\nAl confirmar un pedido, el banco puede mostrar una retención temporal además del cargo definitivo. Las retenciones de pedidos cancelados o modificados se liberan solas en un máximo de 7 días naturales. Si aparecen dos cargos definitivos por el mismo pedido, ThePower Shop devuelve el cargo duplicado en 48 horas hábiles desde que el cliente lo comunica por el chat de atención al cliente.",
             "embeddingModel": "openrouter:google/gemini-embedding-2:768",
             "embeddingDimensions": 768,
             "cosineDistance": 0.217465,
@@ -1241,7 +1241,7 @@
             "ordinal": 2,
             "title": "Pagos y reembolsos",
             "section": "Plazos de abono de los reembolsos",
-            "content": "## Plazos de abono de los reembolsos\n\nUna vez ordenado el reembolso, el abono tarda 5 días hábiles en tarjeta, 2 días hábiles en Bizum y 24 horas en PayPal. El reembolso en saldo Zocomar es inmediato y puede elegirse en lugar del método original. En los pedidos pagados con ZocoPlazos se cancelan las cuotas pendientes y se devuelven a la tarjeta las ya pagadas.",
+            "content": "## Plazos de abono de los reembolsos\n\nUna vez ordenado el reembolso, el abono tarda 5 días hábiles en tarjeta, 2 días hábiles en Bizum y 24 horas en PayPal. El reembolso en saldo ThePower Shop es inmediato y puede elegirse en lugar del método original. En los pedidos pagados con Plazos ThePower Shop se cancelan las cuotas pendientes y se devuelven a la tarjeta las ya pagadas.",
             "embeddingModel": "openrouter:google/gemini-embedding-2:768",
             "embeddingDimensions": 768,
             "cosineDistance": 0.340871,
@@ -1253,8 +1253,8 @@
             "documentId": "06-pagos-y-reembolsos",
             "ordinal": 1,
             "title": "Pagos y reembolsos",
-            "section": "ZocoPlazos: pago en tres cuotas",
-            "content": "## ZocoPlazos: pago en tres cuotas\n\nZocoPlazos permite pagar en 3 cuotas mensuales sin intereses los pedidos de entre 90 € y 1.500 €. La primera cuota se cobra al confirmar el pedido. Solo está disponible con tarjeta y exige que la tarjeta caduque después de la última cuota.",
+            "section": "Plazos ThePower Shop: pago en tres cuotas",
+            "content": "## Plazos ThePower Shop: pago en tres cuotas\n\nPlazos ThePower Shop permite pagar en 3 cuotas mensuales sin intereses los pedidos de entre 90 € y 1.500 €. La primera cuota se cobra al confirmar el pedido. Solo está disponible con tarjeta y exige que la tarjeta caduque después de la última cuota.",
             "embeddingModel": "openrouter:google/gemini-embedding-2:768",
             "embeddingDimensions": 768,
             "cosineDistance": 0.345986,
@@ -1282,7 +1282,7 @@
             "ordinal": 3,
             "title": "Pagos y reembolsos",
             "section": "Cargos duplicados y retenciones",
-            "content": "## Cargos duplicados y retenciones\n\nAl confirmar un pedido, el banco puede mostrar una retención temporal además del cargo definitivo. Las retenciones de pedidos cancelados o modificados se liberan solas en un máximo de 7 días naturales. Si aparecen dos cargos definitivos por el mismo pedido, Zocomar devuelve el cargo duplicado en 48 horas hábiles desde que el cliente lo comunica por el chat de atención al cliente.",
+            "content": "## Cargos duplicados y retenciones\n\nAl confirmar un pedido, el banco puede mostrar una retención temporal además del cargo definitivo. Las retenciones de pedidos cancelados o modificados se liberan solas en un máximo de 7 días naturales. Si aparecen dos cargos definitivos por el mismo pedido, ThePower Shop devuelve el cargo duplicado en 48 horas hábiles desde que el cliente lo comunica por el chat de atención al cliente.",
             "embeddingModel": "openrouter:google/gemini-embedding-2:768",
             "embeddingDimensions": 768,
             "cosineDistance": 0.217465,
@@ -1292,7 +1292,7 @@
         "decision": "answer",
         "generationCalled": true,
         "retrievalCount": 1,
-        "answer": "Lo primero es comprobar si se trata de un cargo duplicado real o de una retención temporal. Al confirmar un pedido, el banco puede mostrar una retención temporal además del cargo definitivo, y las retenciones de pedidos cancelados o modificados se liberan solas en un máximo de 7 días naturales [cite:lab-ae3817b7bdcf:06-pagos-y-reembolsos:03].\n\nSi en tu banco aparecen dos cargos definitivos por el mismo pedido, comunícalo por el chat de atención al cliente. Zocomar devuelve el cargo duplicado en 48 horas hábiles desde que lo comunicas [cite:lab-ae3817b7bdcf:06-pagos-y-reembolsos:03].\n\nLos datos suministrados no indican cómo distinguir en el extracto bancario una retención de un cargo definitivo, ni qué información o documentación hay que aportar en el chat; eso no puedo confirmártelo.",
+        "answer": "Lo primero es comprobar si se trata de un cargo duplicado real o de una retención temporal. Al confirmar un pedido, el banco puede mostrar una retención temporal además del cargo definitivo, y las retenciones de pedidos cancelados o modificados se liberan solas en un máximo de 7 días naturales [cite:lab-ae3817b7bdcf:06-pagos-y-reembolsos:03].\n\nSi en tu banco aparecen dos cargos definitivos por el mismo pedido, comunícalo por el chat de atención al cliente. ThePower Shop devuelve el cargo duplicado en 48 horas hábiles desde que lo comunicas [cite:lab-ae3817b7bdcf:06-pagos-y-reembolsos:03].\n\nLos datos suministrados no indican cómo distinguir en el extracto bancario una retención de un cargo definitivo, ni qué información o documentación hay que aportar en el chat; eso no puedo confirmártelo.",
         "citations": ["lab-ae3817b7bdcf:06-pagos-y-reembolsos:03"],
         "latencyMs": 3074
       },
@@ -1303,12 +1303,12 @@
     },
     {
       "id": 6,
-      "question": "¿Qué descuento tienen los estudiantes universitarios en Zocomar?",
+      "question": "¿Qué descuento tienen los estudiantes universitarios en ThePower Shop?",
       "answerable": false,
       "expectedDocuments": [],
       "expectedFacts": ["Rechazo: no existe un descuento para estudiantes."],
       "rag": {
-        "question": "¿Qué descuento tienen los estudiantes universitarios en Zocomar?",
+        "question": "¿Qué descuento tienen los estudiantes universitarios en ThePower Shop?",
         "corpusVersion": "lab-ae3817b7bdcf",
         "embeddingModel": "openrouter:google/gemini-embedding-2:768",
         "genModelId": "claude-sonnet-5-5",
@@ -1320,9 +1320,9 @@
             "corpusVersion": "lab-ae3817b7bdcf",
             "documentId": "09-zocomar-plus",
             "ordinal": 0,
-            "title": "Zocomar Plus",
+            "title": "ThePower Shop Plus",
             "section": "Precio y prueba gratuita",
-            "content": "## Precio y prueba gratuita\n\nZocomar Plus cuesta 4,99 € al mes o 49 € al año. Cada cliente puede disfrutar una sola vez de una prueba gratuita de 30 días. La cuota se cobra al terminar la prueba si no se cancela antes.",
+            "content": "## Precio y prueba gratuita\n\nThePower Shop Plus cuesta 4,99 € al mes o 49 € al año. Cada cliente puede disfrutar una sola vez de una prueba gratuita de 30 días. La cuota se cobra al terminar la prueba si no se cancela antes.",
             "embeddingModel": "openrouter:google/gemini-embedding-2:768",
             "embeddingDimensions": 768,
             "cosineDistance": 0.275886,
@@ -1335,7 +1335,7 @@
             "ordinal": 2,
             "title": "Promociones, cupones y garantía de precio",
             "section": "Garantía de precio",
-            "content": "## Garantía de precio\n\nSi el precio de un artículo vendido y enviado por Zocomar baja en los 7 días siguientes a la compra, el cliente puede solicitar la diferencia como saldo Zocomar desde «Mis pedidos». No se aplica a los artículos de otros vendedores ni a las ofertas flash.",
+            "content": "## Garantía de precio\n\nSi el precio de un artículo vendido y enviado por ThePower Shop baja en los 7 días siguientes a la compra, el cliente puede solicitar la diferencia como saldo ThePower Shop desde «Mis pedidos». No se aplica a los artículos de otros vendedores ni a las ofertas flash.",
             "embeddingModel": "openrouter:google/gemini-embedding-2:768",
             "embeddingDimensions": 768,
             "cosineDistance": 0.289234,
@@ -1348,7 +1348,7 @@
             "ordinal": 0,
             "title": "Atención al cliente",
             "section": "Canales y horarios",
-            "content": "## Canales y horarios\n\nEl chat de la aplicación atiende todos los días de 8:00 a 22:00. El teléfono gratuito, que aparece en la sección «Ayuda» de la aplicación, atiende de lunes a viernes de 9:00 a 19:00. Zocomar no ofrece atención por correo electrónico ni por redes sociales.",
+            "content": "## Canales y horarios\n\nEl chat de la aplicación atiende todos los días de 8:00 a 22:00. El teléfono gratuito, que aparece en la sección «Ayuda» de la aplicación, atiende de lunes a viernes de 9:00 a 19:00. ThePower Shop no ofrece atención por correo electrónico ni por redes sociales.",
             "embeddingModel": "openrouter:google/gemini-embedding-2:768",
             "embeddingDimensions": 768,
             "cosineDistance": 0.307306,
@@ -1359,7 +1359,7 @@
             "corpusVersion": "lab-ae3817b7bdcf",
             "documentId": "01-zocomar-que-es",
             "ordinal": 3,
-            "title": "Qué es Zocomar y cómo funciona el marketplace",
+            "title": "Qué es ThePower Shop y cómo funciona el marketplace",
             "section": "Cuenta de cliente",
             "content": "## Cuenta de cliente\n\nPara comprar hace falta una cuenta verificada con correo electrónico y teléfono móvil. Los menores de 18 años no pueden abrir una cuenta. Desde «Mis pedidos» se consultan los pedidos, se inician devoluciones y se abren disputas.",
             "embeddingModel": "openrouter:google/gemini-embedding-2:768",
@@ -1374,9 +1374,9 @@
             "corpusVersion": "lab-ae3817b7bdcf",
             "documentId": "09-zocomar-plus",
             "ordinal": 0,
-            "title": "Zocomar Plus",
+            "title": "ThePower Shop Plus",
             "section": "Precio y prueba gratuita",
-            "content": "## Precio y prueba gratuita\n\nZocomar Plus cuesta 4,99 € al mes o 49 € al año. Cada cliente puede disfrutar una sola vez de una prueba gratuita de 30 días. La cuota se cobra al terminar la prueba si no se cancela antes.",
+            "content": "## Precio y prueba gratuita\n\nThePower Shop Plus cuesta 4,99 € al mes o 49 € al año. Cada cliente puede disfrutar una sola vez de una prueba gratuita de 30 días. La cuota se cobra al terminar la prueba si no se cancela antes.",
             "embeddingModel": "openrouter:google/gemini-embedding-2:768",
             "embeddingDimensions": 768,
             "cosineDistance": 0.275886,
@@ -1386,14 +1386,14 @@
         "decision": "answer",
         "generationCalled": true,
         "retrievalCount": 1,
-        "answer": "Los datos suministrados no mencionan ningún descuento para estudiantes universitarios en Zocomar, así que no puedo responder a esa parte de la pregunta.\n\nLo único que figura en los documentos sobre precios es que Zocomar Plus cuesta 4,99 € al mes o 49 € al año, y que cada cliente puede disfrutar una sola vez de una prueba gratuita de 30 días, cobrándose la cuota al terminarla si no se cancela antes [cite:lab-ae3817b7bdcf:09-zocomar-plus:00]. Ninguna de estas condiciones se refiere a tarifas para estudiantes.",
+        "answer": "Los datos suministrados no mencionan ningún descuento para estudiantes universitarios en ThePower Shop, así que no puedo responder a esa parte de la pregunta.\n\nLo único que figura en los documentos sobre precios es que ThePower Shop Plus cuesta 4,99 € al mes o 49 € al año, y que cada cliente puede disfrutar una sola vez de una prueba gratuita de 30 días, cobrándose la cuota al terminarla si no se cancela antes [cite:lab-ae3817b7bdcf:09-zocomar-plus:00]. Ninguna de estas condiciones se refiere a tarifas para estudiantes.",
         "citations": ["lab-ae3817b7bdcf:09-zocomar-plus:00"],
         "latencyMs": 2388
       },
       "crag": {
-        "question": "¿Qué descuento tienen los estudiantes universitarios en Zocomar?",
+        "question": "¿Qué descuento tienen los estudiantes universitarios en ThePower Shop?",
         "queries": [
-          "¿Qué descuento tienen los estudiantes universitarios en Zocomar?",
+          "¿Qué descuento tienen los estudiantes universitarios en ThePower Shop?",
           "Política de descuentos y tarifas especiales para estudiantes universitarios: porcentaje de descuento aplicable y condiciones de aplicación",
           "Programa de beneficios para el colectivo estudiantil: bonificación porcentual sobre el precio de venta al público y requisito de acreditación mediante carné o matrícula universitaria vigente"
         ],
@@ -1490,7 +1490,7 @@
             "chunkId": "lab-ae3817b7bdcf:09-zocomar-plus:00",
             "attempt": 2,
             "rerankScore": 0.1,
-            "reason": "Precio de Zocomar Plus y prueba gratuita; no indica tarifa especial para estudiantes."
+            "reason": "Precio de ThePower Shop Plus y prueba gratuita; no indica tarifa especial para estudiantes."
           },
           {
             "chunkId": "lab-ae3817b7bdcf:02-devoluciones:01",
@@ -1526,7 +1526,7 @@
             "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:04",
             "attempt": 2,
             "rerankScore": 0,
-            "reason": "Ventajas de envío de Zocomar Plus; no menciona estudiantes."
+            "reason": "Ventajas de envío de ThePower Shop Plus; no menciona estudiantes."
           },
           {
             "chunkId": "lab-ae3817b7bdcf:09-zocomar-plus:02",
@@ -1586,7 +1586,7 @@
             "chunkId": "lab-ae3817b7bdcf:06-pagos-y-reembolsos:01",
             "attempt": 3,
             "rerankScore": 0,
-            "reason": "Describe ZocoPlazos, sin relación con descuentos estudiantiles."
+            "reason": "Describe Plazos ThePower Shop, sin relación con descuentos estudiantiles."
           },
           {
             "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:04",
@@ -1604,7 +1604,7 @@
         "iterations": [
           {
             "attempt": 1,
-            "query": "¿Qué descuento tienen los estudiantes universitarios en Zocomar?",
+            "query": "¿Qué descuento tienen los estudiantes universitarios en ThePower Shop?",
             "retrievedIds": [
               {
                 "chunkId": "lab-ae3817b7bdcf:09-zocomar-plus:00",
@@ -1715,7 +1715,7 @@
               "maxChunkRelevance": 0.1,
               "reason": "Ningún fragmento menciona descuentos para estudiantes universitarios; solo hay información general de Plus, garantía de precio y otras políticas sin relación con lo preguntado.",
               "gaps": [
-                "¿Existe algún descuento o tarifa especial para estudiantes universitarios en Zocomar y de cuánto es?",
+                "¿Existe algún descuento o tarifa especial para estudiantes universitarios en ThePower Shop y de cuánto es?",
                 "¿Qué requisitos o acreditación se exigen para acceder a ese descuento estudiantil, si existe?"
               ],
               "usefulIds": []
@@ -1786,7 +1786,7 @@
               {
                 "chunkId": "lab-ae3817b7bdcf:09-zocomar-plus:00",
                 "rerankScore": 0.1,
-                "reason": "Precio de Zocomar Plus y prueba gratuita; no indica tarifa especial para estudiantes."
+                "reason": "Precio de ThePower Shop Plus y prueba gratuita; no indica tarifa especial para estudiantes."
               },
               {
                 "chunkId": "lab-ae3817b7bdcf:02-devoluciones:01",
@@ -1816,7 +1816,7 @@
               {
                 "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:04",
                 "rerankScore": 0,
-                "reason": "Ventajas de envío de Zocomar Plus; no menciona estudiantes."
+                "reason": "Ventajas de envío de ThePower Shop Plus; no menciona estudiantes."
               },
               {
                 "chunkId": "lab-ae3817b7bdcf:09-zocomar-plus:02",
@@ -1936,7 +1936,7 @@
               {
                 "chunkId": "lab-ae3817b7bdcf:06-pagos-y-reembolsos:01",
                 "rerankScore": 0,
-                "reason": "Describe ZocoPlazos, sin relación con descuentos estudiantiles."
+                "reason": "Describe Plazos ThePower Shop, sin relación con descuentos estudiantiles."
               },
               {
                 "chunkId": "lab-ae3817b7bdcf:04-envios-vigente:04",
@@ -1955,7 +1955,7 @@
               "maxChunkRelevance": 0.1,
               "reason": "Ningún fragmento menciona un programa o descuento para estudiantes universitarios; solo hay promociones generales sin relación con la pregunta.",
               "gaps": [
-                "Si Zocomar ofrece algún descuento o programa de beneficios para estudiantes universitarios",
+                "Si ThePower Shop ofrece algún descuento o programa de beneficios para estudiantes universitarios",
                 "Cuál es el porcentaje de descuento y cómo se acredita la condición de estudiante"
               ],
               "usefulIds": []
@@ -1963,7 +1963,7 @@
             "route": "refuse"
           }
         ],
-        "answer": "No consta evidencia suficiente en la documentación de Zocomar tras agotar el límite de búsquedas y reformulaciones. No se llama al generador.",
+        "answer": "No consta evidencia suficiente en la documentación de ThePower Shop tras agotar el límite de búsquedas y reformulaciones. No se llama al generador.",
         "citations": [],
         "latencyMs": 23441
       },

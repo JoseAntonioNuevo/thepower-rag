@@ -2,9 +2,9 @@
 // Worker puente que usan los scripts de ingesta y verificación: solo escucha en 127.0.0.1 y exige una
 // ficha compartida. Embebe, describe el índice, ingesta el corpus congelado y elige el perfil activo,
 // con bindings reales (BRIDGE_REMOTE=true) o con emuladores locales. Registra qué adaptador se usó.
-// Corpus preparados y congelados que se empaquetan con el Worker: el curso y la tienda Zocomar.
+// Corpus preparados y congelados que se empaquetan con el Worker: el curso y la tienda ThePower Shop.
 import rawCorpus from "../../../corpus/prepared/corpus.json";
-import rawStoreCorpus from "../../../corpus/prepared/zocomar.json";
+import rawStoreCorpus from "../../../corpus/prepared/thepower-shop.json";
 // Núcleo: emulador local de embeddings, manifiesto, selección de perfil, nombres y sesión de gasto.
 import {
   // Embedding emulado local y su dimensión.
@@ -43,9 +43,9 @@ import { BGE_M3_MODEL, type EmbeddingRunner } from "./vectors";
 const FROZEN_PREPARATION = "c3a59a406888b";
 // Versión de contenido del corpus congelado.
 const FROZEN_CONTENT = "cc037ef0bb1f7";
-// Preparación y contenido congelados de la tienda Zocomar (chat con CHAT_CORPUS=zocomar).
-const FROZEN_STORE_PREPARATION = "cb7dabfb11854";
-const FROZEN_STORE_CONTENT = "cbb8eb3cb881c";
+// Preparación y contenido congelados de la tienda ThePower Shop (chat con CHAT_CORPUS=thepower-shop).
+const FROZEN_STORE_PREPARATION = "cc140d7876624";
+const FROZEN_STORE_CONTENT = "c907bd93cf7af";
 
 // Parte de D1 que usa el puente.
 interface SqlDb {

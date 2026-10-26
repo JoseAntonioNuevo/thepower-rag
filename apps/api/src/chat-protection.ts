@@ -135,6 +135,14 @@ async function ipLimit(request: Request, env: WorkerEnv): Promise<Response | nul
     ? null
     : failure(429, "Esta red ha enviado demasiadas peticiones. Espera un minuto.");
 }
+// Límite de las lecturas públicas (biblioteca de documentos): mismo cupo por red que el chat.
+// Fuera del perfil público, o si falta su configuración, no limita (el chat ya la exige).
+export async function limitPublicRead(request: Request, env: WorkerEnv): Promise<Response | null> {
+  // Sin protección pública o sin limitadores: libre.
+  if (!protectionRequired(env) || !configured(env)) return null;
+  // Cupo por red.
+  return ipLimit(request, env);
+}
 // Configuración de seguridad para el navegador; emite o renueva la sesión.
 export async function securityConfig(
   request: Request,

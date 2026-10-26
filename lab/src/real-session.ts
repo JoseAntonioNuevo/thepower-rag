@@ -6,9 +6,9 @@ import path from "node:path";
 import type { GenerationSettings } from "../../apps/api/src/env";
 import type { LabModelOperation } from "../../apps/api/src/lab-models";
 
-// Estado privado del corpus actual (Zocomar): índice, calibración, diario de gasto y recibos.
+// Estado privado del corpus actual (ThePower Shop): índice, calibración, diario de gasto y recibos.
 // Los recibos de AetherCloud (S10) siguen en lab/.local y no se mezclan con este diario.
-export const LAB_LOCAL_DIR = "lab/.local/zocomar";
+export const LAB_LOCAL_DIR = "lab/.local/thepower-shop";
 
 // Escritura atómica: un recibo incompleto no se interpreta como presupuesto nuevo.
 export function saveLabJson(file: string, value: unknown): void {

@@ -20,11 +20,11 @@ import { Json, StageInspector, Vector } from "./inspectors";
 const QUESTIONS = [
   {
     label: "Pregunta con evidencia",
-    text: "Devolví en un Zocopunto un pedido que pagué con Bizum. ¿Cuánto puede tardar en llegarme el dinero?",
+    text: "Devolví en un punto ThePower Shop un pedido que pagué con Bizum. ¿Cuánto puede tardar en llegarme el dinero?",
   },
   {
     label: "Pregunta sin evidencia",
-    text: "¿Qué descuento tienen los estudiantes universitarios en Zocomar?",
+    text: "¿Qué descuento tienen los estudiantes universitarios en ThePower Shop?",
   },
 ];
 const KIND_LABEL = {

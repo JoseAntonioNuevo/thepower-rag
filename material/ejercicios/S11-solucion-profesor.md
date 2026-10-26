@@ -25,7 +25,7 @@ No es un documento para repartir antes de la entrega. Reúne los criterios de co
 
 1. **En el laboratorio reproducible (`lab/`, referencia directa del ejercicio):**
    - Nodos del `StateGraph` (`lab/src/crag-graph.ts`): `retrieve` (top 10) → `rerank` (escala `[0, 1]`) → `assess` (`minChunkRelevance = 0,50`, `partialCoverageMin = 0,40`, `sufficientCoverageMin = 0,75`) → `retain` / `discard` → `reformulate` (máx. 2, 3 búsquedas) → `answer` / `refuse`. Con modelos reales, el juez y el reformulador están en `apps/api/src/lab-models.ts` y los umbrales se aplican en código (`decideLabSufficiency`).
-   - **Comparación real del 24 de octubre de 2026** sobre la tienda ficticia Zocomar (12 políticas, `vector(768)` + HNSW, Gemini Embedding 2, Sonnet como generador y juez; `docs/evidence/zocomar-lab-2026-10-24.md`):
+   - **Comparación real del 24 de octubre de 2026** sobre la tienda ficticia ThePower Shop (12 políticas, `vector(768)` + HNSW, Gemini Embedding 2, Sonnet como generador y juez; `docs/evidence/thepower-shop-lab-2026-10-24.md`):
      - **RAG básico:** `14/14` respondibles, `6/6` rechazos, **`1,00` recuperaciones medias**, mediana `3,2 s` con respuesta y `0,5 s` sin respuesta.
      - **CRAG:** `14/14` respondibles, `6/6` rechazos, **`1,60` recuperaciones medias**, `0,60` reformulaciones medias, mediana `8,9 s` con respuesta y `21 s` sin respuesta.
      - Margen de decisión: `0,014` (similitud de RAG alrededor del umbral `0,7226`) frente a `0,65` (relevancia del juez). Política sustituida en el contexto del generador: 3 de 14 respuestas en RAG, 0 en CRAG.

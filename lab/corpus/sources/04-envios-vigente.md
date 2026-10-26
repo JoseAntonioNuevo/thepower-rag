@@ -16,10 +16,10 @@ Los envíos a Baleares tardan de 4 a 6 días laborables y cuestan 5,99 €. Son 
 
 Los envíos a Portugal continental tardan de 3 a 5 días laborables y cuestan 4,99 €. Son gratuitos a partir de 49 € por vendedor.
 
-## Ventajas de Zocomar Plus en el envío
+## Ventajas de ThePower Shop Plus en el envío
 
-Los miembros de Zocomar Plus tienen envío estándar gratuito sin importe mínimo en España peninsular y en Portugal continental, y en Baleares a partir de 29 € por vendedor. El envío exprés les cuesta 2,99 € por paquete.
+Los miembros de ThePower Shop Plus tienen envío estándar gratuito sin importe mínimo en España peninsular y en Portugal continental, y en Baleares a partir de 29 € por vendedor. El envío exprés les cuesta 2,99 € por paquete.
 
 ## Retrasos y pedidos no recibidos
 
-Si un paquete no llega en la fecha máxima indicada en el seguimiento, el comprador puede abrir una disputa con la Garantía Zocomar. Los plazos y la cobertura se detallan en la política de la Garantía Zocomar.
+Si un paquete no llega en la fecha máxima indicada en el seguimiento, el comprador puede abrir una disputa con la Garantía ThePower Shop. Los plazos y la cobertura se detallan en la política de la Garantía ThePower Shop.

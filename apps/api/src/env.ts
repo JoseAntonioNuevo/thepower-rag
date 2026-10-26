@@ -43,9 +43,9 @@ export interface WorkerEnv {
   APP_MODE?: string;
   // complete para el RAG con contexto completo.
   RAG_CONTEXT_MODE?: string;
-  // Corpus del chat: course (por defecto) o zocomar. La investigación usa siempre el curso.
+  // Corpus del chat: course (por defecto) o thepower-shop. La investigación usa siempre el curso.
   CHAT_CORPUS?: string;
-  // Versión del corpus de la tienda Zocomar.
+  // Versión del corpus de la tienda ThePower Shop.
   STORE_CORPUS_VERSION?: string;
   // Perfil del índice de la tienda.
   STORE_INDEX_PROFILE?: string;
@@ -147,7 +147,7 @@ export interface WorkerEnv {
   AI?: unknown;
   // Binding de Vectorize del curso (también lo usa la investigación).
   VECTORIZE?: unknown;
-  // Binding de Vectorize de la tienda Zocomar (solo el chat).
+  // Binding de Vectorize de la tienda ThePower Shop (solo el chat).
   VECTORIZE_STORE?: unknown;
   // Binding de D1 del curso.
   DB?: unknown;
@@ -874,7 +874,7 @@ export function assessWorker(env: WorkerEnv): Assessment {
   const chatRetrieval =
     chatCorpus === "course"
       ? retrieval
-      : chatCorpus === "zocomar" &&
+      : chatCorpus === "thepower-shop" &&
           chatMissing.length === 0 &&
           generation !== null &&
           dimensions !== null &&
