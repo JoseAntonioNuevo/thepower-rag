@@ -249,8 +249,7 @@ export function CorpusBrowser({ onClose }: { onClose: () => void }) {
               <header className="library-doc-head">
                 <h3>{shown.document.title || shown.document.documentId}</h3>
                 <p className="library-note">
-                  {shown.document.documentId} · grupo {shown.document.audience} ·{" "}
-                  {String(shown.chunks.length)}{" "}
+                  {shown.document.documentId} · {String(shown.chunks.length)}{" "}
                   {shown.chunks.length === 1 ? "fragmento" : "fragmentos"} ·{" "}
                   {formatCount(shown.document.chars)} caracteres ·{" "}
                   {sourceLabel(shown.source, shown.readAt)}

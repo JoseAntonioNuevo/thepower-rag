@@ -917,8 +917,8 @@ export function assessWorker(env: WorkerEnv): Assessment {
       generation: null,
       retrieval: null,
       storeRetrieval: null,
-      // La demo trae los guiones y el índice léxico del curso, sea cual sea CHAT_CORPUS.
-      chatCorpus: "course",
+      // La demo usa el corpus preparado que pide CHAT_CORPUS (sin valor, el del curso).
+      chatCorpus: chatCorpus ?? "course",
       chatRetrieval: null,
       // Estados «offline-*»: la interfaz los muestra como demostración, no como servicio real.
       capabilities: {

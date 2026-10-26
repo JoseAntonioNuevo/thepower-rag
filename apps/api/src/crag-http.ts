@@ -30,7 +30,7 @@ import { PUBLIC_PROVIDER_MESSAGE } from "./course-stream";
 // Tipos del entorno.
 import { cragExecutionBudgetMs, type Assessment, type WorkerEnv } from "./env";
 // Corpus de la demo.
-import { fixtureCorpusVersion, fixtureProfile } from "./fixture";
+import { demoChatFixture, fixtureCorpusVersion, fixtureProfile } from "./fixture";
 // Fábrica de modelos.
 import { createEvaluatorModel, createGenerationModel } from "./model";
 // Tarifa del coste mostrado.
@@ -176,8 +176,13 @@ export async function cragHttpResponse(input: {
 
   // ¿Modo demo?
   const demo = input.assessment.execution !== "real";
-  // Guion de la demo.
-  const scenarioId = demo ? resolveDemoScenario(input.request.demoScenario, input.question) : null;
+  // Corpus preparado de la demo del chat.
+  const demoFixture = demoChatFixture(corpus);
+  // Guion de la demo: los guiones son del curso; con la tienda solo hay pregunta libre.
+  const scenarioId =
+    demo && corpus === "course"
+      ? resolveDemoScenario(input.request.demoScenario, input.question)
+      : null;
   // Ajustes del RAG del chat (curso o tienda).
   const retrieval = input.assessment.chatRetrieval;
   // Alcance de la ejecución.
@@ -185,9 +190,9 @@ export async function cragHttpResponse(input: {
     runId: crypto.randomUUID(),
     audience: input.request.audience,
     corpusVersion: demo
-      ? fixtureCorpusVersion()
+      ? demoFixture.version
       : (retrieval?.corpusVersion ?? fixtureCorpusVersion()),
-    profileId: demo ? fixtureProfile().id : (retrieval?.indexProfile ?? fixtureProfile().id),
+    profileId: demo ? demoFixture.profile.id : (retrieval?.indexProfile ?? fixtureProfile().id),
     embeddingLabel: demo
       ? "fixture-token-hash-v1"
       : (retrieval?.embeddingModel ?? "sin configurar"),
@@ -196,7 +201,12 @@ export async function cragHttpResponse(input: {
   const ports =
     input.deps.cragPorts ??
     (demo
-      ? createDemoCragPorts({ signal: input.signal, scenarioId })
+      ? createDemoCragPorts({
+          signal: input.signal,
+          scenarioId,
+          library: demoFixture.chunks,
+          profileId: demoFixture.profile.id,
+        })
       : clarify
         ? inertPorts(input.signal)
         : createRealCragPorts({

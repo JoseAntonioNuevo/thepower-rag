@@ -12,7 +12,7 @@ export const DEMO_CHUNK_DELAY_MS = 90;
 // Trozos del texto de la demo.
 const DEMO_CHUNKS = [
   "Demostración local sin modelo. ",
-  "Este texto no viene de un proveedor ni de documentos del curso. ",
+  "Este texto no viene de un proveedor ni de ningún documento. ",
   "El modo sin RAG solo enseña el transporte de la conversación.",
 ];
 

@@ -1,7 +1,7 @@
 // GUÍA DE LECTURA · apps/api/src/crag-demo.ts
 // Puertos de la demo de CRAG: cada guion (suficiente, parcial, descartado, ausente, error) produce
-// búsquedas y evaluaciones fijas para enseñar el grafo sin llamar a un modelo. Una pregunta libre
-// usa el índice léxico de la demo.
+// búsquedas y evaluaciones fijas sobre el corpus del curso para enseñar el grafo sin llamar a un
+// modelo. Una pregunta libre usa el índice léxico del corpus del chat (el del curso o el de la tienda).
 // Guiones y su tipo.
 import { DEMO_CRAG_SCENARIOS, type DemoScenarioId } from "@thepower-rag/contracts";
 // Utilidades de CRAG y del embedding de la demo.
@@ -47,7 +47,7 @@ export function resolveDemoScenario(
 }
 
 // Convierte un fragmento de la demo en candidato de CRAG con una puntuación fija.
-function scripted(chunk: IndexedChunk, score: number): CragChunk {
+function scripted(chunk: IndexedChunk, score: number, profileId: string): CragChunk {
   // Candidato.
   return {
     // Datos del fragmento tal y como los espera el grafo.
@@ -59,7 +59,7 @@ function scripted(chunk: IndexedChunk, score: number): CragChunk {
     audience: chunk.audience,
     // Versión del corpus y perfil de la demo, para que el grafo compruebe que coinciden.
     corpusVersion: chunk.corpusVersion,
-    profileId: fixtureProfile().id,
+    profileId,
     // Puntuación fija del guion.
     score,
   };
@@ -74,8 +74,8 @@ function byId(chunks: readonly IndexedChunk[], id: string, score: number): CragC
     // Error del guion.
     throw new Error(`Falta el fragmento de prueba ${id}.`);
   }
-  // Candidato con la puntuación dada.
-  return scripted(found, score);
+  // Candidato con la puntuación dada (los guiones son del curso).
+  return scripted(found, score, fixtureProfile().id);
 }
 
 // Evaluación con la forma que espera el validador.
@@ -119,11 +119,18 @@ export function createDemoCragPorts(input: {
   signal: CragSignal;
   // Guion, o null en pregunta libre.
   scenarioId: DemoScenarioId | null;
+  // Fragmentos y perfil de la pregunta libre; sin valor, los del curso.
+  library?: readonly IndexedChunk[];
+  profileId?: string;
   // Reloj inyectable.
   now?: () => number;
 }): CragPorts {
-  // Corpus de la demo.
-  const library = fixtureChunks();
+  // Corpus del curso, del que salen los guiones.
+  const course = fixtureChunks();
+  // Corpus de la pregunta libre.
+  const library = input.library ?? course;
+  // Su perfil.
+  const profileId = input.profileId ?? fixtureProfile().id;
   // Guion.
   const scenario = input.scenarioId;
   // Puertos.
@@ -138,7 +145,7 @@ export function createDemoCragPorts(input: {
       // Suficiente: S5 a la primera.
       if (scenario === "sufficient-s5") {
         // S5.
-        return { ok: true, providerCall: false, chunks: [byId(library, S5, 0.91)] };
+        return { ok: true, providerCall: false, chunks: [byId(course, S5, 0.91)] };
       }
       // Parcial: S5 y después S5 con S6.
       if (scenario === "partial-s5-s6") {
@@ -148,8 +155,8 @@ export function createDemoCragPorts(input: {
           providerCall: false,
           chunks:
             attempt === 1
-              ? [byId(library, S5, 0.8)]
-              : [byId(library, S5, 0.4), byId(library, S6, 0.86)],
+              ? [byId(course, S5, 0.8)]
+              : [byId(course, S5, 0.4), byId(course, S6, 0.86)],
         };
       }
       // Descartado: S16 y después S6.
@@ -158,13 +165,13 @@ export function createDemoCragPorts(input: {
         return {
           ok: true,
           providerCall: false,
-          chunks: attempt === 1 ? [byId(library, S16, 0.2)] : [byId(library, S6, 0.88)],
+          chunks: attempt === 1 ? [byId(course, S16, 0.2)] : [byId(course, S6, 0.88)],
         };
       }
       // Dato ausente o error: S16.
       if (scenario === "missing-info" || scenario === "evaluator-error") {
         // S16.
-        return { ok: true, providerCall: false, chunks: [byId(library, S16, 0.1)] };
+        return { ok: true, providerCall: false, chunks: [byId(course, S16, 0.1)] };
       }
       // Pregunta libre: vector léxico de la consulta.
       const embedded = fixtureEmbed(query);
@@ -177,7 +184,7 @@ export function createDemoCragPorts(input: {
               ? chunk.audience === "program"
               : chunk.audience === "program" || chunk.audience === scope.audience),
         )
-        .map((chunk) => scripted(chunk, cosine(embedded, chunk.vector)))
+        .map((chunk) => scripted(chunk, cosine(embedded, chunk.vector), profileId))
         .sort((left, right) => (right.score ?? 0) - (left.score ?? 0))
         .slice(0, CRAG_BOUNDS.maxCandidates);
       // Candidatos.

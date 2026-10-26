@@ -168,9 +168,9 @@ const CragGraphState = Annotation.Root({
 // Respuesta cuando falta el grupo en una pregunta de calendario.
 const CLARIFY =
   "La pregunta parece de calendario. Elige el grupo con clases los lunes y miércoles o el grupo con clases los martes y jueves. La selección general no muestra los dos calendarios.";
-// Respuesta cuando no hay evidencia suficiente.
+// Respuesta cuando no hay evidencia suficiente; vale para el curso y para la tienda.
 const REFUSE =
-  "No hay evidencia suficiente en el corpus del curso. No se responde con fragmentos rechazados ni con una búsqueda agotada.";
+  "No hay evidencia suficiente en los documentos consultados. No se responde con fragmentos rechazados ni con una búsqueda agotada.";
 
 // Entrada de un turno CRAG.
 export interface CragTurnInput {

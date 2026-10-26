@@ -42,6 +42,8 @@
   "vars": {
     // demo: streams etiquetados, índice léxico de prueba y ninguna llamada de pago.
     "APP_MODE": "demo",
+    // La demo usa el corpus preparado de la tienda ThePower Shop, igual que producción.
+    "CHAT_CORPUS": "thepower-shop",
   },
   // Entornos con nombre. Cada uno se elige con CLOUDFLARE_ENV.
   "env": {
@@ -125,7 +127,7 @@
         "binding": "AI",
         "remote": true,
       },
-      // Índices vectoriales: el del curso (también lo usa la investigación) y el de la tienda ThePower Shop.
+      // Índices vectoriales: el del curso y el de la tienda ThePower Shop (chat e investigación).
       "vectorize": [
         {
           "binding": "VECTORIZE",
@@ -209,7 +211,7 @@
       "name": "thepower-rag-local",
       "workers_dev": false,
       "preview_urls": false,
-      // Mismos recursos remotos del curso que producción (sin los de la investigación).
+      // Mismos recursos remotos del chat que producción (sin los de la investigación).
       "ai": {
         "binding": "AI",
         "remote": true,
@@ -218,6 +220,12 @@
         {
           "binding": "VECTORIZE",
           "index_name": "thepower-ai-course-rag-76509a5f9743",
+          "remote": true,
+        },
+        // Índice de la tienda ThePower Shop, el que usa el chat.
+        {
+          "binding": "VECTORIZE_STORE",
+          "index_name": "thepower-ai-course-rag-3d2b914bd60c",
           "remote": true,
         },
       ],
@@ -258,6 +266,11 @@
         "INDEX_PROFILE": "p76509a5f9743",
         "VECTOR_METRIC": "cosine",
         "MIN_RETRIEVAL_SCORE": "0.5",
+        // El chat local consulta la tienda ThePower Shop, igual que producción.
+        "CHAT_CORPUS": "thepower-shop",
+        "STORE_CORPUS_VERSION": "cc140d7876624",
+        "STORE_INDEX_PROFILE": "p3d2b914bd60c",
+        "STORE_MIN_RETRIEVAL_SCORE": "0.68771",
         "MODEL_INPUT_USD_PER_MILLION": "0.1",
         "MODEL_OUTPUT_USD_PER_MILLION": "0.5",
         "EVALUATOR_INPUT_USD_PER_MILLION": "2",
@@ -280,6 +293,8 @@
       "vars": {
         // demo: los puertos de la investigación son guiones, no proveedores.
         "APP_MODE": "demo",
+        // El chat de este perfil también usa la tienda ThePower Shop.
+        "CHAT_CORPUS": "thepower-shop",
         // Secreto local para firmar la cookie del propietario. Solo vale en loopback.
         "RESEARCH_OWNER_SECRET": "local-loopback-research-owner",
         // Mismo presupuesto y tarifas que producción para enseñar la contabilidad.

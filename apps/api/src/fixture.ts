@@ -151,5 +151,19 @@ export function storeFixtureChunks(): IndexedChunk[] {
   return cachedStore;
 }
 
+// Corpus de la demo del chat según CHAT_CORPUS: el del curso o el de ThePower Shop.
+export function demoChatFixture(corpus: "course" | "thepower-shop") {
+  // Archivo preparado del corpus pedido.
+  const file = corpus === "thepower-shop" ? preparedStore : prepared;
+  // Fragmentos, versiones, perfil y cobertura de ese corpus.
+  return {
+    chunks: corpus === "thepower-shop" ? storeFixtureChunks() : fixtureChunks(),
+    version: file.preparationId,
+    contentVersion: file.contentVersion,
+    profile: file.indexProfile,
+    coverage: file.coverage,
+  };
+}
+
 // Umbral de la demo.
 export { FIXTURE_MIN_SCORE };

@@ -70,11 +70,10 @@ import {
 import { offlineDemoResponse } from "./demo-stream";
 // Corpus y perfil de prueba incluidos en el código.
 import {
-  fixtureChunks,
+  demoChatFixture,
   fixtureContentVersion,
   fixtureCorpusVersion,
   fixtureCoverage,
-  fixtureProfile,
 } from "./fixture";
 // Contexto completo del curso (modo complete).
 import { readCourseContext, completeContextOutcome, CourseContextError } from "./course-context";
@@ -296,6 +295,8 @@ export function createApp(deps: AppDeps = {}) {
     const compatibility = await dependencyCompatibility();
     // ¿Corpus de demo?
     const demoCorpus = assessment.execution === "demo";
+    // Corpus preparado de la demo del chat (el del curso o el de la tienda).
+    const demoFixture = demoChatFixture(assessment.chatCorpus ?? "course");
     // Versión del corpus incluido.
     const bundled = fixtureCorpusVersion();
     // Versión configurada.
@@ -319,13 +320,23 @@ export function createApp(deps: AppDeps = {}) {
       runtime: runtimeLabel(),
       // Estado de cada capacidad: sin RAG, RAG, CRAG e investigación.
       capabilities: assessment.capabilities,
-      // Corpus: en demo, el preparado del bundle; en real, la versión y el perfil configurados.
+      // Corpus: en demo, el preparado del chat; en real, la versión y el perfil configurados.
       corpus: {
-        version: demoCorpus ? bundled : configuredVersion,
-        contentVersion: sourceKnown ? fixtureContentVersion() : null,
-        profileId: demoCorpus ? fixtureProfile().id : (assessment.retrieval?.indexProfile ?? null),
+        version: demoCorpus ? demoFixture.version : configuredVersion,
+        contentVersion: demoCorpus
+          ? demoFixture.contentVersion
+          : sourceKnown
+            ? fixtureContentVersion()
+            : null,
+        profileId: demoCorpus
+          ? demoFixture.profile.id
+          : (assessment.retrieval?.indexProfile ?? null),
         profileFamily: demoCorpus ? "fixture" : assessment.retrieval ? "workers-ai" : "unknown",
-        coverage: sourceKnown ? fixtureCoverage() : unknownCoverage,
+        coverage: demoCorpus
+          ? demoFixture.coverage
+          : sourceKnown
+            ? fixtureCoverage()
+            : unknownCoverage,
         // Modelo de embeddings y dimensión que usa cada modo.
         embedding: demoCorpus
           ? FIXTURE_EMBEDDING_MODEL
@@ -351,16 +362,18 @@ export function createApp(deps: AppDeps = {}) {
             : "semantic",
         retrievalMinScore: assessment.chatRetrieval?.minScore ?? null,
       },
-      // Corpus del chat: en demo, el del curso; en real, el de CHAT_CORPUS con su perfil.
+      // Corpus del chat: el de CHAT_CORPUS; en demo con su corpus preparado y en real con su perfil.
       ...(assessment.chatCorpus === null
         ? {}
         : {
             chatCorpus: {
               id: assessment.chatCorpus,
               label: CHAT_CORPUS_LABELS[assessment.chatCorpus],
-              version: demoCorpus ? bundled : (assessment.chatRetrieval?.corpusVersion ?? null),
+              version: demoCorpus
+                ? demoFixture.version
+                : (assessment.chatRetrieval?.corpusVersion ?? null),
               profileId: demoCorpus
-                ? fixtureProfile().id
+                ? demoFixture.profile.id
                 : (assessment.chatRetrieval?.indexProfile ?? null),
               minScore: demoCorpus ? null : (assessment.chatRetrieval?.minScore ?? null),
               groups: usesCourseGroups(assessment.chatCorpus),
@@ -660,8 +673,8 @@ export function createApp(deps: AppDeps = {}) {
       }
     }
 
-    // Fragmentos de prueba.
-    const chunks = deps.chunks ?? fixtureChunks();
+    // Fragmentos de prueba: los inyectados o los del corpus preparado del chat.
+    const chunks = deps.chunks ?? demoChatFixture(chatCorpus).chunks;
     // Embedding de prueba.
     const embed = deps.embed ?? fixtureEmbed;
     // ¿Recuperación de prueba?
@@ -681,10 +694,12 @@ export function createApp(deps: AppDeps = {}) {
         audience: parsed.data.audience,
         chunks,
         embed,
+        // La tienda no tiene grupos ni aclaración de calendario.
+        groups,
         // Umbral y etiqueta del índice de prueba.
         minScore: FIXTURE_MIN_SCORE,
         embeddingLabel: FIXTURE_EMBEDDING_MODEL,
-        corpusVersion: chunks[0]?.corpusVersion ?? fixtureCorpusVersion(),
+        corpusVersion: chunks[0]?.corpusVersion ?? demoChatFixture(chatCorpus).version,
         // Qué significa la puntuación, para no confundirla con una probabilidad.
         scoreMeaning:
           "Coseno del índice de prueba por tokens. No es una probabilidad ni un embedding de BGE-M3.",

@@ -169,12 +169,55 @@ describe("corpus del chat · diagnóstico", () => {
     expect(assessment.chatRetrieval).toEqual(assessment.retrieval);
   });
 
-  // La demo siempre trae el curso.
-  it("la demo informa del curso aunque CHAT_CORPUS diga tienda", () => {
-    // Demo.
-    const assessment = assessWorker({ CHAT_CORPUS: "thepower-shop" });
-    // Curso.
-    expect(assessment.chatCorpus).toBe("course");
+  // La demo respeta CHAT_CORPUS; sin valor sigue con el curso.
+  it("la demo usa el corpus que pide CHAT_CORPUS", () => {
+    // Demo con la tienda.
+    expect(assessWorker({ CHAT_CORPUS: "thepower-shop" }).chatCorpus).toBe("thepower-shop");
+    // Demo sin la variable.
+    expect(assessWorker({}).chatCorpus).toBe("course");
+  });
+
+  // La demo con la tienda responde con sus políticas y no pide grupo.
+  it("la demo con la tienda cita sus políticas y no pide grupo", async () => {
+    // Entorno de demo con la tienda.
+    const demoStore: WorkerEnv = { CHAT_CORPUS: "thepower-shop" };
+    // RAG de la demo.
+    const rag = await postChat(
+      {
+        mode: "rag",
+        messages: [userMessage("¿Cuándo me devolvéis el dinero si pagué con Bizum?")],
+      },
+      demoStore,
+    );
+    // Texto del stream.
+    const ragText = await rag.text();
+    // Responde con fragmentos de la tienda.
+    expect(ragText).toContain("cc140d7876624:");
+    // No pide el grupo aunque la pregunta diga «cuándo».
+    expect(ragText).not.toContain("Elige el grupo");
+    // Ni cita el corpus del curso.
+    expect(ragText).not.toContain("c3a59a406888b");
+    // CRAG de la demo: pregunta libre sobre la tienda.
+    const crag = await postChat(
+      {
+        mode: "crag",
+        messages: [userMessage("¿Puedo devolver unos auriculares intraauditivos abiertos?")],
+      },
+      demoStore,
+    );
+    // Texto del stream.
+    const cragText = await crag.text();
+    // Usa fragmentos de la tienda.
+    expect(cragText).toContain("cc140d7876624");
+    // Ninguno del curso.
+    expect(cragText).not.toContain("c3a59a406888b");
+    // La salud de la demo describe la tienda.
+    const health = healthResponseSchema.parse(
+      await (await createApp().request("/api/health", { method: "GET" }, demoStore)).json(),
+    );
+    expect(health.chatCorpus?.id).toBe("thepower-shop");
+    expect(health.chatCorpus?.version).toBe("cc140d7876624");
+    expect(health.corpus.version).toBe("cc140d7876624");
   });
 
   // Lo que falta de la tienda bloquea el chat con la tienda y también la investigación, que la lee.

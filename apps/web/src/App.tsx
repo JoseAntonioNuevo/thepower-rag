@@ -906,7 +906,7 @@ function ChatPane({
                   }}
                 >
                   {/* Sin guion. */}
-                  <option value="">Libre, con el material del curso de prueba</option>
+                  <option value="">Libre, con las políticas de la tienda de prueba</option>
                   {/* Un guion por escenario. */}
                   {DEMO_RESEARCH_SCENARIOS.map((item) => (
                     <option key={item.id} value={item.id}>
@@ -1399,8 +1399,8 @@ export function App() {
         ) : chatCorpus !== "course" ? (
           <p>
             Sin RAG, RAG básico y CRAG consultan las políticas de ThePower Shop, una tienda en línea
-            ficticia: devoluciones, envíos, pagos, garantías y vendedores. La investigación sigue
-            usando el material del curso, con su temario, ejercicios y calendario de cada grupo.
+            ficticia: devoluciones, envíos, pagos, garantías y vendedores. La investigación añade la
+            consulta de un pedido, la normativa de consumo y la foto o la nota de voz del cliente.
           </p>
         ) : // Con el curso, solo el título: sin descripción de clases.
         null}
