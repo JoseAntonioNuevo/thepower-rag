@@ -15,6 +15,10 @@ Clase del jueves **29 de octubre de 2026**, grupo **M/J**, de **18:30 a 20:00, E
 
 El QR de la diapositiva 2 es el original de AI Engineer y evalúa **S11, CRAG, del martes 27 de octubre**, la clase anterior.
 
+## Caso de la clase
+
+Desde el 26/10/2026 la investigación de la aplicación trabaja sobre la tienda ficticia ThePower Shop, la misma de S10 y S11. Un cliente manda la foto de su pedido `TPS-20481` (auriculares intraauditivos pagados con Bizum) y una nota de voz: los abrió y el derecho no suena. El agente lee la foto, transcribe el audio, consulta las políticas de la tienda, lee el pedido con la herramienta de solo lectura `get_order` y busca la normativa de consumo en `europa.eu`, `eur-lex.europa.eu` y `www.boe.es`. El pedido `TPS-30117` es de otra cuenta y sirve para enseñar que la herramienta lo rechaza.
+
 ## Estructura de los 90 minutos
 
 - **18:30-19:30:** multimodalidad, imagen y OCR, archivos, STT/TTS, fusión, herramientas, memoria, Deep Research, fuentes, verificación, asincronía y límites.
@@ -32,7 +36,7 @@ bun run preflight:research
 bun run dev:research
 ```
 
-Abrir `http://127.0.0.1:5191/`, seleccionar M/J y la etapa Investigación. Los archivos de entrada están en `apps/api/fixtures/media/`: `dimension-mismatch.png`, `embedding-request.wav` y `unknown-square.png`.
+Abrir `http://127.0.0.1:5191/` y seleccionar la etapa Investigación. Los archivos de entrada están en `apps/api/fixtures/media/`: `pedido-auriculares.png` (foto del pedido `TPS-20481`), `nota-de-voz-devolucion.wav` (nota de voz del cliente) y `unknown-square.png` (imagen válida que el guion no reconoce).
 
 La demo principal es local, con fuentes y proveedores de prueba identificados. El tono offline no es voz neural. El MP3 de respaldo sí procede de una síntesis real anterior. El guion incluye pasos, resultados esperados, tiempo de corte y alternativas si la app o el sonido compartido fallan.
 

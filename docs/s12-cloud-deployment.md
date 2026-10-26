@@ -1,5 +1,7 @@
 # Despliegue de S12 en Cloudflare
 
+> **Caso actual desde el 26/10/2026.** La investigación ya no lee el material del curso: trabaja sobre ThePower Shop (políticas de la tienda, herramienta `get_order` sobre pedidos ficticios y normativa de consumo en `europa.eu`, `eur-lex.europa.eu` y `www.boe.es`), sin grupos, con la foto del pedido `TPS-20481` y una nota de voz como caso de clase. Este documento conserva la descripción y la evidencia de cuando el caso era el curso (`get_course_session`, grupos y el error de dimensiones); el motor del grafo, los límites y la contabilidad siguen igual. Ver [decisions.md](decisions.md#la-investigación-de-s12-pasa-a-thepower-shop-26-de-octubre-de-2026).
+
 Entrega del 11 de octubre de 2026 para publicar las fases 1, 2 y 3 en el Worker existente `thepower-rag`, en `https://rag-thepower.josenuevo.dev`.
 
 ## Recursos de investigación

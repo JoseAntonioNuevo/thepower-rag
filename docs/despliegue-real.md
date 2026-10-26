@@ -2,6 +2,10 @@
 
 Verificado el 3 de octubre de 2026. URL: https://rag-thepower.josenuevo.dev.
 
+## Investigación de S12 sobre ThePower Shop: publicación del 26 de octubre de 2026
+
+La versión `9b4284ca-79c8-4e61-8afb-55a3f40be4e9` (deployment `df9129d7-a81f-4403-8642-1d72ad437074`, 100 %) publica el commit `6d9c6bf`: la investigación lee las políticas de la tienda, usa `get_order` sobre pedidos ficticios y busca normativa de consumo. Respecto a `ee30b88b` solo cambia la variable `RESEARCH_ALLOWED_DOMAINS` (`europa.eu,eur-lex.europa.eu,www.boe.es`); los bindings son los mismos. Health en verde en las cuatro etapas, con la investigación durable activa. Antes de publicar, `RESEARCH_DB` tenía 9 trabajos y la cuenta de la investigación 1 USD de presupuesto, 0 reservado y 0,480609 USD desconocidos retenidos, es decir, 0,519391 USD disponibles. Recibos en `activation-receipts/thepower-shop/investigacion/`. Decisión en [decisions.md](decisions.md).
+
 ## Interfaz más clara: publicación del 26 de octubre de 2026
 
 La versión `ee30b88b-a37c-47a5-8b5a-89c2ac10fa5b` (deployment `f6400c9b-6cad-486b-b2ef-ca6bbb329d3c`, 100 %) publica el commit `0a81041`. Solo cambia el cliente: el Worker (`index.js`) y todas las variables son los de `caf33c27`. Mientras `/api/health` responde, la página ya no enseña textos del curso. Las etapas del chat no tienen selector de grupo ni guion de CRAG, y los grafos del modo clase usan nombres llanos con las salidas etiquetadas. Health en verde en las cuatro etapas, con el chat en `thepower-shop`. El cliente servido (`assets/index-CosqMTpS.js`) es el del build. Recibos en `activation-receipts/thepower-shop/interfaz/`.

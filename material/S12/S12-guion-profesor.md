@@ -13,9 +13,9 @@ Este guion acompaña las 24 diapositivas de S12. Las notas del PowerPoint contie
 ### Material abierto antes de entrar
 
 - Presentación y PDF de S12, este guion y el enunciado que la escuela ya haya publicado.
-- Perfil local de investigación en http://127.0.0.1:5191, grupo M/J y etapa Investigación.
-- Captura sintética `apps/api/fixtures/media/dimension-mismatch.png`.
-- Audio sintético `apps/api/fixtures/media/embedding-request.wav`.
+- Perfil local de investigación en http://127.0.0.1:5191, etapa Investigación.
+- Foto sintética del pedido `apps/api/fixtures/media/pedido-auriculares.png` (pedido TPS-20481, auriculares intraauditivos, Bizum).
+- Nota de voz sintética `apps/api/fixtures/media/nota-de-voz-devolucion.wav`.
 - Imagen válida no reconocida por el guion `apps/api/fixtures/media/unknown-square.png`.
 - Respaldo junto a este documento: `respaldo/informe-parcial-ensayo-20261011.png` y `respaldo/voz-ensayo-20261011.mp3`.
 - Pantalla compartida y opción de compartir sonido comprobadas. Ningún archivo de entorno o consola con credenciales a la vista.
@@ -67,15 +67,15 @@ Total: **90 minutos**, de 18:30 a 20:00.
 
 **Explicación para el profesor**
 
-Abre con una situación reconocible: alguien envía una captura y un audio a soporte. La captura muestra un error y el audio explica qué hizo antes. Leer la imagen, entender la petición e investigar la solución son trabajos diferentes. Hoy los conectaremos en un único agente. Venimos de recuperar documentos en S10 y corregir la recuperación en S11. Ahora añadimos entradas que no son solo texto y fuentes que todavía no están en nuestro corpus. El objetivo es que el alumno pueda explicar el recorrido y construir una versión pequeña, con límites y resultados comprobables.
+Abre con una situación reconocible: un cliente de ThePower Shop envía a atención al cliente la foto de su pedido y una nota de voz. La foto identifica el pedido y el audio cuenta qué pasó: abrió unos auriculares y el derecho no suena. Leer la imagen, entender la petición e investigar qué dicen la política de la tienda y la normativa son trabajos diferentes. Hoy los conectaremos en un único agente. Venimos de recuperar documentos en S10 y corregir la recuperación en S11 con la misma tienda. Ahora añadimos entradas que no son solo texto, una herramienta que lee pedidos y fuentes que no están en nuestro corpus. El objetivo es que el alumno pueda explicar el recorrido y construir una versión pequeña, con límites y resultados comprobables.
 
 **Acción y participación**
 
 Presenta el caso sin abrir todavía la aplicación. Indica la fecha, el grupo M/J y el horario de 18:30 a 20:00.
 
-**Pregunta:** ¿Qué información suele faltar cuando alguien solo nos manda una captura?
+**Pregunta:** ¿Qué información suele faltar cuando un cliente solo nos manda la foto de un pedido?
 
-**Respuesta esperada:** La intención y lo que ocurrió antes del error. El audio puede aportar ese contexto.
+**Respuesta esperada:** Qué le pasa al producto y qué quiere el cliente. El audio puede aportar ese contexto.
 
 **Transición:** Antes de empezar, recogemos el feedback sobre CRAG.
 
@@ -85,7 +85,7 @@ Presenta el caso sin abrir todavía la aplicación. Indica la fecha, el grupo M/
 
 **Explicación para el profesor**
 
-Deja dos minutos para la encuesta. El QR corresponde a AI Engineer y evalúa S11 del martes 27, la clase anterior. Mientras responden, pide que piensen en una consulta que el corpus no pueda resolver. Puede tratarse de un cambio reciente en una API o de un fallo cuyo contexto solo aparece en una captura. Recoge un ejemplo y úsalo para introducir la investigación externa. No alargues el feedback hasta consumir el bloque conceptual.
+Deja dos minutos para la encuesta. El QR corresponde a AI Engineer y evalúa S11 del martes 27, la clase anterior. Mientras responden, pide que piensen en una consulta que el corpus no pueda resolver. Puede tratarse de lo que dice la normativa de consumo o de un problema cuyo contexto solo aparece en una foto. Recoge un ejemplo y úsalo para introducir la investigación externa. No alargues el feedback hasta consumir el bloque conceptual.
 
 **Acción y participación**
 
@@ -121,13 +121,13 @@ Señala los cuatro resultados que comprobarás al final. Relaciona memoria y her
 
 **Explicación para el profesor**
 
-Usa cuatro ejemplos: reformular un texto, consultar una política interna, resolver una pregunta compuesta del curso e investigar una incompatibilidad reciente. RAG recupera documentos. CRAG evalúa si esa evidencia cubre la pregunta y puede corregir la búsqueda. Una investigación descompone la tarea, consulta fuentes y revisa las lagunas antes de redactar. Estas categorías se pueden combinar: una investigación también puede usar RAG. La multimodalidad describe las entradas o salidas, por lo que cualquiera de esos recorridos puede recibir una imagen. No presentes Deep Research como una garantía de exactitud ni como un nombre único de arquitectura.
+Usa cuatro ejemplos de la tienda: reformular una respuesta, consultar el plazo de devolución, resolver una pregunta compuesta sobre envíos e investigar qué dice la normativa sobre un producto precintado. RAG recupera documentos. CRAG evalúa si esa evidencia cubre la pregunta y puede corregir la búsqueda. Una investigación descompone la tarea, consulta fuentes y revisa las lagunas antes de redactar. Estas categorías se pueden combinar: una investigación también puede usar RAG. La multimodalidad describe las entradas o salidas, por lo que cualquiera de esos recorridos puede recibir una imagen. No presentes Deep Research como una garantía de exactitud ni como un nombre único de arquitectura.
 
 **Acción y participación**
 
 Pide al grupo que clasifique los cuatro ejemplos. Conserva uno ambiguo y explica por qué la ruta depende de la evidencia necesaria.
 
-**Pregunta:** Si una investigación consulta el corpus del curso, ¿deja de ser investigación?
+**Pregunta:** Si una investigación consulta las políticas de la tienda, ¿deja de ser investigación?
 
 **Respuesta esperada:** Puede combinar recuperación interna con herramientas y fuentes externas. La decisión depende de la tarea.
 
@@ -139,7 +139,7 @@ Pide al grupo que clasifique los cuatro ejemplos. Conserva uno ambiguo y explica
 
 **Explicación para el profesor**
 
-Define modalidad como una forma de representar información. Un modelo puede admitir texto e imagen, mientras otro servicio se encarga de transcribir audio. Un sistema multimodal no necesita resolverlo todo con una única llamada. En nuestro recorrido, la visión convierte la captura en una observación y la transcripción convierte el audio en texto. Después fusionamos esas entradas. Conservar el origen permite comprobar un número mal leído o una palabra mal transcrita. Un MP3 al final es una salida de voz. No implica que el sistema mantenga una conversación de voz en tiempo real.
+Define modalidad como una forma de representar información. Un modelo puede admitir texto e imagen, mientras otro servicio se encarga de transcribir audio. Un sistema multimodal no necesita resolverlo todo con una única llamada. En nuestro recorrido, la visión convierte la foto del pedido en una observación y la transcripción convierte el audio en texto. Después fusionamos esas entradas. Conservar el origen permite comprobar un número mal leído o una palabra mal transcrita. Un MP3 al final es una salida de voz. No implica que el sistema mantenga una conversación de voz en tiempo real.
 
 **Acción y participación**
 
@@ -149,7 +149,7 @@ Usa el mismo caso durante toda la clase. Evita cambiar a ejemplos de vídeo o vo
 
 **Respuesta esperada:** Podemos coordinar modelos especializados y unificar sus resultados en el estado del grafo.
 
-**Transición:** La primera transformación será leer una captura.
+**Transición:** La primera transformación será leer la foto del pedido.
 
 ### 06. Lectura de imagen y OCR
 
@@ -157,15 +157,15 @@ Usa el mismo caso durante toda la clase. Evita cambiar a ejemplos de vídeo o vo
 
 **Explicación para el profesor**
 
-Distingue OCR e interpretación visual. OCR extrae caracteres. Un modelo con visión también puede describir el contexto de una pantalla, pero puede equivocarse con cifras, unidades o etiquetas. Lee expected 1024, got 768 sin invertir los valores. La imagen permite formular una hipótesis de incompatibilidad de dimensiones. No demuestra qué modelo usa el alumno ni cuál debería conservar. Antes de recomendar reconstruir un índice necesitamos comprobar la configuración real. El ejemplo es una imagen sintética del aula, no una captura de una incidencia de un alumno.
+Distingue OCR e interpretación visual. OCR extrae caracteres. Un modelo con visión también puede describir el contexto de una pantalla, pero puede equivocarse con cifras, fechas o importes. Lee el número TPS-20481 y la fecha 20/10/2026 sin cambiar ningún dígito. La foto permite saber de qué pedido hablamos. No demuestra que el pedido sea de la cuenta de quien escribe ni qué le pasa al producto. Antes de responder necesitamos los datos del pedido desde la tienda y la explicación del cliente. El ejemplo es una imagen sintética de un pedido ficticio.
 
 **Acción y participación**
 
-Pide a alguien que lea la captura y a otra persona que explique qué todavía no sabemos.
+Pide a alguien que lea la foto y a otra persona que explique qué todavía no sabemos.
 
-**Pregunta:** ¿Podemos concluir que hay que cambiar el modelo por uno de 1024 dimensiones?
+**Pregunta:** ¿Podemos concluir ya que el cliente puede devolver los auriculares?
 
-**Respuesta esperada:** Todavía falta saber qué índice y qué modelo se han configurado y qué datos se quieren conservar.
+**Respuesta esperada:** Todavía falta saber qué les pasa, qué dice la política de la tienda y si el pedido es de su cuenta.
 
 **Transición:** Antes de invocar visión, la aplicación comprueba el archivo.
 
@@ -193,13 +193,13 @@ Contrasta un archivo mal formado con unknown-square.png, una imagen válida que 
 
 **Explicación para el profesor**
 
-Explica speech to text como transcripción de voz a texto. El agente usará esa transcripción, de modo que una palabra mal reconocida puede cambiar la intención. En el ensayo guardado aparece Rack donde el audio se refería a RAG. Conservamos esa observación, no reescribimos la evidencia para que parezca perfecta. Podemos pedir aclaración o utilizar el contexto con cuidado, dejando visible el texto original. La nota de voz del caso indica que el error apareció después de cambiar el modelo de embeddings. Ese dato no figura en la captura y será importante al construir la pregunta de investigación.
+Explica speech to text como transcripción de voz a texto. El agente usará esa transcripción, de modo que una palabra mal reconocida puede cambiar la intención. Un número de pedido o una marca mal reconocidos cambian la pregunta. Conservamos la transcripción tal como llegó, no la reescribimos para que parezca perfecta. Podemos pedir aclaración o utilizar el contexto con cuidado, dejando visible el texto original. La nota de voz del caso dice que el cliente abrió los auriculares y que el derecho no suena. Ese dato no figura en la foto y será importante al construir la pregunta de investigación.
 
 **Acción y participación**
 
-Reproduce apps/api/fixtures/media/embedding-request.wav si el sonido compartido funciona. Después resume su intención sin atribuir una transcripción literal nueva.
+Reproduce apps/api/fixtures/media/nota-de-voz-devolucion.wav si el sonido compartido funciona. Después resume su intención sin atribuir una transcripción literal nueva.
 
-**Pregunta:** Si la transcripción cambia 768 por 786, ¿deberíamos seguir como si nada?
+**Pregunta:** Si la transcripción cambia TPS-20481 por TPS-20418, ¿deberíamos seguir como si nada?
 
 **Respuesta esperada:** Hay una discrepancia relevante con la imagen. Conviene pedir aclaración y conservar ambas entradas.
 
@@ -211,15 +211,15 @@ Reproduce apps/api/fixtures/media/embedding-request.wav si el sonido compartido 
 
 **Explicación para el profesor**
 
-Construye la pregunta en voz alta utilizando las dos modalidades. La captura aporta cifras y el audio aporta el cambio que las precede. La fusión tiene que mantener la petición completa, incluidos matices y negaciones. Si las modalidades discrepan, el agente no debe elegir silenciosamente una. Si el contenido excede la capacidad admitida, pedimos acortar en lugar de recortar el final, donde podría estar la instrucción principal. Separa texto escrito, observación visual y transcripción. Esa separación permite volver a cada fuente al diagnosticar un fallo.
+Construye la pregunta en voz alta utilizando las dos modalidades. La foto aporta el pedido y el audio aporta lo que le pasa y lo que quiere el cliente. La fusión tiene que mantener la petición completa, incluidos matices y negaciones. Si las modalidades discrepan, el agente no debe elegir silenciosamente una. Si el contenido excede la capacidad admitida, pedimos acortar en lugar de recortar el final, donde podría estar la instrucción principal. Separa texto escrito, observación visual y transcripción. Esa separación permite volver a cada fuente al diagnosticar un fallo.
 
 **Acción y participación**
 
-Propón como contraste una imagen que diga 1024/768 y un audio que diga 768/1024. Pide al grupo que decida la salida antes de mostrar la respuesta esperada.
+Propón como contraste la foto del pedido TPS-20481 y un audio que hable del pedido TPS-19876. Pide al grupo que decida la salida antes de mostrar la respuesta esperada.
 
 **Pregunta:** ¿Qué salida esperamos si la imagen y el audio se contradicen?
 
-**Respuesta esperada:** Una aclaración que señale la discrepancia, sin empezar una investigación sobre cifras elegidas al azar.
+**Respuesta esperada:** Una aclaración que señale la discrepancia, sin investigar un pedido elegido al azar.
 
 **Transición:** Con la pregunta formada, el agente decide qué capacidad utilizar.
 
@@ -229,15 +229,15 @@ Propón como contraste una imagen que diga 1024/768 y un audio que diga 768/1024
 
 **Explicación para el profesor**
 
-Recuerda que proponer una herramienta y ejecutarla son pasos distintos. El modelo puede sugerir una llamada, pero el programa comprueba el nombre permitido, los argumentos y los permisos. Nuestra herramienta de solo lectura consulta una ficha del curso. No necesita buscar en la web para recuperar un dato ya estructurado. La pregunta sobre dimensiones sí puede necesitar documentación externa. Una misma investigación puede usar ambas vías. El grupo de la conversación limita qué calendario puede consultar la herramienta. Un texto dentro de una captura nunca cambia esos permisos.
+Recuerda que proponer una herramienta y ejecutarla son pasos distintos. El modelo puede sugerir una llamada, pero el programa comprueba el nombre permitido, los argumentos y los permisos. Nuestra herramienta de solo lectura consulta los datos de un pedido: producto, pago, fechas y estado. Esos datos no están en las políticas y no tiene sentido buscarlos en la web. La pregunta sobre la normativa sí necesita fuentes externas. Una misma investigación puede usar ambas vías. La cuenta de la conversación limita qué pedidos puede leer la herramienta. Un número escrito en una foto o en una página nunca cambia ese permiso.
 
 **Acción y participación**
 
-Enseña el contrato conceptual get_course_session({sessionId: 'S12', audience: 'M/J'}). La implementación valida también la audiencia autorizada.
+Enseña el contrato conceptual get_order({orderId: 'TPS-20481'}). La implementación comprueba que el pedido pertenece a la cuenta de la conversación.
 
-**Pregunta:** ¿Puede una página externa ordenar que la herramienta consulte el calendario de otro grupo?
+**Pregunta:** ¿Puede una página externa o una foto ordenar que la herramienta lea el pedido de otro cliente?
 
-**Respuesta esperada:** La página es un dato. La autorización la impone el programa.
+**Respuesta esperada:** La página y la foto son datos. La autorización la impone el programa.
 
 **Transición:** La elección de ruta también puede usar el contexto de la conversación.
 
@@ -247,15 +247,15 @@ Enseña el contrato conceptual get_course_session({sessionId: 'S12', audience: '
 
 **Explicación para el profesor**
 
-Distingue historial de conversación, checkpoint del grafo e informe guardado. El historial ayuda a interpretar ese índice en un turno posterior. El checkpoint conserva el estado de una ejecución. El informe es un resultado que debemos poder recuperar aunque el historial se recorte. thread_id identifica un hilo, pero por sí solo no autoriza el acceso. En nuestra app hay una conversación del propietario y cada trabajo tiene su propio checkpoint. El alumno puede implementar una versión más pequeña, pero debe demostrar dos conversaciones aisladas. Recordar una frase del usuario no la convierte en prueba de cómo funciona un proveedor.
+Distingue historial de conversación, checkpoint del grafo e informe guardado. El historial ayuda a interpretar ese pedido en un turno posterior. El checkpoint conserva el estado de una ejecución. El informe es un resultado que debemos poder recuperar aunque el historial se recorte. thread_id identifica un hilo, pero por sí solo no autoriza el acceso. En nuestra app hay una conversación del propietario y cada trabajo tiene su propio checkpoint. El alumno puede implementar una versión más pequeña, pero debe demostrar dos conversaciones aisladas. Recordar una frase del usuario no la convierte en prueba de cómo funciona un proveedor.
 
 **Acción y participación**
 
 Anticipa la prueba de recarga y conversación nueva que se hará en la demo. No equipares cambiar de hilo con demostrar todos los controles de acceso.
 
-**Pregunta:** Si el usuario dijo que su índice tiene 1024 dimensiones, ¿ya hemos verificado su configuración?
+**Pregunta:** Si el cliente dijo que pagó con tarjeta, ¿ya hemos verificado su método de pago?
 
-**Respuesta esperada:** Es contexto aportado por el usuario. La configuración necesita una comprobación independiente.
+**Respuesta esperada:** Es contexto aportado por el cliente. El pago necesita una comprobación independiente con la herramienta.
 
 **Transición:** Veamos cómo se organiza una investigación en varias etapas.
 
@@ -265,11 +265,11 @@ Anticipa la prueba de recarga y conversación nueva que se hará en la demo. No 
 
 **Explicación para el profesor**
 
-Define Deep Research por su recorrido: planificar, reunir evidencia, valorar cobertura y terminar con un informe. El nombre también lo usan productos concretos. Aquí nos interesa comprender el comportamiento antes de escoger proveedor. El plan del caso puede separar la regla general de dimensiones, la configuración que debe comprobarse y su relación con lo visto en el curso. Una búsqueda puede traer una página relevante y aun así dejar una subpregunta sin cubrir. La decisión de seguir depende de esa laguna y de los límites disponibles. Nuestro grafo permite una ronda inicial y una de seguimiento, no un bucle indefinido.
+Define Deep Research por su recorrido: planificar, reunir evidencia, valorar cobertura y terminar con un informe. El nombre también lo usan productos concretos. Aquí nos interesa comprender el comportamiento antes de escoger proveedor. El plan del caso puede separar lo que dice la política de la tienda, los datos del pedido y lo que exige la normativa europea. Una búsqueda puede traer una página relevante y aun así dejar una subpregunta sin cubrir. La decisión de seguir depende de esa laguna y de los límites disponibles. Nuestro grafo permite una ronda inicial y una de seguimiento, no un bucle indefinido.
 
 **Acción y participación**
 
-Pide dos subpreguntas concretas para el caso. Rechaza planes vagos como investigar todo sobre embeddings.
+Pide dos subpreguntas concretas para el caso. Rechaza planes vagos como investigar todo sobre devoluciones.
 
 **Pregunta:** ¿Cuándo merece la pena una segunda búsqueda?
 
@@ -283,11 +283,11 @@ Pide dos subpreguntas concretas para el caso. Rechaza planes vagos como investig
 
 **Explicación para el profesor**
 
-Separa buscar de leer. Un buscador devuelve candidatos y fragmentos resumidos, pero necesitamos leer el contenido relevante. Para una API, priorizamos documentación oficial y comprobamos versión y fecha. Un extracto debe estar relacionado con la subpregunta y conservar su procedencia. La captura de nuestro caso puede demostrar qué texto recibió el agente, pero no cómo está configurado un servicio remoto. Tampoco aceptamos instrucciones encontradas en una página como si fueran órdenes del usuario. La herramienta del curso y la web tienen ámbitos de autoridad diferentes.
+Separa buscar de leer. Un buscador devuelve candidatos y fragmentos resumidos, pero necesitamos leer el contenido relevante. Para una norma, priorizamos fuentes oficiales y comprobamos su vigencia y su fecha. Un extracto debe estar relacionado con la subpregunta y conservar su procedencia. La foto de nuestro caso puede demostrar qué texto recibió el agente, pero no el estado real del pedido. Tampoco aceptamos instrucciones encontradas en una página como si fueran órdenes del usuario. Las políticas de la tienda, la herramienta de pedidos y la web tienen ámbitos de autoridad diferentes.
 
 **Acción y participación**
 
-Da el ejemplo de una página que documenta una regla general y pregunta qué parte de la configuración del alumno sigue sin probar.
+Da el ejemplo de una página que documenta una regla general y pregunta qué parte del caso del cliente sigue sin probar.
 
 **Pregunta:** ¿Una cita real puede acompañar una conclusión que la fuente no permite?
 
@@ -301,13 +301,13 @@ Da el ejemplo de una página que documenta una regla general y pregunta qué par
 
 **Explicación para el profesor**
 
-El programa puede haber completado todas sus llamadas y producir un informe parcial porque ninguna fuente permite confirmar la configuración concreta. Eso es una salida útil si explica la laguna. Nuestro verificador utiliza extractos admitidos y comprueba tramos de texto, cifras y negaciones. Es una elección conservadora que reduce ciertas invenciones, pero limita la síntesis libre y no certifica la verdad universal. Una fuente puede estar desactualizada o ser inadecuada. Mantén separadas la salud de la ejecución, la cobertura de la respuesta y la evaluación humana de su utilidad.
+El programa puede haber completado todas sus llamadas y producir un informe parcial porque ninguna fuente cubre una parte de la pregunta, por ejemplo la garantía de un producto defectuoso. Eso es una salida útil si explica la laguna. Nuestro verificador utiliza extractos admitidos y comprueba tramos de texto, cifras y negaciones. Es una elección conservadora que reduce ciertas invenciones, pero limita la síntesis libre y no certifica la verdad universal. Una fuente puede estar desactualizada o ser inadecuada. Mantén separadas la salud de la ejecución, la cobertura de la respuesta y la evaluación humana de su utilidad.
 
 **Acción y participación**
 
-Plantea dos salidas: una recomendación tajante de borrar el índice y un informe parcial que pide verificar dimensiones. Compara la evidencia necesaria para cada una.
+Plantea dos salidas: una respuesta tajante de que nada abierto se puede devolver y un informe parcial que separa desistimiento y garantía. Compara la evidencia necesaria para cada una.
 
-**Pregunta:** ¿Es un fallo que el sistema diga que todavía no puede recomendar el cambio?
+**Pregunta:** ¿Es un fallo que el sistema diga que todavía no puede confirmar el reembolso?
 
 **Respuesta esperada:** Puede ser el resultado correcto si faltan datos del caso. Un informe parcial debe indicar qué falta y cómo comprobarlo.
 
@@ -427,17 +427,17 @@ Pide que identifiquen dónde probarían una contradicción entre imagen y audio,
 
 **Explicación para el profesor**
 
-Presenta las decisiones de la app después de haber explicado las responsabilidades. LangGraph controla la investigación y consulta el curso, una herramienta y la web. El ensayo real se hizo con Claude para texto e imagen, Whisper para audio y Aura para voz. La fábrica actual permite configurar el proveedor generativo, pero no prometemos compatibilidad universal con cualquier modelo de visión. La persistencia utiliza servicios de Cloudflare. Estos nombres describen nuestra implementación y no requisitos conceptuales de multimodalidad. La ruta Gemini/Interactions del enunciado no queda implementada por el hecho de que esta app tenga un grafo equivalente.
+Presenta las decisiones de la app después de haber explicado las responsabilidades. LangGraph controla la investigación y consulta las políticas de la tienda, la herramienta de pedidos y la web. El ensayo real se hizo con Claude para texto e imagen, Whisper para audio y Aura para voz. La fábrica actual permite configurar el proveedor generativo, pero no prometemos compatibilidad universal con cualquier modelo de visión. La persistencia utiliza servicios de Cloudflare. Estos nombres describen nuestra implementación y no requisitos conceptuales de multimodalidad. La ruta Gemini/Interactions del enunciado no queda implementada por el hecho de que esta app tenga un grafo equivalente.
 
 **Acción y participación**
 
-Abre la app local en 127.0.0.1:5191, grupo M/J y etapa Investigación. Mantén los secretos y las configuraciones operativas fuera de la pantalla compartida.
+Abre la app local en 127.0.0.1:5191 y la etapa Investigación. Mantén los secretos y las configuraciones operativas fuera de la pantalla compartida.
 
 **Pregunta:** Si cambiamos el proveedor, ¿desaparecen las necesidades de validar archivos y aislar conversaciones?
 
 **Respuesta esperada:** Esas responsabilidades siguen perteneciendo al sistema.
 
-**Transición:** Vamos a observar cada parte con la captura y el audio del caso.
+**Transición:** Vamos a observar cada parte con la foto y la nota de voz del caso.
 
 ### 22. Demostración del caso completo
 
@@ -445,7 +445,7 @@ Abre la app local en 127.0.0.1:5191, grupo M/J y etapa Investigación. Mantén l
 
 **Explicación para el profesor**
 
-Usa el perfil local de investigación con sus guiones rotulados. Adjunta dimension-mismatch.png y embedding-request.wav, marca Generar voz y envía sin escribir la pregunta. Muestra que la observación y la intención se conservan por separado, que aparecen plan y fuentes y que el resultado se guarda. El tono offline es una prueba técnica, no una voz neural. Recarga y comprueba el mismo informe. Haz un seguimiento breve con ese índice y después abre otra conversación para mostrar aislamiento. El guion detallado y los tiempos de corte están en el apartado de demostración del documento del profesor. La consulta a get_course_session y las fuentes del caso real se pueden recorrer en el respaldo guardado.
+Usa el perfil local de investigación con sus guiones rotulados. Adjunta pedido-auriculares.png y nota-de-voz-devolucion.wav, marca Generar voz y envía sin escribir la pregunta. Muestra que la observación y la intención se conservan por separado, que aparecen plan y fuentes y que el resultado se guarda. El tono offline es una prueba técnica, no una voz neural. Recarga y comprueba el mismo informe. Haz un seguimiento breve con «¿y ese pedido?» y después abre otra conversación para mostrar aislamiento. El guion detallado y los tiempos de corte están en el apartado de demostración del documento del profesor. La consulta a get_order y las fuentes del caso real se pueden recorrer en el respaldo guardado.
 
 **Acción y participación**
 
@@ -453,7 +453,7 @@ Usa el perfil local de investigación con sus guiones rotulados. Adjunta dimensi
 
 **Pregunta:** ¿Qué parte del resultado procede de la imagen y cuál de una fuente leída?
 
-**Respuesta esperada:** Las cifras del error proceden de la imagen. La regla técnica debe apoyarse en una fuente admitida.
+**Respuesta esperada:** El pedido, el producto y el pago proceden de la imagen. Lo que dicen la tienda y la normativa debe apoyarse en una fuente admitida.
 
 **Transición:** Ahora distinguimos esta demostración de los resultados reales ya conservados.
 
@@ -510,17 +510,17 @@ No utilizar `dev:real`, `--execute`, comandos de despliegue, nuevas investigacio
 
 ### 19:34-19:37 · Entradas y procedencia
 
-1. Seleccionar M/J y la etapa Investigación. Crear una conversación nueva para la clase.
-2. Adjuntar `dimension-mismatch.png` y `embedding-request.wav` desde `apps/api/fixtures/media/`.
+1. Seleccionar la etapa Investigación. Crear una conversación nueva para la clase.
+2. Adjuntar `pedido-auriculares.png` y `nota-de-voz-devolucion.wav` desde `apps/api/fixtures/media/`.
 3. Marcar Generar voz. Dejar vacía la caja de texto para que la pregunta nazca de ambas modalidades.
 4. Antes de enviar, pedir al grupo que describa qué añade cada entrada. Enviar una sola vez.
 
-Resultado esperado: la observación conserva `expected 1024, got 768` y la transcripción aporta la intención de investigar el cambio de embeddings. El perfil usa los archivos y fuentes de un guion determinista. Las respuestas de prueba se identifican como tales.
+Resultado esperado: la observación conserva el pedido `TPS-20481`, el producto, el pago con Bizum y la fecha de entrega, y la transcripción aporta lo que pasa (el auricular derecho no suena) y lo que quiere el cliente. El perfil usa los archivos y fuentes de un guion determinista. Las respuestas de prueba se identifican como tales.
 
 ### 19:37-19:41 · Proceso e informe
 
 1. Leer la pregunta fusionada y comprobar que no se ha perdido la intención del audio.
-2. Recorrer plan, pasos y fuentes. Señalar la diferencia entre una búsqueda y una página leída.
+2. Recorrer plan, pasos y fuentes. Señalar las tres vías: políticas de la tienda, `get_order` y normativa europea. Señalar también la diferencia entre una búsqueda y una página leída.
 3. Leer un extracto y la frase del informe que respalda. Preguntar qué parte del caso no permite concluir.
 4. Mostrar el texto de voz y el reproductor. En offline, el audio es un tono de prueba rotulado. Reservar el MP3 real para la siguiente diapositiva.
 
@@ -529,7 +529,7 @@ Resultado esperado: informe del guion, fuentes visibles y estado final diferenci
 ### 19:41-19:44 · Persistencia y seguimiento
 
 1. Recargar la página y volver a la misma conversación. Comprobar informe y archivos del mismo trabajo.
-2. Enviar una pregunta de seguimiento breve: «¿Y ese índice?». Señalar cuándo la memoria contextualiza la pregunta.
+2. Enviar una pregunta de seguimiento breve: «¿Y ese pedido?». Señalar cuándo la memoria contextualiza la pregunta.
 3. Explicar que una consulta de estado y un nuevo turno son operaciones distintas. El seguimiento debe seguir los límites de su propio trabajo.
 
 Resultado esperado: la recarga recupera el resultado guardado. La memoria conserva contexto acotado. Si la pregunta breve pide aclaración, explicar esa salida en lugar de prometer una respuesta fija del guion.
@@ -538,14 +538,14 @@ Resultado esperado: la recarga recupera el resultado guardado. La memoria conser
 
 1. Crear otra conversación y comprobar que no muestra el informe ni los medios del hilo anterior.
 2. Adjuntar `unknown-square.png`, que es una imagen válida, con el audio del caso.
-3. Mostrar que el perfil de prueba no reconoce el archivo. Debe explicarlo sin inventar la lectura de 1024/768.
-4. Si hay tiempo, contrastar con la descripción de un archivo mal formado: ese caso debe rechazarse en la admisión, antes de investigar.
+3. Mostrar que el perfil de prueba no reconoce el archivo. Debe explicarlo sin inventar la lectura del pedido.
+4. Si hay tiempo, preguntar por el pedido `TPS-30117`, que pertenece a otra cuenta: `get_order` lo rechaza sin enseñar sus datos. También se puede contrastar con la descripción de un archivo mal formado, que se rechaza en la admisión antes de investigar.
 
 Cambiar de conversación prueba separación funcional del hilo. Las pruebas de acceso entre propietarios y el control de autorización tienen evidencia adicional en el código y en el ensayo registrado.
 
 ### 19:47-19:49 · Comprobación del aprendizaje
 
-Pedir que identifiquen un dato de imagen, uno de audio y una afirmación respaldada por una fuente. Preguntar qué cambiaría si la transcripción invirtiera las cifras. Pasar a la evidencia real a las 19:49.
+Pedir que identifiquen un dato de imagen, uno de audio, uno de la herramienta y una afirmación respaldada por una fuente. Preguntar qué cambiaría si la transcripción nombrara otro pedido. Pasar a la evidencia real a las 19:49.
 
 ### Tiempo de corte y respaldo
 
@@ -615,7 +615,7 @@ Rutas relativas a la raíz de `3-rag`, salvo la guía general del directorio pad
 - `docs/s12-research-phase3.md`: admisión, fusión, modalidades y demo offline. Algunas secciones preceden al ensayo real posterior.
 - `docs/s12-cloud-deployment.md`, apartado Ensayo real de extremo a extremo: referencia posterior para los resultados del 11/10.
 - `apps/api/src/research-graph.ts` y `research-gather.ts`: nodos y obtención de evidencia.
-- `apps/api/src/research-tool.ts`: herramienta de sesión del curso.
+- `apps/api/src/research-tool.ts`: herramienta `get_order` sobre los pedidos ficticios de `corpus/thepower-shop/pedidos.json`.
 - `apps/api/src/research-multimodal.ts` y `research-perception-real.ts`: lectura de medios y proveedores.
 - `packages/research/src/fusion.ts`, `report.ts` y `speech-script.ts`: fusión, verificación y texto hablado.
 - `packages/contracts/src/research.ts` y `media.ts`: límites actuales del laboratorio.

@@ -1,5 +1,7 @@
 # Investigación multimodal, fase 3 de S12
 
+> **Caso actual desde el 26/10/2026.** La investigación ya no lee el material del curso: trabaja sobre ThePower Shop (políticas de la tienda, herramienta `get_order` sobre pedidos ficticios y normativa de consumo en `europa.eu`, `eur-lex.europa.eu` y `www.boe.es`), sin grupos, con la foto del pedido `TPS-20481` y una nota de voz como caso de clase. Este documento conserva la descripción y la evidencia de cuando el caso era el curso (`get_course_session`, grupos y el error de dimensiones); el motor del grafo, los límites y la contabilidad siguen igual. Ver [decisions.md](decisions.md#la-investigación-de-s12-pasa-a-thepower-shop-26-de-octubre-de-2026).
+
 La implementación multimodal se cerró el 10 de octubre de 2026; su publicación de infraestructura y Worker se hizo el 11 de octubre y está descrita en `docs/s12-cloud-deployment.md`. La fase añade imagen, audio corto y una respuesta hablada opcional sobre el mismo grafo de las fases 1 y 2. La verificación extractiva del informe no cambia. Este texto describe la implementación de esta aplicación. No afirma que la organización del curso haya aprobado un enunciado nuevo.
 
 La fase 1 está en `docs/s12-research-phase1.md`. La fase 2 está en `docs/s12-research-phase2.md`. El RAG básico con `RAG_CONTEXT_MODE=complete` sigue leyendo los fragmentos autorizados en D1. No es una recuperación vectorial top-k. La variante semántica y el CRAG conservan su camino.

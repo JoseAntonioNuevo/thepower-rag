@@ -6,7 +6,7 @@
 
 Aplicación real: https://rag-thepower.josenuevo.dev. Sin RAG, RAG básico y CRAG usan los servicios remotos. [Operación y límites verificados](docs/despliegue-real.md). [Comparación histórica de 40 respuestas](material/comparacion/resultados/tabla-resultados.md). El arranque local sigue siendo una demo offline.
 
-S12 también está publicado: conversaciones aisladas, investigación asíncrona, contabilidad durable e imagen, audio y voz opcional. Su configuración y la evidencia de publicación están en [despliegue de S12](docs/s12-cloud-deployment.md).
+S12 también está publicado: conversaciones aisladas, investigación asíncrona, contabilidad durable e imagen, audio y voz opcional. Desde el 26/10/2026 investiga sobre la tienda ficticia ThePower Shop: sus políticas, la herramienta de solo lectura `get_order` sobre pedidos ficticios y la normativa de consumo de la UE y del BOE ([decisión](docs/decisions.md)). Su configuración y la evidencia de publicación están en [despliegue de S12](docs/s12-cloud-deployment.md).
 
 ## Perfil de calidad publicado · 18 de octubre de 2026
 
@@ -27,7 +27,7 @@ S10, el 22 de octubre de 2026, cubre las dos primeras etapas. S11, el 27 de octu
 1. **Sin RAG.** Conversación sin documentos. En demo es un stream sin modelo. En real llama a la API de Claude.
 2. **RAG básico.** La configuración de referencia de S10 (`RAG_CONTEXT_MODE=semantic`) embebe la consulta, busca en Vectorize con filtro de grupo, aplica el umbral calibrado (`0,50`) antes de llamar al modelo y responde con citas o rechaza sin generar. La variante `RAG_CONTEXT_MODE=complete` lee de D1 todos los fragmentos autorizados del curso cuando se quiere mostrar contexto completo sobre un corpus pequeño.
 3. **CRAG.** Un grafo correctivo con nodos separados de reordenamiento (`rank`, escala `[0, 1]`) y valoración de suficiencia (`assess`, umbrales `CRAG_SCORE_THRESHOLDS`), tres búsquedas y dos reformulaciones como máximo, un solo plazo por turno (20 s por defecto; 60 s en el perfil Sonnet) y la ordenación validada. En demo usa guiones. En real, si falta configuración o una sesión de gasto, no llama al proveedor y no usa otra etapa.
-4. **Investigación.** Plan y fuentes externas acotados, conversaciones aisladas, Workflow asíncrono y un presupuesto propio. Admite imagen PNG/JPEG, audio WAV corto y voz opcional. La demostración local conserva los guiones; producción usa Tavily y los adaptadores reales configurados.
+4. **Investigación.** Sobre ThePower Shop: plan acotado que separa la política de la tienda, los datos de un pedido (`get_order`) y la normativa externa (`europa.eu`, `eur-lex.europa.eu` y `www.boe.es`), conversaciones aisladas, Workflow asíncrono y un presupuesto propio. Admite imagen PNG/JPEG, audio WAV corto y voz opcional. El caso de clase es la foto del pedido `TPS-20481` y una nota de voz (`apps/api/fixtures/media/`). La demostración local usa guiones; producción usa Tavily y los adaptadores reales configurados.
 
 ## Arquitectura
 

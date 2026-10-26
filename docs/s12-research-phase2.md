@@ -1,5 +1,7 @@
 # Investigación, fase 2 de S12
 
+> **Caso actual desde el 26/10/2026.** La investigación ya no lee el material del curso: trabaja sobre ThePower Shop (políticas de la tienda, herramienta `get_order` sobre pedidos ficticios y normativa de consumo en `europa.eu`, `eur-lex.europa.eu` y `www.boe.es`), sin grupos, con la foto del pedido `TPS-20481` y una nota de voz como caso de clase. Este documento conserva la descripción y la evidencia de cuando el caso era el curso (`get_course_session`, grupos y el error de dimensiones); el motor del grafo, los límites y la contabilidad siguen igual. Ver [decisions.md](decisions.md#la-investigación-de-s12-pasa-a-thepower-shop-26-de-octubre-de-2026).
+
 Fecha de esta entrega: 10 de octubre de 2026. Añade conversaciones aisladas, un checkpointer de LangGraph en D1, trabajos asíncronos con Cloudflare Workflows y una contabilidad durable propia. No despliega, no crea recursos remotos y no llama a un proveedor de pago. La fase 1 sigue en `docs/s12-research-phase1.md`. La verificación extractiva del informe no cambia.
 
 ## Qué puede hacer el alumno
