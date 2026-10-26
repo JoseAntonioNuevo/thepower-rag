@@ -157,6 +157,8 @@ export interface ClassView {
   edges: readonly string[];
   // Veces que se ha pasado por el nodo activo (búsqueda 2, reformulación 1…).
   visits: number;
+  // Arista por la que se acaba de llegar al nodo activo, o null si es el primero.
+  current: string | null;
   // Pasos totales recibidos.
   total: number;
 }
@@ -171,7 +173,16 @@ export function classView(
   const own = events.filter((event) => event.stage === stage);
   // Sin pasos.
   if (own.length === 0) {
-    return { index: null, event: null, active: null, visited: [], edges: [], visits: 0, total: 0 };
+    return {
+      index: null,
+      event: null,
+      active: null,
+      visited: [],
+      edges: [],
+      visits: 0,
+      current: null,
+      total: 0,
+    };
   }
   // Índice dentro de los límites.
   const index = cursor === null ? own.length - 1 : Math.max(0, Math.min(cursor, own.length - 1));
@@ -188,6 +199,8 @@ export function classView(
   // Nodo activo y cuántas veces se ha visitado.
   const active = path[path.length - 1]!;
   const visits = path.filter((node) => node === active).length;
+  // Arista de llegada al nodo activo, si el grafo la dibuja.
+  const arrival = path.length > 1 ? `${path[path.length - 2]!}->${active}` : null;
   // Vista.
   return {
     index,
@@ -196,8 +209,57 @@ export function classView(
     visited: [...new Set(path.slice(0, -1))].filter((node) => node !== active),
     edges: [...edges],
     visits,
+    current: arrival !== null && known.has(arrival) ? arrival : null,
     total: own.length,
   };
+}
+
+// Qué hace cada nodo, en una frase para explicarlo en voz alta durante la clase.
+const NODE_EXPLANATIONS: Record<ClassStage, Record<string, string>> = {
+  rag: {
+    embed: "Convierte la pregunta en un vector de números para compararla con los fragmentos.",
+    search: "Busca en Vectorize los fragmentos cuyo vector se parece más al de la pregunta.",
+    threshold:
+      "El código compara cada similitud con el umbral calibrado: lo que no llega, no pasa al generador.",
+    generate: "El generador escribe la respuesta usando solo los fragmentos que pasaron el umbral.",
+    answer: "Se validan las citas: solo se aceptan ids de la evidencia que recibió el generador.",
+    refuse: "Ningún fragmento alcanzó el umbral: responde «no consta» sin llamar al modelo.",
+    clarify: "Falta el grupo para una pregunta de calendario: pide aclaración sin buscar.",
+  },
+  crag: {
+    retrieve: "Busca 10 candidatos en Vectorize. Aquí no corta ningún umbral: decidirá el juez.",
+    rank: "El juez lee el texto de cada candidato y le pone una nota de 0 a 1 con su motivo.",
+    assess:
+      "El código decide con las notas y la cobertura: suficiente responde, parcial conserva, insuficiente descarta.",
+    retain: "La evidencia es parcial: guarda lo útil y anota la laguna que falta cubrir.",
+    discard: "Nada de lo recuperado sirve: lo descarta y prepara otra búsqueda.",
+    reformulate:
+      "El evaluador reescribe la búsqueda para cubrir la laguna, sin cambiar la pregunta.",
+    answer: "El generador responde solo con los fragmentos conservados y cita sus ids.",
+    refuse: "Se agotaron las búsquedas o las reformulaciones: responde «no consta».",
+    error: "Error o plazo agotado: el turno se detiene sin reintentar ni cambiar de etapa.",
+    clarify: "Falta el grupo para una pregunta de calendario: pide aclaración sin buscar.",
+  },
+};
+
+// Frase didáctica de un nodo, o null si el nodo no existe en esa etapa.
+export function explainNode(stage: ClassStage, node: string | null): string | null {
+  // Sin nodo.
+  if (node === null) {
+    return null;
+  }
+  // Frase de la etapa.
+  return NODE_EXPLANATIONS[stage][node] ?? null;
+}
+
+// Pasos recibidos que el modo lento todavía no ha mostrado.
+export function pendingSteps(view: ClassView): number {
+  // Sin pasos o en el último.
+  if (view.index === null) {
+    return 0;
+  }
+  // Los que quedan por delante.
+  return Math.max(0, view.total - 1 - view.index);
 }
 
 // Siguiente posición del cursor al avanzar o retroceder; desde el directo parte del último paso.

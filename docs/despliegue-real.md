@@ -4,6 +4,8 @@ Verificado el 3 de octubre de 2026. URL: https://rag-thepower.josenuevo.dev.
 
 ## Modo clase: publicación del 26 de octubre de 2026
 
+Desde la versión `17692356-cfb8-4621-9215-2feabf76b6ad` (deployment `935edaa5-400f-41b4-b6bb-e4d7a2b9f327`, 100 %) el grafo tiene además modo lento (`?lento`), línea de pasos y explicación por nodo. Solo cambió el cliente. [Recibo](evidence/zocomar-web-2026-10-25.md#modo-lento-publicado-26-de-octubre-de-2026).
+
 La versión `cfbccfcf-735b-42bd-8800-128b2622545e` (deployment `75a19b23-bf0e-4518-a4a5-ba0ea353a0b3`, 100 %) añade el modo clase (`?clase`): grafo en directo de RAG básico y CRAG, inspector de cada paso y repetición sin llamadas nuevas. Variables y bindings sin cambios respecto a `35d435a0`: Haiku 5.5 genera y Sonnet 5.5 evalúa. Health en verde. [Recibo](evidence/zocomar-web-2026-10-25.md#modo-clase-publicado-26-de-octubre-de-2026).
 
 ## Zocomar en el chat: publicación del 25 de octubre de 2026

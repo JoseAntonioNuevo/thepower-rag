@@ -12,11 +12,14 @@ import {
   NODE_HEIGHT,
   NODE_WIDTH,
   classView,
+  explainNode,
   fitLabel,
   formatScore,
   formatSeconds,
   graphFor,
   modelLabel,
+  nodeOf,
+  pendingSteps,
   stepCursor,
   type ClassEvent,
   type ClassStage,
@@ -28,6 +31,8 @@ import { PanelSlide, ThinkStatus } from "./chat-motion-view";
 
 // Ritmo de la repetición automática: tiempo para explicar cada paso en clase (no es una animación).
 const REPLAY_STEP_MS = 1500;
+// Ritmo del modo lento: cada paso se queda en pantalla el tiempo de leerlo y comentarlo en voz alta.
+const SLOW_STEP_MS = 3500;
 // Corte de fragmento útil del juez de CRAG.
 const JUDGE_USEFUL = 0.5;
 
@@ -276,6 +281,8 @@ export function ClassModeView({
   events,
   live,
   models,
+  slow,
+  onSlowChange,
 }: {
   // RAG básico o CRAG.
   stage: ClassStage;
@@ -285,33 +292,41 @@ export function ClassModeView({
   live: boolean;
   // Modelos que se nombran en el grafo.
   models: ClassModels;
+  // Modo lento: los pasos se muestran de uno en uno, a ritmo de lectura, aunque lleguen antes.
+  slow: boolean;
+  // Cambia el modo lento (el estado vive fuera para conservarlo entre turnos).
+  onSlowChange: (slow: boolean) => void;
 }) {
-  // Cursor de repetición: null sigue el directo.
-  const [cursor, setCursor] = useState<number | null>(null);
-  // Repetición automática en marcha.
-  const [playing, setPlaying] = useState(false);
+  // Cursor: null sigue el directo; en modo lento empieza en el primer paso.
+  const [cursor, setCursor] = useState<number | null>(slow ? 0 : null);
+  // Avance automático (repetición o modo lento); los botones manuales lo pausan.
+  const [auto, setAuto] = useState(slow);
   // Pasos de esta etapa.
   const total = events.filter((event) => event.stage === stage).length;
-  // La repetición sigue mientras quede algún paso por delante; un turno nuevo remonta el
-  // componente (key en ChatPane), así que vuelve solo al directo.
-  const replaying = playing && cursor !== null && cursor < total - 1;
-  // Repetición automática: avanza un paso cada REPLAY_STEP_MS sin pasar del último.
+  // Avanza mientras quede algún paso por delante; un turno nuevo remonta el componente
+  // (key en ChatPane), así que cada turno empieza en el directo o en el primer paso.
+  const advancing = auto && cursor !== null && cursor < total - 1;
+  // Ritmo del avance automático.
+  const pace = slow ? SLOW_STEP_MS : REPLAY_STEP_MS;
+  // Avance automático: un paso cada «pace» sin pasar del último recibido.
   useEffect(() => {
     // Parada.
-    if (!replaying) {
+    if (!advancing) {
       return;
     }
     // Temporizador.
     const timer = window.setInterval(() => {
       setCursor((current) => Math.min(total - 1, (current ?? -1) + 1));
-    }, REPLAY_STEP_MS);
+    }, pace);
     // Limpieza.
     return () => {
       window.clearInterval(timer);
     };
-  }, [replaying, total]);
+  }, [advancing, total, pace]);
   // Vista del grafo.
   const view = classView(stage, events, cursor);
+  // Pasos recibidos que el modo lento aún no ha enseñado.
+  const pending = pendingSteps(view);
   // Definición del grafo.
   const graph = graphFor(stage);
   // Aristas usadas.
@@ -323,18 +338,52 @@ export function ClassModeView({
     activeNode === undefined
       ? "Esperando una pregunta"
       : `${activeNode.title} · ${subtitleFor(stage, activeNode, models, events, view)}`;
+  // Qué hace el nodo activo, en una frase.
+  const explanation = explainNode(stage, view.active);
   // ¿Directo?
   const following = cursor === null;
+  // Pasos de la etapa para la línea de pasos.
+  const own = events.filter((event) => event.stage === stage);
+  // Cambia el modo lento: al activarlo vuelve al primer paso y avanza solo; al quitarlo, al directo.
+  function toggleSlow(next: boolean) {
+    // Estado compartido.
+    onSlowChange(next);
+    // Recorrido local.
+    setCursor(next ? 0 : null);
+    setAuto(next);
+  }
   // Sección.
   return (
     <section className="class-mode" aria-label="Modo clase">
-      {/* Cabecera con el estado del paso. */}
+      {/* Cabecera con el estado del paso y el interruptor del modo lento. */}
       <div className="class-mode-head">
         {/* Título. */}
         <h2>{stage === "rag" ? "Grafo en directo · RAG básico" : "Grafo en directo · CRAG"}</h2>
-        {/* Estado con fundido; brilla mientras la respuesta está en curso. */}
-        <ThinkStatus label={label} live={live && following} />
+        {/* Interruptor del modo lento, con el rebote de transitions.dev. */}
+        <span className="class-slow">
+          <button
+            type="button"
+            role="switch"
+            className="t-toggle"
+            aria-checked={slow}
+            aria-labelledby={`modo-lento-${stage}`}
+            data-on={slow ? "true" : "false"}
+            onClick={(event) => {
+              // Activa los fotogramas solo tras la primera interacción.
+              event.currentTarget.classList.add("is-init");
+              // Alterna.
+              toggleSlow(!slow);
+            }}
+          >
+            {/* Pulgar. */}
+            <span className="t-toggle-thumb" />
+          </button>
+          {/* Etiqueta. */}
+          <span id={`modo-lento-${stage}`}>Modo lento</span>
+        </span>
       </div>
+      {/* Estado con fundido; brilla mientras quedan pasos por llegar o por enseñar. */}
+      <ThinkStatus label={label} live={(live && following) || (auto && pending > 0)} />
       {/* Grafo. */}
       <svg
         className="class-graph"
@@ -342,42 +391,35 @@ export function ClassModeView({
         role="img"
         aria-label={`Grafo de ${stage === "rag" ? "RAG básico" : "CRAG"}; nodo activo: ${view.active ?? "ninguno"}.`}
       >
-        {/* Puntas de flecha: una gris y otra para el camino recorrido. */}
+        {/* Puntas de flecha: gris, recorrida y la de llegada al nodo activo. */}
         <defs>
-          <marker
-            id={`class-arrow-${stage}`}
-            viewBox="0 0 10 10"
-            refX="8"
-            refY="5"
-            markerWidth="6"
-            markerHeight="6"
-            orient="auto-start-reverse"
-          >
-            <path d="M2 1L8 5L2 9" className="class-arrow" />
-          </marker>
-          <marker
-            id={`class-arrow-used-${stage}`}
-            viewBox="0 0 10 10"
-            refX="8"
-            refY="5"
-            markerWidth="6"
-            markerHeight="6"
-            orient="auto-start-reverse"
-          >
-            <path d="M2 1L8 5L2 9" className="class-arrow class-arrow-used" />
-          </marker>
+          {(["idle", "used", "current"] as const).map((kind) => (
+            <marker
+              key={kind}
+              id={`class-arrow-${kind}-${stage}`}
+              viewBox="0 0 10 10"
+              refX="8"
+              refY="5"
+              markerWidth="6"
+              markerHeight="6"
+              orient="auto-start-reverse"
+            >
+              <path d="M2 1L8 5L2 9" className={`class-arrow class-arrow-${kind}`} />
+            </marker>
+          ))}
         </defs>
-        {/* Aristas. */}
+        {/* Aristas: la de llegada al nodo activo destaca sobre las ya recorridas. */}
         {graph.edges.map((edge) => {
-          // ¿Recorrida?
-          const isUsed = used.has(`${edge.from}->${edge.to}`);
+          // Clave y estado de la arista.
+          const key = `${edge.from}->${edge.to}`;
+          const kind = key === view.current ? "current" : used.has(key) ? "used" : "idle";
           return (
             <path
-              key={`${edge.from}->${edge.to}`}
+              key={key}
               d={edge.path}
               className="class-edge"
-              data-used={isUsed ? "true" : "false"}
-              markerEnd={`url(#${isUsed ? "class-arrow-used-" : "class-arrow-"}${stage})`}
+              data-state={kind}
+              markerEnd={`url(#class-arrow-${kind}-${stage})`}
             />
           );
         })}
@@ -416,6 +458,34 @@ export function ClassModeView({
           );
         })}
       </svg>
+      {/* Línea de pasos: cada paso recibido, en orden; pulsar uno lo fija. */}
+      {own.length === 0 ? null : (
+        <ol className="class-timeline" aria-label="Pasos recibidos">
+          {own.map((event, index) => {
+            // Nodo del paso.
+            const node = graph.nodes.find((item) => item.id === nodeOf(event));
+            return (
+              <li key={`${String(index)}-${event.step.kind}`}>
+                <button
+                  type="button"
+                  className="class-chip"
+                  data-state={
+                    index === view.index ? "active" : index < (view.index ?? 0) ? "done" : "next"
+                  }
+                  aria-current={index === view.index ? "step" : undefined}
+                  onClick={() => {
+                    // Fija el paso y pausa el avance.
+                    setAuto(false);
+                    setCursor(index);
+                  }}
+                >
+                  {String(index + 1)} · {node?.title ?? event.step.kind}
+                </button>
+              </li>
+            );
+          })}
+        </ol>
+      )}
       {/* Controles de repetición. */}
       <div className="class-controls">
         {/* Paso anterior. */}
@@ -424,7 +494,7 @@ export function ClassModeView({
           className="class-button"
           disabled={total === 0 || view.index === 0}
           onClick={() => {
-            setPlaying(false);
+            setAuto(false);
             setCursor((current) => stepCursor(current, total, -1));
           }}
         >
@@ -436,46 +506,65 @@ export function ClassModeView({
           className="class-button"
           disabled={total === 0 || view.index === total - 1}
           onClick={() => {
-            setPlaying(false);
+            setAuto(false);
             setCursor((current) => stepCursor(current, total, 1));
           }}
         >
           Siguiente
         </button>
-        {/* Repetir desde el principio, a ritmo de clase. */}
+        {/* Seguir solo: reanuda el avance automático desde el paso fijado. */}
+        {!auto && cursor !== null && cursor < total - 1 ? (
+          <button
+            type="button"
+            className="class-button"
+            onClick={() => {
+              setAuto(true);
+            }}
+          >
+            Seguir solo
+          </button>
+        ) : null}
+        {/* Repetir desde el principio, al ritmo elegido. */}
         <button
           type="button"
           className="class-button"
           disabled={total < 2 || live}
           onClick={() => {
             setCursor(0);
-            setPlaying(true);
+            setAuto(true);
           }}
         >
           Repetir paso a paso
         </button>
-        {/* Volver al directo. */}
+        {/* Volver al directo (o saltar al último en modo lento). */}
         <button
           type="button"
           className="class-button"
-          disabled={following}
+          disabled={following || (slow && pending === 0 && !auto)}
           onClick={() => {
-            setPlaying(false);
-            setCursor(null);
+            setAuto(false);
+            setCursor(slow ? Math.max(0, total - 1) : null);
           }}
         >
-          Directo
+          {slow ? "Ir al último" : "Directo"}
         </button>
-        {/* Posición y momento de llegada. */}
+        {/* Posición, momento de llegada y pasos pendientes. */}
         <span className="class-position">
           {view.index === null
             ? "Sin pasos todavía"
-            : `Paso ${String(view.index + 1)} de ${String(view.total)} · llegó a ${formatSeconds(view.event!.at)}${view.visits > 1 ? ` · ${String(view.visits)}.ª vez en este nodo` : ""}`}
+            : `Paso ${String(view.index + 1)} de ${String(view.total)} · llegó a ${formatSeconds(view.event!.at)}${view.visits > 1 ? ` · ${String(view.visits)}.ª vez en este nodo` : ""}${pending > 0 ? ` · ${String(pending)} por mostrar` : ""}`}
         </span>
       </div>
       {/* Inspector del paso mostrado; se desliza al cambiar de paso. */}
       {view.event === null ? null : (
         <PanelSlide key={`${stage}-${String(view.index)}`} className="class-inspector">
+          {/* Qué hace este nodo, para explicarlo en voz alta. */}
+          {explanation === null ? null : (
+            <p className="class-explain">
+              <span className="class-explain-node">{activeNode?.title}</span> {explanation}
+            </p>
+          )}
+          {/* Datos del paso. */}
           {view.event.stage === "rag" ? (
             <RagDetail step={view.event.step} />
           ) : (

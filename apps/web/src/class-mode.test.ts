@@ -10,11 +10,13 @@ import {
   CRAG_GRAPH,
   RAG_GRAPH,
   classView,
+  explainNode,
   formatScore,
   fitLabel,
   formatSeconds,
   modelLabel,
   nodeOf,
+  pendingSteps,
   stepCursor,
   type ClassEvent,
 } from "./class-mode";
@@ -148,6 +150,49 @@ describe("modo clase", () => {
       // Ningún nodo se sale del lienzo de 680.
       expect(graph.nodes.every((node) => node.x + 110 <= 680)).toBe(true);
     }
+  });
+
+  // La arista de llegada al nodo activo se distingue de las ya recorridas.
+  it("marca la arista por la que se llega al nodo activo", () => {
+    // Recorrido hasta el umbral.
+    const events = [rag("embed", 1), rag("search", 2), rag("threshold", 3)];
+    // En directo: se llegó al umbral desde la búsqueda.
+    expect(classView("rag", events, null).current).toBe("search->threshold");
+    // En el primer paso no hay arista de llegada.
+    expect(classView("rag", events, 0).current).toBeNull();
+  });
+
+  // Modo lento: cuenta los pasos que quedan por mostrar.
+  it("cuenta los pasos pendientes del modo lento", () => {
+    // Cinco pasos recibidos y el cursor en el segundo.
+    const events = [
+      rag("embed", 1),
+      rag("search", 2),
+      rag("threshold", 3),
+      rag("generate", 4),
+      rag("answer", 5),
+    ];
+    // Quedan tres.
+    expect(pendingSteps(classView("rag", events, 1))).toBe(3);
+    // En directo no queda ninguno.
+    expect(pendingSteps(classView("rag", events, null))).toBe(0);
+    // Sin pasos tampoco.
+    expect(pendingSteps(classView("rag", [], 0))).toBe(0);
+  });
+
+  // Cada nodo de los dos grafos tiene su frase para explicarlo.
+  it("explica cada nodo de los dos grafos", () => {
+    // RAG y CRAG.
+    for (const [stage, graph] of [
+      ["rag", RAG_GRAPH],
+      ["crag", CRAG_GRAPH],
+    ] as const) {
+      // Ningún nodo sin explicación.
+      for (const node of graph.nodes) expect(explainNode(stage, node.id)).not.toBeNull();
+    }
+    // Un nodo desconocido o vacío no tiene frase.
+    expect(explainNode("rag", "rank")).toBeNull();
+    expect(explainNode("crag", null)).toBeNull();
   });
 
   // Formatos con coma decimal.

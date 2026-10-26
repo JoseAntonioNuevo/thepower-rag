@@ -54,3 +54,13 @@ Con autorización expresa del usuario se publicó el modo clase, con el grafo en
 - El cliente servido (`assets/index-zamdhd_U.js`) es el del build y contiene el modo clase. La web publicada con `?clase` dibuja el grafo de CRAG con Claude Sonnet 5.5 en el juez y la reformulación y con Claude Haiku 5.5 en la respuesta. No se enviaron preguntas: las pruebas con turnos reales las hace el usuario desde su navegador.
 
 Recibos en `activation-receipts/zocomar/clase/`.
+
+## Modo lento publicado (26 de octubre de 2026)
+
+Con autorización expresa del usuario se publicaron el modo lento del grafo, la línea de pasos, la arista de llegada y la explicación por nodo. Antes pasaron `check`, 380 pruebas unitarias y el build. En la demo local, el modo lento avanzó exactamente cada 3,5 s en RAG; en el guion CRAG de segunda búsqueda iba por el paso 3 de 9 a los 8 s y, al apagar el interruptor, saltó al 9 de 9. No hubo errores de consola. El dry-run frente a `cfbccfcf` no cambia variables ni el código del Worker (mismo hash de `index.js`); solo cambia el cliente.
+
+- Antes: deployment `75a19b23-bf0e-4518-a4a5-ba0ea353a0b3`, versión `cfbccfcf-735b-42bd-8800-128b2622545e`.
+- Después: deployment `935edaa5-400f-41b4-b6bb-e4d7a2b9f327`, versión `17692356-cfb8-4621-9215-2feabf76b6ad`, 100 % del tráfico.
+- `/api/health` (200): las cuatro etapas `ready`, Haiku 5.5 genera y Sonnet 5.5 evalúa, y Zocomar y el curso están `index-verified`. El cliente servido (`assets/index-DqmgO5mF.js`) es el del build y contiene el modo lento.
+
+Recibos en `activation-receipts/zocomar/lento/`.

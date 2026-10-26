@@ -1736,12 +1736,18 @@ button.t-toggle[data-on="true"] {
 }
 
 /* Arista recorrida en este turno. */
-.class-edge[data-used="true"] {
+.class-edge[data-state="used"] {
   stroke: #2f6b4f;
   stroke-width: 2;
 }
 
-/* Puntas de flecha: gris y verde. */
+/* Arista por la que se acaba de llegar al nodo activo: azul y más gruesa. */
+.class-edge[data-state="current"] {
+  stroke: var(--navy);
+  stroke-width: 3;
+}
+
+/* Puntas de flecha: gris, verde (recorrida) y azul (llegada al nodo activo). */
 .class-arrow {
   fill: none;
   stroke: var(--line);
@@ -1751,6 +1757,72 @@ button.t-toggle[data-on="true"] {
 }
 .class-arrow-used {
   stroke: #2f6b4f;
+}
+.class-arrow-current {
+  stroke: var(--navy);
+}
+
+/* Interruptor del modo lento en la cabecera del grafo. */
+.class-slow {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  color: var(--ink-soft);
+  font-size: 0.9rem;
+}
+
+/* Línea de pasos recibidos: chips en orden que se pueden pulsar. */
+.class-timeline {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 8px 0 0;
+  padding: 0;
+  list-style: none;
+}
+
+/* Chip de un paso: pequeño y con contorno; su color cambia con los tokens (cambio de estado). */
+button.class-chip {
+  min-height: 30px;
+  padding: 0 10px;
+  border-color: var(--line);
+  background: var(--sheet);
+  color: var(--ink-soft);
+  font-size: 0.82rem;
+  transition:
+    background-color var(--duration-fast) var(--ease-smooth-out),
+    border-color var(--duration-fast) var(--ease-smooth-out),
+    color var(--duration-fast) var(--ease-smooth-out);
+}
+
+/* Paso ya mostrado: verde suave. */
+button.class-chip[data-state="done"] {
+  border-color: #2f6b4f;
+  background: #e8f1ec;
+  color: #2f6b4f;
+}
+
+/* Paso mostrado ahora: azul de acción. */
+button.class-chip[data-state="active"] {
+  border-color: var(--navy);
+  background: var(--navy);
+  color: #fff;
+}
+
+/* Qué hace el nodo: una frase para leer en voz alta. */
+.class-explain {
+  margin: 0 0 10px;
+  padding: 8px 12px;
+  border-radius: 8px;
+  background: #e4edf8;
+  color: var(--ink);
+  font-size: 0.95rem;
+}
+
+/* Nombre del nodo dentro de la frase. */
+.class-explain-node {
+  font-weight: 600;
+  color: var(--navy);
 }
 
 /* Controles de repetición en una fila que se parte en móvil. */
@@ -1892,10 +1964,11 @@ button.class-button {
   }
 }
 
-/* Movimiento reducido: los nodos y aristas cambian sin transición. */
+/* Movimiento reducido: nodos, aristas y chips cambian sin transición. */
 @media (prefers-reduced-motion: reduce) {
   .class-node rect,
-  .class-edge {
+  .class-edge,
+  button.class-chip {
     transition: none;
   }
 }

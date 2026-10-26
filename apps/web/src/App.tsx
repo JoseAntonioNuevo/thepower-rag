@@ -583,6 +583,8 @@ function ChatPane({
   onBusy,
   classMode,
   models,
+  slow,
+  onSlowChange,
 }: {
   // Etapa.
   mode: ChatMode;
@@ -598,6 +600,10 @@ function ChatPane({
   classMode: boolean;
   // Modelos que nombra el grafo.
   models: ClassModels;
+  // Modo lento del grafo.
+  slow: boolean;
+  // Cambia el modo lento.
+  onSlowChange: (slow: boolean) => void;
 }) {
   // Turnstile.
   const {
@@ -849,6 +855,8 @@ function ChatPane({
           events={classEvents}
           live={busy}
           models={models}
+          slow={slow}
+          onSlowChange={onSlowChange}
         />
       ) : null}
       <div className={showRail ? "layout" : "layout layout-single"}>
@@ -1347,14 +1355,14 @@ function ChatPane({
   );
 }
 
-// Modo clase activado por la URL (?clase), para dejarlo listo antes de proyectar.
-function classModeFromUrl(): boolean {
-  // Sin ventana (pruebas): apagado.
+// Opción activada por la URL (?clase, ?lento), para dejarla lista antes de proyectar.
+function flagFromUrl(name: string): boolean {
+  // Sin ventana (pruebas): apagada.
   if (typeof window === "undefined") {
     return false;
   }
   // Parámetro presente.
-  return new URLSearchParams(window.location.search).has("clase");
+  return new URLSearchParams(window.location.search).has(name);
 }
 
 // Aplicación: barra de etapa y grupo, y el panel que corresponde.
@@ -1370,7 +1378,9 @@ export function App() {
   // Salud del servidor.
   const [health, setHealth] = useState<HealthResponse | null>(null);
   // Modo clase: grafo en directo encima del chat.
-  const [classMode, setClassMode] = useState(classModeFromUrl);
+  const [classMode, setClassMode] = useState(() => flagFromUrl("clase") || flagFromUrl("lento"));
+  // Modo lento del grafo: un paso cada pocos segundos, aunque lleguen antes.
+  const [slowMode, setSlowMode] = useState(() => flagFromUrl("lento"));
   // Callback estable.
   const onBusy = useCallback((value: boolean) => {
     // Actualiza.
@@ -1537,6 +1547,8 @@ export function App() {
           allowScenario={health?.execution === "demo"}
           onBusy={onBusy}
           classMode={classMode}
+          slow={slowMode}
+          onSlowChange={setSlowMode}
           models={{
             embedding: health?.corpus.embedding ?? null,
             generator: health?.modelConfiguration?.generator ?? null,

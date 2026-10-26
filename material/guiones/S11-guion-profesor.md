@@ -190,7 +190,7 @@ Si falla la red o el presupuesto, abre los recibos guardados (`docs/evidence/zoc
 
 ### Parte 3 · La web en modo clase: el caso de los auriculares
 
-En el laboratorio RAG y CRAG empatan porque Gemini recupera bien. En la web, con BGE-M3 y el umbral 0,661926, la medición del 26/10 (`docs/evidence/zocomar-crag-casos-2026-10-26.md`) encontró un caso claro. Abre la web con `?clase`, elige **RAG básico** y pregunta:
+En el laboratorio RAG y CRAG empatan porque Gemini recupera bien. En la web, con BGE-M3 y el umbral 0,661926, la medición del 26/10 (`docs/evidence/zocomar-crag-casos-2026-10-26.md`) encontró un caso claro. Abre la web con `?lento` (modo clase con modo lento: un paso cada 3,5 s, con la frase de qué hace cada nodo), elige **RAG básico** y pregunta:
 
 > Compré unos auriculares de botón hace 12 días, los he probado y no me convencen. Tengo 30 días para devolverlos, ¿verdad?
 
