@@ -332,6 +332,9 @@ function emitStep(
           candidates: step.candidates.slice(0, CRAG_BOUNDS.maxCandidates).map((item) => ({
             ...item,
             reason: item.reason === null ? null : item.reason.slice(0, CRAG_BOUNDS.maxReasonChars),
+            // Nombres recortados al contrato.
+            ...(item.title === undefined ? {} : { title: item.title.slice(0, 200) }),
+            ...(item.section === undefined ? {} : { section: item.section.slice(0, 200) }),
           })),
         }),
     ...(step.gaps === undefined
@@ -673,6 +676,8 @@ export async function runCragTurn(input: CragTurnInput): Promise<CragTurnResult>
           cosine: chunk.score,
           relevance: null,
           reason: null,
+          title: chunk.title,
+          section: chunk.section,
         })),
       });
       // Candidatos.
@@ -822,8 +827,8 @@ export async function runCragTurn(input: CragTurnInput): Promise<CragTurnResult>
         .map((hit) => `${hit.chunkId} ${hit.score.toFixed(3)}`)
         .join(", ");
       // Paso rank.
-      // Coseno de cada fragmento mostrado, para enseñarlo junto a la nota del juez.
-      const cosineById = new Map(shown.map((chunk) => [chunk.chunkId, chunk.score]));
+      // Fragmentos mostrados por id: coseno, título y sección para enseñarlos junto a la nota.
+      const shownById = new Map(shown.map((chunk) => [chunk.chunkId, chunk]));
       emitStep({ ...state, ledger }, emit, {
         kind: "rank",
         status: `Orden: ${order || "sin fragmentos"}.`.slice(0, CRAG_BOUNDS.maxReasonChars),
@@ -832,9 +837,11 @@ export async function runCragTurn(input: CragTurnInput): Promise<CragTurnResult>
         // Candidatos en el orden validado del juez, con su nota y su motivo.
         candidates: parsed.ranking.map((hit) => ({
           chunkId: hit.chunkId,
-          cosine: cosineById.get(hit.chunkId) ?? null,
+          cosine: shownById.get(hit.chunkId)?.score ?? null,
           relevance: hit.score,
           reason: hit.reason,
+          title: shownById.get(hit.chunkId)?.title,
+          section: shownById.get(hit.chunkId)?.section,
         })),
       });
       // Pasa el ranking validado y la salida bruta al nodo assess.

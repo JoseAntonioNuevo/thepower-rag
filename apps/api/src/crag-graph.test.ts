@@ -534,14 +534,14 @@ describe("grafo CRAG", () => {
     // Modo clase: la búsqueda trae los candidatos con su coseno y sin nota del juez.
     const retrieveStep = ranked.result.steps.find((step) => step.kind === "retrieve");
     expect(retrieveStep?.candidates).toEqual([
-      { chunkId: "a", cosine: 0.5, relevance: null, reason: null },
-      { chunkId: "b", cosine: 0.5, relevance: null, reason: null },
+      { chunkId: "a", cosine: 0.5, relevance: null, reason: null, title: "a", section: "S" },
+      { chunkId: "b", cosine: 0.5, relevance: null, reason: null, title: "b", section: "S" },
     ]);
     // El paso del juez sigue su orden, con coseno, nota y motivo de cada fragmento.
     const rankStep = ranked.result.steps.find((step) => step.kind === "rank");
     expect(rankStep?.candidates).toEqual([
-      { chunkId: "b", cosine: 0.5, relevance: 0.2, reason: "va delante" },
-      { chunkId: "a", cosine: 0.5, relevance: 0.9, reason: "va detrás" },
+      { chunkId: "b", cosine: 0.5, relevance: 0.2, reason: "va delante", title: "b", section: "S" },
+      { chunkId: "a", cosine: 0.5, relevance: 0.9, reason: "va detrás", title: "a", section: "S" },
     ]);
 
     // Número de búsqueda.

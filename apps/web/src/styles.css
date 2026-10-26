@@ -1896,13 +1896,60 @@ button.class-button {
 .class-chunk {
   overflow-wrap: anywhere;
 }
+
+/* Documento del fragmento en negrita; la sección, en texto normal. */
+.class-chunk-doc {
+  font-weight: 600;
+}
+.class-chunk-section {
+  color: var(--ink-soft);
+}
+
+/* Número de fragmento en su propia línea, pequeño (el id técnico va en el tooltip). */
+.class-chunk-id {
+  display: block;
+  color: #78716c;
+  font-size: 0.76rem;
+}
+
+/* Guía «Cómo leer este paso»: términos y su explicación, para leer en clase. */
+.class-guide {
+  margin: 0 0 12px;
+  padding: 8px 12px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  background: var(--paper);
+  font-size: 0.88rem;
+}
+.class-guide summary {
+  cursor: pointer;
+  color: var(--navy);
+  font-weight: 600;
+}
+.class-guide dl {
+  display: grid;
+  gap: 6px;
+  margin: 8px 0 0;
+}
+.class-guide dt {
+  display: inline;
+  font-weight: 600;
+}
+.class-guide dt::after {
+  content: ": ";
+}
+.class-guide dd {
+  display: inline;
+  margin: 0;
+  color: var(--ink-soft);
+}
 .class-score,
 .class-flag {
   font-variant-numeric: tabular-nums;
   color: var(--ink-soft);
 }
 .class-candidates li[data-selected="true"] .class-flag,
-.class-candidates li[data-selected="true"] .class-chunk {
+.class-candidates li[data-selected="true"] .class-chunk-doc {
   color: #2f6b4f;
   font-weight: 600;
 }

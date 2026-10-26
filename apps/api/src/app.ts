@@ -573,6 +573,8 @@ export function createApp(deps: AppDeps = {}) {
     let outcome: RetrievalOutcome;
     // Duraciones medidas de la búsqueda real para el modo clase; la demo no mide.
     let timings: RagTimings = NO_RAG_TIMINGS;
+    // Fragmentos con título y sección para nombrar los candidatos del modo clase.
+    let labelChunks: readonly IndexedChunk[] = useFixture ? chunks : [];
     // Demo: índice incluido en el código.
     if (useFixture && assessment.execution === "demo") {
       // Recuperación básica con el embedding de prueba.
@@ -801,11 +803,12 @@ export function createApp(deps: AppDeps = {}) {
                 score: hit.score,
               });
             }
-            // Duraciones medidas del modo clase.
+            // Duraciones medidas del modo clase y nombres de los vecinos leídos de D1.
             timings = {
               embedMs: searchStarted - embedStarted,
               searchMs: Date.now() - searchStarted,
             };
+            labelChunks = ranked.map((item) => item.chunk);
             // Decide con el umbral mínimo.
             outcome = gateScoredChunks({
               question,
@@ -850,6 +853,9 @@ export function createApp(deps: AppDeps = {}) {
           ? FIXTURE_MIN_SCORE
           : (assessment.chatRetrieval?.minScore ?? null),
       timings,
+      labels: new Map(
+        labelChunks.map((chunk) => [chunk.chunkId, { title: chunk.title, section: chunk.section }]),
+      ),
     });
     // Sin respuesta (aclarar o rechazar).
     if (outcome.decision !== "answer") {

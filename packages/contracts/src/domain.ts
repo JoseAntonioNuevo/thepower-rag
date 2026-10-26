@@ -186,6 +186,9 @@ export const ragStepSchema = z.object({
         chunkId: z.string().min(1).max(128),
         score: z.number().finite().nullable(),
         selected: z.boolean(),
+        // Título del documento y sección del fragmento, para nombrarlo en clase sin su id.
+        title: z.string().max(200).optional(),
+        section: z.string().max(200).optional(),
       }),
     )
     .max(10),

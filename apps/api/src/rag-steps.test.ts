@@ -51,6 +51,29 @@ describe("pasos del RAG básico", () => {
     for (const step of steps) ragStepSchema.parse(step);
   });
 
+  // Nombres: título y sección del fragmento cuando se conocen; sin ellos, solo el id.
+  it("nombra los candidatos con título y sección cuando se conocen", () => {
+    // Pasos con el nombre de uno de los dos candidatos.
+    const steps = ragRetrievalSteps({
+      trace: trace(),
+      threshold: 0.661926,
+      timings: NO_RAG_TIMINGS,
+      labels: new Map([["c-test:a:00", { title: "Electrónica y garantía", section: "Higiene" }]]),
+    });
+    // El umbral lleva el nombre del primero y deja el segundo sin nombre.
+    const [first, second] = steps[2]!.candidates;
+    expect(first).toMatchObject({ title: "Electrónica y garantía", section: "Higiene" });
+    expect(second?.title).toBeUndefined();
+    // La generación también los nombra.
+    const generate = ragGenerateStep({
+      query: "q",
+      model: null,
+      chunkIds: ["c-test:a:00"],
+      labels: new Map([["c-test:a:00", { title: "T", section: "S" }]]),
+    });
+    expect(generate.candidates[0]).toMatchObject({ title: "T", section: "S" });
+  });
+
   // Rechazo: nada pasa el umbral y no se genera.
   it("termina en rechazo sin generación cuando nada alcanza el umbral", () => {
     // Pasos.

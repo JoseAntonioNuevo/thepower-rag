@@ -17,6 +17,27 @@ export interface RagTimings {
 // Tiempos vacíos: la demo y las rutas sin embedding no miden nada.
 export const NO_RAG_TIMINGS: RagTimings = { embedMs: null, searchMs: null };
 
+// Nombre legible de un fragmento: título del documento y sección.
+export interface ChunkLabel {
+  title: string;
+  section: string;
+}
+
+// Añade a un candidato el título y la sección si se conocen, recortados al contrato.
+function named<T extends { chunkId: string }>(
+  item: T,
+  labels: ReadonlyMap<string, ChunkLabel> | undefined,
+): T & { title?: string; section?: string } {
+  // Nombre del fragmento.
+  const label = labels?.get(item.chunkId);
+  // Sin nombre: tal cual.
+  if (label === undefined) {
+    return item;
+  }
+  // Con título y sección.
+  return { ...item, title: label.title.slice(0, 200), section: label.section.slice(0, 200) };
+}
+
 // Redondea una duración medida a milisegundos enteros no negativos.
 function duration(value: number | null): number | null {
   // Sin medida.
@@ -47,16 +68,18 @@ export function ragRetrievalSteps(input: {
   threshold: number | null;
   // Tiempos medidos.
   timings: RagTimings;
+  // Nombres de los fragmentos por id, si se conocen.
+  labels?: ReadonlyMap<string, ChunkLabel>;
 }): RagStep[] {
   // Traza y consulta recortada al contrato.
   const { trace } = input;
   const query = trace.query.slice(0, 500);
-  // Candidatos tal como los dejó el umbral, como mucho diez.
-  const judged = trace.retrieved.slice(0, 10).map((item) => ({
-    chunkId: item.chunkId,
-    score: item.score,
-    selected: item.selected,
-  }));
+  // Candidatos tal como los dejó el umbral, como mucho diez, con su nombre.
+  const judged = trace.retrieved
+    .slice(0, 10)
+    .map((item) =>
+      named({ chunkId: item.chunkId, score: item.score, selected: item.selected }, input.labels),
+    );
   // Pasos acumulados.
   const steps: RagStep[] = [];
   // Aclaración de calendario: no hay búsqueda ni modelo.
@@ -154,6 +177,8 @@ export function ragGenerateStep(input: {
   model: string | null;
   // Fragmentos que recibe el generador.
   chunkIds: readonly string[];
+  // Nombres de los fragmentos por id, si se conocen.
+  labels?: ReadonlyMap<string, ChunkLabel>;
 }): RagStep {
   // Paso.
   return {
@@ -168,7 +193,7 @@ export function ragGenerateStep(input: {
     threshold: null,
     candidates: input.chunkIds
       .slice(0, 10)
-      .map((chunkId) => ({ chunkId, score: null, selected: true })),
+      .map((chunkId) => named({ chunkId, score: null, selected: true }, input.labels)),
   };
 }
 
@@ -182,6 +207,8 @@ export function ragAnswerStep(input: {
   durationMs: number | null;
   // Fragmentos citados en la respuesta.
   citedIds: readonly string[];
+  // Nombres de los fragmentos por id, si se conocen.
+  labels?: ReadonlyMap<string, ChunkLabel>;
 }): RagStep {
   // Paso.
   return {
@@ -196,6 +223,6 @@ export function ragAnswerStep(input: {
     threshold: null,
     candidates: input.citedIds
       .slice(0, 10)
-      .map((chunkId) => ({ chunkId, score: null, selected: true })),
+      .map((chunkId) => named({ chunkId, score: null, selected: true }, input.labels)),
   };
 }

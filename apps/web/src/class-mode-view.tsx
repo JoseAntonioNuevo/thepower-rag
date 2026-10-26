@@ -11,6 +11,8 @@ import type { CragStep, RagStep } from "@thepower-rag/contracts";
 import {
   NODE_HEIGHT,
   NODE_WIDTH,
+  chunkIndex,
+  chunkName,
   classView,
   explainNode,
   fitLabel,
@@ -20,7 +22,10 @@ import {
   modelLabel,
   nodeOf,
   pendingSteps,
+  readableStatus,
   stepCursor,
+  stepGuide,
+  type ChunkInfo,
   type ClassEvent,
   type ClassStage,
   type ClassView,
@@ -122,15 +127,67 @@ function ScoreBar({
   );
 }
 
+// Nombre de un fragmento: documento, sección y número; el id técnico queda en el tooltip.
+function ChunkTitle({
+  chunkId,
+  info,
+  names,
+}: {
+  // Id del fragmento.
+  chunkId: string;
+  // Título y sección que trae el propio paso.
+  info?: ChunkInfo;
+  // Nombres reunidos de todo el turno, por si el paso no los trae.
+  names: ReadonlyMap<string, ChunkInfo>;
+}) {
+  // Nombre legible.
+  const name = chunkName(chunkId, info?.title === undefined ? names.get(chunkId) : info);
+  // Documento, sección y número.
+  return (
+    <span className="class-chunk" title={chunkId}>
+      {/* Documento. */}
+      <span className="class-chunk-doc">{name.document}</span>
+      {/* Sección. */}
+      {name.section === null ? null : (
+        <span className="class-chunk-section"> › {name.section}</span>
+      )}
+      {/* Número de fragmento. */}
+      {name.fragment === null ? null : (
+        <span className="class-chunk-id">fragmento {String(name.fragment)}</span>
+      )}
+    </span>
+  );
+}
+
+// Lista de fragmentos por su nombre (conservados, descartados, evidencia o citas).
+function ChunkList({
+  ids,
+  names,
+}: {
+  ids: readonly string[];
+  names: ReadonlyMap<string, ChunkInfo>;
+}) {
+  // Un nombre por línea.
+  return (
+    <ul className="class-ids">
+      {ids.map((id) => (
+        <li key={id}>
+          <ChunkTitle chunkId={id} names={names} />
+        </li>
+      ))}
+    </ul>
+  );
+}
+
 // Detalle de un paso del RAG básico.
-function RagDetail({ step }: { step: RagStep }) {
+function RagDetail({ step, names }: { step: RagStep; names: ReadonlyMap<string, ChunkInfo> }) {
   // Umbral para marcar en las barras.
   const cut = step.threshold;
   // Contenido.
   return (
     <>
       {/* Estado del paso. */}
-      <p className="class-status">{step.status}</p>
+      <p className="class-status">{readableStatus(step.status, names)}</p>
       {/* Datos del paso. */}
       <dl className="class-facts">
         {/* Modelo. */}
@@ -153,11 +210,7 @@ function RagDetail({ step }: { step: RagStep }) {
       </dl>
       {/* Ids sin puntuación (generación y citas): lista simple. */}
       {step.candidates.length > 0 && step.candidates.every((item) => item.score === null) ? (
-        <ul className="class-ids">
-          {step.candidates.map((item) => (
-            <li key={item.chunkId}>{item.chunkId}</li>
-          ))}
-        </ul>
+        <ChunkList ids={step.candidates.map((item) => item.chunkId)} names={names} />
       ) : null}
       {/* Candidatos con su similitud. */}
       {step.candidates.length === 0 ||
@@ -165,8 +218,12 @@ function RagDetail({ step }: { step: RagStep }) {
         <ol className="class-candidates">
           {step.candidates.map((item) => (
             <li key={item.chunkId} data-selected={item.selected ? "true" : "false"}>
-              {/* Id del fragmento. */}
-              <span className="class-chunk">{item.chunkId}</span>
+              {/* Nombre del fragmento: documento, sección y número. */}
+              <ChunkTitle
+                chunkId={item.chunkId}
+                info={{ title: item.title, section: item.section }}
+                names={names}
+              />
               {/* Barra con el corte. */}
               <ScoreBar value={item.score} cut={cut} strong={item.selected} />
               {/* Puntuación. */}
@@ -184,14 +241,14 @@ function RagDetail({ step }: { step: RagStep }) {
 }
 
 // Detalle de un paso de CRAG.
-function CragDetail({ step }: { step: CragStep }) {
+function CragDetail({ step, names }: { step: CragStep; names: ReadonlyMap<string, ChunkInfo> }) {
   // Candidatos con nota del juez (solo tras evaluar).
   const judged = step.candidates?.some((item) => item.relevance !== null) ?? false;
   // Contenido.
   return (
     <>
       {/* Estado del paso. */}
-      <p className="class-status">{step.status}</p>
+      <p className="class-status">{readableStatus(step.status, names)}</p>
       {/* Datos del paso. */}
       <dl className="class-facts">
         {/* Consulta. */}
@@ -226,14 +283,18 @@ function CragDetail({ step }: { step: CragStep }) {
         {step.retainedIds.length === 0 ? null : (
           <>
             <dt>Conservados</dt>
-            <dd>{step.retainedIds.join(", ")}</dd>
+            <dd>
+              <ChunkList ids={step.retainedIds} names={names} />
+            </dd>
           </>
         )}
         {/* Descartados. */}
         {step.discardedIds.length === 0 ? null : (
           <>
             <dt>Descartados</dt>
-            <dd>{step.discardedIds.join(", ")}</dd>
+            <dd>
+              <ChunkList ids={step.discardedIds} names={names} />
+            </dd>
           </>
         )}
       </dl>
@@ -249,8 +310,12 @@ function CragDetail({ step }: { step: CragStep }) {
                   : "false"
               }
             >
-              {/* Id del fragmento. */}
-              <span className="class-chunk">{item.chunkId}</span>
+              {/* Nombre del fragmento: documento, sección y número. */}
+              <ChunkTitle
+                chunkId={item.chunkId}
+                info={{ title: item.title, section: item.section }}
+                names={names}
+              />
               {/* Barra: la nota del juez si existe; si no, el coseno. */}
               <ScoreBar
                 value={judged ? item.relevance : item.cosine}
@@ -338,8 +403,11 @@ export function ClassModeView({
     activeNode === undefined
       ? "Esperando una pregunta"
       : `${activeNode.title} · ${subtitleFor(stage, activeNode, models, events, view)}`;
-  // Qué hace el nodo activo, en una frase.
+  // Qué hace el nodo activo, en una frase, y cómo leer sus datos.
   const explanation = explainNode(stage, view.active);
+  const guide = stepGuide(stage, view.active);
+  // Nombres de los fragmentos que han aparecido en el turno.
+  const names = chunkIndex(events);
   // ¿Directo?
   const following = cursor === null;
   // Pasos de la etapa para la línea de pasos.
@@ -564,11 +632,25 @@ export function ClassModeView({
               <span className="class-explain-node">{activeNode?.title}</span> {explanation}
             </p>
           )}
+          {/* Cómo leer este paso: qué es cada dato que aparece debajo. */}
+          {guide.length === 0 ? null : (
+            <details className="class-guide" open>
+              <summary>Cómo leer este paso</summary>
+              <dl>
+                {guide.map((entry) => (
+                  <div key={entry.term}>
+                    <dt>{entry.term}</dt>
+                    <dd>{entry.text}</dd>
+                  </div>
+                ))}
+              </dl>
+            </details>
+          )}
           {/* Datos del paso. */}
           {view.event.stage === "rag" ? (
-            <RagDetail step={view.event.step} />
+            <RagDetail step={view.event.step} names={names} />
           ) : (
-            <CragDetail step={view.event.step} />
+            <CragDetail step={view.event.step} names={names} />
           )}
         </PanelSlide>
       )}

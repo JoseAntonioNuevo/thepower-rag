@@ -9,6 +9,8 @@ import type { CragStep, RagStep } from "@thepower-rag/contracts";
 import {
   CRAG_GRAPH,
   RAG_GRAPH,
+  chunkIndex,
+  chunkName,
   classView,
   explainNode,
   formatScore,
@@ -17,7 +19,9 @@ import {
   modelLabel,
   nodeOf,
   pendingSteps,
+  readableStatus,
   stepCursor,
+  stepGuide,
   type ClassEvent,
 } from "./class-mode";
 
@@ -193,6 +197,83 @@ describe("modo clase", () => {
     // Un nodo desconocido o vacío no tiene frase.
     expect(explainNode("rag", "rank")).toBeNull();
     expect(explainNode("crag", null)).toBeNull();
+  });
+
+  // Nombres legibles de los fragmentos.
+  it("nombra un fragmento por su documento, sección y número", () => {
+    // Con título y sección del servidor.
+    expect(
+      chunkName("cb7dabfb11854:03-electronica-y-garantia:01", {
+        title: "Electrónica y garantía",
+        section: "Artículos excluidos por higiene",
+      }),
+    ).toEqual({
+      document: "Electrónica y garantía",
+      section: "Artículos excluidos por higiene",
+      fragment: 2,
+      id: "cb7dabfb11854:03-electronica-y-garantia:01",
+    });
+    // Sin nombre: el documento sale del id, sin el número delante.
+    expect(chunkName("cb7dabfb11854:06-pagos-y-reembolsos:02")).toMatchObject({
+      document: "Pagos y reembolsos",
+      section: null,
+      fragment: 3,
+    });
+    // Un id sin partes se deja tal cual.
+    expect(chunkName("raro")).toMatchObject({ document: "Raro", fragment: null });
+  });
+
+  // Estados del servidor sin ids: nombre del documento, número de fragmento y coma decimal.
+  it("cambia los ids del texto de estado por nombres legibles", () => {
+    // Nombres conocidos.
+    const names = new Map([
+      ["cb7dabfb11854:03-electronica-y-garantia:01", { title: "Electrónica y garantía" }],
+    ]);
+    // Orden del juez con dos ids, uno conocido y otro no.
+    expect(
+      readableStatus(
+        "Orden: cb7dabfb11854:03-electronica-y-garantia:01 0.960, cb7dabfb11854:02-devoluciones:00 0.300.",
+        names,
+      ),
+    ).toBe("Orden: Electrónica y garantía (fragmento 2) 0,960, Devoluciones (fragmento 1) 0,300.");
+    // La sección que repite el título no se muestra.
+    expect(
+      chunkName("v:s05:00", { title: "S5 · LangGraph", section: "S5 · LangGraph" }).section,
+    ).toBeNull();
+  });
+
+  // El índice reúne los nombres que llegaron en cualquier paso.
+  it("reúne los nombres de los fragmentos del turno", () => {
+    // Un paso con nombre y otro sin él.
+    const named: ClassEvent = {
+      stage: "rag",
+      at: 1,
+      step: {
+        ...(rag("search", 1).step as RagStep),
+        candidates: [
+          { chunkId: "v:a:00", score: 0.7, selected: false, title: "A", section: "S" },
+          { chunkId: "v:b:00", score: 0.6, selected: false },
+        ],
+      },
+    };
+    // Índice.
+    const index = chunkIndex([named, rag("threshold", 2)]);
+    expect(index.get("v:a:00")).toEqual({ title: "A", section: "S" });
+    expect(index.has("v:b:00")).toBe(false);
+  });
+
+  // Cada nodo tiene su guía de lectura.
+  it("tiene guía de lectura para cada nodo", () => {
+    // RAG y CRAG.
+    for (const [stage, graph] of [
+      ["rag", RAG_GRAPH],
+      ["crag", CRAG_GRAPH],
+    ] as const) {
+      // Al menos una entrada por nodo.
+      for (const node of graph.nodes) expect(stepGuide(stage, node.id).length).toBeGreaterThan(0);
+    }
+    // Sin nodo, sin guía.
+    expect(stepGuide("rag", null)).toEqual([]);
   });
 
   // Formatos con coma decimal.

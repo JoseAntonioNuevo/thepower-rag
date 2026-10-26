@@ -64,3 +64,13 @@ Con autorización expresa del usuario se publicaron el modo lento del grafo, la 
 - `/api/health` (200): las cuatro etapas `ready`, Haiku 5.5 genera y Sonnet 5.5 evalúa, y Zocomar y el curso están `index-verified`. El cliente servido (`assets/index-DqmgO5mF.js`) es el del build y contiene el modo lento.
 
 Recibos en `activation-receipts/zocomar/lento/`.
+
+## Nombres legibles y guía por paso publicados (26 de octubre de 2026)
+
+Con autorización expresa del usuario se publicaron los nombres legibles de los fragmentos (documento › sección · fragmento N, con el id en el tooltip) y la guía «Cómo leer este paso». Antes pasaron `check`, 385 pruebas unitarias, 6 de entrada y el build (hash de `index.js` `fbe6df12a86b003e41bec31020d5489e7b9da6177ea3bd8703699b8e887ba05b`). En la demo local se comprobaron con RAG y con CRAG, sin errores de consola. El dry-run frente a `17692356` no cambia variables; cambian el Worker (los candidatos llevan `title` y `section`) y el cliente.
+
+- Antes: deployment `935edaa5-400f-41b4-b6bb-e4d7a2b9f327`, versión `17692356-cfb8-4621-9215-2feabf76b6ad`.
+- Después: deployment `2818ad5f-ff1c-4869-aa75-cf5eae418827`, versión `758f276d-65f4-4bf8-94e8-ae9eac8c7dfe`, 100 % del tráfico.
+- `/api/health` (200): las cuatro etapas `ready`, Haiku 5.5 genera y Sonnet 5.5 evalúa, y Zocomar y el curso están `index-verified`. El cliente servido (`assets/index-io0DmSXx.js`) es el del build y contiene la guía.
+
+Recibos en `activation-receipts/zocomar/nombres/`.

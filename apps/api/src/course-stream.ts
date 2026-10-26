@@ -38,6 +38,16 @@ export interface RagStepsInput {
   model: string | null;
 }
 
+// Nombres de las fuentes por id, para los pasos del modo clase.
+function sourceLabels(
+  sources: readonly Citation[],
+): Map<string, { title: string; section: string }> {
+  // Título y sección de cada cita.
+  return new Map(
+    sources.map((source) => [source.chunkId, { title: source.title, section: source.section }]),
+  );
+}
+
 // Ids citados y permitidos dentro de un trozo de texto ya validado.
 function citedIn(text: string, allowed: ReadonlySet<string>): string[] {
   // Cada [cite:id] reconocido que pertenece a la evidencia.
@@ -135,6 +145,7 @@ export function streamFixedCourseResponse(input: {
             query: input.ragSteps!.query,
             model: input.ragSteps!.model,
             chunkIds: input.sources.map((source) => source.chunkId),
+            labels: sourceLabels(input.sources),
           }),
           transient: true,
         });
@@ -170,6 +181,7 @@ export function streamFixedCourseResponse(input: {
             model: input.ragSteps!.model,
             durationMs: null,
             citedIds: [...new Set(citedIn(input.text, allowed))],
+            labels: sourceLabels(input.sources),
           }),
           transient: true,
         });
@@ -284,6 +296,7 @@ export function streamProviderCourseResponse(input: {
               query: input.ragSteps.query,
               model: input.ragSteps.model,
               chunkIds: input.sources.map((source) => source.chunkId),
+              labels: sourceLabels(input.sources),
             }),
             transient: true,
           });
@@ -364,6 +377,7 @@ export function streamProviderCourseResponse(input: {
               model: input.ragSteps.model,
               durationMs: Date.now() - generationStarted,
               citedIds: [...cited],
+              labels: sourceLabels(input.sources),
             }),
             transient: true,
           });

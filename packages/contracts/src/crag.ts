@@ -104,6 +104,9 @@ export const cragStepSchema = z.object({
         relevance: z.number().min(0).max(1).nullable(),
         // Motivo del juez, o null antes de evaluar.
         reason: z.string().max(240).nullable(),
+        // Título del documento y sección del fragmento, para nombrarlo en clase sin su id.
+        title: z.string().max(200).optional(),
+        section: z.string().max(200).optional(),
       }),
     )
     .max(10)

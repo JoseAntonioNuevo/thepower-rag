@@ -320,3 +320,247 @@ export function fitLabel(text: string, max = 17): string {
   // Recorta y marca el corte.
   return `${text.slice(0, max - 1)}…`;
 }
+
+// Nombre legible de un fragmento para la clase: documento, sección y número de fragmento.
+export interface ChunkName {
+  // Título del documento (o su id humanizado si no se conoce).
+  document: string;
+  // Sección del fragmento, o null si no se conoce.
+  section: string | null;
+  // Número de fragmento dentro del documento, empezando en 1, o null si el id no lo trae.
+  fragment: number | null;
+  // Id técnico completo, para el tooltip.
+  id: string;
+}
+
+// Título y sección conocidos de un fragmento.
+export interface ChunkInfo {
+  title?: string;
+  section?: string;
+}
+
+// Id de documento convertido en texto: «03-electronica-y-garantia» → «Electronica y garantia».
+function humanizeDocument(slug: string): string {
+  // Sin el prefijo numérico y con espacios.
+  const words = slug.replace(/^\d+-/, "").replace(/-/g, " ").trim();
+  // Primera letra en mayúscula.
+  return words.length === 0 ? slug : words.charAt(0).toUpperCase() + words.slice(1);
+}
+
+// Nombre de un fragmento a partir de su id («versión:documento:NN») y de lo que se sepa de él.
+export function chunkName(chunkId: string, info?: ChunkInfo): ChunkName {
+  // Partes del id: la versión delante, el número de fragmento detrás.
+  const parts = chunkId.split(":");
+  const ordinal = parts.length >= 3 ? Number(parts[parts.length - 1]) : Number.NaN;
+  const slug = parts.length >= 3 ? parts.slice(1, -1).join(":") : chunkId;
+  // Documento y sección; la sección se omite si repite el título.
+  const document = info?.title?.trim() || humanizeDocument(slug);
+  const section = info?.section?.trim() || null;
+  // Nombre.
+  return {
+    document,
+    section: section === document ? null : section,
+    fragment: Number.isInteger(ordinal) ? ordinal + 1 : null,
+    id: chunkId,
+  };
+}
+
+// Cambia los ids de fragmento de un texto de estado por su nombre legible (documento y número).
+export function readableStatus(status: string, names: ReadonlyMap<string, ChunkInfo>): string {
+  // Ids «versión:documento:NN» y, si le sigue, su puntuación en inglés («0.800»).
+  return status.replace(
+    /\b([a-z0-9]{8,}:[a-z0-9-]+:\d{2})\b(?: (\d\.\d{3}))?/g,
+    (_match, id: string, score: string | undefined) => {
+      // Nombre del fragmento.
+      const name = chunkName(id, names.get(id));
+      // Documento, número de fragmento y puntuación con coma.
+      const label =
+        name.fragment === null
+          ? name.document
+          : `${name.document} (fragmento ${String(name.fragment)})`;
+      return score === undefined ? label : `${label} ${score.replace(".", ",")}`;
+    },
+  );
+}
+
+// Título y sección de cada fragmento que ya ha aparecido en algún paso del turno.
+export function chunkIndex(events: readonly ClassEvent[]): Map<string, ChunkInfo> {
+  // Índice por id.
+  const index = new Map<string, ChunkInfo>();
+  // Candidatos de todos los pasos.
+  for (const event of events) {
+    for (const item of event.step.candidates ?? []) {
+      // Solo los que traen nombre.
+      if (item.title !== undefined && !index.has(item.chunkId)) {
+        index.set(item.chunkId, { title: item.title, section: item.section });
+      }
+    }
+  }
+  // Índice.
+  return index;
+}
+
+// Una entrada de la guía de lectura: qué es cada cosa que se ve en el paso.
+export interface GuideEntry {
+  term: string;
+  text: string;
+}
+
+// Guía «Cómo leer este paso» de cada nodo, para leerla en clase.
+const STEP_GUIDES: Record<ClassStage, Record<string, readonly GuideEntry[]>> = {
+  rag: {
+    embed: [
+      {
+        term: "Modelo",
+        text: "BGE-M3, en Workers AI, convierte el texto en un vector de 1024 números.",
+      },
+      { term: "Duración medida", text: "Tiempo que tardó este paso en el servidor." },
+      { term: "Pregunta", text: "El texto exacto que se convierte en vector y se busca." },
+    ],
+    search: [
+      {
+        term: "Fragmento",
+        text: "Trozo de una política, de 900 caracteres como mucho: primero el documento, después su sección.",
+      },
+      {
+        term: "Barra y número",
+        text: "Similitud coseno entre la pregunta y el fragmento, de 0 a 1: más alto es más parecido. No es una probabilidad de acierto.",
+      },
+      { term: "Vecinos", text: "RAG básico solo mira los 4 fragmentos más parecidos." },
+    ],
+    threshold: [
+      {
+        term: "Marca azul",
+        text: "El umbral calibrado: solo pasa al generador lo que llega a la marca.",
+      },
+      {
+        term: "pasa / fuera",
+        text: "«pasa» llega al generador; «fuera» se ignora aunque trate del tema.",
+      },
+      {
+        term: "Calibración",
+        text: "El umbral se eligió con preguntas de validación, a medio camino entre la peor con respuesta y la mejor sin ella.",
+      },
+    ],
+    generate: [
+      {
+        term: "Generador",
+        text: "Escribe la respuesta con los fragmentos que pasaron, marcados como datos no fiables: no ve nada más del corpus.",
+      },
+      { term: "Lista", text: "Los fragmentos que recibe el generador." },
+    ],
+    answer: [
+      {
+        term: "Citas",
+        text: "Cada [cite:id] se comprueba contra la evidencia; un id inventado se borra antes de mostrarlo.",
+      },
+      { term: "Duración medida", text: "Tiempo de la generación en el servidor." },
+    ],
+    refuse: [
+      {
+        term: "No consta",
+        text: "Sin evidencia que pase el umbral no se llama al modelo: no gasta y no inventa.",
+      },
+    ],
+    clarify: [
+      {
+        term: "Aclarar",
+        text: "La pregunta necesita un grupo; se pide antes de buscar o generar.",
+      },
+    ],
+  },
+  crag: {
+    retrieve: [
+      {
+        term: "Consulta",
+        text: "Lo que se busca en esta vuelta: la pregunta original o su reformulación.",
+      },
+      {
+        term: "Búsquedas y reformulaciones",
+        text: "Cuántas lleva de su máximo: 3 búsquedas y 2 reformulaciones por turno.",
+      },
+      {
+        term: "Barra y número",
+        text: "Similitud coseno de Vectorize, de 0 a 1. Aquí no se corta: los 10 candidatos pasan al juez.",
+      },
+    ],
+    rank: [
+      {
+        term: "Nota del juez",
+        text: "De 0 a 1, cuánto sirve el fragmento para responder. La marca azul es 0,50: desde ahí cuenta como útil.",
+      },
+      {
+        term: "Coseno",
+        text: "La similitud de la búsqueda, para comparar: el juez puede subir un fragmento que la búsqueda dejó abajo.",
+      },
+      { term: "Motivo", text: "Por qué el juez le pone esa nota, con sus palabras." },
+    ],
+    assess: [
+      {
+        term: "Evidencia",
+        text: "Suficiente (cobertura de 0,75 o más, sin lagunas) responde; parcial (0,40 a 0,75) conserva y reformula; insuficiente (menos de 0,40) descarta y reformula.",
+      },
+      { term: "Lagunas", text: "Lo que falta para responder; guía la siguiente búsqueda." },
+      {
+        term: "Conservados",
+        text: "Fragmentos útiles que pasan a la respuesta o a la siguiente vuelta.",
+      },
+      {
+        term: "Quién decide",
+        text: "El juez solo pone notas; los umbrales viven en el código, no en el prompt.",
+      },
+    ],
+    retain: [
+      {
+        term: "Conservados",
+        text: "Lo útil se guarda para no perderlo cuando se vuelva a buscar.",
+      },
+    ],
+    discard: [
+      {
+        term: "Descartados",
+        text: "Lo recuperado no sirve y queda fuera de la respuesta, con su motivo.",
+      },
+    ],
+    reformulate: [
+      {
+        term: "Consulta nueva",
+        text: "El evaluador reescribe la búsqueda para cubrir la laguna; la pregunta original no cambia.",
+      },
+      { term: "Reformulaciones", text: "Como mucho 2 por turno." },
+    ],
+    answer: [
+      {
+        term: "Generador",
+        text: "Responde solo con los fragmentos conservados y cita sus ids, que se validan.",
+      },
+      {
+        term: "Coste",
+        text: "Un turno CRAG puede hacer hasta 6 llamadas; por eso reserva más que RAG básico.",
+      },
+    ],
+    refuse: [
+      {
+        term: "No consta",
+        text: "Se agotaron las búsquedas o las reformulaciones sin evidencia suficiente.",
+      },
+    ],
+    error: [
+      {
+        term: "Detenido",
+        text: "Un error o el plazo del turno agotado; no se reintenta ni se cambia de etapa.",
+      },
+    ],
+    clarify: [{ term: "Aclarar", text: "La pregunta necesita un grupo; se pide antes de buscar." }],
+  },
+};
+
+// Guía de lectura de un nodo; vacía si el nodo no existe en esa etapa.
+export function stepGuide(stage: ClassStage, node: string | null): readonly GuideEntry[] {
+  // Sin nodo.
+  if (node === null) {
+    return [];
+  }
+  // Entradas del nodo.
+  return STEP_GUIDES[stage][node] ?? [];
+}
