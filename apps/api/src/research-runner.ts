@@ -161,7 +161,6 @@ export async function runResearchTick(
     createFixtureResearchPorts({
       signal,
       scenarioId: scenarioOf(job),
-      audience: job.audience,
       corpusVersion: job.corpus_version,
     }),
   // Contexto de medios: por defecto, demo sin R2, sin AI y sin visión.
@@ -273,7 +272,6 @@ export async function runResearchTick(
     threadId: claimed.conversation_id,
     question: graphQuestion,
     observations: [{ kind: "text", text: claimed.original_question }],
-    audience: claimed.audience,
     corpusVersion: claimed.corpus_version,
     scenarioId: scenarioOf(claimed),
   };
@@ -412,7 +410,7 @@ export async function runResearchTick(
         startedAt: claimed.created_at,
         checkpointer: new D1CheckpointSaver(database),
         threadId: checkpointThread(jobId),
-        interruptBefore: interrupt ? "course" : undefined,
+        interruptBefore: interrupt ? "store" : undefined,
         jobId: claimed.id,
         originalQuestion: claimed.original_question,
       },
@@ -672,7 +670,6 @@ export function fixturePorts(signal: AbortSignal, job: JobRow): ResearchPorts {
   return createFixtureResearchPorts({
     signal,
     scenarioId: scenarioOf(job),
-    audience: job.audience,
     corpusVersion: job.corpus_version,
   });
 }

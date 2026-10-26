@@ -91,9 +91,9 @@ function attachmentSource(
   hash: string,
   text: string,
 ): ResearchSource {
-  // Fuente de tipo attachment aportada por el alumno.
+  // Fuente de tipo attachment aportada por el usuario.
   return {
-    // «attachment»: lo aportó el alumno. No es una fuente del curso ni de la web.
+    // «attachment»: lo aportó el usuario. No es una fuente de la tienda ni de la web.
     kind: "attachment",
     // Id estable de la fuente: papel y archivo.
     sourceId: `attachment:${role}:${assetId}`,
@@ -105,7 +105,7 @@ function attachmentSource(
     excerpts: [text.slice(0, RESEARCH_LIMITS.maxExcerptChars)],
     // Hash para identificar el contenido exacto.
     contentHash: hash,
-    // Autoridad «user-input»: no puede sostener por sí sola un hecho del curso.
+    // Autoridad «user-input»: no puede sostener por sí sola un hecho de la tienda.
     authority: "user-input",
     // Aún no se asigna a ninguna subpregunta.
     subquestionIds: [],
@@ -650,7 +650,6 @@ export function shellSummary(
     fixture: ports.fixture,
     scenarioId: job.scenario_id,
     measured: ports.measured,
-    audience: job.audience,
     corpusVersion: job.corpus_version,
     // Pregunta original (o el texto del informe si no hay pregunta).
     originalQuestion: (job.original_question || reportText).slice(
@@ -666,7 +665,7 @@ export function shellSummary(
     subquestions: [],
     // Sin rondas ni registros de llamadas.
     rounds: 0,
-    courseQueries: [],
+    storeQueries: [],
     toolCalls: [],
     searches: [],
     discovered: [],
@@ -690,7 +689,7 @@ export function shellSummary(
       pagesRead: 0,
       modelCalls: 0,
       toolCalls: 0,
-      courseQueries: 0,
+      storeQueries: 0,
       elapsedMs: null,
     },
     // Límites del laboratorio, para que la interfaz los muestre.

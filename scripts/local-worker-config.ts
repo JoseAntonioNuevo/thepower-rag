@@ -304,6 +304,7 @@ export function loadLocalWorkerConfig(
           message: "El entorno pedido no está en el archivo de Wrangler.",
           generation: null,
           retrieval: null,
+          storeRetrieval: null,
           chatCorpus: null,
           chatRetrieval: null,
           capabilities: {
@@ -469,11 +470,11 @@ export function formatPreflight(
     // Nivel, sin comprobar conexión.
     lines.push(`  ${name}: ${binding.level}; alcanzable: no comprobado; verificado: no`);
   }
-  // Corpus del chat y, con la tienda, sus variables e índice. La investigación sigue con el curso.
+  // Corpus del chat y, con la tienda, sus variables e índice. La investigación lee siempre la tienda.
   const chatCorpus = chatCorpusId(config.vars.CHAT_CORPUS);
   // Línea del corpus.
   lines.push(
-    `corpus del chat (CHAT_CORPUS): ${chatCorpus ?? `desconocido (${config.vars.CHAT_CORPUS ?? ""})`}; la investigación usa el curso`,
+    `corpus del chat (CHAT_CORPUS): ${chatCorpus ?? `desconocido (${config.vars.CHAT_CORPUS ?? ""})`}; la investigación usa ThePower Shop`,
   );
   // Con la tienda, sus nombres y su binding.
   if (chatCorpus === "thepower-shop") {

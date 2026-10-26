@@ -5,7 +5,6 @@
 import {
   RESEARCH_LIMITS,
   researchStepSchema,
-  type Audience,
   type ResearchNode,
   type ResearchOutcome,
   type ResearchScenarioId,
@@ -92,8 +91,8 @@ export function controlError(error: unknown): ResearchControlError | null {
   return null;
 }
 
-// Registro de una consulta al curso.
-export interface CourseQueryLog {
+// Registro de una consulta a las políticas de la tienda.
+export interface StoreQueryLog {
   // Ronda.
   round: number;
   // Subpregunta.
@@ -111,9 +110,9 @@ export interface ToolCallLog {
   // Ronda.
   round: number;
   // Nombre de la herramienta.
-  name: "get_course_session";
+  name: "get_order";
   // Argumentos.
-  args: { sessionId: string; audience: Audience };
+  args: { orderId: string };
   // Estado.
   status: "ok" | "rejected" | "error";
   // Detalle.
@@ -218,9 +217,7 @@ export interface ResearchState {
   threadId: string | null;
   // Trabajo durable.
   jobId: string | null;
-  // Audiencia.
-  audience: Audience;
-  // Versión del corpus.
+  // Versión del corpus de la tienda.
   corpusVersion: string;
   // Escenario de prueba.
   scenarioId: ResearchScenarioId | null;
@@ -232,8 +229,8 @@ export interface ResearchState {
   researchPlan: ResearchPlan | null;
   // Contadores.
   counters: Counters;
-  // Consultas al curso.
-  courseQueries: CourseQueryLog[];
+  // Consultas a las políticas.
+  storeQueries: StoreQueryLog[];
   // Llamadas a la herramienta.
   toolCalls: ToolCallLog[];
   // Búsquedas.
@@ -242,8 +239,8 @@ export interface ResearchState {
   discovered: DiscoveredLog[];
   // Lecturas.
   pagesRead: ReadLog[];
-  // Consultas pendientes al curso.
-  pendingCourse: PendingQuery[];
+  // Consultas pendientes a las políticas.
+  pendingStore: PendingQuery[];
   // Búsquedas pendientes.
   pendingSearch: PendingQuery[];
   // Consultas ya usadas.
@@ -307,8 +304,7 @@ export const ResearchGraphState = Annotation.Root({
   originalQuestion: last<string>(),
   threadId: last<string | null>(),
   jobId: last<string | null>(),
-  // Grupo, corpus, guion, inicio y ronda.
-  audience: last<Audience>(),
+  // Corpus, guion, inicio y ronda.
   corpusVersion: last<string>(),
   scenarioId: last<ResearchScenarioId | null>(),
   startedAt: last<number>(),
@@ -317,13 +313,13 @@ export const ResearchGraphState = Annotation.Root({
   researchPlan: last<ResearchPlan | null>(),
   counters: last<Counters>(),
   // Registros de cada llamada (para la traza).
-  courseQueries: last<CourseQueryLog[]>(),
+  storeQueries: last<StoreQueryLog[]>(),
   toolCalls: last<ToolCallLog[]>(),
   searches: last<SearchLog[]>(),
   discovered: last<DiscoveredLog[]>(),
   pagesRead: last<ReadLog[]>(),
   // Consultas pendientes y ya vistas.
-  pendingCourse: last<PendingQuery[]>(),
+  pendingStore: last<PendingQuery[]>(),
   pendingSearch: last<PendingQuery[]>(),
   seenQueries: last<string[]>(),
   // Evidencia, cobertura, causas y contradicciones.

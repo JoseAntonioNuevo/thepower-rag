@@ -1,11 +1,10 @@
 // GUÍA DE LECTURA · apps/api/src/research-graph.ts
-// Grafo LangGraph de la investigación: validar, planificar, reunir evidencia (curso, herramienta, web),
+// Grafo LangGraph de la investigación: validar, planificar, reunir evidencia (políticas de la tienda,
+// herramienta de pedidos, web),
 // evaluarla, decidir si hace falta otra ronda, sintetizar el informe y verificarlo. Cada nodo devuelve
 // solo los campos del estado que cambia; los nodos de reunir evidencia viven en research-gather.ts.
 // Límites y tipo de paso visible.
 import { RESEARCH_LIMITS, type ResearchStep } from "@thepower-rag/contracts";
-// Detecta preguntas de calendario.
-import { isScheduleQuestion } from "@thepower-rag/core";
 // Reglas puras de la investigación: validar, decidir, verificar y contar.
 import {
   // Cobertura, evidencia mostrada, decisión de otra ronda y deduplicación.
@@ -35,7 +34,7 @@ import {
 import { END, START, StateGraph, type BaseCheckpointSaver } from "@langchain/langgraph";
 // Nodos que reúnen evidencia y sus dependencias.
 import {
-  courseNode,
+  storeNode,
   halt,
   readNode,
   searchNode,
@@ -53,10 +52,6 @@ import {
   traced,
   type ResearchState,
 } from "./research-state";
-
-// Respuesta cuando falta el grupo para una pregunta de calendario.
-export const RESEARCH_CLARIFY =
-  "La pregunta parece de calendario. Elige el grupo con clases los lunes y miércoles o el grupo con clases los martes y jueves. La investigación no consulta los dos calendarios.";
 
 // Subpreguntas en la forma que ve el modelo.
 function modelSubquestions(items: readonly PlanItem[]): ModelSubquestion[] {
@@ -80,11 +75,11 @@ function causesFor(
   for (const sub of state.researchPlan?.subquestions ?? []) {
     // Su cobertura.
     const entry = coverage.find((item) => item.subquestionId === sub.id);
-    // Causa según búsquedas, lecturas, curso y herramienta.
+    // Causa según búsquedas, lecturas, políticas y herramienta.
     causes[sub.id] = attributeCause(sub, entry?.status ?? "uncovered", {
       searches: state.searches,
       reads: state.pagesRead,
-      course: state.courseQueries,
+      store: state.storeQueries,
       tools: state.toolCalls,
     });
   }
@@ -113,17 +108,6 @@ function validateNode(state: ResearchState, deps: NodeDeps): Partial<ResearchSta
     // Devuelve la parada.
     return stop;
   }
-  // Calendario sin grupo: pide aclaración.
-  if (state.audience === "program" && isScheduleQuestion(state.question)) {
-    // Aclaración sin plan ni búsquedas.
-    return {
-      outcome: "clarify",
-      stop: "clarify",
-      stopDetail: "Falta el grupo para un dato de calendario.",
-      reportText: RESEARCH_CLARIFY,
-      trace: traced(state, deps.emit, "validate", "Falta el grupo. No hay plan ni búsquedas."),
-    };
-  }
   // Aviso si la pregunta viene contextualizada con la memoria.
   const memory =
     state.originalQuestion !== state.question
@@ -131,12 +115,7 @@ function validateNode(state: ResearchState, deps: NodeDeps): Partial<ResearchSta
       : "";
   // Paso de validación.
   return {
-    trace: traced(
-      state,
-      deps.emit,
-      "validate",
-      `Pregunta válida para el grupo seleccionado.${memory}`,
-    ),
+    trace: traced(state, deps.emit, "validate", `Pregunta válida.${memory}`),
   };
 }
 
@@ -156,8 +135,7 @@ async function planNode(state: ResearchState, deps: NodeDeps): Promise<Partial<R
     deps.ports,
     state.startedAt,
     RESEARCH_LIMITS.timeouts.planMs,
-    (context) =>
-      deps.ports.model.plan({ question: state.question, audience: state.audience }, context),
+    (context) => deps.ports.model.plan({ question: state.question }, context),
   );
   // Suma el consumo.
   const ledger = addConsumption(state.ledger, result.consumption);
@@ -174,7 +152,7 @@ async function planNode(state: ResearchState, deps: NodeDeps): Promise<Partial<R
     };
   }
   // Valida el plan.
-  const plan = validatePlan(result.value, state.audience);
+  const plan = validatePlan(result.value);
   // Plan inválido.
   if (!plan.ok) {
     // Termina con invalid-output.
@@ -199,7 +177,7 @@ async function planNode(state: ResearchState, deps: NodeDeps): Promise<Partial<R
       outcome: "clarify",
       stop: "clarify",
       stopDetail: plan.value.clarification ?? "Hace falta aclarar la pregunta.",
-      // Texto que verá el alumno: la aclaración que pide el plan.
+      // Texto que verá el usuario: la aclaración que pide el plan.
       reportText:
         `Necesito una aclaración antes de investigar. ${plan.value.clarification ?? ""}`.trim(),
       // traced añade el paso a la traza visible y lo emite al navegador.
@@ -210,16 +188,16 @@ async function planNode(state: ResearchState, deps: NodeDeps): Promise<Partial<R
   const subs = plan.value.subquestions;
   // Cuántas necesitan fuentes externas.
   const external = subs.filter((item) => item.external).length;
-  // Plan aceptado: ronda 1 con consultas pendientes al curso y a la web.
+  // Plan aceptado: ronda 1 con consultas pendientes a las políticas y a la web.
   return {
     // Contadores y libro de consumo con la llamada del plan ya sumada.
     counters,
     ledger,
     researchPlan: plan.value,
     round: 1,
-    // Consultas al corpus del curso: todas las subpreguntas que no son de la herramienta de sesión.
-    pendingCourse: subs
-      .filter((item) => item.kind !== "session")
+    // Consultas a las políticas: todas las subpreguntas que no son de la herramienta de pedidos.
+    pendingStore: subs
+      .filter((item) => item.kind !== "order")
       .map((item) => ({ subquestionId: item.id, query: item.text })),
     // Consultas a la web: solo las subpreguntas marcadas como externas y con consulta.
     pendingSearch: subs
@@ -231,7 +209,7 @@ async function planNode(state: ResearchState, deps: NodeDeps): Promise<Partial<R
       { ...state, round: 1 },
       deps.emit,
       "plan",
-      `Ruta ${plan.value.route}: ${String(subs.length)} subpreguntas, ${String(external)} con fuentes externas${plan.value.tool ? ", herramienta de sesión" : ""}.`,
+      `Ruta ${plan.value.route}: ${String(subs.length)} subpreguntas, ${String(external)} con fuentes externas${plan.value.tool ? ", herramienta de pedidos" : ""}.`,
     ),
   };
 }
@@ -413,10 +391,10 @@ function decideNode(state: ResearchState, deps: NodeDeps): Partial<ResearchState
       trace: traced(state, deps.emit, "decide", `Seguimiento justificado. ${next.reason}`),
     };
   }
-  // ¿Ruta interna (curso o herramienta)?
-  const internal = state.researchPlan?.route === "course" || state.researchPlan?.route === "tool";
-  // Todo cubierto con ruta interna: respuesta del curso.
-  const stop = next.stop === "all-covered" && internal ? "course-answer" : next.stop;
+  // ¿Ruta interna (políticas o herramienta)?
+  const internal = state.researchPlan?.route === "store" || state.researchPlan?.route === "tool";
+  // Todo cubierto con ruta interna: respuesta de las políticas.
+  const stop = next.stop === "all-covered" && internal ? "store-answer" : next.stop;
   // Parada.
   const update: Partial<ResearchState> = {
     eligible: [],
@@ -436,7 +414,7 @@ function decideNode(state: ResearchState, deps: NodeDeps): Partial<ResearchState
         ? toolFailed
           ? "No se pudo leer el catálogo: la herramienta falló. Es un fallo operativo, no una falta de evidencia, y no se reintenta automáticamente."
           : "La investigación no pudo comprobar las fuentes por un fallo operativo. No es una falta de evidencia y no se reintenta automáticamente."
-        : "No hay evidencia admitida para responder. No consta en el material del curso consultado ni en las páginas leídas.";
+        : "No hay evidencia admitida para responder. No consta en las políticas de la tienda consultadas ni en las páginas leídas.";
   }
   // Actualización.
   return update;
@@ -481,7 +459,7 @@ async function followUpNode(state: ResearchState, deps: NodeDeps): Promise<Parti
         ];
   });
   // Consultas ya hechas.
-  const previousQueries = [...state.seenQueries, ...state.courseQueries.map((item) => item.query)];
+  const previousQueries = [...state.seenQueries, ...state.storeQueries.map((item) => item.query)];
   // Una llamada más.
   const counters = { ...state.counters, modelCalls: state.counters.modelCalls + 1 };
   // Seguimiento con plazo.
@@ -544,7 +522,7 @@ async function followUpNode(state: ResearchState, deps: NodeDeps): Promise<Parti
   const round = state.round + 1;
   // Consultas repetidas descartadas.
   const repeated = parsed.value.repeated.length;
-  // Nueva ronda con consultas a la web o al curso.
+  // Nueva ronda con consultas a la web o a las políticas.
   return {
     // Nueva ronda: la pregunta original no cambia, solo se añaden consultas.
     counters,
@@ -555,9 +533,9 @@ async function followUpNode(state: ResearchState, deps: NodeDeps): Promise<Parti
       reason: `Lagunas concretas en ${state.eligible.join(", ")}.`,
       queries: parsed.value.queries,
     },
-    // Las consultas de subpreguntas externas van a la web y el resto al curso.
+    // Las consultas de subpreguntas externas van a la web y el resto a las políticas.
     pendingSearch: parsed.value.queries.filter((item) => external.has(item.subquestionId)),
-    pendingCourse: parsed.value.queries.filter((item) => !external.has(item.subquestionId)),
+    pendingStore: parsed.value.queries.filter((item) => !external.has(item.subquestionId)),
     // Se vacían los candidatos y el contador de evidencia nueva.
     candidates: [],
     newAccepted: 0,
@@ -690,7 +668,7 @@ function verifyNode(state: ResearchState, deps: NodeDeps): Partial<ResearchState
       report.value.outcome === "refused"
         ? "nothing-supported"
         : state.contradictions.length > 0 &&
-            (state.stop === "all-covered" || state.stop === "course-answer")
+            (state.stop === "all-covered" || state.stop === "store-answer")
           ? "unresolved-contradiction"
           : state.stop,
     // Informe ya verificado y fuentes realmente citadas.
@@ -744,11 +722,11 @@ export function createResearchGraph(deps: NodeDeps) {
   // Nodos y aristas: si un nodo termina, se salta a finish.
   return (
     new StateGraph(ResearchGraphState)
-      // Un nodo por etapa: validar, planificar, reunir (curso, herramienta, web, selección y
+      // Un nodo por etapa: validar, planificar, reunir (políticas, herramienta, web, selección y
       // lectura), evaluar, decidir, seguir, sintetizar, verificar y terminar.
       .addNode("validate", (state) => validateNode(state, deps))
       .addNode("plan", (state) => planNode(state, deps))
-      .addNode("course", (state) => courseNode(state, deps))
+      .addNode("store", (state) => storeNode(state, deps))
       .addNode("tool", (state) => toolNode(state, deps))
       .addNode("search", (state) => searchNode(state, deps))
       .addNode("select", (state) => selectNode(state, deps))
@@ -762,8 +740,8 @@ export function createResearchGraph(deps: NodeDeps) {
       // Aristas: el recorrido es lineal y cualquier nodo que termina salta a finish.
       .addEdge(START, "validate")
       .addConditionalEdges("validate", (state) => (ended(state) ? "finish" : "plan"))
-      .addConditionalEdges("plan", (state) => (ended(state) ? "finish" : "course"))
-      .addConditionalEdges("course", (state) => (ended(state) ? "finish" : "tool"))
+      .addConditionalEdges("plan", (state) => (ended(state) ? "finish" : "store"))
+      .addConditionalEdges("store", (state) => (ended(state) ? "finish" : "tool"))
       .addConditionalEdges("tool", (state) => (ended(state) ? "finish" : "search"))
       .addConditionalEdges("search", (state) => (ended(state) ? "finish" : "select"))
       .addConditionalEdges("select", (state) => (ended(state) ? "finish" : "read"))
@@ -773,9 +751,9 @@ export function createResearchGraph(deps: NodeDeps) {
       .addConditionalEdges("decide", (state) =>
         ended(state) ? "finish" : state.eligible.length > 0 ? "follow_up" : "synthesize",
       )
-      // follow_up: con una parada va a sintetizar; si no, vuelve a buscar en el curso.
+      // follow_up: con una parada va a sintetizar; si no, vuelve a buscar en las políticas.
       .addConditionalEdges("follow_up", (state) =>
-        ended(state) ? "finish" : state.stop !== null ? "synthesize" : "course",
+        ended(state) ? "finish" : state.stop !== null ? "synthesize" : "store",
       )
       .addConditionalEdges("synthesize", (state) => (ended(state) ? "finish" : "verify"))
       // Tras verificar se termina siempre.
@@ -793,9 +771,8 @@ export function initialResearchState(request: ResearchRequest, startedAt: number
     question: request.question.trim(),
     originalQuestion: request.question.trim(),
     threadId: request.threadId,
-    // Grupo, versión del corpus y guion de demo.
+    // Trabajo, versión del corpus y guion de demo.
     jobId: null,
-    audience: request.audience,
     corpusVersion: request.corpusVersion,
     scenarioId: request.scenarioId,
     // Inicio (para el plazo global) y ronda 0.
@@ -804,13 +781,13 @@ export function initialResearchState(request: ResearchRequest, startedAt: number
     researchPlan: null,
     // Contadores y registros de cada llamada.
     counters: emptyCounters(),
-    courseQueries: [],
+    storeQueries: [],
     toolCalls: [],
     searches: [],
     discovered: [],
     pagesRead: [],
     // Consultas pendientes y ya vistas (para no repetir).
-    pendingCourse: [],
+    pendingStore: [],
     pendingSearch: [],
     seenQueries: [],
     // Evidencia: candidatos, aceptada, rechazada, cobertura, causas y contradicciones.
@@ -852,8 +829,8 @@ export async function runResearchGraph(
     checkpointer?: BaseCheckpointSaver;
     // Hilo del trabajo.
     threadId?: string;
-    // Pausa antes del nodo course.
-    interruptBefore?: "course";
+    // Pausa antes del nodo store.
+    interruptBefore?: "store";
     // Id del trabajo.
     jobId?: string | null;
     // Pregunta original.

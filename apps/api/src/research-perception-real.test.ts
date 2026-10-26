@@ -37,8 +37,8 @@ import { initialResearchState } from "./research-graph";
 // Esquema del resumen.
 import { researchSummarySchema } from "@thepower-rag/contracts";
 
-// Bytes de la imagen del aula.
-const imageBytes = async () => readFixtureBytes("dimension-mismatch.png");
+// Bytes de la foto del pedido.
+const imageBytes = async () => readFixtureBytes("pedido-auriculares.png");
 
 // Consumo simulado en el formato del proveedor.
 function usage(input: number | undefined, output: number | undefined) {
@@ -151,7 +151,7 @@ describe("adaptadores reales de medios con dobles", () => {
             {
               type: "text",
               text: JSON.stringify({
-                observedText: "expected 1024, got 768",
+                observedText: "Pedido TPS-20481",
                 notes: "contraste",
                 uncertain: false,
               }),
@@ -259,7 +259,7 @@ describe("adaptadores reales de medios con dobles", () => {
           {
             type: "text",
             text: JSON.stringify({
-              observedText: "expected 1024, got 768",
+              observedText: "Pedido TPS-20481",
               notes: "",
               uncertain: false,
             }),
@@ -279,7 +279,7 @@ describe("adaptadores reales de medios con dobles", () => {
           {
             type: "text",
             text: JSON.stringify({
-              observedText: "expected 1024, got 768",
+              observedText: "Pedido TPS-20481",
               notes: "",
               uncertain: false,
             }),
@@ -344,15 +344,15 @@ describe("adaptadores reales de medios con dobles", () => {
     expect(parseVisionJson('{"notes":"x"}')).toBeNull();
     // Válido.
     expect(
-      parseVisionJson('{"observedText":"expected 1024, got 768","notes":"","uncertain":false}')
+      parseVisionJson('{"observedText":"Pedido TPS-20481","notes":"","uncertain":false}')
         ?.observedText,
-    ).toContain("1024");
+    ).toContain("TPS-20481");
   });
 
   // Whisper: petición, transcripción y fallos.
   it("envía el audio a Whisper y no inventa una transcripción", async () => {
-    // Audio del aula.
-    const audio = await readFixtureBytes("embedding-request.wav");
+    // Nota de voz.
+    const audio = await readFixtureBytes("nota-de-voz-devolucion.wav");
     // Peticiones vistas.
     const seen: unknown[] = [];
     // Transcripción correcta.
@@ -364,7 +364,7 @@ describe("adaptadores reales de medios con dobles", () => {
           seen.push({ model, input });
           // Respuesta de Whisper.
           return {
-            text: "He cambiado el modelo de embeddings.",
+            text: "el derecho no suena.",
             word_count: 6,
             transcription_info: { language: "es", duration: 4.2 },
           };
@@ -544,7 +544,6 @@ describe("adaptadores reales de medios con dobles", () => {
         threadId: null,
         question: "pregunta",
         observations: [{ kind: "text", text: "pregunta" }],
-        audience: "program",
         corpusVersion: "fixture",
         scenarioId: null,
       },

@@ -91,7 +91,6 @@ export class ResearchJobWorkflow extends WorkflowEntrypoint<WorkerEnv, Payload> 
             return createFixtureResearchPorts({
               signal,
               scenarioId: job.scenario_id,
-              audience: job.audience,
               corpusVersion: job.corpus_version,
             });
           },

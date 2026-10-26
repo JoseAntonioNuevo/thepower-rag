@@ -175,7 +175,7 @@ describe("medios de la investigación", () => {
         modelCallMicros: 10,
         searchMicros: 10,
         readMicros: 10,
-        courseMicros: 10,
+        storeMicros: 10,
         holdMicros: 40,
       }),
     );
@@ -242,16 +242,16 @@ describe("medios de la investigación", () => {
     const created = await send(env, `${demoOrigin}/api/research/conversations`, {
       method: "POST",
       headers: { ...headers, "content-type": "application/json" },
-      body: JSON.stringify({ audience: "M/J" }),
+      body: JSON.stringify({}),
     });
     // 201.
     expect(created.status).toBe(201);
     // Id.
     const conversation = (await created.json()) as { id: string };
-    // Imagen del aula.
-    const image = await readFixtureBytes("dimension-mismatch.png");
-    // Audio del aula.
-    const audio = await readFixtureBytes("embedding-request.wav");
+    // Foto del pedido.
+    const image = await readFixtureBytes("pedido-auriculares.png");
+    // Nota de voz.
+    const audio = await readFixtureBytes("nota-de-voz-devolucion.wav");
     // Sube unos bytes con una clave de idempotencia.
     const upload = (bytes: Uint8Array, key: string, type = "application/octet-stream") =>
       send(env, `${demoOrigin}/api/research/conversations/${conversation.id}/media`, {
@@ -476,11 +476,9 @@ describe("medios de la investigación", () => {
       report: { text: string } | null;
     };
     // Texto de la imagen.
-    expect(payload.summary.media?.image?.observedText).toContain("expected 1024, got 768");
+    expect(payload.summary.media?.image?.observedText).toContain("Pedido TPS-20481");
     // Transcripción.
-    expect(payload.summary.media?.audio?.transcript).toContain(
-      "He cambiado el modelo de embeddings",
-    );
+    expect(payload.summary.media?.audio?.transcript).toContain("el derecho no suena");
     // Voz lista.
     expect(payload.summary.media?.speech?.status).toBe("ready");
     // Informe.
@@ -565,8 +563,8 @@ describe("medios de la investigación", () => {
     // La inserta.
     await database
       .prepare(
-        `INSERT INTO research_conversations (id, owner_id, audience, created_at, updated_at)
-         VALUES (?, 'owner-a', 'M/J', 1, 1)`,
+        `INSERT INTO research_conversations (id, owner_id, created_at, updated_at)
+         VALUES (?, 'owner-a', 1, 1)`,
       )
       .bind(conversationId)
       .run();
@@ -630,7 +628,7 @@ describe("medios de la investigación", () => {
         // Resultado.
         return {
           ok: true as const,
-          value: { observedText: "expected 1024, got 768", notes: "texto", uncertain: false },
+          value: { observedText: "Pedido TPS-20481", notes: "texto", uncertain: false },
           consumption: { kind: "none" as const },
         };
       },
@@ -773,12 +771,12 @@ describe("medios de la investigación", () => {
     // Conversación.
     const conversationId = crypto.randomUUID();
     // Pregunta.
-    const question = "¿Para qué sirve un checkpointer en LangGraph?";
+    const question = "¿Cuánto tarda el reembolso con Bizum?";
     // La inserta.
     await database
       .prepare(
-        `INSERT INTO research_conversations (id, owner_id, audience, created_at, updated_at)
-         VALUES (?, 'owner-a', 'M/J', 1, 1)`,
+        `INSERT INTO research_conversations (id, owner_id, created_at, updated_at)
+         VALUES (?, 'owner-a', 1, 1)`,
       )
       .bind(conversationId)
       .run();
@@ -942,7 +940,7 @@ describe("medios de la investigación", () => {
       // Termina esta rama sin ejecutar los pasos siguientes del recorrido.
       return;
     // Imagen.
-    const image = await readFixtureBytes("dimension-mismatch.png");
+    const image = await readFixtureBytes("pedido-auriculares.png");
     // Hash.
     const hash = await sha256Bytes(image);
     // Conversación.
@@ -952,8 +950,8 @@ describe("medios de la investigación", () => {
     // Conversación.
     await database
       .prepare(
-        `INSERT INTO research_conversations (id, owner_id, audience, created_at, updated_at)
-         VALUES (?, 'owner-a', 'M/J', 1, 1)`,
+        `INSERT INTO research_conversations (id, owner_id, created_at, updated_at)
+         VALUES (?, 'owner-a', 1, 1)`,
       )
       .bind(conversationId)
       .run();

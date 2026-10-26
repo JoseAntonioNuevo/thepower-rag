@@ -10,13 +10,13 @@ import type { PlanItem } from "./plan";
 // Tipo de evidencia web.
 import type { WebEvidence } from "./ports";
 
-// Subpregunta técnica de prueba.
+// Subpregunta externa de prueba.
 const sub: PlanItem = {
   id: "q1",
-  text: "Qué significa el desajuste de dimensión.",
-  kind: "technical",
+  text: "Qué dice la normativa sobre los productos precintados.",
+  kind: "external",
   external: true,
-  query: "dimension mismatch",
+  query: "desistimiento productos precintados",
 };
 
 // Evidencia web aceptada de prueba.
@@ -25,11 +25,11 @@ function accepted(sourceId: string): AcceptedEvidence {
   const item: WebEvidence = {
     kind: "web",
     sourceId,
-    requestedUrl: "https://developers.cloudflare.com/vectorize/",
-    url: "https://developers.cloudflare.com/vectorize/",
-    domain: "developers.cloudflare.com",
-    title: "Vectorize",
-    text: "La dimensión del índice no se puede cambiar después de crearlo.",
+    requestedUrl: "https://europa.eu/youreurope/citizens/consumers/shopping/returns/index_es.htm",
+    url: "https://europa.eu/youreurope/citizens/consumers/shopping/returns/index_es.htm",
+    domain: "europa.eu",
+    title: "Devoluciones",
+    text: "Los productos precintados por higiene no se pueden devolver después de abrirlos.",
     retrievedAt: "2026-10-10T00:00:00.000Z",
     publishedAt: null,
     contentHash: `sha256:${"b".repeat(64)}`,
@@ -39,8 +39,8 @@ function accepted(sourceId: string): AcceptedEvidence {
   return {
     item,
     subquestionIds: ["q1"],
-    excerpts: ["La dimensión del índice no se puede cambiar después de crearlo."],
-    reason: "Explica la dimensión fija.",
+    excerpts: ["Los productos precintados por higiene no se pueden devolver después de abrirlos."],
+    reason: "Explica la excepción por higiene.",
     round: 1,
   };
 }

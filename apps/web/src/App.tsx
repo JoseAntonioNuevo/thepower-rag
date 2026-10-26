@@ -1,6 +1,6 @@
 // GUÍA DE LECTURA · apps/web/src/App.tsx
-// Interfaz principal del curso: elige etapa (sin RAG, RAG, CRAG o investigación) y grupo, conversa con
-// useChat del AI SDK contra /api/chat y enseña al lado las fuentes citadas, la traza y el grafo CRAG.
+// Interfaz principal: elige etapa (sin RAG, RAG, CRAG o investigación), conversa con useChat del AI SDK
+// contra /api/chat y enseña al lado las fuentes citadas, la traza y el grafo CRAG.
 // Recorrido de un envío: verificación Turnstile → sendMessage → flujo SSE → mensajes, fuentes y traza.
 // useChat gestiona mensajes, envío y streaming.
 import { useChat } from "@ai-sdk/react";
@@ -70,12 +70,8 @@ const STAGES: readonly { id: ChatMode; label: string }[] = [
   { id: "research", label: "Investigación" },
 ];
 
-// Grupos: general o un calendario concreto.
-const AUDIENCES: readonly { id: Audience; label: string; title?: string }[] = [
-  { id: "program", label: "General" },
-  { id: "L/X", label: "L/X", title: "Grupo con clases los lunes y miércoles" },
-  { id: "M/J", label: "M/J", title: "Grupo con clases los martes y jueves" },
-];
+// Grupo de todas las conversaciones: la aplicación ya no separa por grupos.
+const AUDIENCE: Audience = "program";
 
 // Pregunta de ejemplo de cada etapa con el material del curso.
 const EXAMPLES: Record<ChatMode, string> = {
@@ -86,7 +82,7 @@ const EXAMPLES: Record<ChatMode, string> = {
 };
 
 // Preguntas de ejemplo con la tienda ThePower Shop. Son casos de demostración, nunca del test de 20.
-// La investigación sigue con el material del curso.
+// La investigación usa su propia pregunta de demostración.
 const STORE_EXAMPLES: Record<ChatMode, string> = {
   "sin-rag": "¿Cuántos días tengo para devolver un pedido en ThePower Shop?",
   rag: "¿A partir de qué importe es gratis el envío estándar a la península?",
@@ -1294,12 +1290,10 @@ function flagFromUrl(name: string): boolean {
   return new URLSearchParams(window.location.search).has(name);
 }
 
-// Aplicación: barra de etapa y grupo, y el panel que corresponde.
+// Aplicación: barra de etapa y el panel que corresponde.
 export function App() {
   // Etapa.
   const [mode, setMode] = useState<ChatMode>("sin-rag");
-  // Grupo.
-  const [audience, setAudience] = useState<Audience>("program");
   // Contador para reiniciar la conversación.
   const [epoch, setEpoch] = useState(0);
   // ¿Ocupado?
@@ -1358,30 +1352,22 @@ export function App() {
   }, []);
 
   // Corpus del chat. Solo lo dice /api/health; hasta que responde es null, para no enseñar durante
-  // ese medio segundo textos del curso (ni de la tienda). La investigación sigue con el curso.
+  // ese medio segundo textos del curso (ni de la tienda).
   const chatCorpus =
     health === null ? null : health.chatCorpus?.id === "thepower-shop" ? "thepower-shop" : "course";
   // ¿El chat consulta la tienda?
   const store = chatCorpus === "thepower-shop";
   // Cabecera en espera: ocupa su sitio, invisible, hasta saber el corpus (o hasta que falle /api/health).
   const mastheadPending = chatCorpus === null && !healthFailed;
-  // Las etapas del chat no tienen grupos: siempre «General». Solo la investigación, que lee el
-  // material del curso con sus calendarios, conserva el grupo.
-  const chatAudience: Audience = mode !== "research" ? "program" : audience;
-  // Selector de grupo: solo en la investigación.
-  const showGroups = mode === "research";
-
-  // Cambia de etapa o grupo (nunca con una respuesta en curso).
-  function choose(nextMode: ChatMode, nextAudience: Audience) {
+  // Cambia de etapa (nunca con una respuesta en curso).
+  function choose(nextMode: ChatMode) {
     // Ocupado o sin cambios.
-    if (busy || (nextMode === mode && nextAudience === audience)) {
+    if (busy || nextMode === mode) {
       // Nada.
       return;
     }
     // Etapa.
     setMode(nextMode);
-    // Grupo.
-    setAudience(nextAudience);
     // Conversación nueva.
     setEpoch((value) => value + 1);
   }
@@ -1442,31 +1428,12 @@ export function App() {
               disabled={busy}
               onChange={(nextMode) => {
                 // Cambia.
-                choose(nextMode, audience);
+                choose(nextMode);
               }}
             />
             {/* Estado de la etapa. */}
             <p className="stage-note">{capabilityNote(health?.capabilities[mode].status)}</p>
           </div>
-          {/* Grupo: solo para la investigación. */}
-          {showGroups ? (
-            <div>
-              {/* Selector de grupo. */}
-              <SegmentedChoice
-                legend="Grupo del curso"
-                name="audience"
-                value={audience}
-                options={AUDIENCES}
-                disabled={busy}
-                onChange={(nextAudience) => {
-                  // Cambia.
-                  choose(mode, nextAudience);
-                }}
-              />
-              {/* Leyenda de los grupos. */}
-              <p className="group-note">L/X, lunes y miércoles. M/J, martes y jueves.</p>
-            </div>
-          ) : null}
           {/* Acceso a la biblioteca de documentos y fragmentos de la base de datos. */}
           <div className="library-open">
             <button
@@ -1509,18 +1476,13 @@ export function App() {
         {/* Investigación durable o chat, con clave para reiniciar al cambiar. */}
         {health?.durableResearch && mode === "research" ? (
           // Con investigación durable configurada: la mesa de investigación.
-          <ResearchDesk
-            key={audience}
-            audience={audience}
-            allowScenario={health.execution === "demo"}
-            onBusy={onBusy}
-          />
+          <ResearchDesk allowScenario={health.execution === "demo"} onBusy={onBusy} />
         ) : (
           // En el resto de modos: el chat.
           <ChatPane
-            key={conversationKey(mode, chatAudience, epoch)}
+            key={conversationKey(mode, AUDIENCE, epoch)}
             mode={mode}
-            audience={chatAudience}
+            audience={AUDIENCE}
             examples={chatCorpus === null ? null : store ? STORE_EXAMPLES : EXAMPLES}
             allowScenario={health?.execution === "demo"}
             onBusy={onBusy}

@@ -1,5 +1,5 @@
 // GUÍA DE LECTURA · apps/api/src/media-bytes.test.ts
-// Pruebas del inspector de bytes de imágenes y audio: acepta los archivos del aula y rechaza PNG,
+// Pruebas del inspector de bytes de imágenes y audio: acepta los archivos del caso y rechaza PNG,
 // JPEG o WAV falsificados, truncados, enormes o con datos imposibles.
 // Límites de medios.
 import { MEDIA_LIMITS } from "@thepower-rag/contracts";
@@ -28,14 +28,14 @@ async function zlib(data: Uint8Array): Promise<Uint8Array> {
 
 // Grupo de pruebas de bytes de medios.
 describe("bytes de medios", () => {
-  // Acepta los archivos del aula y detecta un PNG alterado.
-  it("acepta la imagen y el wav del aula", async () => {
-    // Imagen del aula.
-    const image = await inspectMedia(await readFixtureBytes("dimension-mismatch.png"));
+  // Acepta los archivos del caso y detecta un PNG alterado.
+  it("acepta la foto del pedido y la nota de voz", async () => {
+    // Foto del pedido.
+    const image = await inspectMedia(await readFixtureBytes("pedido-auriculares.png"));
     // Imagen cuadrada.
     const unknown = await inspectMedia(await readFixtureBytes("unknown-square.png"));
-    // Audio del aula.
-    const audio = await inspectMedia(await readFixtureBytes("embedding-request.wav"));
+    // Nota de voz.
+    const audio = await inspectMedia(await readFixtureBytes("nota-de-voz-devolucion.wav"));
     // PNG.
     expect(image.ok && image.facts.role === "image" && image.facts.mime).toBe("image/png");
     // Ancho 32.
@@ -49,11 +49,11 @@ describe("bytes de medios", () => {
       audio.ok && audio.facts.role === "audio" ? audio.facts.durationMs : 0,
     ).toBeLessThanOrEqual(30_000);
     // Hash fijo de la imagen.
-    expect(await sha256Bytes(await readFixtureBytes("dimension-mismatch.png"))).toBe(
-      "sha256:933c9557ac8d0ef3ca3687ba8a1c5d3d7cc538eec0cd0666df2ebfa0d957f596",
+    expect(await sha256Bytes(await readFixtureBytes("pedido-auriculares.png"))).toBe(
+      "sha256:97c58ca3ac12706343d5fca0f50d91d0ff0bdf0a4e235af7b759b142656cf521",
     );
     // Copia para alterar.
-    const tampered = new Uint8Array(await readFixtureBytes("dimension-mismatch.png"));
+    const tampered = new Uint8Array(await readFixtureBytes("pedido-auriculares.png"));
     // Byte 80.
     const changed = tampered[80] ?? 0;
     // Lo invierte.
@@ -69,7 +69,7 @@ describe("bytes de medios", () => {
     // Rechazado.
     expect((await inspectMedia(svg)).ok).toBe(false);
     // PNG con el primer byte cambiado.
-    const forged = new Uint8Array(await readFixtureBytes("dimension-mismatch.png"));
+    const forged = new Uint8Array(await readFixtureBytes("pedido-auriculares.png"));
     // Rompe la firma.
     forged[0] = 0x3c;
     // Rechazado.
@@ -82,7 +82,7 @@ describe("bytes de medios", () => {
 
   // JPEG real y JPEG con bytes FF de relleno.
   it("acepta un JPEG real y uno cuyo escaneo contiene FF relleno", async () => {
-    // JPEG del aula.
+    // JPEG de prueba.
     const photo = await inspectMedia(await readFixtureBytes("sample-square.jpg"));
     // MIME JPEG.
     expect(photo.ok && photo.facts.role === "image" && photo.facts.mime).toBe("image/jpeg");

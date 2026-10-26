@@ -274,7 +274,7 @@ export function parseCourseMarkdown(source: string): CourseBlock[] {
 }
 
 // Color de una cita.
-export type CiteTone = "calendar" | "exercise" | "session" | "note" | "web" | "tool";
+export type CiteTone = "calendar" | "exercise" | "session" | "store" | "note" | "web" | "tool";
 
 // Etiqueta legible de una cita a partir de su id.
 export function citeBadge(id: string): { label: string; tone: CiteTone } {
@@ -282,6 +282,23 @@ export function citeBadge(id: string): { label: string; tone: CiteTone } {
   if (/^web-[a-f0-9]{12}$/.test(id)) {
     // Web.
     return { label: "Web", tone: "web" };
+  }
+  // Herramienta de pedidos.
+  const order = /^tool:order:(tps-\d{5})$/.exec(id);
+  // Sí.
+  if (order?.[1] !== undefined) {
+    // Pedido.
+    return { label: `Pedido ${order[1].toUpperCase()}`, tone: "tool" };
+  }
+  // Política de ThePower Shop: «versión:NN-nombre:MM».
+  const policy = /^[a-z0-9]+:(\d{2})-[a-z0-9-]+:(\d{2})$/.exec(id);
+  // Sí.
+  if (policy?.[1] !== undefined && policy[2] !== undefined) {
+    // Número de la política y fragmento contado desde 1.
+    return {
+      label: `Política ${policy[1]} · ${String(Number(policy[2]) + 1)}`,
+      tone: "store",
+    };
   }
   // Herramienta de sesión.
   const tool = /^tool:session:[a-z]+:s(\d{1,2})$/.exec(id);

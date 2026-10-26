@@ -1223,7 +1223,7 @@ function parseWav(
     // Malformado.
     return { ok: false, reason: "malformed" };
   }
-  // Solo PCM con los canales, frecuencia y bits del curso.
+  // Solo PCM con los canales, frecuencia y bits admitidos.
   if (
     format !== 1 ||
     channels !== MEDIA_LIMITS.audioChannels ||

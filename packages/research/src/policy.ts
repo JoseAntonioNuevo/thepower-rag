@@ -27,14 +27,14 @@ export interface Counters {
   modelCalls: number;
   // Llamadas a la herramienta de sesiones.
   toolCalls: number;
-  // Consultas al corpus del curso.
-  courseQueries: number;
+  // Consultas a las políticas de la tienda.
+  storeQueries: number;
 }
 
 // Contadores a cero.
 export function emptyCounters(): Counters {
   // Todo empieza en cero.
-  return { searchCalls: 0, pagesRead: 0, modelCalls: 0, toolCalls: 0, courseQueries: 0 };
+  return { searchCalls: 0, pagesRead: 0, modelCalls: 0, toolCalls: 0, storeQueries: 0 };
 }
 
 // Búsquedas que quedan.
@@ -77,8 +77,8 @@ export interface AttemptLog {
   searches: readonly { subquestionId: string; status: string }[];
   // Lecturas y su estado.
   reads: readonly { subquestionId: string; status: string }[];
-  // Consultas al curso y su estado.
-  course: readonly { subquestionId: string; status: string }[];
+  // Consultas a las políticas y su estado.
+  store: readonly { subquestionId: string; status: string }[];
   // Llamadas a la herramienta y su estado.
   tools: readonly { status: string }[];
 }
@@ -99,17 +99,17 @@ export function attributeCause(
   }
   // ¿Cuenta un estado como fallo operativo?
   const failed = (value: string) => value === "error" || value === "timeout" || value === "late";
-  // Pregunta de sesión con la herramienta fallida: fallo operativo.
-  if (sub.kind === "session" && log.tools.some((item) => failed(item.status))) {
+  // Pregunta de pedido con la herramienta fallida: fallo operativo.
+  if (sub.kind === "order" && log.tools.some((item) => failed(item.status))) {
     // Fallo operativo.
     return "operational-failure";
   }
-  // Consultas al curso de esta subpregunta.
-  const course = log.course.filter((item) => item.subquestionId === sub.id);
-  // Subpregunta del curso (no externa).
+  // Consultas a las políticas de esta subpregunta.
+  const store = log.store.filter((item) => item.subquestionId === sub.id);
+  // Subpregunta interna (no externa).
   if (!sub.external) {
     // Si todas las consultas fallaron, fallo operativo; si no, falta evidencia.
-    return course.length > 0 && course.every((item) => failed(item.status))
+    return store.length > 0 && store.every((item) => failed(item.status))
       ? "operational-failure"
       : "missing-evidence";
   }
@@ -305,8 +305,8 @@ export function decideNext(input: {
         // Siguiente.
         continue;
       }
-    } else if (input.counters.courseQueries >= RESEARCH_LIMITS.maxCourseQueries) {
-      // Del curso sin consultas disponibles: no es elegible.
+    } else if (input.counters.storeQueries >= RESEARCH_LIMITS.maxStoreQueries) {
+      // Interna sin consultas disponibles: no es elegible.
       continue;
     }
     // Elegible.

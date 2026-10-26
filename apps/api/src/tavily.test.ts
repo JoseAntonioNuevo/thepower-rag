@@ -104,7 +104,7 @@ describe("Tavily en la investigación durable", () => {
         modelCallMicros: 10,
         searchMicros: 20_000,
         readMicros: 20_000,
-        courseMicros: 24,
+        storeMicros: 24,
         holdMicros: 50_024,
         visionCallMicros: 10,
         sttMicrosPerMinute: 510,
@@ -131,7 +131,7 @@ describe("Tavily en la investigación durable", () => {
         return Response.json({
           results: [
             {
-              url: "https://docs.langchain.com/graph",
+              url: "https://europa.eu/youreurope/garantias",
               title: "Graph",
               content: "Discovery snippet",
             },
@@ -142,7 +142,7 @@ describe("Tavily en la investigación durable", () => {
     });
     // Busca.
     const result = await port.search(
-      { query: "checkpointer", allowedDomains: ["docs.langchain.com"], limit: 2 },
+      { query: "desistimiento", allowedDomains: ["europa.eu"], limit: 2 },
       context,
     );
     // Una llamada.
@@ -155,7 +155,7 @@ describe("Tavily en la investigación durable", () => {
       auto_parameters: false,
       include_answer: false,
       include_raw_content: false,
-      include_domains: ["docs.langchain.com"],
+      include_domains: ["europa.eu"],
       include_usage: true,
     });
     // Correcto con créditos y usd null.
@@ -172,7 +172,7 @@ describe("Tavily en la investigación durable", () => {
     // Lector con reloj en 0.
     const port = createTavilyReader({
       apiKey: "test-key",
-      allowedDomains: ["docs.langchain.com"],
+      allowedDomains: ["europa.eu"],
       // Doble de prueba: proporciona el reloj del recorrido para calcular plazos y tiempos transcurridos.
       now: () => 0,
       // Doble de prueba: atiende la petición HTTP con el adaptador y el entorno de este recorrido.
@@ -183,7 +183,7 @@ describe("Tavily en la investigación durable", () => {
         return Response.json({
           results: [
             {
-              url: "https://docs.langchain.com/graph",
+              url: "https://europa.eu/youreurope/garantias",
               raw_content: "The checkpointer saves state.",
             },
           ],
@@ -193,11 +193,11 @@ describe("Tavily en la investigación durable", () => {
       },
     });
     // Lee.
-    const result = await port.read({ url: "https://docs.langchain.com/graph" }, context);
+    const result = await port.read({ url: "https://europa.eu/youreurope/garantias" }, context);
     // Contrato de lectura.
     expect(seen).toEqual([
       {
-        urls: ["https://docs.langchain.com/graph"],
+        urls: ["https://europa.eu/youreurope/garantias"],
         extract_depth: "basic",
         format: "markdown",
         include_images: false,
@@ -226,7 +226,7 @@ describe("Tavily en la investigación durable", () => {
     // Lector cuya respuesta viene de otro dominio.
     const port = createTavilyReader({
       apiKey: "test-key",
-      allowedDomains: ["docs.langchain.com"],
+      allowedDomains: ["europa.eu"],
       // Doble de prueba: atiende la petición HTTP con el adaptador y el entorno de este recorrido.
       fetch: async () => {
         // Cuenta.
@@ -246,7 +246,9 @@ describe("Tavily en la investigación durable", () => {
     // Sin llamadas.
     expect(calls).toBe(0);
     // URL permitida pero respuesta ajena: bloqueada.
-    expect(await port.read({ url: "https://docs.langchain.com/graph" }, context)).toMatchObject({
+    expect(
+      await port.read({ url: "https://europa.eu/youreurope/garantias" }, context),
+    ).toMatchObject({
       ok: false,
       error: "blocked",
     });
@@ -261,7 +263,7 @@ describe("Tavily en la investigación durable", () => {
     // Lector cuya lectura falla.
     const reader = createTavilyReader({
       apiKey: "test-key",
-      allowedDomains: ["docs.langchain.com"],
+      allowedDomains: ["europa.eu"],
       // Doble de prueba: atiende la petición HTTP con el adaptador y el entorno de este recorrido.
       fetch: async () => {
         // Cuenta.
@@ -275,7 +277,9 @@ describe("Tavily en la investigación durable", () => {
       },
     });
     // Error de proveedor.
-    expect(await reader.read({ url: "https://docs.langchain.com/graph" }, context)).toMatchObject({
+    expect(
+      await reader.read({ url: "https://europa.eu/youreurope/garantias" }, context),
+    ).toMatchObject({
       ok: false,
       error: "provider",
     });
@@ -292,7 +296,7 @@ describe("Tavily en la investigación durable", () => {
     });
     // Error invalid con consumo desconocido.
     expect(
-      await port.search({ query: "q", allowedDomains: ["docs.langchain.com"], limit: 1 }, context),
+      await port.search({ query: "q", allowedDomains: ["europa.eu"], limit: 1 }, context),
     ).toMatchObject({ ok: false, error: "invalid", consumption: { kind: "unknown" } });
     // Dos llamadas, sin reintentos.
     expect(calls).toBe(2);
@@ -312,7 +316,7 @@ describe("Tavily en la investigación durable", () => {
     // Con la señal cancelada: aborted.
     expect(
       await failing.search(
-        { query: "q", allowedDomains: ["docs.langchain.com"], limit: 1 },
+        { query: "q", allowedDomains: ["europa.eu"], limit: 1 },
         { ...context, signal: aborted.signal },
       ),
     ).toMatchObject({ ok: false, error: "aborted", consumption: { kind: "unknown" } });

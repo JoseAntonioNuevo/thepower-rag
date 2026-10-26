@@ -68,7 +68,7 @@ describe("adaptador Firecrawl con red simulada", () => {
           data: {
             web: [
               {
-                url: "https://docs.langchain.com/langgraph",
+                url: "https://europa.eu/youreurope/devoluciones",
                 title: "LangGraph",
                 description: "Persistencia",
               },
@@ -81,7 +81,7 @@ describe("adaptador Firecrawl con red simulada", () => {
     });
     // Busca.
     const result = await search.search(
-      { query: "langgraph", allowedDomains: ["docs.langchain.com"], limit: 5 },
+      { query: "devoluciones", allowedDomains: ["europa.eu"], limit: 5 },
       context,
     );
     // Una llamada.
@@ -90,15 +90,15 @@ describe("adaptador Firecrawl con red simulada", () => {
     expect(authorization).toBe("Bearer test-key");
     // Contrato enviado.
     expect(body).toMatchObject({
-      query: "langgraph",
+      query: "devoluciones",
       limit: 5,
-      includeDomains: ["docs.langchain.com"],
+      includeDomains: ["europa.eu"],
       ignoreInvalidURLs: true,
     });
     // Correcto.
     expect(result.ok).toBe(true);
     // URL del resultado.
-    expect(result.ok ? result.value[0]?.url : "").toContain("docs.langchain.com");
+    expect(result.ok ? result.value[0]?.url : "").toContain("europa.eu");
     // Créditos sin USD.
     expect(result.consumption).toEqual({ kind: "reported", credits: 2, usd: null });
   });
@@ -114,7 +114,7 @@ describe("adaptador Firecrawl con red simulada", () => {
     });
     // Busca.
     const result = await search.search(
-      { query: "langgraph", allowedDomains: ["docs.langchain.com"], limit: 1 },
+      { query: "devoluciones", allowedDomains: ["europa.eu"], limit: 1 },
       context,
     );
     // 2 créditos × 0,01 = 0,02 USD.
@@ -132,7 +132,7 @@ describe("adaptador Firecrawl con red simulada", () => {
     });
     // Busca.
     const result = await search.search(
-      { query: "langgraph", allowedDomains: ["docs.langchain.com"], limit: 1 },
+      { query: "devoluciones", allowedDomains: ["europa.eu"], limit: 1 },
       context,
     );
     // Desconocido.
@@ -157,7 +157,7 @@ describe("adaptador Firecrawl con red simulada", () => {
     });
     // Busca.
     const result = await search.search(
-      { query: "langgraph", allowedDomains: ["docs.langchain.com"], limit: 1 },
+      { query: "devoluciones", allowedDomains: ["europa.eu"], limit: 1 },
       context,
     );
     // Sin llamadas.
@@ -184,12 +184,12 @@ describe("adaptador Firecrawl con red simulada", () => {
     });
     // Busca con el 401.
     const denied = await unauthorized.search(
-      { query: "langgraph", allowedDomains: ["docs.langchain.com"], limit: 1 },
+      { query: "devoluciones", allowedDomains: ["europa.eu"], limit: 1 },
       context,
     );
     // Busca con el 503.
     const down = await unavailable.search(
-      { query: "langgraph", allowedDomains: ["docs.langchain.com"], limit: 1 },
+      { query: "devoluciones", allowedDomains: ["europa.eu"], limit: 1 },
       context,
     );
     // Sin cargo.
@@ -216,12 +216,12 @@ describe("adaptador Firecrawl con red simulada", () => {
     });
     // Busca.
     const badJson = await malformed.search(
-      { query: "langgraph", allowedDomains: ["docs.langchain.com"], limit: 1 },
+      { query: "devoluciones", allowedDomains: ["europa.eu"], limit: 1 },
       context,
     );
     // Busca.
     const badShape = await shaped.search(
-      { query: "langgraph", allowedDomains: ["docs.langchain.com"], limit: 1 },
+      { query: "devoluciones", allowedDomains: ["europa.eu"], limit: 1 },
       context,
     );
     // Inválido.
@@ -274,7 +274,7 @@ describe("adaptador Firecrawl con red simulada", () => {
     });
     // Busca.
     const result = await search.search(
-      { query: "langgraph", allowedDomains: ["docs.langchain.com"], limit: 1 },
+      { query: "devoluciones", allowedDomains: ["europa.eu"], limit: 1 },
       context,
     );
     // Inválido.
@@ -307,7 +307,7 @@ describe("adaptador Firecrawl con red simulada", () => {
               title: "Fuera",
               // url: destino final; sourceURL: lo que se pidió.
               url: "https://evil.example/secret",
-              sourceURL: "https://docs.langchain.com/langgraph",
+              sourceURL: "https://europa.eu/youreurope/devoluciones",
               statusCode: 200,
             },
           },
@@ -317,10 +317,10 @@ describe("adaptador Firecrawl con red simulada", () => {
       },
     });
     // Lee.
-    const result = await reader.read({ url: "https://docs.langchain.com/langgraph" }, context);
+    const result = await reader.read({ url: "https://europa.eu/youreurope/devoluciones" }, context);
     // Contrato enviado.
     expect(body).toMatchObject({
-      url: "https://docs.langchain.com/langgraph",
+      url: "https://europa.eu/youreurope/devoluciones",
       formats: [{ type: "markdown" }],
       onlyMainContent: true,
       proxy: "basic",
@@ -357,7 +357,7 @@ describe("adaptador Firecrawl con red simulada", () => {
     });
     // Lee.
     const result = await reader.read(
-      { url: "https://docs.langchain.com/langgraph" },
+      { url: "https://europa.eu/youreurope/devoluciones" },
       { signal: controller.signal, timeoutMs: 5_000 },
     );
     // Error aborted.

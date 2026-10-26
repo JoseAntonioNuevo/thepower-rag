@@ -93,8 +93,9 @@
         "RESEARCH_VISION_MODEL_ID": "claude-haiku-5-5",
         "RESEARCH_STT_MODEL_ID": "@cf/openai/whisper-large-v3-turbo",
         "RESEARCH_TTS_MODEL_ID": "@cf/deepgram/aura-2-es",
-        // Únicos dominios que la investigación puede buscar y leer.
-        "RESEARCH_ALLOWED_DOMAINS": "developers.cloudflare.com,docs.langchain.com,langchain-ai.github.io",
+        // Únicos dominios que la investigación puede buscar y leer: información de la UE para
+        // consumidores (Tu Europa, EUR-Lex) y el Boletín Oficial del Estado.
+        "RESEARCH_ALLOWED_DOMAINS": "europa.eu,eur-lex.europa.eu,www.boe.es",
         // Tarifas del modelo de investigación en USD por millón de tokens.
         "RESEARCH_INPUT_USD_PER_MILLION": "0.100000",
         "RESEARCH_OUTPUT_USD_PER_MILLION": "0.500000",

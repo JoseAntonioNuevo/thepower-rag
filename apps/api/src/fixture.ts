@@ -1,6 +1,7 @@
 // GUÍA DE LECTURA · apps/api/src/fixture.ts
-// Corpus de la demostración: lee el corpus preparado incluido en el bundle y calcula, una sola vez,
-// los vectores léxicos de prueba de cada fragmento.
+// Corpus de la demostración: lee los corpus preparados incluidos en el bundle (el del chat de la demo
+// y el de ThePower Shop, que usa la investigación) y calcula, una sola vez, los vectores léxicos de
+// prueba de cada fragmento.
 // Constantes y función del embedding de la demo, y tipo de fragmento.
 import {
   FIXTURE_DIMENSIONS,
@@ -13,6 +14,8 @@ import {
 import type { Audience } from "@thepower-rag/contracts";
 // Corpus preparado (JSON) incluido en el bundle.
 import corpus from "../../../corpus/prepared/corpus.json";
+// Corpus preparado de ThePower Shop, con el mismo perfil léxico de la demo.
+import storeCorpus from "../../../corpus/prepared/thepower-shop.json";
 
 // Forma del archivo del corpus preparado.
 interface PreparedFile {
@@ -67,8 +70,12 @@ interface PreparedFile {
 
 // Corpus con su tipo.
 const prepared = corpus as PreparedFile;
+// Corpus de la tienda con su tipo.
+const preparedStore = storeCorpus as PreparedFile;
 // Fragmentos ya calculados (caché del módulo).
 let cached: IndexedChunk[] | null = null;
+// Fragmentos de la tienda ya calculados.
+let cachedStore: IndexedChunk[] | null = null;
 
 // Versión de preparación del corpus de la demo.
 export function fixtureCorpusVersion(): string {
@@ -94,26 +101,21 @@ export function fixtureCoverage() {
   return prepared.coverage;
 }
 
-// Fragmentos de la demo con su vector léxico.
-export function fixtureChunks(): IndexedChunk[] {
-  // Si ya se calcularon, se reutilizan.
-  if (cached) {
-    // Caché.
-    return cached;
-  }
+// Fragmentos de un corpus preparado con su vector léxico.
+function indexChunks(file: PreparedFile): IndexedChunk[] {
   // El corpus preparado debe usar el perfil léxico de la demo.
   if (
-    prepared.embeddingModel !== FIXTURE_EMBEDDING_MODEL ||
-    prepared.dimensions !== FIXTURE_DIMENSIONS ||
-    prepared.indexProfile.family !== "fixture" ||
-    prepared.indexProfile.model !== FIXTURE_EMBEDDING_MODEL ||
-    prepared.indexProfile.dimensions !== FIXTURE_DIMENSIONS
+    file.embeddingModel !== FIXTURE_EMBEDDING_MODEL ||
+    file.dimensions !== FIXTURE_DIMENSIONS ||
+    file.indexProfile.family !== "fixture" ||
+    file.indexProfile.model !== FIXTURE_EMBEDDING_MODEL ||
+    file.indexProfile.dimensions !== FIXTURE_DIMENSIONS
   ) {
     // Error si no.
     throw new Error("El corpus preparado no usa el perfil de prueba declarado.");
   }
   // Aplana documentos y fragmentos y calcula cada vector.
-  cached = prepared.documents.flatMap((document) =>
+  return file.documents.flatMap((document) =>
     document.chunks.map((chunk) => ({
       documentId: document.id,
       chunkId: chunk.chunkId,
@@ -121,12 +123,32 @@ export function fixtureChunks(): IndexedChunk[] {
       section: chunk.section,
       text: chunk.text,
       audience: document.audience,
-      corpusVersion: prepared.preparationId,
+      corpusVersion: file.preparationId,
       vector: fixtureEmbed(chunk.text),
     })),
   );
+}
+
+// Fragmentos de la demo con su vector léxico.
+export function fixtureChunks(): IndexedChunk[] {
+  // Se calculan una vez y se reutilizan.
+  cached ??= indexChunks(prepared);
   // Fragmentos calculados.
   return cached;
+}
+
+// Versión de preparación del corpus de ThePower Shop que usa la demo de la investigación.
+export function storeFixtureCorpusVersion(): string {
+  // Id de preparación.
+  return preparedStore.preparationId;
+}
+
+// Fragmentos de ThePower Shop con su vector léxico, para la demo de la investigación.
+export function storeFixtureChunks(): IndexedChunk[] {
+  // Se calculan una vez y se reutilizan.
+  cachedStore ??= indexChunks(preparedStore);
+  // Fragmentos calculados.
+  return cachedStore;
 }
 
 // Umbral de la demo.

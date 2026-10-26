@@ -1,10 +1,10 @@
 // GUÍA DE LECTURA · apps/api/src/research-phase3-review.test.ts
-// Pruebas de las correcciones de la fase 3 (multimodal): guion del aula sin escenario, memoria de imagen y
+// Pruebas de las correcciones de la fase 3 (multimodal): guion del caso sin escenario, memoria de imagen y
 // audio, compactación de la memoria, aclaración cuando la fusión no cabe y esperas que no terminan.
 // Funciones de prueba.
 import { describe, expect, it } from "vite-plus/test";
 // Versión del corpus de ejemplo.
-import { fixtureCorpusVersion } from "./fixture";
+import { storeFixtureCorpusVersion } from "./fixture";
 // Lee archivos de ejemplo.
 import { readFixtureBytes } from "./fixture-bytes";
 // Inspección y hash de bytes.
@@ -60,7 +60,7 @@ async function ready(filename = ":memory:") {
   return database;
 }
 
-// Crea un trabajo con la imagen y el audio del aula.
+// Crea un trabajo con la imagen y el nota de voz.
 async function classroomJob(
   database: Awaited<ReturnType<typeof ready>>,
   input: {
@@ -89,8 +89,8 @@ async function classroomJob(
   // La inserta.
   await database
     .prepare(
-      `INSERT INTO research_conversations (id, owner_id, audience, created_at, updated_at)
-       VALUES (?, ?, 'M/J', 1, 1)`,
+      `INSERT INTO research_conversations (id, owner_id, created_at, updated_at)
+       VALUES (?, ?, 1, 1)`,
     )
     .bind(conversationId, ownerId)
     .run();
@@ -101,9 +101,9 @@ async function classroomJob(
   // ¿Audio?
   const withAudio = input.audio !== false;
   // Bytes de la imagen.
-  const image = withImage ? await readFixtureBytes("dimension-mismatch.png") : null;
+  const image = withImage ? await readFixtureBytes("pedido-auriculares.png") : null;
   // Bytes del audio.
-  const audio = withAudio ? await readFixtureBytes("embedding-request.wav") : null;
+  const audio = withAudio ? await readFixtureBytes("nota-de-voz-devolucion.wav") : null;
   // Datos de la imagen.
   const imageFacts = image ? await inspectMedia(image) : null;
   // Datos del audio.
@@ -220,7 +220,7 @@ async function classroomJob(
     originalQuestion: input.question ?? "",
     contextualized: null,
     scenarioId: null,
-    corpusVersion: fixtureCorpusVersion(),
+    corpusVersion: storeFixtureCorpusVersion(),
     // Reserva calculada para los medios del caso.
     prices: { ...prices, holdMicros: hold },
     now,
@@ -245,8 +245,8 @@ async function classroomJob(
 
 // Grupo: correcciones de la fase 3.
 describe("correcciones de la revisión de la fase 3", () => {
-  // El guion del aula se usa en todo el recorrido sin escenario.
-  it("resuelve el guion del aula para todo el recorrido, sin escenario explícito", async () => {
+  // El guion del caso se usa en todo el recorrido sin escenario.
+  it("resuelve el guion del caso para todo el recorrido, sin escenario explícito", async () => {
     // Base.
     const database = await ready();
     // Trabajo con voz.
@@ -309,7 +309,7 @@ describe("correcciones de la revisión de la fase 3", () => {
       originalQuestion: "",
       contextualized: null,
       scenarioId: null,
-      corpusVersion: fixtureCorpusVersion(),
+      corpusVersion: storeFixtureCorpusVersion(),
       // Misma reserva que el trabajo ya admitido.
       prices: { ...prices!, holdMicros: job.admitted.reserved_micros },
       now: Date.now(),
@@ -320,11 +320,11 @@ describe("correcciones de la revisión de la fase 3", () => {
         voice: true,
         image: {
           id: job.imageId,
-          hash: await sha256Bytes(await readFixtureBytes("dimension-mismatch.png")),
+          hash: await sha256Bytes(await readFixtureBytes("pedido-auriculares.png")),
         },
         audio: {
           id: job.audioId,
-          hash: await sha256Bytes(await readFixtureBytes("embedding-request.wav")),
+          hash: await sha256Bytes(await readFixtureBytes("nota-de-voz-devolucion.wav")),
           durationMs: 1_000,
         },
       },
@@ -373,29 +373,29 @@ describe("correcciones de la revisión de la fase 3", () => {
     // Uno solo.
     expect(user).toHaveLength(1);
     // Con la imagen.
-    expect(user[0]?.text).toContain("1024");
+    expect(user[0]?.text).toContain("TPS-20481");
     // Con el audio.
-    expect(user[0]?.text).toContain("He cambiado el modelo de embeddings");
+    expect(user[0]?.text).toContain("el derecho no suena");
     // Sin bytes.
     expect(user[0]?.text).not.toContain("base64");
     // Seguimiento sobre la captura.
     const follow = contextualize(own, "¿Qué dimensiones aparecían en mi captura?");
     // Con la imagen.
-    expect(follow.contextualized).toContain("1024");
+    expect(follow.contextualized).toContain("TPS-20481");
     // Con el audio.
-    expect(follow.contextualized).toContain("He cambiado el modelo de embeddings");
-    // Avisa de que no es evidencia del curso.
-    expect(follow.contextualized).toContain("no es evidencia del curso");
+    expect(follow.contextualized).toContain("el derecho no suena");
+    // Avisa de que no es evidencia de la tienda.
+    expect(follow.contextualized).toContain("no es evidencia de la tienda");
     // Seguimiento sobre el audio.
     const spoken = contextualize(own, "¿Qué pedía el audio?");
     // Con el audio.
-    expect(spoken.contextualized).toContain("He cambiado el modelo de embeddings");
+    expect(spoken.contextualized).toContain("el derecho no suena");
     // Otro propietario no lo ve.
     expect(await memoryTurns(database, "otra-persona", job.conversationId)).toEqual([]);
     // Relee.
     const again = await memoryTurns(database, job.ownerId, job.conversationId);
     // Sigue.
-    expect(again.some((turn) => turn.text.includes("1024"))).toBe(true);
+    expect(again.some((turn) => turn.text.includes("TPS-20481"))).toBe(true);
     // Cierra.
     database.close();
   });
@@ -446,9 +446,9 @@ describe("correcciones de la revisión de la fase 3", () => {
     // Sigue.
     expect(perceived.proceed).toBe(true);
     // Imagen.
-    expect(perceived.question).toContain("expected 1024");
+    expect(perceived.question).toContain("Pedido TPS-20481");
     // Audio.
-    expect(perceived.question).toContain("He cambiado el modelo de embeddings");
+    expect(perceived.question).toContain("el derecho no suena");
     // Cabecera de memoria.
     expect(perceived.question).toContain(RESEARCH_MEMORY_HEADER.trim());
     // Final reciente.
@@ -508,9 +508,9 @@ describe("correcciones de la revisión de la fase 3", () => {
     // Petición final.
     expect(perceived.question).toContain("ERROR_AUTH_401");
     // Imagen.
-    expect(perceived.question).toContain("expected 1024");
+    expect(perceived.question).toContain("Pedido TPS-20481");
     // Audio.
-    expect(perceived.question).toContain("He cambiado el modelo de embeddings");
+    expect(perceived.question).toContain("el derecho no suena");
     // Final reciente.
     expect(perceived.question).toContain("dato-reciente-9981");
     // Sin el principio.
@@ -518,9 +518,9 @@ describe("correcciones de la revisión de la fase 3", () => {
     // Dentro del máximo.
     expect(perceived.question.length).toBeLessThanOrEqual(2_000);
     // Texto de la imagen.
-    expect(perceived.media.image?.observedText).toContain("1024");
+    expect(perceived.media.image?.observedText).toContain("TPS-20481");
     // Transcripción.
-    expect(perceived.media.audio?.transcript).toContain("embeddings");
+    expect(perceived.media.audio?.transcript).toContain("auriculares");
   });
 
   // Si la fusión perdería la petición, no planifica ni busca.
@@ -553,7 +553,6 @@ describe("correcciones de la revisión de la fase 3", () => {
         const ports = createFixtureResearchPorts({
           signal,
           scenarioId: row.scenario_id,
-          audience: row.audience,
           corpusVersion: row.corpus_version,
         });
         // Plan y búsqueda contados.
@@ -642,16 +641,16 @@ describe("correcciones de la revisión de la fase 3", () => {
     // Sin informe de prueba.
     expect(body.report?.text ?? "").not.toContain("Informe de prueba");
     // Imagen leída.
-    expect(body.summary.media?.image?.observedText).toContain("1024");
+    expect(body.summary.media?.image?.observedText).toContain("TPS-20481");
     // Audio transcrito.
-    expect(body.summary.media?.audio?.transcript).toContain("He cambiado el modelo de embeddings");
+    expect(body.summary.media?.audio?.transcript).toContain("el derecho no suena");
     // Tipos de operación del grafo.
     const graphKinds = new Set([
       "plan",
       "assess",
       "follow-up",
       "synthesize",
-      "course",
+      "store",
       "tool",
       "search",
       "read",
@@ -676,7 +675,7 @@ describe("correcciones de la revisión de la fase 3", () => {
       originalQuestion: question,
       contextualized: null,
       scenarioId: null,
-      corpusVersion: fixtureCorpusVersion(),
+      corpusVersion: storeFixtureCorpusVersion(),
       prices: { ...prices!, holdMicros: job.admitted.reserved_micros },
       now: Date.now(),
       deadlineMs: 120_000,
@@ -686,11 +685,11 @@ describe("correcciones de la revisión de la fase 3", () => {
         voice: false,
         image: {
           id: job.imageId,
-          hash: await sha256Bytes(await readFixtureBytes("dimension-mismatch.png")),
+          hash: await sha256Bytes(await readFixtureBytes("pedido-auriculares.png")),
         },
         audio: {
           id: job.audioId,
-          hash: await sha256Bytes(await readFixtureBytes("embedding-request.wav")),
+          hash: await sha256Bytes(await readFixtureBytes("nota-de-voz-devolucion.wav")),
           durationMs: 1_000,
         },
       },
@@ -723,7 +722,6 @@ describe("correcciones de la revisión de la fase 3", () => {
         const ports = createFixtureResearchPorts({
           signal,
           scenarioId: row.scenario_id,
-          audience: row.audience,
           corpusVersion: row.corpus_version,
         });
         // Búsqueda contada.
@@ -753,7 +751,7 @@ describe("correcciones de la revisión de la fase 3", () => {
             // Marca tarde.
             late = true;
             // Transcripción.
-            return { text: "Investiga el error de embeddings." };
+            return { text: "Investiga la devolución del pedido." };
           },
         },
         vision: null,
@@ -809,8 +807,7 @@ describe("correcciones de la revisión de la fase 3", () => {
           // Puertos de demo para la reanudación.
           signal: new AbortController().signal,
           scenarioId: null,
-          audience: "M/J",
-          corpusVersion: fixtureCorpusVersion(),
+          corpusVersion: storeFixtureCorpusVersion(),
         });
       },
       {
@@ -847,8 +844,8 @@ describe("correcciones de la revisión de la fase 3", () => {
     // La inserta.
     await database
       .prepare(
-        `INSERT INTO research_conversations (id, owner_id, audience, created_at, updated_at)
-         VALUES (?, 'review-owner', 'program', 1, 1)`,
+        `INSERT INTO research_conversations (id, owner_id, created_at, updated_at)
+         VALUES (?, 'review-owner', 1, 1)`,
       )
       .bind(conversationId)
       .run();
@@ -864,7 +861,7 @@ describe("correcciones de la revisión de la fase 3", () => {
       originalQuestion: "¿Qué es un checkpointer?",
       contextualized: null,
       scenarioId: "sufficient-first-round",
-      corpusVersion: fixtureCorpusVersion(),
+      corpusVersion: storeFixtureCorpusVersion(),
       // Reserva que incluye la voz.
       prices: { ...prices!, holdMicros: hold ?? 1 },
       now: Date.now(),
@@ -984,7 +981,6 @@ describe("correcciones de la revisión de la fase 3", () => {
         const ports = createFixtureResearchPorts({
           signal,
           scenarioId: row.scenario_id,
-          audience: row.audience,
           corpusVersion: row.corpus_version,
         });
         // Búsqueda contada.

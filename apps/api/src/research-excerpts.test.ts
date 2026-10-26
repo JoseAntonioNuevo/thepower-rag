@@ -11,9 +11,10 @@ import { excerptChoices } from "./research-excerpts";
 import { createResearchModelPort } from "./research-real";
 
 // Texto de prueba con una negación y dos cifras.
-const text = "No se puede cambiar la dimensión. El índice espera 1024 y el vector contiene 768.";
+const text =
+  "No se puede devolver por desistimiento. El plazo general es de 30 días y el de la electrónica abierta es de 14.";
 // Evidencia mostrada al modelo.
-const evidence = [{ sourceId: "web-test", kind: "web" as const, title: "Vectorize", text }];
+const evidence = [{ sourceId: "web-test", kind: "web" as const, title: "Devoluciones", text }];
 // Contexto de una llamada.
 const call = { signal: new AbortController().signal, timeoutMs: 5000 };
 
@@ -88,8 +89,8 @@ describe("selección de extractos del proveedor real", () => {
             decision: "accept",
             subquestionIds: ["q1"],
             excerptIds: [index],
-            reason: "Dimensiones documentadas.",
-            excerpts: ["Se puede cambiar a 768."],
+            reason: "Plazos documentados.",
+            excerpts: ["Se puede devolver en 14 días."],
           },
         ],
         coverage: [{ subquestionId: "q1", status: "covered", gap: null, followUp: false }],
@@ -97,7 +98,7 @@ describe("selección de extractos del proveedor real", () => {
       });
       // Evaluación.
       const result = await mock.port.assess(
-        { question: "Dimensiones", subquestions: [], evidence, priorCoverage: [], round: 1 },
+        { question: "Plazos", subquestions: [], evidence, priorCoverage: [], round: 1 },
         call,
       );
       // Una llamada.
@@ -106,8 +107,8 @@ describe("selección de extractos del proveedor real", () => {
       expect(mock.outputCap()).toBe(1800);
       // Extracto que corresponde al índice, o ninguno.
       const selected = [
-        "No se puede cambiar la dimensión.",
-        "El índice espera 1024 y el vector contiene 768.",
+        "No se puede devolver por desistimiento.",
+        "El plazo general es de 30 días y el de la electrónica abierta es de 14.",
       ][index];
       // Resultado esperado.
       const expected = selected
@@ -116,7 +117,7 @@ describe("selección de extractos del proveedor real", () => {
       // Coincide.
       expect(result).toMatchObject(expected);
       // El texto inventado no aparece.
-      expect(JSON.stringify(result)).not.toContain("Se puede cambiar a 768.");
+      expect(JSON.stringify(result)).not.toContain("Se puede devolver en 14 días.");
       // Consumo estimado con los tokens.
       expect(result.consumption).toMatchObject({ kind: "estimated", inputTokens: 10 });
     },
@@ -134,12 +135,12 @@ describe("selección de extractos del proveedor real", () => {
         findings: [{ subquestionId: "q1", reference }],
         checks: [reference],
         unresolved: [],
-        answer: { text: "El índice espera 768 y el vector contiene 1024." },
+        answer: { text: "El plazo general es de 14 días y el de la electrónica abierta es de 30." },
       });
       // Síntesis.
       const result = await mock.port.synthesize(
         {
-          question: "Dimensiones",
+          question: "Plazos",
           subquestions: [],
           coverage: [],
           contradictions: [],
@@ -167,7 +168,7 @@ describe("selección de extractos del proveedor real", () => {
       expect(result).toMatchObject(expected);
       // El texto inventado no aparece.
       expect(JSON.stringify(result)).not.toContain(
-        "El índice espera 768 y el vector contiene 1024.",
+        "El plazo general es de 14 días y el de la electrónica abierta es de 30.",
       );
     },
   );

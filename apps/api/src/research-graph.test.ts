@@ -1,22 +1,27 @@
 // GUÍA DE LECTURA · apps/api/src/research-graph.test.ts
-// Pruebas del grafo de investigación con los puertos de prueba: los ocho escenarios de la demo, preguntas
-// libres, contradicciones, fallos de la herramienta, cancelación y contabilidad del consumo.
+// Pruebas del grafo de investigación con los puertos de prueba sobre ThePower Shop: los ocho escenarios
+// de la demo, preguntas libres, pedidos de otra cuenta, contradicciones, fallos de la herramienta,
+// cancelación y contabilidad del consumo.
 // Pregunta de demo, límites, esquema y tipos.
 import {
   DEMO_RESEARCH_QUESTION,
   RESEARCH_LIMITS,
   researchSummarySchema,
-  type Audience,
   type ResearchScenarioId,
 } from "@thepower-rag/contracts";
 // Tipos de puertos y petición.
 import type { ResearchPorts, ResearchRequest } from "@thepower-rag/research";
 // Funciones de prueba.
 import { afterEach, beforeEach, describe, expect, it } from "vite-plus/test";
-// Versión del corpus de ejemplo.
-import { fixtureCorpusVersion } from "./fixture";
-// Puertos de prueba y consulta principal.
-import { createFixtureResearchPorts, MAIN_Q1_QUERY } from "./research-fixture";
+// Versión del corpus de la tienda de la demo.
+import { storeFixtureCorpusVersion } from "./fixture";
+// Puertos de prueba, subpregunta de las políticas y consultas principales.
+import {
+  createFixtureResearchPorts,
+  FOLLOW_Q3_QUERY,
+  MAIN_Q1,
+  STALL_Q3_QUERY,
+} from "./research-fixture";
 // Grafo y estado inicial.
 import { initialResearchState, runResearchGraph } from "./research-graph";
 // Libro de consumo.
@@ -41,21 +46,16 @@ afterEach(() => {
 });
 
 // Versión del corpus.
-const corpus = fixtureCorpusVersion();
+const corpus = storeFixtureCorpusVersion();
 
 // Petición de investigación de prueba.
-function request(
-  question: string,
-  scenarioId: ResearchScenarioId | null,
-  audience: Audience = "program",
-): ResearchRequest {
+function request(question: string, scenarioId: ResearchScenarioId | null): ResearchRequest {
   // Campos de la petición.
   return {
     runId: "run-test",
     threadId: null,
     question,
     observations: [{ kind: "text", text: question }],
-    audience,
     corpusVersion: corpus,
     scenarioId,
   };
@@ -69,8 +69,8 @@ interface Calls {
   search: number;
   // URL leídas.
   read: string[];
-  // Consultas al curso.
-  course: number;
+  // Consultas a las políticas.
+  store: number;
   // Llamadas a la herramienta.
   tool: number;
 }
@@ -78,7 +78,7 @@ interface Calls {
 /** Envuelve los puertos para contar llamadas sin cambiar su comportamiento. */
 function counted(ports: ResearchPorts): { ports: ResearchPorts; calls: Calls } {
   // Contadores vacíos.
-  const calls: Calls = { model: [], search: 0, read: [], course: 0, tool: 0 };
+  const calls: Calls = { model: [], search: 0, read: [], store: 0, tool: 0 };
   // Puertos que registran cada llamada y delegan.
   return {
     // Registro de llamadas por tipo.
@@ -96,7 +96,7 @@ function counted(ports: ResearchPorts): { ports: ResearchPorts; calls: Calls } {
         // Doble de prueba: compone el informe a partir de la evidencia reunida y las subpreguntas del plan.
         synthesize: (i, c) => (calls.model.push("synthesize"), ports.model.synthesize(i, c)),
       },
-      // Búsqueda, lectura, curso y herramienta, con el mismo patrón.
+      // Búsqueda, lectura, políticas y herramienta, con el mismo patrón.
       search: {
         // Doble de prueba: busca candidatos para la consulta con los límites y el transporte de este adaptador.
         search: (i, c) => ((calls.search += 1), ports.search.search(i, c)),
@@ -105,13 +105,13 @@ function counted(ports: ResearchPorts): { ports: ResearchPorts; calls: Calls } {
         // Doble de prueba: lee el recurso solicitado y devuelve el resultado de este adaptador al consumidor.
         read: (i, c) => (calls.read.push(i.url), ports.reader.read(i, c)),
       },
-      course: {
-        // Doble de prueba: recupera candidatos documentales dentro del ámbito de corpus y consulta del recorrido.
-        retrieve: (i, c) => ((calls.course += 1), ports.course.retrieve(i, c)),
+      store: {
+        // Doble de prueba: recupera fragmentos de las políticas para la consulta del recorrido.
+        retrieve: (i, c) => ((calls.store += 1), ports.store.retrieve(i, c)),
       },
       tool: {
-        // Doble de prueba: resuelve una ficha del curso usando el ámbito y los filtros del recorrido.
-        getCourseSession: (i, c) => ((calls.tool += 1), ports.tool.getCourseSession(i, c)),
+        // Doble de prueba: lee un pedido de la cuenta de la conversación.
+        getOrder: (i, c) => ((calls.tool += 1), ports.tool.getOrder(i, c)),
       },
     },
   };
@@ -121,7 +121,6 @@ function counted(ports: ResearchPorts): { ports: ResearchPorts; calls: Calls } {
 async function run(
   scenario: ResearchScenarioId | null,
   question = DEMO_RESEARCH_QUESTION,
-  audience: Audience = "program",
   tweak?: (ports: ResearchPorts) => ResearchPorts,
 ) {
   // Controlador de cancelación.
@@ -130,13 +129,12 @@ async function run(
   const base = createFixtureResearchPorts({
     signal: controller.signal,
     scenarioId: scenario,
-    audience,
     corpusVersion: corpus,
   });
   // Puertos contados, con un cambio opcional.
   const { ports, calls } = counted(tweak ? tweak(base) : base);
   // Ejecuta el grafo.
-  const state = await runResearchGraph(request(question, scenario, audience), ports);
+  const state = await runResearchGraph(request(question, scenario), ports);
   // Resumen validado.
   const summary = researchSummarySchema.parse(researchSummary(state, ports));
   // Resultado.
@@ -165,16 +163,18 @@ describe("grafo de investigación con adaptadores de prueba", () => {
     expect(summary.stop).toBe("all-covered");
     // Cubierto.
     expect(summary.coverage.every((entry) => entry.status === "covered")).toBe(true);
-    // Dos búsquedas.
-    expect(summary.counters.searchCalls).toBe(2);
-    // Cuatro páginas.
-    expect(summary.counters.pagesRead).toBe(4);
+    // Una búsqueda: solo la subpregunta de la normativa.
+    expect(summary.counters.searchCalls).toBe(1);
+    // Tres páginas.
+    expect(summary.counters.pagesRead).toBe(3);
+    // La herramienta lee el pedido de la pregunta.
+    expect(summary.toolCalls.map((item) => item.args)).toEqual([{ orderId: "TPS-20481" }]);
     // Plan, evaluación y síntesis.
     expect(calls.model).toEqual(["plan", "assess", "synthesize"]);
     // Tipos de fuente.
     const kinds = new Set(sources.map((source) => source.kind));
-    // Curso y web.
-    expect(kinds).toEqual(new Set(["course", "web"]));
+    // Políticas, pedido y web.
+    expect(kinds).toEqual(new Set(["store", "tool", "web"]));
     // Las fuentes son las citadas.
     expect(sources.map((source) => source.sourceId).sort()).toEqual(
       [...summary.citedSourceIds].sort(),
@@ -214,13 +214,11 @@ describe("grafo de investigación con adaptadores de prueba", () => {
     // Dos rondas.
     expect(summary.rounds).toBe(2);
     // Consulta de seguimiento.
-    expect(summary.followUp?.queries).toEqual([
-      { subquestionId: "q2", query: "wrangler vectorize get index dimensions" },
-    ]);
+    expect(summary.followUp?.queries).toEqual([{ subquestionId: "q3", query: FOLLOW_Q3_QUERY }]);
     // Completo.
     expect(summary.outcome).toBe("complete");
-    // Tres búsquedas.
-    expect(summary.counters.searchCalls).toBe(3);
+    // Dos búsquedas: la inicial y la de seguimiento.
+    expect(summary.counters.searchCalls).toBe(2);
     // Una URL ya leída no se repite.
     expect(summary.discovered.some((item) => item.decision === "already-read")).toBe(true);
     // Etapas del modelo.
@@ -247,10 +245,10 @@ describe("grafo de investigación con adaptadores de prueba", () => {
     expect(injected?.status).toBe("ok");
     // Se rechaza por las instrucciones.
     expect(summary.rejected.map((item) => item.reason).join(" ")).toContain("instrucciones");
-    // Y D1 por no tratar el tema.
-    expect(summary.rejected.map((item) => item.reason).join(" ")).toContain("D1");
-    // También se rechaza curso.
-    expect(summary.rejected.some((item) => item.kind === "course")).toBe(true);
+    // Y la de pasajeros aéreos por no tratar el tema.
+    expect(summary.rejected.map((item) => item.reason).join(" ")).toContain("pasajeros");
+    // También se rechaza una política que no trata devoluciones.
+    expect(summary.rejected.some((item) => item.kind === "store")).toBe(true);
     // La página inyectada no se cita.
     expect(sources.some((source) => source.sourceId === injected?.sourceId)).toBe(false);
     // Dentro del tope.
@@ -263,7 +261,7 @@ describe("grafo de investigación con adaptadores de prueba", () => {
   it("4. un dato interno sin documentar queda sin responder y la web no lo rellena", async () => {
     // Pregunta mixta.
     const question =
-      "¿Qué nota mínima exige el profesor para aprobar el ejercicio de S12? Y, técnicamente, ¿para qué sirve un checkpointer en LangGraph?";
+      "¿Qué descuento hace ThePower Shop a los estudiantes? Y, según la normativa europea, ¿quién paga el envío de una devolución por desistimiento?";
     // Ejecuta.
     const { summary, sources, state } = await run("internal-fact-missing", question);
     // Cobertura de q1.
@@ -282,8 +280,8 @@ describe("grafo de investigación con adaptadores de prueba", () => {
     expect(summary.stop).toBe("no-specific-gap");
     // Lista lo que falta.
     expect(state.reportText).toContain("Puntos sin resolver");
-    // Menciona la nota.
-    expect(state.reportText).toContain("nota mínima");
+    // Menciona el descuento que falta.
+    expect(state.reportText).toContain("descuento para estudiantes");
     // Ninguna fuente apoya q1.
     expect(sources.every((source) => !source.subquestionIds.includes("q1"))).toBe(true);
   });
@@ -292,14 +290,17 @@ describe("grafo de investigación con adaptadores de prueba", () => {
   it("5. un fallo del buscador y de una lectura no se confunde con falta de evidencia", async () => {
     // Ejecuta.
     const { summary, state, calls } = await run("provider-failure");
-    // Búsqueda de q1 con error.
-    expect(summary.searches.find((item) => item.subquestionId === "q1")?.status).toBe("error");
+    // Búsqueda de q2 con error.
+    expect(summary.searches.find((item) => item.subquestionId === "q2")?.status).toBe("error");
     // Lectura con timeout.
     expect(summary.pagesRead.some((page) => page.status === "timeout")).toBe(true);
-    // Causa: fallo operativo.
-    expect(summary.coverage.find((entry) => entry.subquestionId === "q1")?.cause).toBe(
-      "operational-failure",
-    );
+    // Causa: fallo operativo en las dos subpreguntas externas.
+    for (const id of ["q2", "q3"]) {
+      // Fallo operativo.
+      expect(summary.coverage.find((entry) => entry.subquestionId === id)?.cause).toBe(
+        "operational-failure",
+      );
+    }
     // Parada por el proveedor.
     expect(summary.stop).toBe("provider-failure");
     // Sin seguimiento.
@@ -322,12 +323,13 @@ describe("grafo de investigación con adaptadores de prueba", () => {
     expect(summary.rounds).toBe(2);
     // Parada sin progreso.
     expect(summary.stop).toBe("no-progress");
-    // Tres búsquedas.
-    expect(summary.searches).toHaveLength(3);
-    // La repetida no se busca otra vez.
-    expect(summary.searches.filter((item) => item.query.trim() === MAIN_Q1_QUERY)).toHaveLength(1);
-    // Dos lecturas.
-    expect(calls.read).toHaveLength(2);
+    // Dos búsquedas: la inicial y la que no avanza.
+    expect(summary.searches.map((item) => item.query)).toContain(STALL_Q3_QUERY);
+    expect(summary.searches).toHaveLength(2);
+    // La consulta repetida a las políticas no se hace otra vez.
+    expect(summary.storeQueries.filter((item) => item.query.trim() === MAIN_Q1)).toHaveLength(1);
+    // Una lectura: la página que vuelve a salir ya estaba leída.
+    expect(calls.read).toHaveLength(1);
     // Sin segunda evaluación.
     expect(calls.model).toEqual(["plan", "assess", "followUp", "synthesize"]);
     // Parcial.
@@ -351,15 +353,15 @@ describe("grafo de investigación con adaptadores de prueba", () => {
     // Sin la fuente inventada.
     expect(state.reportText).not.toContain("web-000000000000");
     // Sin la afirmación falsa.
-    expect(state.reportText).not.toContain("reiniciar el navegador");
+    expect(state.reportText).not.toContain("reiniciar el teléfono");
   });
 
   // Escenario 8: la herramienta responde sin búsquedas.
-  it("8. un dato interno usa la herramienta de solo lectura sin búsquedas externas", async () => {
-    // Pregunta de sesión.
-    const question = "¿Cuándo es la sesión 12 de mi grupo y qué ejercicio tiene?";
-    // Ejecuta con M/J.
-    const { summary, sources, calls } = await run("course-tool", question, "M/J");
+  it("8. un dato de un pedido usa la herramienta de solo lectura sin búsquedas externas", async () => {
+    // Pregunta sobre un pedido.
+    const question = "¿En qué estado está mi pedido TPS-20481 y cómo lo pagué?";
+    // Ejecuta.
+    const { summary, sources, calls } = await run("order-tool", question);
     // Ruta tool.
     expect(summary.route).toBe("tool");
     // Sin búsquedas.
@@ -369,56 +371,59 @@ describe("grafo de investigación con adaptadores de prueba", () => {
     // Una llamada.
     expect(summary.toolCalls).toHaveLength(1);
     // Argumentos.
-    expect(summary.toolCalls[0]?.args).toEqual({ sessionId: "S12", audience: "M/J" });
+    expect(summary.toolCalls[0]?.args).toEqual({ orderId: "TPS-20481" });
     // Fuente de la herramienta.
     const tool = sources.find((source) => source.kind === "tool");
-    // Respaldada por el calendario.
-    expect(tool?.kind === "tool" ? tool.backingSourceIds : []).toContain(
-      `${corpus}:calendario-mj:12`,
-    );
-    // Con la fecha.
-    expect(tool?.excerpts.join(" ")).toContain("2026-10-29");
-    // Respuesta del curso.
-    expect(summary.stop).toBe("course-answer");
+    // Con la versión de los datos de pedidos.
+    expect(tool?.kind === "tool" ? tool.dataVersion : null).toBe("pedidos-2026-10-26");
+    // Con el pago y la entrega.
+    expect(tool?.excerpts.join(" ")).toContain("Pago: Bizum.");
+    expect(tool?.excerpts.join(" ")).toContain("Entrega: 20/10/2026.");
+    // Respuesta de las políticas y la herramienta, sin web.
+    expect(summary.stop).toBe("store-answer");
     // Completo.
     expect(summary.outcome).toBe("complete");
   });
 
-  // Calendario sin grupo: aclaración sin plan.
-  it("pide grupo para una pregunta de calendario en General sin planificar", async () => {
-    // Ejecuta.
-    const { summary, calls } = await run(
+  // Pedido de otra cuenta: la herramienta lo rechaza sin enseñar sus datos.
+  it("rechaza el pedido de otra cuenta sin enseñar sus datos", async () => {
+    // Ejecuta con un pedido que pertenece a otra cuenta.
+    const { summary, sources, state, calls } = await run(
       null,
-      "¿Cuándo es la sesión 12 de mi grupo y qué ejercicio tiene?",
+      "¿En qué estado está el pedido TPS-30117?",
     );
-    // Aclaración.
-    expect(summary.outcome).toBe("clarify");
-    // Sin modelo.
-    expect(calls.model).toEqual([]);
+    // Una llamada rechazada.
+    expect(summary.toolCalls).toHaveLength(1);
+    expect(summary.toolCalls[0]?.status).toBe("rejected");
+    // El motivo es la cuenta.
+    expect(summary.toolCalls[0]?.detail).toContain("no pertenece a la cuenta");
+    // Ninguna fuente de la herramienta.
+    expect(sources.some((source) => source.kind === "tool")).toBe(false);
+    // El informe no enseña el producto de ese pedido.
+    expect(state.reportText).not.toContain("Portátil");
+    // Sin búsquedas.
+    expect(calls.search).toBe(0);
   });
 
-  // Pregunta libre: solo el curso.
-  it("una pregunta libre del curso no fuerza búsquedas externas", async () => {
+  // Pregunta libre: solo las políticas.
+  it("una pregunta libre sobre la tienda no fuerza búsquedas externas", async () => {
     // Ejecuta.
-    const { summary, calls } = await run(
-      null,
-      "¿Cómo modela LangGraph un agente con estado y nodos?",
-    );
-    // Ruta course.
-    expect(summary.route).toBe("course");
+    const { summary, calls } = await run(null, "¿Cuánto cuesta ThePower Shop Plus al año?");
+    // Ruta store.
+    expect(summary.route).toBe("store");
     // Sin búsquedas.
     expect(calls.search).toBe(0);
     // Completo o parcial.
     expect(["complete", "partial"]).toContain(summary.outcome);
   });
 
-  // Una nota inventada se retira aunque cite una página técnica.
-  it("no muestra una nota inventada citada solo con una página técnica", async () => {
+  // Un descuento inventado se retira aunque cite una página externa.
+  it("no muestra un descuento inventado citado solo con una página externa", async () => {
     // Pregunta mixta.
     const question =
-      "¿Qué nota mínima exige el profesor para aprobar el ejercicio de S12? Y, técnicamente, ¿para qué sirve un checkpointer en LangGraph?";
-    // Síntesis que inventa la nota.
-    const { summary, state } = await run("internal-fact-missing", question, "program", (ports) => ({
+      "¿Qué descuento hace ThePower Shop a los estudiantes? Y, según la normativa europea, ¿quién paga el envío de una devolución por desistimiento?";
+    // Síntesis que inventa el descuento.
+    const { summary, state } = await run("internal-fact-missing", question, (ports) => ({
       ...ports,
       model: {
         ...ports.model,
@@ -437,7 +442,7 @@ describe("grafo de investigación con adaptadores de prueba", () => {
                   ...(base.value as Record<string, unknown>),
                   // …pero cambia la respuesta por una afirmación inventada que cita la página web.
                   answer: {
-                    text: "El curso exige nota mínima 9 para el ejercicio con LangGraph checkpointer.",
+                    text: "ThePower Shop hace un 20 % de descuento a los estudiantes en la devolución.",
                     sourceIds: web === undefined ? [] : [web.sourceId],
                   },
                 },
@@ -452,43 +457,38 @@ describe("grafo de investigación con adaptadores de prueba", () => {
     );
     // No completo.
     expect(summary.outcome).not.toBe("complete");
-    // Sin la nota inventada.
-    expect(state.reportText).not.toContain("nota mínima 9");
-    // Retirada en la verificación.
-    expect(summary.claimCheck.dropped.some((item) => item.claim.includes("nota mínima 9"))).toBe(
-      true,
-    );
+    // Sin el descuento inventado.
+    expect(state.reportText).not.toContain("20 % de descuento");
+    // Retirado en la verificación.
+    expect(
+      summary.claimCheck.dropped.some((item) => item.claim.includes("20 % de descuento")),
+    ).toBe(true);
   });
 
   // Una contradicción abre seguimiento y no cierra el informe.
   it("una contradicción sin resolver no cierra el informe y abre seguimiento", async () => {
     // Texto de la contradicción.
     const text =
-      "Una fuente dice que la dimensión no se puede cambiar y otra dice que sí se puede.";
+      "Una fuente dice que el plazo de desistimiento es de 14 días y otra dice que es de 30 días.";
     // Evaluación que siempre la añade.
-    const { summary, state, calls } = await run(
-      "sufficient-first-round",
-      undefined,
-      "program",
-      (ports) => ({
-        ...ports,
-        model: {
-          ...ports.model,
-          // Doble de prueba: valora la suficiencia de la evidencia y las carencias que quedan por cubrir.
-          assess: async (input, context) => {
-            // Evaluación original.
-            const base = await ports.model.assess(input, context);
-            // Con la contradicción.
-            return base.ok
-              ? {
-                  ...base,
-                  value: { ...(base.value as Record<string, unknown>), contradictions: [text] },
-                }
-              : base;
-          },
+    const { summary, state, calls } = await run("sufficient-first-round", undefined, (ports) => ({
+      ...ports,
+      model: {
+        ...ports.model,
+        // Doble de prueba: valora la suficiencia de la evidencia y las carencias que quedan por cubrir.
+        assess: async (input, context) => {
+          // Evaluación original.
+          const base = await ports.model.assess(input, context);
+          // Con la contradicción.
+          return base.ok
+            ? {
+                ...base,
+                value: { ...(base.value as Record<string, unknown>), contradictions: [text] },
+              }
+            : base;
         },
-      }),
-    );
+      },
+    }));
     // Hubo seguimiento.
     expect(calls.model).toContain("followUp");
     // Dentro del tope.
@@ -510,7 +510,7 @@ describe("grafo de investigación con adaptadores de prueba", () => {
     // Lo que vio cada evaluación.
     const seen: { ids: string[]; accepted: string[]; prior: string[] }[] = [];
     // Evaluación que registra su entrada.
-    const { summary } = await run("partial-follow-up", undefined, "program", (ports) => ({
+    const { summary } = await run("partial-follow-up", undefined, (ports) => ({
       ...ports,
       model: {
         ...ports.model,
@@ -562,14 +562,14 @@ describe("grafo de investigación con adaptadores de prueba", () => {
 
   // Fallo de la herramienta: error operativo.
   it("un fallo de la herramienta no se informa como falta de evidencia", async () => {
-    // Pregunta de sesión.
-    const question = "¿Cuándo es la sesión 12 de mi grupo y qué ejercicio tiene?";
+    // Pregunta sobre un pedido.
+    const question = "¿En qué estado está mi pedido TPS-20481 y cómo lo pagué?";
     // Herramienta que falla.
-    const { summary, state } = await run("course-tool", question, "M/J", (ports) => ({
+    const { summary, state } = await run("order-tool", question, (ports) => ({
       ...ports,
       tool: {
-        // Doble de prueba: resuelve una ficha del curso usando el ámbito y los filtros del recorrido.
-        getCourseSession: () =>
+        // Doble de prueba: lee un pedido de la cuenta de la conversación.
+        getOrder: () =>
           Promise.resolve({
             ok: false as const,
             error: "provider" as const,
@@ -589,19 +589,19 @@ describe("grafo de investigación con adaptadores de prueba", () => {
     // Lo dice.
     expect(state.reportText).toContain("fallo operativo");
     // No lo presenta como falta de evidencia.
-    expect(state.reportText).not.toContain("No consta en el material");
+    expect(state.reportText).not.toContain("No consta en las políticas");
   });
 
   // Herramienta sin el dato: falta de evidencia.
   it("una herramienta que responde sin el dato sí es falta de evidencia", async () => {
-    // Pregunta de sesión.
-    const question = "¿Cuándo es la sesión 12 de mi grupo y qué ejercicio tiene?";
-    // Herramienta que no encuentra la ficha.
-    const { summary, state } = await run("course-tool", question, "M/J", (ports) => ({
+    // Pregunta sobre un pedido.
+    const question = "¿En qué estado está mi pedido TPS-20481 y cómo lo pagué?";
+    // Herramienta que no encuentra el pedido.
+    const { summary, state } = await run("order-tool", question, (ports) => ({
       ...ports,
       tool: {
-        // Doble de prueba: resuelve una ficha del curso usando el ámbito y los filtros del recorrido.
-        getCourseSession: () =>
+        // Doble de prueba: lee un pedido de la cuenta de la conversación.
+        getOrder: () =>
           Promise.resolve({
             ok: true as const,
             value: null,
@@ -633,7 +633,6 @@ describe("grafo de investigación con adaptadores de prueba", () => {
     const base = createFixtureResearchPorts({
       signal: controller.signal,
       scenarioId: "sufficient-first-round",
-      audience: "program",
       corpusVersion: corpus,
     });
     // Puertos medidos con un plan lento que ignora la señal.

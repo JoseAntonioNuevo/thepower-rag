@@ -71,7 +71,7 @@ function factualText(report: string): string {
 /**
  * Selecciona frases completas verificadas de las secciones factuales.
  * No lee las lagunas libres del modelo ni separa cláusulas coordinadas.
- * Las frases de estado son fijas y no hablan de una norma del curso.
+ * Las frases de estado son fijas y no hablan de una política de la tienda.
  */
 export function spokenScript(input: {
   // Cómo terminó la investigación.

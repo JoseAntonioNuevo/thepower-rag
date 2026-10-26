@@ -1,8 +1,7 @@
 // GUÍA DE LECTURA · apps/api/src/research-live.ts
-// Construye los puertos reales de una investigación (modelo, corpus, herramienta, buscador y lector)
-// solo si la capacidad está lista y la reserva del trabajo es compatible. No llama a la red.
-// Tipo de audiencia.
-import type { Audience } from "@thepower-rag/contracts";
+// Construye los puertos reales de una investigación (modelo, políticas de ThePower Shop, herramienta de
+// pedidos, buscador y lector) solo si la capacidad está lista y la reserva del trabajo es compatible.
+// No llama a la red.
 // Tipo de los puertos.
 import type { ResearchPorts } from "@thepower-rag/research";
 // Diagnóstico del entorno y ajustes de la investigación.
@@ -36,15 +35,15 @@ export function liveResearchPorts(
   const settings = researchSettings(env);
   // Binding de Workers AI.
   const embedder = env.AI;
-  // Binding de Vectorize.
-  const index = env.VECTORIZE;
+  // Índice de Vectorize de la tienda.
+  const index = env.VECTORIZE_STORE;
   // Binding de D1.
   const database = env.DB;
   // Todo tiene que estar listo; si no, error sin caer a los guiones.
   if (
     assessment.capabilities.research.status !== "ready" ||
     assessment.generation === null ||
-    assessment.retrieval === null ||
+    assessment.storeRetrieval === null ||
     !settings.ok ||
     embedder === undefined ||
     typeof embedder !== "object" ||
@@ -77,17 +76,16 @@ export function liveResearchPorts(
     throw new Error("research-model-reservation-incompatible");
   // Puertos reales con el modelo de investigación.
   return createRealResearchPorts({
-    // Señal, grupo del trabajo y versión del corpus configurada.
+    // Señal y versión configurada del corpus de la tienda.
     signal,
-    audience: job.audience as Audience,
-    corpusVersion: assessment.retrieval.corpusVersion,
-    // Ajustes de investigación y de recuperación.
+    corpusVersion: assessment.storeRetrieval.corpusVersion,
+    // Ajustes de investigación y de búsqueda en la tienda.
     settings: settings.settings,
-    retrieval: assessment.retrieval,
+    retrieval: assessment.storeRetrieval,
     // El mismo modelo planifica y redacta.
     planner: model,
     generator: model,
-    // Bindings del curso.
+    // Bindings de embeddings, índice de la tienda y D1.
     embedder: embedder as EmbeddingRunner,
     index: index as VectorIndex,
     database: database as SqlDatabase,

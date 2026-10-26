@@ -81,6 +81,17 @@ describe("markdown del curso", () => {
     });
   });
 
+  // Citas de la tienda: política y pedido.
+  it("nombra las citas de las políticas y de la herramienta de pedidos", () => {
+    // Fragmento de una política.
+    expect(citeBadge("cc140d7876624:03-electronica-y-garantia:01")).toEqual({
+      label: "Política 03 · 2",
+      tone: "store",
+    });
+    // Pedido devuelto por get_order.
+    expect(citeBadge("tool:order:tps-20481")).toEqual({ label: "Pedido TPS-20481", tone: "tool" });
+  });
+
   // Tablas con filas en líneas o pegadas.
   it("lee una tabla de calendario y también si las filas vinieron pegadas", () => {
     // Tabla normal.

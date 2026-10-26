@@ -18,7 +18,7 @@ import { PUBLIC_PROVIDER_MESSAGE } from "./course-stream";
 // Tipo del diagnóstico.
 import type { Assessment } from "./env";
 // Versión del corpus de la demo.
-import { fixtureCorpusVersion } from "./fixture";
+import { storeFixtureCorpusVersion } from "./fixture";
 // Puertos de la demo y su guion.
 import { createFixtureResearchPorts, resolveResearchScenario } from "./research-fixture";
 // Grafo de la investigación.
@@ -103,17 +103,16 @@ export async function researchHttpResponse(input: {
   const scenarioId = real
     ? null
     : resolveResearchScenario(input.request.researchScenario, input.question);
-  // Versión del corpus.
+  // Versión del corpus de la tienda.
   const corpusVersion = real
-    ? (input.assessment.retrieval?.corpusVersion ?? fixtureCorpusVersion())
-    : fixtureCorpusVersion();
+    ? (input.assessment.storeRetrieval?.corpusVersion ?? storeFixtureCorpusVersion())
+    : storeFixtureCorpusVersion();
   // Puertos inyectados o los de la demo.
   const ports =
     input.deps.researchPorts ??
     createFixtureResearchPorts({
       signal: input.signal,
       scenarioId,
-      audience: input.request.audience,
       corpusVersion,
     });
   // Petición al grafo.
@@ -122,7 +121,6 @@ export async function researchHttpResponse(input: {
     threadId: null,
     question: input.question,
     observations: [{ kind: "text", text: input.question }],
-    audience: input.request.audience,
     corpusVersion,
     scenarioId,
   };

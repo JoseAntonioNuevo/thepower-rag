@@ -439,7 +439,7 @@ const CAUSE_LABEL: Record<GapCause, string> = {
   evidence: "con evidencia",
   "missing-evidence": "no consta en la evidencia admitida",
   "operational-failure": "no se pudo comprobar por un fallo operativo, no por falta de evidencia",
-  "not-allowed": "las fuentes externas no pueden documentar un dato interno del curso",
+  "not-allowed": "las fuentes externas no pueden documentar un dato interno de la tienda",
 };
 
 /**

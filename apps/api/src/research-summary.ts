@@ -82,8 +82,7 @@ export function researchSummary(
     fixture: ports.fixture,
     scenarioId: state.scenarioId,
     measured: ports.measured,
-    // Grupo, corpus y pregunta original recortada.
-    audience: state.audience,
+    // Corpus de la tienda y pregunta original recortada.
     corpusVersion: state.corpusVersion,
     originalQuestion: (state.originalQuestion || state.question).slice(
       0,
@@ -106,9 +105,9 @@ export function researchSummary(
       kind: item.kind,
       external: item.external,
     })),
-    // Rondas y registros de cada llamada al curso, herramienta y búsqueda.
+    // Rondas y registros de cada llamada a las políticas, la herramienta y la búsqueda.
     rounds: state.round,
-    courseQueries: state.courseQueries.map((item) => ({
+    storeQueries: state.storeQueries.map((item) => ({
       ...item,
       subquestionId: sid(item.subquestionId),
     })),

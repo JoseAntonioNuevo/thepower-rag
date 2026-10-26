@@ -1,7 +1,7 @@
 // GUÍA DE LECTURA · apps/api/src/chat-corpus.ts
 // Corpus del chat (Sin RAG, RAG básico y CRAG): el material del curso o la tienda ficticia ThePower Shop.
-// Lo elige CHAT_CORPUS. La investigación de S12 no pasa por aquí: siempre lee el curso con
-// CORPUS_VERSION, INDEX_PROFILE y el binding VECTORIZE, aunque el chat use la tienda.
+// Lo elige CHAT_CORPUS. La investigación de S12 no pasa por aquí: siempre lee las políticas de la
+// tienda (variables STORE_* y binding VECTORIZE_STORE, en storeRetrieval), aunque el chat use el curso.
 // Identificador del corpus del chat, compartido con la interfaz.
 import type { ChatCorpusId } from "@thepower-rag/contracts";
 

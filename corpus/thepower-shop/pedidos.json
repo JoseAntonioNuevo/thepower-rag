@@ -1,0 +1,58 @@
+{
+  "version": "pedidos-2026-10-26",
+  "customerId": "C-1001",
+  "orders": [
+    {
+      "orderId": "TPS-20481",
+      "customerId": "C-1001",
+      "product": "Auriculares intraauditivos SoundBud Pro",
+      "category": "Electrónica · audio",
+      "seller": "ThePower Shop",
+      "price": "59,90 €",
+      "payment": "Bizum",
+      "orderedAt": "17/10/2026",
+      "deliveredAt": "20/10/2026",
+      "status": "Entregado",
+      "openCases": "ninguna"
+    },
+    {
+      "orderId": "TPS-20517",
+      "customerId": "C-1001",
+      "product": "Cepillo de dientes eléctrico CleanPro 3",
+      "category": "Electrónica · cuidado personal",
+      "seller": "Hogar Norte S.L.",
+      "price": "39,95 €",
+      "payment": "Tarjeta",
+      "orderedAt": "22/10/2026",
+      "deliveredAt": null,
+      "status": "En reparto",
+      "openCases": "ninguna"
+    },
+    {
+      "orderId": "TPS-19876",
+      "customerId": "C-1001",
+      "product": "Zapatillas de running Trail, talla 42",
+      "category": "Moda · calzado",
+      "seller": "Deportes Atlántico",
+      "price": "74,00 €",
+      "payment": "PayPal",
+      "orderedAt": "05/09/2026",
+      "deliveredAt": "09/09/2026",
+      "status": "Devuelto el 18/09/2026; reembolso ordenado el 21/09/2026",
+      "openCases": "ninguna"
+    },
+    {
+      "orderId": "TPS-30117",
+      "customerId": "C-2002",
+      "product": "Portátil Lumen 14",
+      "category": "Electrónica · informática",
+      "seller": "ThePower Shop",
+      "price": "899,00 €",
+      "payment": "Plazos ThePower Shop",
+      "orderedAt": "12/10/2026",
+      "deliveredAt": "15/10/2026",
+      "status": "Entregado",
+      "openCases": "una reclamación de garantía"
+    }
+  ]
+}

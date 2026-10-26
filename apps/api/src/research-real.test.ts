@@ -1,6 +1,7 @@
 // GUÍA DE LECTURA · apps/api/src/research-real.test.ts
 // Pruebas de los adaptadores reales de investigación con modelos y almacenes simulados: errores del
-// proveedor sin filtrar datos, umbral de búsqueda, herramienta del catálogo, consumo y construcción sin red.
+// proveedor sin filtrar datos, umbral de búsqueda en las políticas, herramienta de pedidos, consumo y
+// construcción sin red.
 // Tipo de fragmento del corpus.
 import type { ChunkRecord } from "@thepower-rag/core";
 // Validador del plan de investigación.
@@ -13,27 +14,27 @@ import { MockLanguageModelV4 } from "ai/test";
 import { describe, expect, it } from "vite-plus/test";
 // Tipos de ajustes.
 import type { ResearchSettings, RetrievalSettings } from "./env";
-// Fragmentos y versión de ejemplo.
-import { fixtureChunks, fixtureCorpusVersion } from "./fixture";
+// Fragmentos y versión de las políticas de la tienda de la demo.
+import { storeFixtureChunks, storeFixtureCorpusVersion } from "./fixture";
 // Adaptadores reales que se prueban.
 import {
   createRealResearchPorts,
   createResearchModelPort,
-  createVectorCoursePort,
+  createVectorStorePort,
   estimateResearchMaxUsd,
   type RealResearchInput,
 } from "./research-real";
-// Herramienta de sesiones del curso.
-import { createCourseSessionTool } from "./research-tool";
+// Herramienta de pedidos y sus datos ficticios.
+import { createOrderTool, ORDER_DATA } from "./research-tool";
 // Tipos de D1 y Vectorize.
 import type { SqlDatabase, VectorIndex } from "./stores";
 // Modelo de embeddings BGE-M3.
 import { BGE_M3_MODEL } from "./vectors";
 
-// Versión del corpus de ejemplo.
-const corpus = fixtureCorpusVersion();
-// Fragmentos de ejemplo.
-const library = fixtureChunks();
+// Versión del corpus de la tienda.
+const corpus = storeFixtureCorpusVersion();
+// Fragmentos de las políticas.
+const library = storeFixtureChunks();
 // Opciones de llamada: señal y plazo.
 const call = { signal: new AbortController().signal, timeoutMs: 5_000 };
 
@@ -51,7 +52,7 @@ const retrieval: RetrievalSettings = {
 const settings: ResearchSettings = {
   plannerModelId: "example/planner",
   firecrawlApiKey: "test-key",
-  allowedDomains: ["docs.langchain.com"],
+  allowedDomains: ["europa.eu"],
   budgetUsd: 1,
   inputUsdPerMillion: 0.2,
   outputUsdPerMillion: 1,
@@ -96,7 +97,7 @@ describe("adaptadores reales simulados", () => {
     });
     // Pide un plan.
     const result = await createResearchModelPort({ planner: model, generator: model }).plan(
-      { question: "Vectorize", audience: "program" },
+      { question: "Devolución de unos auriculares" },
       call,
     );
     // Una sola llamada.
@@ -135,7 +136,7 @@ describe("adaptadores reales simulados", () => {
     });
     // Pide un plan.
     const result = await createResearchModelPort({ planner: model, generator: model }).plan(
-      { question: "Vectorize", audience: "program" },
+      { question: "Devolución de unos auriculares" },
       call,
     );
     // Una llamada.
@@ -150,8 +151,8 @@ describe("adaptadores reales simulados", () => {
     // Sin el texto truncado.
     expect(JSON.stringify(result)).not.toContain("private-input");
   });
-  // El curso vectorial filtra por umbral de similitud.
-  it("el curso vectorial devuelve solo fragmentos por encima del umbral", async () => {
+  // La búsqueda en las políticas filtra por umbral de similitud.
+  it("la búsqueda en las políticas devuelve solo fragmentos por encima del umbral", async () => {
     // Consultas recibidas.
     const seen: unknown[] = [];
     // Índice simulado con un resultado alto y uno bajo.
@@ -163,15 +164,15 @@ describe("adaptadores reales simulados", () => {
         // Dos resultados.
         return {
           matches: [
-            { id: `${corpus}:s12-deep-research:00`, score: 0.91 },
-            { id: `${corpus}:s12-deep-research:01`, score: 0.1 },
+            { id: `${corpus}:03-electronica-y-garantia:01`, score: 0.91 },
+            { id: `${corpus}:03-electronica-y-garantia:02`, score: 0.1 },
           ],
         };
       },
       // Doble de prueba: inserta o actualiza el lote de vectores por sus identificadores.
       upsert: async () => ({}),
     };
-    // D1 simulado: solo existe el fragmento :00.
+    // D1 simulado: solo existe el fragmento :01.
     const database: SqlDatabase = {
       // Doble de prueba: prepara una sentencia y devuelve el objeto que permitirá enlazar valores y ejecutarla.
       prepare: () => ({
@@ -182,13 +183,13 @@ describe("adaptadores reales simulados", () => {
             // Id enlazado.
             const id = String(values[1]);
             // Fragmento o null.
-            return (id.endsWith(":00") ? chunk(id) : null) as T | null;
+            return (id.endsWith(":01") ? chunk(id) : null) as T | null;
           },
         }),
       }),
     };
-    // Puerto del curso.
-    const course = createVectorCoursePort({
+    // Puerto de las políticas.
+    const store = createVectorStorePort({
       embedder: {
         // Doble de prueba: ejecuta la operación del puerto y devuelve su resultado al llamador.
         run: async () => ({ data: [[0.1, 0.2, 0.3, 0.4]] }),
@@ -198,15 +199,15 @@ describe("adaptadores reales simulados", () => {
       retrieval,
     });
     // Busca.
-    const result = await course.retrieve(
-      { query: "deep research", audience: "program", corpusVersion: corpus, limit: 4 },
+    const result = await store.retrieve(
+      { query: "auriculares abiertos", corpusVersion: corpus, limit: 4 },
       call,
     );
     // Correcto.
     expect(result.ok).toBe(true);
     // Solo el de puntuación alta.
     expect(result.ok ? result.value.map((item) => item.sourceId) : []).toEqual([
-      `${corpus}:s12-deep-research:00`,
+      `${corpus}:03-electronica-y-garantia:01`,
     ]);
     // Consumo desconocido.
     expect(result.consumption).toEqual({ kind: "unknown" });
@@ -220,8 +221,8 @@ describe("adaptadores reales simulados", () => {
     const controller = new AbortController();
     // Cancela ya.
     controller.abort();
-    // Puerto del curso.
-    const course = createVectorCoursePort({
+    // Puerto de las políticas.
+    const store = createVectorStorePort({
       embedder: {
         // Doble de prueba: ejecuta la operación del puerto y devuelve su resultado al llamador.
         run: async () => ({ data: [[0.1, 0.2, 0.3, 0.4]] }),
@@ -245,60 +246,51 @@ describe("adaptadores reales simulados", () => {
       retrieval,
     });
     // Busca con la señal cancelada.
-    const result = await course.retrieve(
-      { query: "deep research", audience: "program", corpusVersion: corpus, limit: 2 },
+    const result = await store.retrieve(
+      { query: "auriculares abiertos", corpusVersion: corpus, limit: 2 },
       { signal: controller.signal, timeoutMs: 5_000 },
     );
     // Error aborted.
     expect(result).toMatchObject({ ok: false, error: "aborted", consumption: { kind: "unknown" } });
   });
 
-  // La herramienta no inventa la fecha si falta el calendario.
-  it("la herramienta lee el catálogo y no inventa un campo ausente", async () => {
-    // Herramienta sin el fragmento del calendario.
-    const tool = createCourseSessionTool({
-      corpusVersion: corpus,
-      audience: "M/J",
-      // Doble de prueba: lee el recurso solicitado y devuelve el resultado de este adaptador al consumidor.
-      read: async (_version, id) =>
-        id.includes("calendario") ? null : (library.find((item) => item.chunkId === id) ?? null),
-    });
-    // Pide S12.
-    const result = await tool.getCourseSession({ sessionId: "S12", audience: "M/J" }, call);
+  // La herramienta devuelve los pedidos de la cuenta y nada de otra cuenta.
+  it("la herramienta lee un pedido de la cuenta y rechaza uno de otra cuenta", async () => {
+    // Herramienta con los pedidos ficticios y la cuenta de la demo.
+    const tool = createOrderTool({ data: ORDER_DATA, customerId: ORDER_DATA.customerId });
+    // Pedido de la cuenta.
+    const mine = await tool.getOrder({ orderId: "TPS-20481" }, call);
     // Correcto.
-    expect(result.ok).toBe(true);
-    // Texto de la ficha.
-    const text = result.ok && result.value !== null ? result.value.text : "";
-    // Con el ejercicio.
-    expect(text).toContain("Ejercicio resumido");
-    // Dice que la fecha no consta.
-    expect(text).toContain("la fecha no consta");
-    // Cita su fragmento.
-    expect(result.ok && result.value !== null ? result.value.backingSourceIds : []).toContain(
-      `${corpus}:s12-deep-research:00`,
+    expect(mine.ok).toBe(true);
+    // Texto del pedido.
+    const text = mine.ok && mine.value !== null ? mine.value.text : "";
+    // Con el pago y la entrega.
+    expect(text).toContain("Pago: Bizum.");
+    expect(text).toContain("Entrega: 20/10/2026.");
+    // Con la versión de los datos.
+    expect(mine.ok && mine.value !== null ? mine.value.dataVersion : null).toBe(
+      "pedidos-2026-10-26",
     );
+    // Pedido de otra cuenta: bloqueado, sin datos.
+    const other = await tool.getOrder({ orderId: "TPS-30117" }, call);
+    expect(other).toMatchObject({ ok: false, error: "blocked" });
+    expect(other.ok ? "" : other.detail).toContain("no pertenece a la cuenta");
+    expect(JSON.stringify(other)).not.toContain("Portátil");
+    // Pedido que no existe: sin resultado.
+    expect(await tool.getOrder({ orderId: "TPS-99999" }, call)).toMatchObject({
+      ok: true,
+      value: null,
+    });
   });
 
-  // Un catálogo que falla da error, no una ficha.
-  it("un catálogo que lanza un error no fabrica la ficha", async () => {
-    // Herramienta con lectura que lanza.
-    const tool = createCourseSessionTool({
-      corpusVersion: corpus,
-      audience: "M/J",
-      // Doble de prueba: lee el recurso solicitado y devuelve el resultado de este adaptador al consumidor.
-      read: async () => {
-        // Error simulado.
-        throw new Error("catalog unavailable");
-      },
-    });
-    // Pide S12.
-    const result = await tool.getCourseSession({ sessionId: "S12", audience: "M/J" }, call);
-    // Error de proveedor.
-    expect(result).toMatchObject({
-      ok: false,
-      error: "provider",
-      detail: "El catálogo del curso no respondió.",
-    });
+  // Un número mal formado no llega a los datos.
+  it("la herramienta rechaza un número de pedido mal formado", async () => {
+    // Herramienta.
+    const tool = createOrderTool({ data: ORDER_DATA, customerId: ORDER_DATA.customerId });
+    // Número inválido.
+    const result = await tool.getOrder({ orderId: "S12" }, call);
+    // Error de validación.
+    expect(result).toMatchObject({ ok: false, error: "invalid" });
   });
 
   // El plan se valida, sin reintentos, con consumo estimado.
@@ -307,14 +299,14 @@ describe("adaptadores reales simulados", () => {
     let calls = 0;
     // Plan válido de ejemplo.
     const plan = {
-      route: "course",
-      rationale: "Basta el material del curso. ".repeat(20),
+      route: "store",
+      rationale: "Bastan las políticas de la tienda. ".repeat(20),
       clarification: null,
       subquestions: [
         {
           id: "q1",
-          text: "Qué es un checkpointer.",
-          kind: "technical",
+          text: "Cuánto cuesta ThePower Shop Plus al año.",
+          kind: "store",
           external: false,
           query: null,
         },
@@ -343,22 +335,19 @@ describe("adaptadores reales simulados", () => {
     // Puerto del modelo.
     const port = createResearchModelPort({ planner: model, generator: model });
     // Pide el plan.
-    const result = await port.plan(
-      { question: "¿Qué es un checkpointer?", audience: "program" },
-      call,
-    );
+    const result = await port.plan({ question: "¿Cuánto cuesta ThePower Shop Plus?" }, call);
     // Una llamada.
     expect(calls).toBe(1);
     // Correcto.
     expect(result.ok).toBe(true);
     // Plan normalizado.
     expect(result.ok ? result.value : null).toMatchObject({
-      route: "course",
+      route: "store",
       rationale: plan.rationale.trim().slice(0, 240).trimEnd(),
       subquestions: plan.subquestions,
     });
     // El plan pasa la validación.
-    expect(result.ok && validatePlan(result.value, "program").ok).toBe(true);
+    expect(result.ok && validatePlan(result.value).ok).toBe(true);
     // Consumo estimado: (4 × 0,2 + 8 × 1) / 1.000.000 USD.
     expect(result.consumption).toMatchObject({
       kind: "estimated",
@@ -380,7 +369,6 @@ describe("adaptadores reales simulados", () => {
     // Entrada completa con fetch que cuenta.
     const input = {
       signal: new AbortController().signal,
-      audience: "program",
       corpusVersion: corpus,
       settings,
       priceSearchProvider: "firecrawl",

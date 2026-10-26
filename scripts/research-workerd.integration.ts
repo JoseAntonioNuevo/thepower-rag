@@ -92,9 +92,9 @@ export default { async fetch(request, env, ctx) {
   };
   const input = {apiKey: "test-key", fetch: fakeFetch};
   const context = {signal: new AbortController().signal, timeoutMs: 5000};
-  const query = {query: "Vectorize", allowedDomains: ["developers.cloudflare.com"], limit: 1};
+  const query = {query: "devoluciones", allowedDomains: ["europa.eu"], limit: 1};
   const search = await createTavilySearch(input).search(query, context);
-  const read = await createTavilyReader({...input, allowedDomains: query.allowedDomains}).read({url: "https://developers.cloudflare.com/vectorize/"}, context);
+  const read = await createTavilyReader({...input, allowedDomains: query.allowedDomains}).read({url: "https://europa.eu/youreurope/devoluciones"}, context);
   const firecrawl = await createFirecrawlSearch({...input, usdPerCredit: 0.01}).search(query, context);
   return Response.json({calls, search, read, firecrawl});
 }};`,
@@ -233,10 +233,9 @@ export default { async fetch(request, env, ctx) {
         method: "POST",
         headers: { "content-type": "application/json", origin: base },
         body: JSON.stringify({
-          // Investigación del guion «course-tool» en el grupo M/J.
+          // Investigación del guion «order-tool».
           mode: "research",
-          audience: "M/J",
-          researchScenario: "course-tool",
+          researchScenario: "order-tool",
           // Un mensaje del usuario con la pregunta.
           messages: [
             {
@@ -245,7 +244,7 @@ export default { async fetch(request, env, ctx) {
               parts: [
                 {
                   type: "text",
-                  text: "¿Cuándo es la sesión 12 de mi grupo y qué ejercicio tiene?",
+                  text: "¿En qué estado está mi pedido TPS-20481 y cómo lo pagué?",
                 },
               ],
             },
@@ -282,7 +281,7 @@ export default { async fetch(request, env, ctx) {
       // Completo.
       expect(summary.outcome).toBe("complete");
       // Argumentos.
-      expect(summary.toolCalls[0]?.args).toEqual({ sessionId: "S12", audience: "M/J" });
+      expect(summary.toolCalls[0]?.args).toEqual({ orderId: "TPS-20481" });
       // No repite la pregunta de demo.
       expect(body).not.toContain(DEMO_RESEARCH_QUESTION);
     } finally {

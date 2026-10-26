@@ -1,6 +1,6 @@
 // GUÍA DE LECTURA · apps/api/src/chat-corpus.test.ts
 // Pruebas sin red del corpus del chat: CHAT_CORPUS elige el curso o la tienda ThePower Shop para Sin RAG,
-// RAG básico y CRAG; la investigación de S12 sigue leyendo el curso; la tienda no pide grupo ni
+// RAG básico y CRAG; la investigación de S12 lee siempre la tienda; la tienda no pide grupo ni
 // calendario; los prompts cambian de papel pero conservan las reglas de DATOS y citas.
 // Esquema de salud.
 import { healthResponseSchema } from "@thepower-rag/contracts";
@@ -19,7 +19,7 @@ import { assessWorker, type WorkerEnv } from "./env";
 // Prompts del chat.
 import { CRAG_PROMPT, RAG_PROMPT, chatPrompts, ragSystem } from "./prompts";
 
-// Entorno real con los dos corpus: el curso (investigación) y la tienda (chat).
+// Entorno real con los dos corpus: el curso y la tienda (chat e investigación).
 const storeEnv: WorkerEnv = {
   // Generación.
   APP_MODE: "real",
@@ -30,11 +30,11 @@ const storeEnv: WorkerEnv = {
   EMBEDDING_MODEL: "@cf/baai/bge-m3",
   EMBEDDING_DIMENSIONS: "32",
   VECTOR_METRIC: "cosine",
-  // Curso: lo que lee la investigación.
+  // Curso: lo que lee el chat si CHAT_CORPUS es course.
   CORPUS_VERSION: "curso-v",
   INDEX_PROFILE: "p-curso",
   MIN_RETRIEVAL_SCORE: "0.5",
-  // Tienda: lo que lee el chat.
+  // Tienda: lo que leen el chat con la tienda y la investigación.
   CHAT_CORPUS: "thepower-shop",
   STORE_CORPUS_VERSION: "tienda-v",
   STORE_INDEX_PROFILE: "p-tienda",
@@ -131,8 +131,8 @@ const storeProfile = {
 
 // Diagnóstico de la configuración.
 describe("corpus del chat · diagnóstico", () => {
-  // Con la tienda, el chat usa sus ajustes y la investigación los del curso.
-  it("separa el corpus del chat del de la investigación", () => {
+  // La investigación lee la tienda sea cual sea el corpus del chat.
+  it("la investigación lee la tienda sea cual sea el corpus del chat", () => {
     // Diagnóstico.
     const assessment = assessWorker(storeEnv);
     // Chat con la tienda.
@@ -142,12 +142,16 @@ describe("corpus del chat · diagnóstico", () => {
       indexProfile: "p-tienda",
       minScore: 0.2,
     });
-    // La investigación sigue con el curso.
-    expect(assessment.retrieval).toMatchObject({
-      corpusVersion: "curso-v",
-      indexProfile: "p-curso",
-      minScore: 0.5,
+    // La investigación usa los ajustes de la tienda.
+    expect(assessment.storeRetrieval).toMatchObject({
+      corpusVersion: "tienda-v",
+      indexProfile: "p-tienda",
+      minScore: 0.2,
     });
+    // Con el chat en el curso, la investigación sigue en la tienda.
+    const courseChat = assessWorker({ ...storeEnv, CHAT_CORPUS: "course" });
+    expect(courseChat.chatRetrieval?.corpusVersion).toBe("curso-v");
+    expect(courseChat.storeRetrieval?.corpusVersion).toBe("tienda-v");
     // RAG y CRAG listos con la tienda.
     expect(assessment.capabilities.rag.status).toBe("ready");
     expect(assessment.capabilities.crag.status).toBe("ready");
@@ -173,7 +177,7 @@ describe("corpus del chat · diagnóstico", () => {
     expect(assessment.chatCorpus).toBe("course");
   });
 
-  // Lo que falta de la tienda bloquea el chat, nunca la investigación.
+  // Lo que falta de la tienda bloquea el chat con la tienda y también la investigación, que la lee.
   it("bloquea RAG y CRAG de la tienda sin su índice o con el umbral sin calibrar", () => {
     // Sin el índice de la tienda.
     const { VECTORIZE_STORE: _index, ...withoutIndex } = storeEnv;
@@ -182,10 +186,10 @@ describe("corpus del chat · diagnóstico", () => {
     // RAG bloqueado por el binding.
     expect(missingIndex.capabilities.rag.status).toBe("blocked");
     expect(missingIndex.capabilities.rag.missing).toContain("VECTORIZE_STORE");
-    // La investigación no depende del índice de la tienda.
-    expect(missingIndex.capabilities.research.missing).not.toContain("VECTORIZE_STORE");
-    // El curso sigue disponible para la investigación.
-    expect(missingIndex.retrieval?.corpusVersion).toBe("curso-v");
+    // La investigación también lee la tienda: le falta el mismo índice.
+    expect(missingIndex.capabilities.research.missing).toContain("VECTORIZE_STORE");
+    // Sin ajustes de la tienda para la investigación.
+    expect(missingIndex.storeRetrieval).toBeNull();
 
     // Umbral con el marcador de producción.
     const placeholder = assessWorker({
@@ -318,13 +322,13 @@ describe("corpus del chat · /api/chat y /api/health", () => {
     expect(calls.prompt).toContain("no inventes plazos");
   });
 
-  // La salud separa el corpus del chat del de la investigación.
-  it("informa del corpus del chat y conserva el del curso para la investigación", async () => {
+  // La salud separa el corpus del chat del corpus del curso.
+  it("informa del corpus del chat y del corpus del curso", async () => {
     // Salud.
     const response = await createApp().request("/api/health", { method: "GET" }, storeEnv);
     // Validada.
     const body = healthResponseSchema.parse(await response.json());
-    // Corpus del curso (investigación).
+    // Corpus del curso.
     expect(body.corpus.version).toBe("curso-v");
     expect(body.corpus.profileId).toBe("p-curso");
     // Corpus del chat.

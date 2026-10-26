@@ -1,12 +1,11 @@
 // GUÍA DE LECTURA · apps/web/src/research-desk.tsx
-// Mesa de investigación durable en el navegador: conversaciones por grupo, pregunta con imagen, audio y voz
+// Mesa de investigación durable en el navegador sobre ThePower Shop: conversaciones, pregunta con imagen, audio y voz
 // opcionales, envío protegido con Turnstile, sondeo del trabajo, informe con fuentes, traza y presupuesto.
 // El trabajo sigue en el Worker aunque se cierre la página; al volver se recupera desde la conversación.
-// Pregunta y escenarios de demo; tipos de audiencia, escenario, fuente y resumen.
+// Pregunta y escenarios de demo; tipos de escenario, fuente y resumen.
 import {
   DEMO_RESEARCH_QUESTION,
   DEMO_RESEARCH_SCENARIOS,
-  type Audience,
   type ResearchScenarioId,
   type ResearchSource,
   type ResearchSummary,
@@ -17,7 +16,7 @@ import { useCallback, useEffect, useId, useRef, useState, type ReactNode } from 
 import { ChatError, MatrixLoader, PanelSlide, RevealSlot } from "./chat-motion-view";
 // Duración leída de las variables CSS.
 import { readCssMs } from "./chat-motion";
-// Respuesta con el Markdown del curso.
+// Respuesta con el Markdown reducido de la aplicación.
 import { CourseAnswer } from "./course-answer";
 // Fuentes y traza de la investigación.
 import { ResearchSources, ResearchTrace } from "./research-panel";
@@ -30,8 +29,6 @@ import { useTurnstile } from "./use-turnstile";
 interface ConversationItem {
   // Id.
   id: string;
-  // Grupo.
-  audience: Audience;
 }
 
 // Estado de un trabajo según /api/research/jobs/:id.
@@ -51,6 +48,9 @@ interface JobView {
   // Eventos.
   events: { seq: number; text: string }[];
 }
+
+// Clave de la sesión del navegador con la conversación elegida.
+const CONVERSATION_KEY = "research-conversation";
 
 // Texto de cada estado de ejecución.
 const EXECUTION_LABEL: Record<string, string> = {
@@ -309,20 +309,17 @@ function messageOf(body: unknown, fallback: string): string {
   return fallback;
 }
 
-// Mesa de investigación de un grupo.
+// Mesa de investigación.
 export function ResearchDesk({
-  audience,
   allowScenario,
   onBusy,
 }: {
-  // Grupo.
-  audience: Audience;
   // Si se pueden elegir escenarios de prueba.
   allowScenario: boolean;
   // Avisa de si hay un trabajo en curso.
   onBusy: (busy: boolean) => void;
 }) {
-  // Conversaciones del grupo.
+  // Conversaciones del propietario.
   const [conversations, setConversations] = useState<ConversationItem[]>([]);
   // Conversación seleccionada.
   const [conversationId, setConversationId] = useState<string | null>(null);
@@ -417,33 +414,30 @@ export function ResearchDesk({
     }
   }
 
-  // Carga las conversaciones del grupo y elige la guardada o la primera.
-  const loadConversations = useCallback(
-    async (preferred: string | null) => {
-      // GET /api/research/conversations.
-      const response = await fetch("/api/research/conversations");
-      // Cuerpo.
-      const body = (await readJson(response)) as { conversations?: ConversationItem[] } | null;
-      // Solo las del grupo.
-      const mine = (body?.conversations ?? []).filter((item) => item.audience === audience);
-      // Guarda.
-      setConversations(mine);
-      // Conversación preferida o guardada en la sesión.
-      const stored = preferred ?? sessionStorage.getItem(`research-conversation:${audience}`);
-      // La elegida.
-      const selected = mine.find((item) => item.id === stored) ?? mine[0] ?? null;
-      // La selecciona.
-      setConversationId(selected?.id ?? null);
-      // Si hay.
-      if (selected) {
-        // La recuerda.
-        sessionStorage.setItem(`research-conversation:${audience}`, selected.id);
-      }
-    },
-    [audience],
-  );
+  // Carga las conversaciones y elige la guardada o la primera.
+  const loadConversations = useCallback(async (preferred: string | null) => {
+    // GET /api/research/conversations.
+    const response = await fetch("/api/research/conversations");
+    // Cuerpo.
+    const body = (await readJson(response)) as { conversations?: ConversationItem[] } | null;
+    // Conversaciones del propietario.
+    const mine = body?.conversations ?? [];
+    // Guarda.
+    setConversations(mine);
+    // Conversación preferida o guardada en la sesión.
+    const stored = preferred ?? sessionStorage.getItem(CONVERSATION_KEY);
+    // La elegida.
+    const selected = mine.find((item) => item.id === stored) ?? mine[0] ?? null;
+    // La selecciona.
+    setConversationId(selected?.id ?? null);
+    // Si hay.
+    if (selected) {
+      // La recuerda.
+      sessionStorage.setItem(CONVERSATION_KEY, selected.id);
+    }
+  }, []);
 
-  // Al montar o cambiar de grupo: sesión, conversaciones y presupuesto.
+  // Al montar: sesión, conversaciones y presupuesto.
   useEffect(() => {
     // ¿Desmontado?
     let ignore = false;
@@ -466,7 +460,7 @@ export function ResearchDesk({
       // Ignora resultados tardíos.
       ignore = true;
     };
-  }, [audience, loadConversations]);
+  }, [loadConversations]);
 
   // Al desmontar, libera las URL locales.
   useEffect(() => {
@@ -709,7 +703,7 @@ export function ResearchDesk({
     }
   }
 
-  // Crea una conversación nueva del grupo.
+  // Crea una conversación nueva.
   async function createConversation() {
     // Nueva generación.
     generation.current += 1;
@@ -726,7 +720,7 @@ export function ResearchDesk({
     const response = await fetch("/api/research/conversations", {
       method: "POST",
       headers,
-      body: JSON.stringify({ audience }),
+      body: JSON.stringify({}),
     });
     // Cuerpo.
     const body = (await readJson(response)) as { id?: string; message?: string } | null;
@@ -738,7 +732,7 @@ export function ResearchDesk({
       return;
     }
     // La recuerda.
-    sessionStorage.setItem(`research-conversation:${audience}`, body.id);
+    sessionStorage.setItem(CONVERSATION_KEY, body.id);
     // Limpia el formulario.
     clearLocalMedia();
     // Limpia el resumen.
@@ -959,7 +953,7 @@ export function ResearchDesk({
             </h2>
             {/* Aviso de privacidad y duración. */}
             <p className="desk-caption">
-              Conversación anónima de esta demostración. No es una cuenta de alumno. Cerrar la
+              Conversación anónima de esta demostración. No es una cuenta de cliente. Cerrar la
               página no cancela el trabajo.
             </p>
           </div>
@@ -977,7 +971,7 @@ export function ResearchDesk({
         </header>
         {/* Lista de conversaciones o invitación a crear una. */}
         {conversations.length > 0 ? (
-          <div className="conversation-list" role="group" aria-label="Conversaciones del grupo">
+          <div className="conversation-list" role="group" aria-label="Conversaciones">
             {/* Un botón por conversación. */}
             {conversations.map((item, index) => (
               <button
@@ -991,7 +985,7 @@ export function ResearchDesk({
                   // Selecciona.
                   setConversationId(item.id);
                   // La recuerda.
-                  sessionStorage.setItem(`research-conversation:${audience}`, item.id);
+                  sessionStorage.setItem(CONVERSATION_KEY, item.id);
                   // Limpia el resumen.
                   setSummary(null);
                   // Limpia el informe.
@@ -1034,7 +1028,7 @@ export function ResearchDesk({
               }}
             >
               {/* Sin guion. */}
-              <option value="">Libre, con el material del curso de prueba</option>
+              <option value="">Libre, con las políticas de la tienda de prueba</option>
               {/* Un guion por escenario. */}
               {[...DEMO_RESEARCH_SCENARIOS, RECOVERY_SCENARIO].map((item) => (
                 <option key={item.id} value={item.id}>

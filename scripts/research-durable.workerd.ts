@@ -297,7 +297,7 @@ describe("investigación durable en workerd", () => {
       const created = await fetch(`${base}/api/research/conversations`, {
         method: "POST",
         headers: mutateHeaders(base, cookie),
-        body: JSON.stringify({ audience: "M/J" }),
+        body: JSON.stringify({}),
       });
       // Fallo.
       if (created.status !== 201) {
@@ -382,7 +382,7 @@ describe("investigación durable en workerd", () => {
       const ambiguous = await fetch(`${base}/api/research/conversations`, {
         method: "POST",
         headers: mutateHeaders(base, cookie),
-        body: JSON.stringify({ audience: "L/X" }),
+        body: JSON.stringify({}),
       });
       // Id.
       const other = (await ambiguous.json()) as { id: string };
@@ -430,7 +430,7 @@ describe("investigación durable en workerd", () => {
       const crashCreated = await fetch(`${base}/api/research/conversations`, {
         method: "POST",
         headers: mutateHeaders(base, cookie),
-        body: JSON.stringify({ audience: "program" }),
+        body: JSON.stringify({}),
       });
       // Id.
       const crashConversation = (await crashCreated.json()) as { id: string };
@@ -631,10 +631,12 @@ describe("investigación durable en workerd", () => {
     const first = await boot(persist, port, inspector);
     // Origen.
     const base = `http://127.0.0.1:${String(port)}`;
-    // Imagen del aula.
-    const image = readFileSync(path.join(root, "apps/api/fixtures/media/dimension-mismatch.png"));
-    // Audio del aula.
-    const audio = readFileSync(path.join(root, "apps/api/fixtures/media/embedding-request.wav"));
+    // Foto del pedido.
+    const image = readFileSync(path.join(root, "apps/api/fixtures/media/pedido-auriculares.png"));
+    // Nota de voz.
+    const audio = readFileSync(
+      path.join(root, "apps/api/fixtures/media/nota-de-voz-devolucion.wav"),
+    );
     // try/finally.
     try {
       // Espera.
@@ -647,7 +649,7 @@ describe("investigación durable en workerd", () => {
       const created = await fetch(`${base}/api/research/conversations`, {
         method: "POST",
         headers: mutateHeaders(base, cookie),
-        body: JSON.stringify({ audience: "M/J" }),
+        body: JSON.stringify({}),
       });
       // 201.
       expect(created.status).toBe(201);
@@ -737,9 +739,9 @@ describe("investigación durable en workerd", () => {
       // Con evidencia.
       expect(summary.accepted.length).toBeGreaterThan(0);
       // Texto de la imagen.
-      expect(summary.media?.image?.observedText).toContain("expected 1024, got 768");
+      expect(summary.media?.image?.observedText).toContain("Pedido TPS-20481");
       // Transcripción.
-      expect(summary.media?.audio?.transcript).toContain("He cambiado el modelo de embeddings");
+      expect(summary.media?.audio?.transcript).toContain("el derecho no suena");
       // Voz lista.
       expect(summary.media?.speech?.status).toBe("ready");
       // Avisa de que es de prueba.
@@ -802,9 +804,9 @@ describe("investigación durable en workerd", () => {
         // Texto recordado.
         const remembered = (history.messages ?? []).map((message) => message.text).join("\n");
         // Con la imagen.
-        expect(remembered).toContain("1024");
+        expect(remembered).toContain("TPS-20481");
         // Con el audio.
-        expect(remembered).toContain("He cambiado el modelo de embeddings");
+        expect(remembered).toContain("el derecho no suena");
       } finally {
         // Para.
         stop(second.child);

@@ -53,7 +53,7 @@ import { buildStoredResult, presentResearchResult } from "./research-result";
 // Puertos de prueba.
 import { createFixtureResearchPorts } from "./research-fixture";
 // Versión del corpus de ejemplo.
-import { fixtureCorpusVersion } from "./fixture";
+import { storeFixtureCorpusVersion } from "./fixture";
 
 // Tarifas de prueba con una reserva configurable.
 function prices(hold = 100): PriceSnapshot {
@@ -69,7 +69,7 @@ function prices(hold = 100): PriceSnapshot {
     modelCallMicros: 10,
     searchMicros: 10,
     readMicros: 10,
-    courseMicros: 10,
+    storeMicros: 10,
     holdMicros: hold,
     // Precios de visión, transcripción por minuto, voz por carácter y tope de la voz.
     visionCallMicros: 10,
@@ -90,13 +90,9 @@ async function ready(budget = 1_000_000) {
 }
 
 // Crea una conversación.
-async function conversation(
-  database: Awaited<ReturnType<typeof ready>>,
-  owner: string,
-  audience: "program" | "L/X" | "M/J",
-) {
+async function conversation(database: Awaited<ReturnType<typeof ready>>, owner: string) {
   // Con fecha fija.
-  return createConversation(database, owner, audience, 1_000);
+  return createConversation(database, owner, 1_000);
 }
 
 // Admite un trabajo con valores por defecto.
@@ -134,7 +130,7 @@ async function submit(
     originalQuestion: input.question,
     contextualized: null,
     scenarioId: input.scenarioId ?? "sufficient-first-round",
-    corpusVersion: fixtureCorpusVersion(),
+    corpusVersion: storeFixtureCorpusVersion(),
     // Tarifas con la reserva pedida, fecha y plazos.
     prices: prices(input.hold ?? 100),
     now,
@@ -150,20 +146,20 @@ describe("investigación durable", () => {
     // Base.
     const database = await ready();
     // Conversación.
-    const created = await conversation(database, "owner-a", "M/J");
+    const created = await conversation(database, "owner-a");
     // Trabajo.
     const admitted = await submit(database, {
       ownerId: "owner-a",
       conversationId: created.id,
       key: "idem-0001",
-      question: "Dimension mismatch expected 1024",
+      question: "Pedido TPS-20481 sin reembolso",
     });
     // Admitido.
     expect(admitted.ok).toBe(true);
     // Mensajes.
     const messages = await listMessages(database, "owner-a", created.id);
     // La pregunta guardada.
-    expect(messages.map((message) => message.text)).toEqual(["Dimension mismatch expected 1024"]);
+    expect(messages.map((message) => message.text)).toEqual(["Pedido TPS-20481 sin reembolso"]);
     // Otro propietario no ve nada.
     expect(await listMessages(database, "owner-b", created.id)).toEqual([]);
     // Cierra.
@@ -175,15 +171,15 @@ describe("investigación durable", () => {
     // Base.
     const database = await ready();
     // Primera conversación.
-    const first = await conversation(database, "owner-a", "M/J");
+    const first = await conversation(database, "owner-a");
     // Segunda.
-    const second = await conversation(database, "owner-a", "M/J");
+    const second = await conversation(database, "owner-a");
     // Trabajo en la primera.
     await submit(database, {
       ownerId: "owner-a",
       conversationId: first.id,
       key: "idem-0001",
-      question: "el índice esperaba 1024",
+      question: "el pedido TPS-20481 llegó dañado",
     });
     // Seguimiento en la primera.
     const own = contextualize(await memoryTurns(database, "owner-a", first.id), "¿y ese índice?");
@@ -193,7 +189,7 @@ describe("investigación durable", () => {
       "¿y ese índice?",
     );
     // Usa la memoria propia.
-    expect(own.contextualized).toContain("el índice esperaba 1024");
+    expect(own.contextualized).toContain("el pedido TPS-20481 llegó dañado");
     // Conserva la original.
     expect(own.original).toBe("¿y ese índice?");
     // La otra no tiene memoria.
@@ -205,13 +201,13 @@ describe("investigación durable", () => {
     // Base.
     const database = await ready();
     // Conversación.
-    const created = await conversation(database, "owner-a", "L/X");
+    const created = await conversation(database, "owner-a");
     // Trabajo.
     const admitted = await submit(database, {
       ownerId: "owner-a",
       conversationId: created.id,
       key: "idem-0001",
-      question: "calendario lunes",
+      question: "plazo de devolución",
     });
     // Si falla.
     if (!admitted.ok) {
@@ -226,33 +222,31 @@ describe("investigación durable", () => {
     expect((await getJob(database, "owner-a", admitted.job.id))?.execution_status).toBe("queued");
   });
 
-  // El grupo queda fijo.
-  it("el grupo queda fijo en la conversación", async () => {
+  // Dos conversaciones no comparten memoria.
+  it("dos conversaciones del mismo propietario no comparten memoria", async () => {
     // Base.
     const database = await ready();
-    // L/X.
-    const lx = await conversation(database, "owner-a", "L/X");
-    // M/J.
-    const mj = await conversation(database, "owner-a", "M/J");
-    // Trabajo en L/X.
+    // Primera conversación.
+    const first = await conversation(database, "owner-a");
+    // Segunda conversación.
+    const second = await conversation(database, "owner-a");
+    // Trabajo en la primera.
     await submit(database, {
       ownerId: "owner-a",
-      conversationId: lx.id,
+      conversationId: first.id,
       key: "idem-0001",
-      question: "clase del lunes",
+      question: "pedido TPS-20481",
     });
-    // Memoria de L/X.
-    const lxMemory = await memoryTurns(database, "owner-a", lx.id);
-    // Memoria de M/J.
-    const mjMemory = await memoryTurns(database, "owner-a", mj.id);
-    // L/X recuerda.
-    expect(lxMemory.map((turn) => turn.text).join(" ")).toContain("lunes");
-    // M/J vacía.
-    expect(mjMemory).toEqual([]);
-    // Grupo L/X.
-    expect(lx.audience).toBe("L/X");
-    // Grupo M/J.
-    expect(mj.audience).toBe("M/J");
+    // Memoria de la primera.
+    const firstMemory = await memoryTurns(database, "owner-a", first.id);
+    // Memoria de la segunda.
+    const secondMemory = await memoryTurns(database, "owner-a", second.id);
+    // La primera recuerda.
+    expect(firstMemory.map((turn) => turn.text).join(" ")).toContain("TPS-20481");
+    // La segunda está vacía.
+    expect(secondMemory).toEqual([]);
+    // Son conversaciones distintas.
+    expect(first.id).not.toBe(second.id);
   });
 
   // Misma clave: una reserva; otra pregunta: conflicto.
@@ -260,7 +254,7 @@ describe("investigación durable", () => {
     // Presupuesto de 100.
     const database = await ready(100);
     // Conversación.
-    const created = await conversation(database, "owner-a", "program");
+    const created = await conversation(database, "owner-a");
     // Primer envío.
     const first = await submit(database, {
       ownerId: "owner-a",
@@ -309,9 +303,9 @@ describe("investigación durable", () => {
     // Presupuesto de 100.
     const database = await ready(100);
     // Conversación 1.
-    const left = await conversation(database, "owner-a", "program");
+    const left = await conversation(database, "owner-a");
     // Conversación 2.
-    const right = await conversation(database, "owner-a", "M/J");
+    const right = await conversation(database, "owner-a");
     // Dos envíos a la vez.
     const [one, two] = await Promise.all([
       // Dos envíos simultáneos del mismo dueño en conversaciones distintas.
@@ -346,7 +340,7 @@ describe("investigación durable", () => {
     // Base.
     const database = await ready();
     // Conversación.
-    const created = await conversation(database, "owner-a", "program");
+    const created = await conversation(database, "owner-a");
     // Trabajo.
     const admitted = await submit(database, {
       ownerId: "owner-a",
@@ -381,7 +375,7 @@ describe("investigación durable", () => {
     // Base.
     const database = await ready();
     // Conversación.
-    const created = await conversation(database, "owner-a", "program");
+    const created = await conversation(database, "owner-a");
     // Trabajo.
     const admitted = await submit(database, {
       ownerId: "owner-a",
@@ -426,7 +420,7 @@ describe("investigación durable", () => {
         fence: operation.fence,
         resultJson: JSON.stringify({
           ok: true,
-          value: { route: "course" },
+          value: { route: "store" },
           consumption: { kind: "none" },
         }),
         // Consumo y reserva de la operación.
@@ -481,7 +475,7 @@ describe("investigación durable", () => {
     // Base.
     const database = await ready();
     // Conversación.
-    const created = await conversation(database, "owner-a", "program");
+    const created = await conversation(database, "owner-a");
     // Trabajo.
     const admitted = await submit(database, {
       ownerId: "owner-a",
@@ -563,7 +557,7 @@ describe("investigación durable", () => {
     // Base.
     const database = await ready();
     // Conversación.
-    const created = await conversation(database, "owner-a", "program");
+    const created = await conversation(database, "owner-a");
     // Trabajo.
     const admitted = await submit(database, {
       ownerId: "owner-a",
@@ -650,7 +644,7 @@ describe("investigación durable", () => {
     // Base.
     const database = await ready();
     // Conversación.
-    const created = await conversation(database, "owner-a", "program");
+    const created = await conversation(database, "owner-a");
     // Trabajo.
     const admitted = await submit(database, {
       ownerId: "owner-a",
@@ -687,7 +681,7 @@ describe("investigación durable", () => {
     // Base.
     const database = await ready();
     // Conversación.
-    const created = await conversation(database, "owner-a", "program");
+    const created = await conversation(database, "owner-a");
     // Trabajo.
     const admitted = await submit(database, {
       ownerId: "owner-a",
@@ -719,7 +713,7 @@ describe("investigación durable", () => {
     // Base.
     const database = await ready();
     // Conversación.
-    const created = await conversation(database, "owner-a", "program");
+    const created = await conversation(database, "owner-a");
     // Trabajo.
     const admitted = await submit(database, {
       ownerId: "owner-a",
@@ -904,13 +898,13 @@ describe("investigación durable", () => {
     // Base.
     const database = await ready();
     // Conversación.
-    const created = await conversation(database, "owner-a", "M/J");
+    const created = await conversation(database, "owner-a");
     // Trabajo con caída simulada.
     const admitted = await submit(database, {
       ownerId: "owner-a",
       conversationId: created.id,
       key: "idem-crash",
-      question: "Dimension mismatch",
+      question: "Devolución de auriculares",
       scenarioId: "crash-after-plan",
       hold: 250_000,
       now: Date.now(),
@@ -928,7 +922,6 @@ describe("investigación durable", () => {
       const ports = createFixtureResearchPorts({
         signal,
         scenarioId: job.scenario_id,
-        audience: job.audience,
         corpusVersion: job.corpus_version,
       });
       // Plan original.
@@ -1001,7 +994,7 @@ describe("investigación durable", () => {
     // Base.
     const database = await ready();
     // Conversación.
-    const created = await conversation(database, "owner-a", "program");
+    const created = await conversation(database, "owner-a");
     // Trabajo.
     const admitted = await submit(database, {
       ownerId: "owner-a",
@@ -1074,13 +1067,13 @@ describe("investigación durable", () => {
     // Base.
     const database = await ready();
     // Conversación.
-    const created = await conversation(database, "owner-a", "M/J");
+    const created = await conversation(database, "owner-a");
     // Trabajo con operación ambigua.
     const admitted = await submit(database, {
       ownerId: "owner-a",
       conversationId: created.id,
       key: "idem-0001",
-      question: "Dimension mismatch",
+      question: "Devolución de auriculares",
       scenarioId: "ambiguous-operation",
       now: Date.now(),
     });
@@ -1097,7 +1090,6 @@ describe("investigación durable", () => {
       const ports = createFixtureResearchPorts({
         signal,
         scenarioId: job.scenario_id,
-        audience: job.audience,
         corpusVersion: job.corpus_version,
       });
       // Plan original.
@@ -1133,7 +1125,7 @@ describe("investigación durable", () => {
     // Base.
     const database = await ready();
     // Conversación.
-    const created = await conversation(database, "owner-a", "program");
+    const created = await conversation(database, "owner-a");
     // Momento.
     const now = Date.now();
     // Trabajo.
@@ -1162,8 +1154,7 @@ describe("investigación durable", () => {
     const inner = createFixtureResearchPorts({
       signal: new AbortController().signal,
       scenarioId: "sufficient-first-round",
-      audience: "program",
-      corpusVersion: fixtureCorpusVersion(),
+      corpusVersion: storeFixtureCorpusVersion(),
     });
     // Plan original.
     const plan = inner.model.plan.bind(inner.model);
@@ -1179,9 +1170,9 @@ describe("investigación durable", () => {
     // Contexto.
     const context = { signal: inner.signal, timeoutMs: 1_000 };
     // Primer plan.
-    await ports.model.plan({ question: "pregunta", audience: "program" }, context);
+    await ports.model.plan({ question: "pregunta" }, context);
     // Mismo plan.
-    await ports.model.plan({ question: "pregunta", audience: "program" }, context);
+    await ports.model.plan({ question: "pregunta" }, context);
     // Una llamada.
     expect(calls).toBe(1);
   });

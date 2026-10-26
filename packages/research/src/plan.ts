@@ -1,13 +1,13 @@
 // GUÍA DE LECTURA · packages/research/src/plan.ts
 // Validadores del plan de investigación y de las consultas de seguimiento que propone el modelo.
-// El plan es acotado y coherente: 1 a 3 subpreguntas q1..q3, hechos del curso sin búsqueda externa
-// y argumentos de la herramienta limitados a la sesión y al grupo de la petición.
+// El plan es acotado y coherente: 1 a 3 subpreguntas q1..q3, hechos internos de la tienda sin
+// búsqueda externa y argumentos de la herramienta limitados a un número de pedido bien formado.
 // Límites y tipos del contrato.
-import { RESEARCH_LIMITS, type Audience, type ResearchRoute } from "@thepower-rag/contracts";
+import { RESEARCH_LIMITS, type ResearchRoute } from "@thepower-rag/contracts";
 // Normalización de consultas para detectar repetidas.
 import { normalizeQuery } from "@thepower-rag/core";
 // Tipo de los argumentos de la herramienta.
-import type { SessionToolArgs } from "./ports";
+import type { OrderToolArgs } from "./ports";
 
 // Subpregunta validada del plan.
 export interface PlanItem {
@@ -15,8 +15,8 @@ export interface PlanItem {
   id: "q1" | "q2" | "q3";
   // Texto.
   text: string;
-  // Del curso, de una sesión o técnica.
-  kind: "course" | "session" | "technical";
+  // Política de la tienda, dato de un pedido o fuente externa.
+  kind: "store" | "order" | "external";
   // Si necesita fuentes externas.
   external: boolean;
   /** Consulta externa generada. Nunca sustituye a la pregunta original. */
@@ -25,22 +25,22 @@ export interface PlanItem {
 
 // Plan validado.
 export interface ResearchPlan {
-  // Ruta: curso, herramienta, investigar o aclarar.
+  // Ruta: políticas de la tienda, herramienta, investigar o aclarar.
   route: ResearchRoute;
   // Explicación de la decisión.
   rationale: string;
   // Subpreguntas.
   subquestions: PlanItem[];
   // Argumentos de la herramienta, o null.
-  tool: SessionToolArgs | null;
+  tool: OrderToolArgs | null;
   // Aclaración que se pide, o null.
   clarification: string | null;
 }
 
 // Ids admitidos en orden.
 const IDS = ["q1", "q2", "q3"] as const;
-// Sesiones S1 a S20.
-const SESSION = /^S(?:[1-9]|1\d|20)$/;
+// Número de pedido de ThePower Shop: «TPS-» y cinco cifras.
+const ORDER_ID = /^TPS-\d{5}$/;
 
 // Objeto plano o null.
 function record(value: unknown): Record<string, unknown> | null {
@@ -66,27 +66,23 @@ export function boundedText(value: unknown, max: number): string | null {
 // Resultado de una validación: valor o motivo del rechazo.
 type Verdict<T> = { ok: true; value: T } | { ok: false; reason: string };
 
-// Valida los argumentos de la herramienta de sesiones.
-export function validateSessionArgs(raw: unknown, audience: Audience): Verdict<SessionToolArgs> {
+/**
+ * Valida los argumentos de la herramienta de pedidos. Solo comprueba la forma
+ * del número: a qué cuenta pertenece el pedido lo decide la herramienta, nunca
+ * el modelo ni el texto de un adjunto.
+ */
+export function validateOrderArgs(raw: unknown): Verdict<OrderToolArgs> {
   // Argumentos como objeto.
   const body = record(raw);
-  // Sesión en mayúsculas sin espacios.
-  const sessionId = typeof body?.sessionId === "string" ? body.sessionId.trim().toUpperCase() : "";
-  // Solo S1 a S20.
-  if (!SESSION.test(sessionId)) {
+  // Pedido en mayúsculas sin espacios.
+  const orderId = typeof body?.orderId === "string" ? body.orderId.trim().toUpperCase() : "";
+  // Solo «TPS-» y cinco cifras.
+  if (!ORDER_ID.test(orderId)) {
     // Rechazo.
-    return { ok: false, reason: "La herramienta solo admite sesiones S1 a S20." };
-  }
-  // Solo el grupo de la petición.
-  if (body?.audience !== audience) {
-    // Rechazo.
-    return {
-      ok: false,
-      reason: "La herramienta solo consulta el grupo seleccionado en la petición.",
-    };
+    return { ok: false, reason: "La herramienta solo admite pedidos con la forma TPS-12345." };
   }
   // Argumentos válidos.
-  return { ok: true, value: { sessionId, audience } };
+  return { ok: true, value: { orderId } };
 }
 
 /**
@@ -94,7 +90,7 @@ export function validateSessionArgs(raw: unknown, audience: Audience): Verdict<S
  * ids q1..qN en orden, hechos internos sin búsqueda externa y una ruta
  * coherente con lo que pide cada subpregunta.
  */
-export function validatePlan(raw: unknown, audience: Audience): Verdict<ResearchPlan> {
+export function validatePlan(raw: unknown): Verdict<ResearchPlan> {
   // Salida como objeto.
   const body = record(raw);
   // Forma incorrecta.
@@ -105,7 +101,7 @@ export function validatePlan(raw: unknown, audience: Audience): Verdict<Research
   // Ruta propuesta.
   const route = body.route;
   // Debe ser una de las cuatro.
-  if (route !== "course" && route !== "tool" && route !== "investigate" && route !== "clarify") {
+  if (route !== "store" && route !== "tool" && route !== "investigate" && route !== "clarify") {
     // Rechazo.
     return { ok: false, reason: "La ruta del plan no es válida." };
   }
@@ -166,7 +162,7 @@ export function validatePlan(raw: unknown, audience: Audience): Verdict<Research
     // Tipo.
     const kind = row.kind;
     // Texto y tipo válidos.
-    if (text === null || (kind !== "course" && kind !== "session" && kind !== "technical")) {
+    if (text === null || (kind !== "store" && kind !== "order" && kind !== "external")) {
       // Rechazo.
       return { ok: false, reason: "Una subpregunta tiene texto o tipo inválido." };
     }
@@ -175,12 +171,12 @@ export function validatePlan(raw: unknown, audience: Audience): Verdict<Research
       // Rechazo.
       return { ok: false, reason: "Cada subpregunta indica si necesita fuentes externas." };
     }
-    // Solo lo técnico se busca fuera.
-    if (row.external && kind !== "technical") {
+    // Solo lo externo se busca fuera.
+    if (row.external && kind !== "external") {
       // Rechazo.
       return {
         ok: false,
-        reason: "Un hecho interno del curso no se investiga en fuentes externas.",
+        reason: "Un hecho interno de la tienda no se investiga en fuentes externas.",
       };
     }
     // Texto normalizado.
@@ -209,29 +205,29 @@ export function validatePlan(raw: unknown, audience: Audience): Verdict<Research
   }
   // ¿Alguna externa?
   const external = items.some((item) => item.external);
-  // ¿Alguna de sesión?
-  const session = items.some((item) => item.kind === "session");
+  // ¿Alguna sobre un pedido?
+  const order = items.some((item) => item.kind === "order");
   // Investigar exige algo externo.
   if (route === "investigate" && !external) {
     // Rechazo.
-    return { ok: false, reason: "Investigar exige al menos una subpregunta técnica externa." };
+    return { ok: false, reason: "Investigar exige al menos una subpregunta externa." };
   }
-  // Curso o herramienta no buscan fuera.
-  if ((route === "course" || route === "tool") && external) {
+  // Políticas o herramienta no buscan fuera.
+  if ((route === "store" || route === "tool") && external) {
     // Rechazo.
-    return { ok: false, reason: "Una respuesta del curso no lanza búsquedas externas." };
+    return { ok: false, reason: "Una respuesta de la tienda no lanza búsquedas externas." };
   }
-  // La herramienta necesita una subpregunta de sesión.
-  if (route === "tool" && !session) {
+  // La herramienta necesita una subpregunta sobre un pedido.
+  if (route === "tool" && !order) {
     // Rechazo.
-    return { ok: false, reason: "La ruta de herramienta necesita una subpregunta de sesión." };
+    return { ok: false, reason: "La ruta de herramienta necesita una subpregunta de pedido." };
   }
   // Argumentos de la herramienta.
-  let tool: SessionToolArgs | null = null;
-  // Con subpregunta de sesión se validan.
-  if (session) {
+  let tool: OrderToolArgs | null = null;
+  // Con subpregunta de pedido se validan.
+  if (order) {
     // Validación.
-    const args = validateSessionArgs(body.tool, audience);
+    const args = validateOrderArgs(body.tool);
     // Inválidos.
     if (!args.ok) {
       // Se devuelve el rechazo.
@@ -240,8 +236,8 @@ export function validatePlan(raw: unknown, audience: Audience): Verdict<Research
     // Válidos.
     tool = args.value;
   } else if (body.tool !== null && body.tool !== undefined) {
-    // Pide la herramienta sin subpregunta de sesión.
-    return { ok: false, reason: "El plan pide la herramienta sin una subpregunta de sesión." };
+    // Pide la herramienta sin subpregunta de pedido.
+    return { ok: false, reason: "El plan pide la herramienta sin una subpregunta de pedido." };
   }
   // Plan válido.
   return { ok: true, value: { route, rationale, subquestions: items, tool, clarification: null } };

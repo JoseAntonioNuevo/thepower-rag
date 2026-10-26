@@ -146,16 +146,15 @@ export function journalPorts(
       synthesize: (input, context) =>
         call("synthesize", input, () => inner.model.synthesize(input, context)),
     },
-    // Curso, herramienta, búsqueda y lectura con el mismo patrón.
-    course: {
+    // Políticas, herramienta, búsqueda y lectura con el mismo patrón.
+    store: {
       // Recupera candidatos documentales dentro del ámbito de corpus y consulta del recorrido.
       retrieve: (input, context) =>
-        call("course", input, () => inner.course.retrieve(input, context)),
+        call("store", input, () => inner.store.retrieve(input, context)),
     },
     tool: {
-      // Resuelve una ficha del curso usando el ámbito y los filtros del recorrido.
-      getCourseSession: (args, context) =>
-        call("tool", args, () => inner.tool.getCourseSession(args, context)),
+      // Lee un pedido de la cuenta de la conversación.
+      getOrder: (args, context) => call("tool", args, () => inner.tool.getOrder(args, context)),
     },
     search: {
       // Busca candidatos para la consulta con los límites y el transporte de este adaptador.

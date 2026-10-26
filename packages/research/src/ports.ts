@@ -1,13 +1,9 @@
 // GUÍA DE LECTURA · packages/research/src/ports.ts
-// Puertos de la investigación: tipos de evidencia (curso, herramienta, web), resultados de cada
-// llamada con su consumo y las interfaces que implementan los adaptadores reales o de prueba.
+// Puertos de la investigación: tipos de evidencia (políticas de la tienda, herramienta de pedidos,
+// web), resultados de cada llamada con su consumo y las interfaces que implementan los adaptadores
+// reales o de prueba.
 // Tipos del contrato compartido.
-import type {
-  Audience,
-  ResearchSource,
-  ResearchStep,
-  ResearchSummary,
-} from "@thepower-rag/contracts";
+import type { ResearchSource, ResearchStep, ResearchSummary } from "@thepower-rag/contracts";
 
 /**
  * Puertos del núcleo de investigación. No dependen del navegador ni de los
@@ -60,10 +56,10 @@ export type PortResult<T> =
   | { ok: true; value: T; consumption: Consumption }
   | { ok: false; error: PortFailure; detail: string; consumption: Consumption };
 
-// Evidencia del corpus del curso.
-export interface CourseEvidence {
+// Evidencia de las políticas de la tienda: un fragmento del corpus de ThePower Shop.
+export interface StoreEvidence {
   // Tipo de evidencia.
-  kind: "course";
+  kind: "store";
   // Id de la fuente.
   sourceId: string;
   // Documento.
@@ -74,32 +70,26 @@ export interface CourseEvidence {
   section: string;
   // Texto.
   text: string;
-  // Audiencia.
-  audience: Audience;
   // Versión del corpus.
   corpusVersion: string;
   // Puntuación de la búsqueda.
   score: number | null;
 }
 
-// Evidencia de la herramienta de sesiones.
+// Evidencia de la herramienta de pedidos: los datos de un pedido de la cuenta de la conversación.
 export interface ToolEvidence {
   // Tipo de evidencia.
   kind: "tool";
   // Id de la fuente.
   sourceId: string;
   // Nombre de la herramienta.
-  toolName: "get_course_session";
+  toolName: "get_order";
   // Título.
   title: string;
   // Texto devuelto.
   text: string;
-  // Fragmentos del curso que la respaldan.
-  backingSourceIds: string[];
-  // Audiencia.
-  audience: Audience;
-  // Versión del corpus.
-  corpusVersion: string;
+  // Versión de los datos de pedidos que se leyeron.
+  dataVersion: string;
 }
 
 // Evidencia de una página web leída.
@@ -129,7 +119,7 @@ export interface WebEvidence {
 }
 
 // Cualquier tipo de evidencia.
-export type EvidenceItem = CourseEvidence | ToolEvidence | WebEvidence;
+export type EvidenceItem = StoreEvidence | ToolEvidence | WebEvidence;
 
 /** Resultado de búsqueda: sirve para descubrir páginas, no es una lectura. */
 export interface SearchHit {
@@ -174,39 +164,35 @@ export interface PageReadPort {
   read(input: { url: string }, context: CallContext): Promise<PortResult<PageSnapshot>>;
 }
 
-// Puerto del corpus del curso.
-export interface CourseEvidencePort {
-  // Busca fragmentos del curso.
+// Puerto de las políticas de la tienda.
+export interface StoreEvidencePort {
+  // Busca fragmentos de las políticas.
   retrieve(
     input: {
       // Consulta.
       query: string;
-      // Audiencia.
-      audience: Audience;
       // Versión del corpus.
       corpusVersion: string;
       // Fragmentos pedidos.
       limit: number;
     },
     context: CallContext,
-  ): Promise<PortResult<CourseEvidence[]>>;
+  ): Promise<PortResult<StoreEvidence[]>>;
 }
 
-// Argumentos de la herramienta de sesiones.
-export interface SessionToolArgs {
-  // Sesión (por ejemplo, S12).
-  sessionId: string;
-  // Grupo.
-  audience: Audience;
+// Argumentos de la herramienta de pedidos.
+export interface OrderToolArgs {
+  // Pedido (por ejemplo, TPS-20481).
+  orderId: string;
 }
 
-// Puerto de la herramienta de sesiones.
-export interface CourseSessionToolPort {
-  // Devuelve la ficha de una sesión, o null.
-  getCourseSession(
-    args: SessionToolArgs,
-    context: CallContext,
-  ): Promise<PortResult<ToolEvidence | null>>;
+/**
+ * Puerto de la herramienta de pedidos. Devuelve los datos de un pedido de la
+ * cuenta de la conversación, `null` si no existe, o un rechazo si es de otra cuenta.
+ */
+export interface OrderToolPort {
+  // Devuelve los datos de un pedido, o null.
+  getOrder(args: OrderToolArgs, context: CallContext): Promise<PortResult<ToolEvidence | null>>;
 }
 
 // Evidencia tal como se enseña al modelo.
@@ -227,8 +213,8 @@ export interface ModelSubquestion {
   id: string;
   // Texto.
   text: string;
-  // Tipo.
-  kind: "course" | "session" | "technical";
+  // Tipo: política de la tienda, dato de un pedido o fuente externa.
+  kind: "store" | "order" | "external";
   // Si necesita fuentes externas.
   external: boolean;
 }
@@ -236,10 +222,7 @@ export interface ModelSubquestion {
 /** Las salidas del modelo son `unknown` hasta pasar los validadores del núcleo. */
 export interface ResearchModelPort {
   // Plan de la investigación.
-  plan(
-    input: { question: string; audience: Audience },
-    context: CallContext,
-  ): Promise<PortResult<unknown>>;
+  plan(input: { question: string }, context: CallContext): Promise<PortResult<unknown>>;
   // Evaluación de la evidencia.
   assess(
     input: {
@@ -302,10 +285,10 @@ export interface ResearchPorts {
   estimatedMaxUsd: number | null;
   // Modelo.
   model: ResearchModelPort;
-  // Corpus del curso.
-  course: CourseEvidencePort;
-  // Herramienta de sesiones.
-  tool: CourseSessionToolPort;
+  // Políticas de la tienda.
+  store: StoreEvidencePort;
+  // Herramienta de pedidos.
+  tool: OrderToolPort;
   // Buscador.
   search: SearchPort;
   // Lector de páginas.
@@ -337,9 +320,7 @@ export interface ResearchRequest {
   question: string;
   // Observaciones de entrada.
   observations: readonly ResearchObservation[];
-  // Audiencia.
-  audience: Audience;
-  // Versión del corpus.
+  // Versión del corpus de la tienda.
   corpusVersion: string;
   // Guion de la demo, si lo hay.
   scenarioId: ResearchSummary["scenarioId"];

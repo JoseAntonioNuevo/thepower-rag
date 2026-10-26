@@ -10,22 +10,22 @@ import type { PlanItem } from "./plan";
 // Funciones de la política.
 import { attributeCause, decideNext, emptyCounters } from "./policy";
 
-// Subpregunta de sesión.
-const session: PlanItem = {
+// Subpregunta sobre un pedido.
+const order: PlanItem = {
   id: "q1",
-  text: "Fecha y ejercicio de la sesión 12.",
-  kind: "session",
+  text: "Pago y fecha de entrega del pedido TPS-20481.",
+  kind: "order",
   external: false,
   query: null,
 };
 
-// Subpregunta técnica externa.
-const technical: PlanItem = {
+// Subpregunta externa.
+const external: PlanItem = {
   id: "q1",
-  text: "Qué dimensión tiene el índice.",
-  kind: "technical",
+  text: "Qué dice la normativa europea sobre el desistimiento.",
+  kind: "external",
   external: true,
-  query: "vectorize dimensions",
+  query: "derecho de desistimiento UE",
 };
 
 // Cobertura completa de q1.
@@ -40,13 +40,13 @@ const covered: CoverageEntry = {
 // Grupo de pruebas de la causa de una laguna.
 describe("causa de una laguna", () => {
   // Un error de la herramienta es un fallo operativo.
-  it("un fallo de la herramienta de sesión es operativo aunque no haya consulta al curso", () => {
+  it("un fallo de la herramienta de pedidos es operativo aunque no haya consulta a las políticas", () => {
     // Herramienta con error.
     expect(
-      attributeCause(session, "uncovered", {
+      attributeCause(order, "uncovered", {
         searches: [],
         reads: [],
-        course: [],
+        store: [],
         tools: [{ status: "error" }],
       }),
     ).toBe("operational-failure");
@@ -56,10 +56,10 @@ describe("causa de una laguna", () => {
   it("una herramienta que responde sin el dato es falta de evidencia", () => {
     // Herramienta que rechaza.
     expect(
-      attributeCause(session, "uncovered", {
+      attributeCause(order, "uncovered", {
         searches: [],
         reads: [],
-        course: [],
+        store: [],
         tools: [{ status: "rejected" }],
       }),
     ).toBe("missing-evidence");
@@ -70,7 +70,7 @@ describe("causa de una laguna", () => {
 describe("contradicciones y parada", () => {
   // Datos comunes: todo cubierto, dos llamadas al modelo y tiempo de sobra.
   const base = {
-    subquestions: [technical],
+    subquestions: [external],
     coverage: [covered],
     causes: { q1: "evidence" as const },
     counters: { ...emptyCounters(), modelCalls: 2 },

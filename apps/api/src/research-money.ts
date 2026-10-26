@@ -19,7 +19,7 @@ const INPUT_TOKEN_CAP = 8_000;
 // Tope de salida: el mayor de todas las etapas.
 const OUTPUT_TOKEN_CAP = Math.max(...Object.values(RESEARCH_LIMITS.maxOutputTokens));
 /** 0,0118 USD por millón de tokens de embedding, 2.000 tokens, redondeo al alza. */
-export const COURSE_EMBED_MICROS = 24;
+export const STORE_EMBED_MICROS = 24;
 
 // Campos comunes de todas las versiones.
 interface PriceFields {
@@ -33,8 +33,8 @@ interface PriceFields {
   searchMicros: number;
   // Reserva por lectura.
   readMicros: number;
-  // Reserva por consulta al curso.
-  courseMicros: number;
+  // Reserva por consulta a las políticas de la tienda.
+  storeMicros: number;
   // Reserva total del trabajo de texto.
   holdMicros: number;
   // Buscador.
@@ -222,10 +222,10 @@ export function reservationFor(
     // Reserva.
     return prices.readMicros;
   }
-  // Curso.
-  if (kind === "course") {
+  // Políticas de la tienda.
+  if (kind === "store") {
     // Reserva.
-    return prices.courseMicros;
+    return prices.storeMicros;
   }
   // v1 sin tarifas de medios.
   if (!hasMediaRates(prices)) {
@@ -320,7 +320,7 @@ export function priceSnapshot(input: PriceInput): PriceSnapshot | null {
     RESEARCH_LIMITS.maxModelCalls * modelCallMicros +
     RESEARCH_LIMITS.maxSearchCalls * searchMicros +
     RESEARCH_LIMITS.maxPagesRead * readMicros +
-    RESEARCH_LIMITS.maxCourseQueries * COURSE_EMBED_MICROS;
+    RESEARCH_LIMITS.maxStoreQueries * STORE_EMBED_MICROS;
   // Faltan tarifas o la reserva supera el tope.
   if (
     sttRate === null ||
@@ -344,8 +344,8 @@ export function priceSnapshot(input: PriceInput): PriceSnapshot | null {
     modelCallMicros,
     searchMicros,
     readMicros,
-    // Embedding del curso y reserva inicial del texto.
-    courseMicros: COURSE_EMBED_MICROS,
+    // Embedding de las consultas a la tienda y reserva inicial del texto.
+    storeMicros: STORE_EMBED_MICROS,
     holdMicros: textHold,
     // Precios de visión, transcripción, voz y tope de la voz.
     visionCallMicros,
@@ -415,8 +415,8 @@ function moneyOk(parsed: {
   searchMicros?: number;
   // Lectura.
   readMicros?: number;
-  // Curso.
-  courseMicros?: number;
+  // Políticas de la tienda.
+  storeMicros?: number;
   // Reserva.
   holdMicros?: number;
 }): boolean {
@@ -428,7 +428,7 @@ function moneyOk(parsed: {
     Number.isSafeInteger(parsed.modelCallMicros) &&
     Number.isSafeInteger(parsed.searchMicros) &&
     Number.isSafeInteger(parsed.readMicros) &&
-    Number.isSafeInteger(parsed.courseMicros)
+    Number.isSafeInteger(parsed.storeMicros)
   );
 }
 
@@ -437,7 +437,9 @@ export function parsePriceSnapshot(value: string): PriceSnapshot | null {
   // JSON inválido: null.
   try {
     // Campos posibles.
-    const parsed = JSON.parse(value) as {
+    const raw = JSON.parse(value) as { courseMicros?: number; storeMicros?: number };
+    // Los trabajos guardados antes del 26/10/2026 llamaban «courseMicros» a la reserva por consulta.
+    const parsed = { ...raw, storeMicros: raw.storeMicros ?? raw.courseMicros } as {
       // Versión.
       version?: string;
       // Presupuesto.
@@ -450,8 +452,8 @@ export function parsePriceSnapshot(value: string): PriceSnapshot | null {
       searchMicros?: number;
       // Lectura.
       readMicros?: number;
-      // Curso.
-      courseMicros?: number;
+      // Políticas de la tienda.
+      storeMicros?: number;
       // Reserva.
       holdMicros?: number;
       // Visión.
@@ -473,7 +475,7 @@ export function parsePriceSnapshot(value: string): PriceSnapshot | null {
       parsed.modelCallMicros === undefined ||
       parsed.searchMicros === undefined ||
       parsed.readMicros === undefined ||
-      parsed.courseMicros === undefined ||
+      parsed.storeMicros === undefined ||
       parsed.holdMicros === undefined
     ) {
       // null.
@@ -486,7 +488,7 @@ export function parsePriceSnapshot(value: string): PriceSnapshot | null {
       modelCallMicros: parsed.modelCallMicros,
       searchMicros: parsed.searchMicros,
       readMicros: parsed.readMicros,
-      courseMicros: parsed.courseMicros,
+      storeMicros: parsed.storeMicros,
       holdMicros: parsed.holdMicros,
     };
     // v1.

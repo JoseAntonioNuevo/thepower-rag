@@ -1,66 +1,70 @@
 // GUÍA DE LECTURA · apps/api/src/research-fixture.ts
-// Puertos de prueba de la investigación: un guion por escenario decide plan, búsquedas, páginas leídas,
-// evaluación e informe. Sirven para ver el flujo del grafo sin red ni modelos; no miden calidad.
+// Puertos de prueba de la investigación sobre ThePower Shop: un guion por escenario decide plan,
+// búsquedas, páginas leídas, evaluación e informe. Sirven para ver el flujo del grafo sin red ni
+// modelos; no miden calidad.
 // Dominios por defecto, escenarios de demo y tipos.
 import {
   DEFAULT_RESEARCH_DOMAINS,
   DEMO_RESEARCH_SCENARIOS,
-  type Audience,
   type ResearchScenarioId,
 } from "@thepower-rag/contracts";
-// Núcleo RAG: audiencias, coseno, umbral y embedding de prueba.
-import {
-  allowsAudience,
-  cosine,
-  FIXTURE_MIN_SCORE,
-  fixtureEmbed,
-  normalizeQuery,
-} from "@thepower-rag/core";
+// Núcleo RAG: coseno, umbral y embedding de prueba.
+import { cosine, FIXTURE_MIN_SCORE, fixtureEmbed, normalizeQuery } from "@thepower-rag/core";
 // Utilidades y tipos del paquete de investigación.
 import {
   flatten,
   webSourceId,
-  type CourseEvidence,
+  withoutHeadings,
   type PortResult,
   type ResearchModelPort,
   type ResearchPorts,
   type SearchHit,
   type ShownEvidence,
+  type StoreEvidence,
 } from "@thepower-rag/research";
-// Fragmentos de ejemplo del corpus.
-import { fixtureChunks } from "./fixture";
+// Fragmentos de las políticas de la tienda con su vector léxico.
+import { storeFixtureChunks } from "./fixture";
 // Páginas web simuladas.
 import { FIXTURE_PAGES, fixturePageByUrl, type FixturePage } from "./research-fixture-data";
-// Herramienta de sesiones del curso.
-import { createCourseSessionTool } from "./research-tool";
+// Herramienta de pedidos y sus datos ficticios.
+import { createOrderTool, ORDER_DATA } from "./research-tool";
 // Hash SHA-256.
 import { sha256Hex } from "./snapshot-hash";
 
 /** Hora fija de las lecturas de prueba: la demo es determinista. */
-export const FIXTURE_RETRIEVED_AT = "2026-10-10T00:00:00.000Z";
+export const FIXTURE_RETRIEVED_AT = "2026-10-26T00:00:00.000Z";
 
-// Subpregunta 1 del escenario principal.
+// Subpregunta 1 del escenario principal: la política de la tienda.
 export const MAIN_Q1 =
-  "¿Qué significa «Dimension mismatch: expected 1024, got 768» en un índice vectorial?";
-// Subpregunta 2.
-export const MAIN_Q2 =
-  "¿Cómo se comprueban las dimensiones del índice y las del modelo de embeddings?";
-// Subpregunta 3 (curso).
-export const MAIN_Q3 = "¿Qué se vio en el curso sobre embeddings y sus dimensiones?";
-// Consulta web de la subpregunta 1.
-export const MAIN_Q1_QUERY = "vector index dimension mismatch expected 1024 got 768 embeddings";
-// Consulta web de la subpregunta 2.
-export const MAIN_Q2_QUERY = "check vectorize index dimensions wrangler embedding vector length";
+  "¿Qué dice la política de ThePower Shop sobre devolver auriculares intraauditivos abiertos o defectuosos y cuánto tarda el reembolso con Bizum?";
+// Subpregunta 2: los datos del pedido.
+export const MAIN_Q2 = "¿Qué datos tiene el pedido TPS-20481: pago, fecha de entrega y estado?";
+// Subpregunta 3: la normativa europea.
+export const MAIN_Q3 =
+  "¿Qué dice la normativa europea sobre desistir de un producto precintado y sobre la garantía de un producto defectuoso?";
+// Pedido del caso.
+export const MAIN_ORDER = "TPS-20481";
+// Consulta web de la subpregunta 3.
+export const MAIN_Q3_QUERY = "derecho de desistimiento productos precintados higiene garantía UE";
 // Consulta de seguimiento.
-export const FOLLOW_Q2_QUERY = "wrangler vectorize get index dimensions";
+export const FOLLOW_Q3_QUERY = "garantía legal producto defectuoso reparación sustitución UE";
 // Consulta que no avanza.
-export const STALL_Q2_QUERY = "vectorize index dimensions command";
+export const STALL_Q3_QUERY = "devolver auriculares abiertos normativa";
+// Fallo del proveedor: la normativa se parte en dos subpreguntas externas.
+const FAIL_Q2 = "¿Qué dice la normativa europea sobre desistir de un producto precintado?";
+// Su consulta, que falla en el buscador.
+const FAIL_Q2_QUERY = "desistimiento productos precintados higiene UE";
+// Segunda subpregunta externa.
+const FAIL_Q3 = "¿Qué dice la normativa europea sobre la garantía de un producto defectuoso?";
+// Su consulta, cuya página no se puede leer.
+const FAIL_Q3_QUERY = "garantía legal producto defectuoso UE";
 // Dato interno que no consta.
-const FACT_Q1 = "¿Qué nota mínima exige el profesor para aprobar el ejercicio de S12?";
-// Pregunta técnica del mismo escenario.
-const FACT_Q2 = "¿Para qué sirve un checkpointer en LangGraph?";
+const FACT_Q1 = "¿Qué descuento hace ThePower Shop a los estudiantes?";
+// Pregunta externa del mismo escenario.
+const FACT_Q2 =
+  "¿Quién paga el envío de una devolución por desistimiento según la normativa europea?";
 // Su consulta web.
-const FACT_Q2_QUERY = "LangGraph checkpointer persistence thread_id";
+const FACT_Q2_QUERY = "quién paga gastos de devolución desistimiento compra en línea UE";
 
 // Escenarios que usan el plan principal.
 const MAIN_SCENARIOS: readonly ResearchScenarioId[] = [
@@ -103,6 +107,8 @@ function hits(...pages: FixturePage[]): PortResult<SearchHit[]> {
 const P = FIXTURE_PAGES;
 // Id de fuente web de una página.
 const webId = (page: FixturePage) => webSourceId(page.finalUrl ?? page.url);
+// Id de la fuente de la herramienta para el pedido del caso.
+const ORDER_SOURCE = `tool:order:${MAIN_ORDER.toLowerCase()}`;
 
 /** Busca la frase que contiene la palabra clave: siempre es un extracto literal. */
 export function pickExcerpt(text: string, keyword: string): string {
@@ -130,8 +136,8 @@ export function pickExcerpt(text: string, keyword: string): string {
 interface Rule {
   // Subpreguntas que cubre.
   subs: string[];
-  // Palabra clave del extracto.
-  keyword: string;
+  // Palabras clave de los extractos.
+  keywords: string[];
   // Motivo.
   reason: string;
 }
@@ -140,7 +146,7 @@ interface Rule {
 type RuleTable = Record<string, Rule | { reject: string }>;
 
 // Id del fragmento sin la versión.
-function courseKey(sourceId: string): string {
+function storeKey(sourceId: string): string {
   // Quita el prefijo de versión.
   return sourceId.replace(/^[^:]+:/, "");
 }
@@ -149,70 +155,80 @@ function courseKey(sourceId: string): string {
 function rulesFor(scenario: ResearchScenarioId | null, round: number): RuleTable {
   // Reglas del escenario principal.
   const main: RuleTable = {
-    // Cada regla: subpreguntas que apoya, palabra clave que debe aparecer en el extracto y motivo.
-    [webId(P.vectorizeCreate)]: {
+    // Políticas de la tienda: exclusión por higiene, garantía y plazo de abono con Bizum.
+    "03-electronica-y-garantia:01": {
       subs: ["q1"],
-      keyword: "no se puede cambiar",
-      reason: "Explica que la dimensión del índice es fija.",
+      keywords: ["precinto higiénico", "a través de la garantía"],
+      reason: "Los intraauditivos abiertos solo se devuelven por la garantía.",
     },
-    [webId(P.langchainEmbeddings)]: {
+    "03-electronica-y-garantia:03": {
       subs: ["q1"],
-      keyword: "no son comparables",
-      reason: "Explica por qué hay que reindexar.",
+      keywords: ["3 años de garantía legal"],
+      reason: "Plazo de la garantía legal de un producto nuevo.",
     },
-    [webId(P.vectorizeGet)]: {
+    "06-pagos-y-reembolsos:02": {
+      subs: ["q1"],
+      keywords: ["2 días hábiles en Bizum"],
+      reason: "Plazo de abono de un reembolso con Bizum.",
+    },
+    // Datos del pedido que devuelve la herramienta.
+    [ORDER_SOURCE]: {
       subs: ["q2"],
-      keyword: "wrangler vectorize get",
-      reason: "Da el comando que lee la dimensión del índice.",
+      keywords: ["Pago:", "Entrega:", "Estado:"],
+      reason: "Datos del pedido de la cuenta de la conversación.",
     },
-    [webId(P.bgeM3)]: {
-      subs: ["q2"],
-      keyword: "longitud del vector",
-      reason: "Indica cómo medir la dimensión del modelo.",
-    },
-    // Fragmento del corpus del curso (S10) que aporta el dato interno.
-    "s10-rag:01": {
+    // Normativa externa.
+    [webId(P.withdrawal)]: {
       subs: ["q3"],
-      keyword: "768 dimensiones",
-      reason: "El ejercicio de S10 citaba embeddings de 768 dimensiones.",
+      keywords: ["catorce días sin", "precintados por razones"],
+      reason: "Plazo legal de desistimiento y excepción por higiene.",
+    },
+    [webId(P.guarantees)]: {
+      subs: ["q3"],
+      keywords: ["debe repararlo", "tres años"],
+      reason: "Qué hace el vendedor con un producto defectuoso y plazo en España.",
+    },
+    [webId(P.boeLaw)]: {
+      subs: ["q3"],
+      keywords: ["desprecintados tras la entrega"],
+      reason: "Texto legal de la excepción por higiene.",
     },
     // Reglas de rechazo: el evaluador de prueba las descarta con su motivo.
-    "s10-rag:00": { reject: "Habla de embeddings en general, no de su dimensión." },
-    [webId(P.d1Overview)]: { reject: "Trata D1, no índices vectoriales." },
+    "02-devoluciones:00": {
+      reject: "Plazo general; los intraauditivos tienen su exclusión propia.",
+    },
+    "10-productos-prohibidos-y-restringidos:00": {
+      reject: "Trata productos prohibidos, no devoluciones.",
+    },
+    [webId(P.airPassengers)]: { reject: "Trata derechos de pasajeros aéreos, no compras." },
     [webId(P.injected)]: { reject: "Contiene instrucciones embebidas y no aporta a la pregunta." },
-    "s16-cloud-aws:00": { reject: "Despliegue en AWS; no trata embeddings." },
   };
   // Dato interno que falta.
   if (scenario === "internal-fact-missing") {
     // Reglas propias.
     return {
-      // Se rechaza: el curso no documenta una nota mínima (es el dato que falta a propósito).
-      "s12-deep-research:01": {
-        reject: "Describe el ejercicio de S12, pero no menciona una nota mínima.",
+      // Se rechazan: las políticas no documentan un descuento para estudiantes (falta a propósito).
+      "12-promociones-y-cupones:00": {
+        reject: "Cupón de bienvenida para clientes nuevos; no menciona estudiantes.",
       },
-      "s19-evaluacion:00": { reject: "Trata la evaluación de sistemas de IA, no calificaciones." },
-      // S5 y la página web sí apoyan la parte técnica.
-      "s05-langgraph:00": {
+      "09-thepower-shop-plus:00": { reject: "Precio de Plus; no hay descuento para estudiantes." },
+      // La página europea sí responde a la parte externa.
+      [webId(P.withdrawal)]: {
         subs: ["q2"],
-        keyword: "checkpointer",
-        reason: "S5 menciona la memoria guardada por un checkpointer.",
-      },
-      [webId(P.checkpointer)]: {
-        subs: ["q1", "q2"],
-        keyword: "guarda el estado",
-        reason: "Describe qué guarda un checkpointer.",
+        keywords: ["gastos de devolución"],
+        reason: "Dice quién paga la devolución por desistimiento.",
       },
     };
   }
-  // Seguimiento parcial en la ronda 1.
+  // Seguimiento parcial en la ronda 1: la página de desistimiento no trata la garantía.
   if (scenario === "partial-follow-up" && round === 1) {
-    // bgeM3 solo cubre en parte.
+    // Solo el desistimiento.
     return {
       ...main,
-      [webId(P.bgeM3)]: {
-        subs: ["q2"],
-        keyword: "longitud del vector",
-        reason: "Mide el modelo, pero no lee el índice.",
+      [webId(P.withdrawal)]: {
+        subs: ["q3"],
+        keywords: ["catorce días sin", "precintados por razones"],
+        reason: "Cubre el desistimiento, pero no la garantía de un producto defectuoso.",
       },
     };
   }
@@ -244,46 +260,49 @@ function coverageFor(
       return all;
     // Seguimiento parcial.
     case "partial-follow-up":
-      // q2 parcial en la ronda 1.
+      // q3 parcial en la ronda 1.
       return round === 1
         ? {
             ...all,
-            q2: {
+            q3: {
               status: "partial",
-              gap: "Falta el comando que lee las dimensiones configuradas del índice existente.",
+              gap: "Falta lo que dice la normativa sobre la garantía de un producto defectuoso.",
               followUp: true,
             },
           }
         : all;
     // Fallo del proveedor.
     case "provider-failure":
-      // q1 sin cubrir.
+      // q2 sin búsqueda útil y q3 sin lectura: dos fallos operativos.
       return {
-        ...all,
-        q1: {
+        q1: covered,
+        q2: {
           status: "uncovered",
           gap: "No hay páginas leídas para esta subpregunta.",
+          followUp: true,
+        },
+        q3: {
+          status: "uncovered",
+          gap: "No se pudo leer la página sobre la garantía de los productos defectuosos.",
           followUp: true,
         },
       };
     // Sin progreso.
     case "no-progress-stop":
-      // Dos parciales.
+      // q1 y q3 siguen parciales y piden seguimiento; como la ronda no aporta nada nuevo, el
+      // grafo para.
       return {
-        // q1 y q2 siguen parciales y piden seguimiento; como la ronda no aporta nada nuevo, el
-        // grafo para.
         q1: {
           status: "partial",
-          gap: "Falta confirmar si basta con cambiar el modelo de consulta.",
+          gap: "Falta confirmar si la garantía cubre un defecto de un solo auricular.",
           followUp: true,
         },
-        q2: {
+        q2: covered,
+        q3: {
           status: "partial",
-          gap: "Falta el comando que lee las dimensiones del índice existente.",
+          gap: "Falta lo que dice la normativa sobre la garantía de un producto defectuoso.",
           followUp: true,
         },
-        // q3 ya está cubierta.
-        q3: covered,
       };
     // Dato interno que falta.
     case "internal-fact-missing":
@@ -291,13 +310,13 @@ function coverageFor(
       return {
         q1: {
           status: "uncovered",
-          gap: "El material del curso no documenta una nota mínima para el ejercicio.",
+          gap: "Las políticas de ThePower Shop no documentan un descuento para estudiantes.",
           followUp: false,
         },
         q2: covered,
       };
-    // Herramienta del curso.
-    case "course-tool":
+    // Herramienta de pedidos.
+    case "order-tool":
       // q1 cubierta.
       return { q1: covered };
     // Otro: sin guion.
@@ -307,13 +326,10 @@ function coverageFor(
   }
 }
 
-/** El aula de la captura y el audio. No se aplica a un archivo arbitrario. */
+/** El caso de la foto del pedido y la nota de voz. No se aplica a un archivo arbitrario. */
 export function classroomFixtureScenario(question: string): ResearchScenarioId | null {
-  // Pregunta con el error de la imagen y la transcripción del audio.
-  if (
-    /expected 1024,\s*got 768/i.test(question) &&
-    /he cambiado el modelo de embeddings/i.test(question)
-  ) {
+  // Pregunta con el pedido de la foto y la queja de la nota de voz.
+  if (/TPS-20481/.test(question) && /no suena/i.test(question)) {
     // Escenario principal.
     return "sufficient-first-round";
   }
@@ -322,34 +338,43 @@ export function classroomFixtureScenario(question: string): ResearchScenarioId |
 }
 
 // Plan guionizado según escenario y pregunta.
-function planFor(
-  scenario: ResearchScenarioId | null,
-  question: string,
-  audience: Audience,
-): unknown {
+function planFor(scenario: ResearchScenarioId | null, question: string): unknown {
   // Sin escenario.
   if (scenario === null) {
-    // ¿Es la pregunta del aula?
+    // ¿Es el caso de la foto y la nota de voz?
     const classroom = classroomFixtureScenario(question);
     // Usa su escenario.
-    if (classroom !== null) return planFor(classroom, question, audience);
+    if (classroom !== null) return planFor(classroom, question);
+  }
+  // Fallo del proveedor: la política y dos subpreguntas externas, una por cada fallo.
+  if (scenario === "provider-failure") {
+    // Tres subpreguntas.
+    return {
+      route: "investigate",
+      rationale: "Política de la tienda y dos preguntas sobre la normativa europea.",
+      subquestions: [
+        { id: "q1", text: MAIN_Q1, kind: "store", external: false },
+        { id: "q2", text: FAIL_Q2, kind: "external", external: true, query: FAIL_Q2_QUERY },
+        { id: "q3", text: FAIL_Q3, kind: "external", external: true, query: FAIL_Q3_QUERY },
+      ],
+      tool: null,
+    };
   }
   // Escenario principal.
   if (scenario !== null && MAIN_SCENARIOS.includes(scenario)) {
     // Tres subpreguntas.
     return {
-      // Ruta de investigación con dos subpreguntas técnicas externas y una del curso.
+      // Ruta de investigación: política de la tienda, pedido y normativa externa.
       route: "investigate",
-      rationale:
-        "Pregunta técnica con relación al curso: dos subpreguntas externas y una del curso.",
-      // q1 y q2 buscan en la web con su consulta; q3 se responde con el corpus.
+      rationale: "Política de la tienda, datos del pedido y normativa europea de consumo.",
+      // q1 se responde con las políticas, q2 con la herramienta y q3 busca en la web.
       subquestions: [
-        { id: "q1", text: MAIN_Q1, kind: "technical", external: true, query: MAIN_Q1_QUERY },
-        { id: "q2", text: MAIN_Q2, kind: "technical", external: true, query: MAIN_Q2_QUERY },
-        { id: "q3", text: MAIN_Q3, kind: "course", external: false },
+        { id: "q1", text: MAIN_Q1, kind: "store", external: false },
+        { id: "q2", text: MAIN_Q2, kind: "order", external: false },
+        { id: "q3", text: MAIN_Q3, kind: "external", external: true, query: MAIN_Q3_QUERY },
       ],
-      // Sin herramienta de sesión.
-      tool: null,
+      // La herramienta lee el pedido de la pregunta.
+      tool: { orderId: MAIN_ORDER },
     };
   }
   // Dato interno que falta.
@@ -357,43 +382,45 @@ function planFor(
     // Dos subpreguntas.
     return {
       route: "investigate",
-      rationale: "Un dato interno del curso y una explicación técnica separada.",
+      rationale: "Un dato interno de la tienda y una pregunta sobre la normativa.",
       subquestions: [
-        { id: "q1", text: FACT_Q1, kind: "course", external: false },
-        { id: "q2", text: FACT_Q2, kind: "technical", external: true, query: FACT_Q2_QUERY },
+        { id: "q1", text: FACT_Q1, kind: "store", external: false },
+        { id: "q2", text: FACT_Q2, kind: "external", external: true, query: FACT_Q2_QUERY },
       ],
       tool: null,
     };
   }
-  // ¿Menciona una sesión?
-  const session = /\bs(?:esi[oó]n)?\s*(\d{1,2})\b/i.exec(question);
-  // Escenario de herramienta o sesión con grupo.
-  if (scenario === "course-tool" || (session !== null && audience !== "program")) {
-    // Número de sesión.
-    const number = scenario === "course-tool" ? 12 : Number(session?.[1] ?? 0);
+  // ¿Menciona un pedido?
+  const order = /\bTPS-\d{5}\b/i.exec(question);
+  // Escenario de herramienta o pregunta libre sobre un pedido.
+  if (scenario === "order-tool" || order !== null) {
+    // Número del pedido.
+    const orderId =
+      scenario === "order-tool" ? MAIN_ORDER : (order?.[0] ?? MAIN_ORDER).toUpperCase();
     // Ruta tool.
     return {
-      // Ruta «tool»: basta la herramienta de solo lectura get_course_session.
+      // Ruta «tool»: basta la herramienta de solo lectura get_order.
       route: "tool",
-      rationale: "Dato interno de una sesión: basta la herramienta de solo lectura.",
-      // Una sola subpregunta del tipo «session», sin búsqueda externa.
+      rationale: "Dato de un pedido concreto: basta la herramienta de solo lectura.",
+      // Una sola subpregunta del tipo «order», sin búsqueda externa.
       subquestions: [
         {
           id: "q1",
-          text: `Fecha, profesor y ejercicio de la sesión ${String(number)} del grupo seleccionado.`,
-          kind: "session",
+          text: `Estado, pago y fecha de entrega del pedido ${orderId}.`,
+          kind: "order",
           external: false,
         },
       ],
-      // Argumentos de la herramienta: sesión pedida y grupo del alumno.
-      tool: { sessionId: `S${String(number)}`, audience },
+      // Argumentos de la herramienta: el pedido de la pregunta.
+      tool: { orderId },
     };
   }
-  // Pregunta libre: solo curso.
+  // Pregunta libre: solo las políticas.
   return {
-    route: "course",
-    rationale: "Pregunta libre: se responde con el material del curso, sin búsquedas externas.",
-    subquestions: [{ id: "q1", text: question.slice(0, 300), kind: "technical", external: false }],
+    route: "store",
+    rationale:
+      "Pregunta libre: se responde con las políticas de la tienda, sin búsquedas externas.",
+    subquestions: [{ id: "q1", text: question.slice(0, 300), kind: "store", external: false }],
     tool: null,
   };
 }
@@ -413,16 +440,17 @@ function assessFor(
   // Decisión por fuente.
   const items = evidence.map((shown) => {
     // Regla de la fuente.
-    const rule = table[shown.sourceId] ?? table[courseKey(shown.sourceId)];
-    // Herramienta: se acepta.
-    if (shown.kind === "tool") {
+    const rule = table[shown.sourceId] ?? table[storeKey(shown.sourceId)];
+    // Herramienta fuera del plan principal (su pedido es la única subpregunta): se acepta para q1
+    // con sus líneas de pago, entrega y estado.
+    if (shown.kind === "tool" && (scenario === null || !MAIN_SCENARIOS.includes(scenario))) {
       // Aceptada.
       return {
         sourceId: shown.sourceId,
         decision: "accept",
         subquestionIds: ["q1"],
-        excerpts: [pickExcerpt(shown.text, "Grupo")],
-        reason: "Resultado de la herramienta con fuentes del curso.",
+        excerpts: ["Pago:", "Entrega:", "Estado:"].map((key) => pickExcerpt(shown.text, key)),
+        reason: "Datos del pedido devueltos por la herramienta.",
       };
     }
     // Sin guion.
@@ -459,12 +487,12 @@ function assessFor(
         reason: rule === undefined ? "Guion: no aporta a ninguna subpregunta." : rule.reject,
       };
     }
-    // Aceptada con su extracto.
+    // Aceptada con sus extractos.
     return {
       sourceId: shown.sourceId,
       decision: "accept",
       subquestionIds: rule.subs,
-      excerpts: [pickExcerpt(shown.text, rule.keyword)],
+      excerpts: rule.keywords.map((keyword) => pickExcerpt(shown.text, keyword)),
       reason: rule.reason,
     };
   });
@@ -515,22 +543,24 @@ function synthesizeFor(
       sourceIds: [item.sourceId],
     }));
   });
-  // Fuente vectorizeCreate.
-  const create = claimFrom(evidence, webId(P.vectorizeCreate));
-  // Fuente vectorizeGet.
-  const get = claimFrom(evidence, webId(P.vectorizeGet));
-  // Fuente de LangChain.
-  const lc = claimFrom(evidence, webId(P.langchainEmbeddings));
+  // Exclusión por higiene de la tienda.
+  const hygiene = evidence.find(
+    (item) => storeKey(item.sourceId) === "03-electronica-y-garantia:01",
+  );
+  // Página de garantías.
+  const guarantees = claimFrom(evidence, webId(P.guarantees));
+  // Datos del pedido.
+  const order = claimFrom(evidence, ORDER_SOURCE);
   // Comprobaciones con esas fuentes.
-  const checks = [get, create, lc].flatMap((item) =>
+  const checks = [order, guarantees].flatMap((item) =>
     item?.excerpts[0] === undefined ? [] : [{ text: item.excerpts[0], sourceIds: [item.sourceId] }],
   );
   // Primera evidencia.
   const first = evidence[0];
-  // Respuesta.
+  // Respuesta directa: la política de la tienda sobre los intraauditivos.
   const answer =
-    create?.excerpts[0] !== undefined
-      ? { text: create.excerpts[0], sourceIds: [create.sourceId] }
+    hygiene?.excerpts[0] !== undefined
+      ? { text: hygiene.excerpts[0], sourceIds: [hygiene.sourceId] }
       : {
           text: first?.excerpts[0] ?? "Sin evidencia.",
           sourceIds: first === undefined ? [] : [first.sourceId],
@@ -542,20 +572,20 @@ function synthesizeFor(
       // Afirmación que el extracto citado no sostiene.
       {
         subquestionId: "q1",
-        text: "Basta con reiniciar el navegador para que desaparezca el aviso.",
-        sourceIds: create ? [create.sourceId] : [],
+        text: "Basta con reiniciar el teléfono para arreglarlo.",
+        sourceIds: hygiene ? [hygiene.sourceId] : [],
       },
       // Afirmación que cita una fuente que no existe.
       {
-        subquestionId: "q2",
-        text: "Según una página que no se ha leído, el error se corrige solo.",
+        subquestionId: "q3",
+        text: "Según una página que no se ha leído, la garantía dura diez años.",
         sourceIds: ["web-000000000000"],
       },
-      // Afirmación del curso apoyada en una fuente web: autoridad incorrecta.
+      // Afirmación de la tienda apoyada en una fuente web: autoridad incorrecta.
       {
-        subquestionId: "q3",
-        text: "En el curso se vio que el índice no se puede cambiar después de crearlo.",
-        sourceIds: create ? [create.sourceId] : [],
+        subquestionId: "q1",
+        text: "En España la garantía legal de los bienes nuevos es de tres años.",
+        sourceIds: guarantees ? [guarantees.sourceId] : [],
       },
     );
   }
@@ -568,18 +598,18 @@ function followUpFor(
   scenario: ResearchScenarioId | null,
   gaps: readonly { subquestionId: string; text: string }[],
 ): unknown {
-  // Seguimiento parcial.
+  // Seguimiento parcial: una consulta sobre la garantía.
   if (scenario === "partial-follow-up") {
     // Una consulta.
-    return { queries: [{ subquestionId: "q2", query: FOLLOW_Q2_QUERY }] };
+    return { queries: [{ subquestionId: "q3", query: FOLLOW_Q3_QUERY }] };
   }
   // Sin progreso.
   if (scenario === "no-progress-stop") {
     // Consultas repetidas o que no avanzan.
     return {
       queries: [
-        { subquestionId: "q1", query: `  ${MAIN_Q1_QUERY.toUpperCase()}   ` },
-        { subquestionId: "q2", query: STALL_Q2_QUERY },
+        { subquestionId: "q1", query: `  ${MAIN_Q1.toUpperCase()}   ` },
+        { subquestionId: "q3", query: STALL_Q3_QUERY },
       ],
     };
   }
@@ -587,7 +617,7 @@ function followUpFor(
   return {
     queries: gaps.map((gap) => ({
       subquestionId: gap.subquestionId,
-      query: `${gap.text} documentación oficial`.slice(0, 300),
+      query: `${gap.text} normativa oficial`.slice(0, 300),
     })),
   };
 }
@@ -604,34 +634,28 @@ function searchFor(scenario: ResearchScenarioId | null, query: string): PortResu
     case "sufficient-first-round":
     // Cita inventada.
     case "invalid-citation":
-      // q1.
-      if (is(MAIN_Q1_QUERY)) return hits(P.vectorizeCreate, P.langchainEmbeddings);
-      // q2.
-      if (is(MAIN_Q2_QUERY)) return hits(P.vectorizeGet, P.bgeM3);
+      // q3.
+      if (is(MAIN_Q3_QUERY)) return hits(P.withdrawal, P.guarantees, P.boeLaw);
       // Fin.
       break;
     // Seguimiento parcial.
     case "partial-follow-up":
-      // q1.
-      if (is(MAIN_Q1_QUERY)) return hits(P.vectorizeCreate);
-      // q2 incompleto.
-      if (is(MAIN_Q2_QUERY)) return hits(P.bgeM3);
+      // q3 incompleta.
+      if (is(MAIN_Q3_QUERY)) return hits(P.withdrawal);
       // Seguimiento.
-      if (is(FOLLOW_Q2_QUERY)) return hits(P.vectorizeGet, P.bgeM3);
+      if (is(FOLLOW_Q3_QUERY)) return hits(P.guarantees, P.withdrawal);
       // Fin.
       break;
     // Irrelevantes.
     case "irrelevant-discarded":
-      // Con páginas ajenas.
-      if (is(MAIN_Q1_QUERY)) return hits(P.vectorizeCreate, P.blog, P.d1Overview);
-      // Con instrucciones embebidas.
-      if (is(MAIN_Q2_QUERY)) return hits(P.vectorizeGet, P.injected);
+      // Con una página ajena, un blog fuera de la lista y una página con instrucciones.
+      if (is(MAIN_Q3_QUERY)) return hits(P.withdrawal, P.blog, P.airPassengers, P.injected);
       // Fin.
       break;
     // Fallo del proveedor.
     case "provider-failure":
-      // q1 falla.
-      if (is(MAIN_Q1_QUERY)) {
+      // q2: el buscador falla.
+      if (is(FAIL_Q2_QUERY)) {
         // HTTP 503.
         return {
           ok: false,
@@ -640,24 +664,22 @@ function searchFor(scenario: ResearchScenarioId | null, query: string): PortResu
           consumption: { kind: "none" },
         };
       }
-      // q2.
-      if (is(MAIN_Q2_QUERY)) return hits(P.vectorizeGet, P.bgeM3);
+      // q3: la página de garantías no se podrá leer.
+      if (is(FAIL_Q3_QUERY)) return hits(P.guarantees);
       // Fin.
       break;
     // Sin progreso.
     case "no-progress-stop":
-      // q1.
-      if (is(MAIN_Q1_QUERY)) return hits(P.vectorizeCreate);
-      // q2.
-      if (is(MAIN_Q2_QUERY)) return hits(P.bgeM3);
+      // q3.
+      if (is(MAIN_Q3_QUERY)) return hits(P.withdrawal);
       // Consulta que no avanza.
-      if (is(STALL_Q2_QUERY)) return hits(P.bgeM3, P.blog);
+      if (is(STALL_Q3_QUERY)) return hits(P.withdrawal, P.blog);
       // Fin.
       break;
     // Dato interno.
     case "internal-fact-missing":
-      // checkpointer.
-      if (is(FACT_Q2_QUERY)) return hits(P.checkpointer);
+      // Gastos de devolución.
+      if (is(FACT_Q2_QUERY)) return hits(P.withdrawal);
       // Fin.
       break;
     // Otro.
@@ -669,24 +691,32 @@ function searchFor(scenario: ResearchScenarioId | null, query: string): PortResu
   return ok([]);
 }
 
-// Fragmentos del curso guionizados por consulta.
-function courseIdsFor(scenario: ResearchScenarioId | null, query: string): string[] | null {
+// Fragmentos de las políticas guionizados por consulta.
+function storeIdsFor(scenario: ResearchScenarioId | null, query: string): string[] | null {
   // Escenario principal.
   if (scenario !== null && MAIN_SCENARIOS.includes(scenario)) {
-    // q3.
-    if (query === MAIN_Q3) return ["s10-rag:01", "s10-rag:00"];
-    // q1.
+    // q1: la política de devoluciones de los intraauditivos.
     if (query === MAIN_Q1)
-      return scenario === "irrelevant-discarded" ? ["s16-cloud-aws:00"] : ["s10-rag:00"];
+      return scenario === "irrelevant-discarded"
+        ? [
+            "10-productos-prohibidos-y-restringidos:00",
+            "03-electronica-y-garantia:01",
+            "03-electronica-y-garantia:03",
+            "06-pagos-y-reembolsos:02",
+          ]
+        : [
+            "03-electronica-y-garantia:01",
+            "03-electronica-y-garantia:03",
+            "06-pagos-y-reembolsos:02",
+            "02-devoluciones:00",
+          ];
     // Otra.
     return [];
   }
   // Dato interno.
   if (scenario === "internal-fact-missing") {
     // q1.
-    if (query === FACT_Q1) return ["s12-deep-research:01", "s19-evaluacion:00"];
-    // q2.
-    if (query === FACT_Q2) return ["s05-langgraph:00"];
+    if (query === FACT_Q1) return ["12-promociones-y-cupones:00", "09-thepower-shop-plus:00"];
     // Otra.
     return [];
   }
@@ -700,9 +730,7 @@ export interface FixtureResearchOptions {
   signal: AbortSignal;
   // Escenario.
   scenarioId: ResearchScenarioId | null;
-  // Audiencia.
-  audience: Audience;
-  // Versión del corpus.
+  // Versión del corpus de la tienda.
   corpusVersion: string;
   // Reloj.
   now?: () => number;
@@ -755,37 +783,36 @@ export function createFixtureResearchPorts(
     requested === "crash-after-plan"
       ? "sufficient-first-round"
       : requested;
-  // Si no hay escenario, lo deduce de la pregunta del aula.
+  // Si no hay escenario, lo deduce del caso de la foto y la nota de voz.
   const noteFixtureQuestion = (question: string) => {
     // Ya hay uno.
     if (scenario !== null)
       // Termina esta rama sin ejecutar los pasos siguientes del recorrido.
       return;
-    // ¿Pregunta del aula?
+    // ¿Es el caso de la demo?
     const classroom = classroomFixtureScenario(question);
     // Lo fija.
     if (classroom !== null) scenario = classroom;
   };
-  // Fragmentos de ejemplo.
-  const library = fixtureChunks();
+  // Fragmentos de las políticas.
+  const library = storeFixtureChunks();
   // Puntuaciones vistas.
   const scores = new Map<string, number | null>();
-  // Convierte un fragmento en evidencia del curso.
-  const toCourse = (chunkId: string, score: number | null): CourseEvidence | null => {
+  // Convierte un fragmento en evidencia de las políticas.
+  const toStore = (chunkId: string, score: number | null): StoreEvidence | null => {
     // Fragmento.
     const chunk = library.find((item) => item.chunkId === chunkId);
     // Evidencia o null.
     return chunk === undefined
       ? null
-      : // Evidencia del curso con los mismos campos que la del puerto real.
+      : // Evidencia de la tienda con los mismos campos que la del puerto real.
         {
-          kind: "course",
+          kind: "store",
           sourceId: chunk.chunkId,
           documentId: chunk.documentId,
           title: chunk.title,
           section: chunk.section,
-          text: chunk.text,
-          audience: chunk.audience,
+          text: withoutHeadings(chunk.text),
           corpusVersion: chunk.corpusVersion,
           score,
         };
@@ -793,11 +820,11 @@ export function createFixtureResearchPorts(
   // Modelo guionizado.
   const model: ResearchModelPort = {
     // Construye el plan de investigación que consumen los nodos posteriores.
-    plan: ({ question, audience }) => {
+    plan: ({ question }) => {
       // Deduce el escenario.
       noteFixtureQuestion(question);
       // Plan.
-      return Promise.resolve(ok(planFor(scenario, question, audience)));
+      return Promise.resolve(ok(planFor(scenario, question)));
     },
     // Valora la suficiencia de la evidencia y las carencias que quedan por cubrir.
     assess: ({ evidence, round, subquestions }) =>
@@ -818,17 +845,17 @@ export function createFixtureResearchPorts(
     allowedDomains: [...DEFAULT_RESEARCH_DOMAINS],
     estimatedMaxUsd: null,
     model,
-    course: {
-      // Recupera candidatos documentales dentro del ámbito de corpus y consulta del recorrido.
-      retrieve({ query, audience, corpusVersion, limit }) {
+    store: {
+      // Recupera fragmentos de las políticas para la consulta del recorrido.
+      retrieve({ query, corpusVersion, limit }) {
         // Fragmentos guionizados.
-        const scripted = courseIdsFor(scenario, query);
+        const scripted = storeIdsFor(scenario, query);
         // Con guion.
         if (scripted !== null) {
           // Evidencia con puntuación 0,9.
           const rows = scripted
-            .map((key) => toCourse(`${corpusVersion}:${key}`, 0.9))
-            .filter((item): item is CourseEvidence => item !== null);
+            .map((key) => toStore(`${corpusVersion}:${key}`, 0.9))
+            .filter((item): item is StoreEvidence => item !== null);
           // Hasta el límite.
           return Promise.resolve(ok(rows.slice(0, limit)));
         }
@@ -836,10 +863,7 @@ export function createFixtureResearchPorts(
         const vector = fixtureEmbed(query);
         // Fragmentos por similitud.
         const rows = library
-          .filter(
-            (chunk) =>
-              chunk.corpusVersion === corpusVersion && allowsAudience(chunk.audience, audience),
-          )
+          .filter((chunk) => chunk.corpusVersion === corpusVersion)
           .map((chunk) => ({ chunk, score: cosine(vector, chunk.vector) }))
           .sort((left, right) => right.score - left.score)
           .slice(0, limit)
@@ -847,26 +871,15 @@ export function createFixtureResearchPorts(
             // Guarda la puntuación.
             scores.set(chunk.chunkId, score);
             // Evidencia.
-            return toCourse(chunk.chunkId, score);
+            return toStore(chunk.chunkId, score);
           })
-          .filter((item): item is CourseEvidence => item !== null);
+          .filter((item): item is StoreEvidence => item !== null);
         // Resultados.
         return Promise.resolve(ok(rows));
       },
     },
-    tool: createCourseSessionTool({
-      corpusVersion: options.corpusVersion,
-      audience: options.audience,
-      // Lee el recurso solicitado y devuelve el resultado de este adaptador al consumidor.
-      read: (corpusVersion, chunkId) => {
-        // Fragmento de esa versión.
-        const chunk = library.find(
-          (item) => item.chunkId === chunkId && item.corpusVersion === corpusVersion,
-        );
-        // Copia o null.
-        return Promise.resolve(chunk === undefined ? null : { ...chunk });
-      },
-    }),
+    // Herramienta de pedidos sobre los datos ficticios, con la cuenta de la demo.
+    tool: createOrderTool({ data: ORDER_DATA, customerId: ORDER_DATA.customerId }),
     search: {
       // Busca candidatos para la consulta con los límites y el transporte de este adaptador.
       async search({ query }) {
@@ -904,8 +917,8 @@ export function createFixtureResearchPorts(
             consumption: { kind: "none" },
           };
         }
-        // Fallo del proveedor en bgeM3.
-        if (scenario === "provider-failure" && page.key === "bgeM3") {
+        // Fallo del proveedor al leer la página de garantías.
+        if (scenario === "provider-failure" && page.key === "guarantees") {
           // timeout.
           return {
             ok: false,

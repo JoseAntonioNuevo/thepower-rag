@@ -6,12 +6,13 @@ export {
   authorityAllows,
   buildShown,
   carryCoverage,
-  courseInScope,
   dedupeEvidence,
   flatten,
   reconcileCoverage,
   sourceFor,
+  storeInScope,
   validateAssessment,
+  withoutHeadings,
 } from "./evidence";
 // Tipos de evidencia y cobertura.
 export type {
@@ -22,7 +23,7 @@ export type {
   RejectedEvidence,
 } from "./evidence";
 // Validación del plan, del seguimiento y de los argumentos de la herramienta.
-export { boundedText, validateFollowUp, validatePlan, validateSessionArgs } from "./plan";
+export { boundedText, validateFollowUp, validatePlan, validateOrderArgs } from "./plan";
 // Tipos del plan.
 export type { FollowUpQuery, PlanItem, ResearchPlan } from "./plan";
 // Política: plazos, presupuesto de búsquedas y decisión del siguiente paso.
@@ -49,9 +50,9 @@ export {
 // Tipos del informe verificado.
 export type { ClaimSupport, DroppedClaim, ReportClaim, VerifiedReport } from "./report";
 // Fusión de imagen y audio.
-export { dimensionPair, fuseInputs } from "./fusion";
+export { fuseInputs, orderNumber } from "./fusion";
 // Tipos de la fusión.
-export type { DimensionPair, FusionInputText, FusionResult } from "./fusion";
+export type { FusionInputText, FusionResult } from "./fusion";
 // Guion de la locución.
 export { spokenScript } from "./speech-script";
 // Política de URLs y detección de instrucciones incrustadas.
@@ -70,10 +71,10 @@ export type {
   CallContext,
   CancelLike,
   Consumption,
-  // Evidencia y puertos del curso y de la herramienta.
-  CourseEvidence,
-  CourseEvidencePort,
-  CourseSessionToolPort,
+  // Evidencia y puertos de las políticas de la tienda y de la herramienta de pedidos.
+  OrderToolPort,
+  StoreEvidence,
+  StoreEvidencePort,
   // Evidencia común y subpregunta del modelo.
   EvidenceItem,
   ModelSubquestion,
@@ -92,7 +93,7 @@ export type {
   // Búsqueda web y argumentos de la herramienta.
   SearchHit,
   SearchPort,
-  SessionToolArgs,
+  OrderToolArgs,
   // Evidencia mostrada, observación de texto y evidencias de herramienta y web.
   ShownEvidence,
   TextObservation,

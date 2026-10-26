@@ -14,7 +14,7 @@ import { createApp } from "./app";
 // Tipo de las variables del Worker.
 import type { WorkerEnv } from "./env";
 // Versión del corpus de ejemplo.
-import { fixtureCorpusVersion } from "./fixture";
+import { storeFixtureCorpusVersion } from "./fixture";
 // Puertos simulados de la investigación.
 import { createFixtureResearchPorts } from "./research-fixture";
 
@@ -134,7 +134,7 @@ describe("HTTP de investigación", () => {
       researchScenario: "internal-fact-missing",
       messages: [
         userMessage(
-          "¿Qué nota mínima exige el profesor para aprobar el ejercicio de S12? Y, técnicamente, ¿para qué sirve un checkpointer en LangGraph?",
+          "¿Qué descuento hace ThePower Shop a los estudiantes? Y, según la normativa europea, ¿quién paga el envío de una devolución por desistimiento?",
         ),
       ],
     });
@@ -182,18 +182,17 @@ describe("HTTP de investigación", () => {
     // Puertos de prueba del escenario con herramienta.
     const ports = createFixtureResearchPorts({
       signal: controller.signal,
-      scenarioId: "course-tool",
-      audience: "M/J",
-      corpusVersion: fixtureCorpusVersion(),
+      scenarioId: "order-tool",
+      corpusVersion: storeFixtureCorpusVersion(),
     });
     // App con una herramienta que siempre falla.
     const errored = await createApp({
       researchPorts: {
         ...ports,
-        // Herramienta de sesiones que siempre devuelve un fallo del proveedor.
+        // Herramienta de pedidos que siempre devuelve un fallo del proveedor.
         tool: {
-          // Doble de prueba: resuelve una ficha del curso usando el ámbito y los filtros del recorrido.
-          getCourseSession: () =>
+          // Doble de prueba: lee un pedido de la cuenta de la conversación.
+          getOrder: () =>
             Promise.resolve({
               ok: false as const,
               error: "provider" as const,
@@ -202,7 +201,7 @@ describe("HTTP de investigación", () => {
             }),
         },
       },
-      // Petición de investigación del guion «course-tool».
+      // Petición de investigación del guion «order-tool».
     }).request(
       "http://localhost/api/chat",
       {
@@ -210,9 +209,8 @@ describe("HTTP de investigación", () => {
         headers: { "content-type": "application/json", origin: "http://localhost" },
         body: JSON.stringify({
           mode: "research",
-          audience: "M/J",
-          researchScenario: "course-tool",
-          messages: [userMessage("¿Cuándo es la sesión 12 de mi grupo y qué ejercicio tiene?")],
+          researchScenario: "order-tool",
+          messages: [userMessage("¿En qué estado está mi pedido TPS-20481 y cómo lo pagué?")],
         }),
       },
       {},

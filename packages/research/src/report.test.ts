@@ -1,6 +1,6 @@
 // GUÍA DE LECTURA · packages/research/src/report.test.ts
 // Pruebas de la verificación del informe: negaciones invertidas, cifras cambiadas o intercambiadas,
-// datos internos inventados con fuentes técnicas, cláusulas añadidas, orden invertido y contradicciones.
+// datos internos inventados con fuentes externas, cláusulas añadidas, orden invertido y contradicciones.
 // Utilidades de prueba.
 import { describe, expect, it } from "vite-plus/test";
 // Tipos de evidencia y cobertura.
@@ -22,10 +22,10 @@ function web(text: string, subquestionIds: string[], sourceId = "web-check"): Ac
     // Página web admitida con URL, dominio y título fijos.
     kind: "web",
     sourceId,
-    requestedUrl: "https://docs.langchain.com/langgraph/persistence",
-    url: "https://docs.langchain.com/langgraph/persistence",
-    domain: "docs.langchain.com",
-    title: "Persistencia",
+    requestedUrl: "https://europa.eu/youreurope/citizens/consumers/shopping/returns/index_es.htm",
+    url: "https://europa.eu/youreurope/citizens/consumers/shopping/returns/index_es.htm",
+    domain: "europa.eu",
+    title: "Devoluciones",
     // Texto que pasa el test, fechas y hash fijo.
     text,
     retrievedAt: "2026-10-10T00:00:00.000Z",
@@ -38,35 +38,41 @@ function web(text: string, subquestionIds: string[], sourceId = "web-check"): Ac
     item,
     subquestionIds,
     excerpts: [text.slice(0, 180)],
-    reason: "Página técnica admitida.",
+    reason: "Página externa admitida.",
     round: 1,
   };
 }
 
-// Pregunta interna del curso (nota mínima) que la web no puede responder.
-const grade = "¿Qué nota mínima exige el profesor para aprobar el ejercicio de S12?";
-// Pregunta técnica.
-const technical = "¿Para qué sirve un checkpointer en LangGraph?";
-// Página técnica que no habla de notas.
+// Pregunta interna de la tienda (descuento para estudiantes) que la web no puede responder.
+const grade = "¿Qué descuento hace ThePower Shop a los estudiantes?";
+// Pregunta externa.
+const externalQuestion = "¿Quién devuelve el dinero de una devolución?";
+// Página externa que no habla de descuentos.
 const page =
-  "Un checkpointer de LangGraph guarda el estado del grafo en cada paso. Esta página no trata calificaciones ni requisitos de ningún curso.";
+  "El vendedor reembolsa al comprador cuando valida la devolución. Esta página no trata descuentos ni cupones de ninguna tienda.";
 
-// Plan con una subpregunta del curso y otra técnica.
+// Plan con una subpregunta de la tienda y otra externa.
 const subs: PlanItem[] = [
-  { id: "q1", text: grade, kind: "course", external: false, query: null },
-  { id: "q2", text: technical, kind: "technical", external: true, query: "langgraph checkpointer" },
+  { id: "q1", text: grade, kind: "store", external: false, query: null },
+  {
+    id: "q2",
+    text: externalQuestion,
+    kind: "external",
+    external: true,
+    query: "reembolso devolución vendedor",
+  },
 ];
 
-// Devuelve el segundo elemento (la parte técnica) o falla si no existe.
-function technicalOnly<T>(items: readonly T[]): T {
+// Devuelve el segundo elemento (la parte externa) o falla si no existe.
+function externalOnly<T>(items: readonly T[]): T {
   // Segundo elemento.
   const item = items[1];
   // No existe.
   if (item === undefined) {
     // Error de la prueba.
-    throw new Error("falta la subpregunta técnica");
+    throw new Error("falta la subpregunta externa");
   }
-  // Elemento técnico.
+  // Elemento externo.
   return item;
 }
 
@@ -78,11 +84,11 @@ function coverage(q1: CoverageEntry["status"] = "uncovered"): CoverageEntry[] {
     {
       subquestionId: "q1",
       status: q1,
-      gap: q1 === "covered" ? null : "El material del curso no documenta una nota mínima.",
+      gap: q1 === "covered" ? null : "Las políticas no documentan un descuento para estudiantes.",
       followUp: false,
       sourceIds: [],
     },
-    // q2: técnica, cubierta por la página web.
+    // q2: externa, cubierta por la página web.
     {
       subquestionId: "q2",
       status: "covered",
@@ -98,64 +104,82 @@ describe("comprobación de afirmaciones", () => {
   // Quitar el «no» cambia el sentido aunque coincidan las palabras.
   it("rechaza una negación invertida aunque el resto de las palabras coincida", () => {
     // Evidencia con negación.
-    const evidence = ["La dimensión del índice no se puede cambiar después de crearlo."];
+    const evidence = ["Los auriculares intraauditivos no se pueden devolver después de abrirlos."];
     // Sin la negación: no respaldada.
     expect(
-      claimSupported("La dimensión del índice se puede cambiar después de crearlo.", evidence),
+      claimSupported(
+        "Los auriculares intraauditivos se pueden devolver después de abrirlos.",
+        evidence,
+      ),
     ).toBe(false);
     // Veredicto de polaridad.
     expect(
-      claimSupportVerdict("La dimensión del índice se puede cambiar después de crearlo.", evidence),
+      claimSupportVerdict(
+        "Los auriculares intraauditivos se pueden devolver después de abrirlos.",
+        evidence,
+      ),
     ).toBe("polarity");
     // Con la negación: respaldada.
     expect(
-      claimSupported("La dimensión del índice no se puede cambiar después de crearlo.", evidence),
+      claimSupported(
+        "Los auriculares intraauditivos no se pueden devolver después de abrirlos.",
+        evidence,
+      ),
     ).toBe(true);
   });
 
   // Una cifra que no está en la evidencia se rechaza.
   it("rechaza una cifra que la evidencia no contiene", () => {
-    // Evidencia con 768.
-    const evidence = ["La dimensión del índice es 768 y la métrica es coseno."];
-    // Con 1024: no respaldada.
+    // Evidencia con 30 días.
+    const evidence = ["El plazo de devolución es de 30 días y el reembolso usa el mismo método."];
+    // Con 14 días: no respaldada.
     expect(
-      claimSupported("La dimensión del índice es 1024 y la métrica es coseno.", evidence),
+      claimSupported(
+        "El plazo de devolución es de 14 días y el reembolso usa el mismo método.",
+        evidence,
+      ),
     ).toBe(false);
     // Veredicto de cifra.
     expect(
-      claimSupportVerdict("La dimensión del índice es 1024 y la métrica es coseno.", evidence),
+      claimSupportVerdict(
+        "El plazo de devolución es de 14 días y el reembolso usa el mismo método.",
+        evidence,
+      ),
     ).toBe("number");
-    // Con 768: respaldada.
-    expect(claimSupported("La dimensión del índice es 768 y la métrica es coseno.", evidence)).toBe(
-      true,
-    );
+    // Con 30 días: respaldada.
+    expect(
+      claimSupported(
+        "El plazo de devolución es de 30 días y el reembolso usa el mismo método.",
+        evidence,
+      ),
+    ).toBe(true);
   });
 
-  // Se retira una nota inventada aunque cite una página técnica.
-  it("retira la respuesta directa que inventa una nota citada con una página técnica", () => {
-    // Página aceptada solo para la pregunta técnica.
+  // Se retira un cupón inventado aunque cite una página externa.
+  it("retira la respuesta directa que inventa un cupón citado con una página externa", () => {
+    // Página aceptada solo para la pregunta externa.
     const accepted = web(page, ["q2"]);
     // Informe con una respuesta inventada y un hallazgo válido.
     const report = verifyReport(
       // Borrador del modelo.
       {
-        // Respuesta que inventa una nota mínima y cita la página técnica.
+        // Respuesta que inventa un cupón y cita la página externa.
         answer: {
-          text: "El curso exige nota mínima 9 para el ejercicio con LangGraph checkpointer.",
+          text: "ThePower Shop da un cupón del 20 % a los estudiantes que devuelven un pedido.",
           sourceIds: ["web-check"],
         },
         // Hallazgo válido: reproduce la página.
         findings: [
           {
             subquestionId: "q2",
-            text: "Un checkpointer de LangGraph guarda el estado del grafo en cada paso.",
+            text: "El vendedor reembolsa al comprador cuando valida la devolución.",
             sourceIds: ["web-check"],
           },
         ],
         // Comprobación que repite la invención.
         checks: [
           {
-            text: "El curso exige nota mínima 9 para aprobar el ejercicio.",
+            text: "ThePower Shop da un cupón del 20 % a los estudiantes.",
             sourceIds: ["web-check"],
           },
         ],
@@ -179,19 +203,19 @@ describe("comprobación de afirmaciones", () => {
     }
     // No es completo.
     expect(report.value.outcome).not.toBe("complete");
-    // La nota inventada no aparece.
-    expect(report.value.markdown).not.toContain("nota mínima 9");
+    // El cupón inventado no aparece.
+    expect(report.value.markdown).not.toContain("cupón del 20 %");
     // Aparece entre las retiradas.
-    expect(report.value.dropped.map((item) => item.claim).join(" ")).toContain("nota mínima 9");
-    // El hallazgo técnico se conserva.
-    expect(report.value.markdown).toContain("checkpointer de LangGraph guarda el estado");
+    expect(report.value.dropped.map((item) => item.claim).join(" ")).toContain("cupón del 20 %");
+    // El hallazgo externo se conserva.
+    expect(report.value.markdown).toContain("reembolsa al comprador");
   });
 
   // Una contradicción impide un informe completo.
   it("una contradicción sin resolver impide un informe completo", () => {
     // Evidencia aceptada.
     const accepted = web(
-      "La dimensión del índice no se puede cambiar después de crearlo. El índice espera 1024 dimensiones.",
+      "Los auriculares intraauditivos no se pueden devolver después de abrirlos. La garantía legal dura 3 años.",
       ["q2"],
     );
     // Informe con la contradicción registrada.
@@ -200,13 +224,13 @@ describe("comprobación de afirmaciones", () => {
       {
         // Respuesta y hallazgo con la misma afirmación.
         answer: {
-          text: "La dimensión del índice no se puede cambiar después de crearlo.",
+          text: "Los auriculares intraauditivos no se pueden devolver después de abrirlos.",
           sourceIds: ["web-check"],
         },
         findings: [
           {
             subquestionId: "q2",
-            text: "La dimensión del índice no se puede cambiar después de crearlo.",
+            text: "Los auriculares intraauditivos no se pueden devolver después de abrirlos.",
             sourceIds: ["web-check"],
           },
         ],
@@ -216,11 +240,11 @@ describe("comprobación de afirmaciones", () => {
       },
       // Contexto con la contradicción registrada.
       {
-        subquestions: [technicalOnly(subs)],
-        coverage: [technicalOnly(coverage())],
+        subquestions: [externalOnly(subs)],
+        coverage: [externalOnly(coverage())],
         causes: { q2: "evidence" },
         accepted: [accepted],
-        contradictions: ["Una página niega el cambio de dimensión y otra lo afirma."],
+        contradictions: ["Una página niega la devolución y otra la admite."],
         fixture: false,
         stopIsFailure: false,
       },
@@ -238,8 +262,8 @@ describe("comprobación de afirmaciones", () => {
     expect(report.value.markdown).toContain("No es un informe completo");
   });
 
-  // Extracto de la página técnica.
-  const excerpt = "Un checkpointer de LangGraph guarda el estado del grafo en cada paso.";
+  // Extracto de la página externa.
+  const excerpt = "El vendedor reembolsa al comprador cuando valida la devolución.";
   // Hallazgo válido que lo repite.
   const finding = {
     subquestionId: "q2",
@@ -249,16 +273,16 @@ describe("comprobación de afirmaciones", () => {
 
   // Construye un informe con una respuesta y comprobaciones de prueba.
   function gradeReport(answer: string, checks: { text: string; sourceIds: string[] }[] = []) {
-    // Verifica con la página técnica.
+    // Verifica con la página externa.
     return verifyReport(
-      // Borrador: respuesta a probar, hallazgo técnico y comprobaciones opcionales.
+      // Borrador: respuesta a probar, hallazgo externo y comprobaciones opcionales.
       {
         answer: { text: answer, sourceIds: ["web-check"] },
         findings: [finding],
         checks,
         unresolved: [],
       },
-      // Contexto con la página técnica admitida.
+      // Contexto con la página externa admitida.
       {
         subquestions: subs,
         coverage: coverage(),
@@ -271,29 +295,29 @@ describe("comprobación de afirmaciones", () => {
     );
   }
 
-  // Una nota inventada citada con la página técnica no se muestra.
-  it("no muestra «basta obtener un nueve» citado con la página del checkpointer", () => {
-    // Informe con la nota inventada.
-    const report = gradeReport("Para aprobar con LangGraph checkpointer basta obtener un nueve.");
+  // Un cupón inventado citado con la página externa no se muestra.
+  it("no muestra un cupón inventado citado con la página del reembolso", () => {
+    // Informe con el cupón inventado.
+    const report = gradeReport("Para los estudiantes basta pedir un cupón del 20 %.");
     // Forma válida.
     if (!report.ok) {
       // Si no, falla.
       throw new Error(report.reason);
     }
-    // No aparece la nota.
-    expect(report.value.markdown).not.toContain("un nueve");
-    // El hallazgo técnico sí.
-    expect(report.value.markdown).toContain("guarda el estado del grafo");
-    // La nota se retiró.
-    expect(report.value.dropped.some((item) => item.claim.includes("un nueve"))).toBe(true);
+    // No aparece el cupón.
+    expect(report.value.markdown).not.toContain("cupón del 20 %");
+    // El hallazgo externo sí.
+    expect(report.value.markdown).toContain("reembolsa al comprador");
+    // El cupón se retiró.
+    expect(report.value.dropped.some((item) => item.claim.includes("cupón del 20 %"))).toBe(true);
     // No es completo.
     expect(report.value.outcome).not.toBe("complete");
   });
 
-  // Se separa la cláusula técnica de la inventada.
-  it("separa la cláusula técnica de la cláusula que inventa el aprobado", () => {
+  // Se separa la cláusula respaldada de la inventada.
+  it("separa la cláusula respaldada de la cláusula que inventa un cupón", () => {
     // Respuesta con las dos cláusulas unidas por «y».
-    const report = gradeReport(`${excerpt} y para obtener el aprobado basta un nueve.`);
+    const report = gradeReport(`${excerpt} y los estudiantes reciben un cupón del 20 %.`);
     // Forma válida.
     if (!report.ok) {
       // Si no, falla.
@@ -301,14 +325,14 @@ describe("comprobación de afirmaciones", () => {
     }
     // Parte de la respuesta directa.
     const direct = report.value.markdown.split("**Hallazgos")[0] ?? "";
-    // Conserva la parte técnica.
-    expect(direct).toContain("guarda el estado");
+    // Conserva la parte respaldada.
+    expect(direct).toContain("reembolsa al comprador");
     // Sin la parte inventada.
-    expect(direct).not.toContain("nueve");
+    expect(direct).not.toContain("cupón");
     // Tampoco en el resto.
-    expect(report.value.markdown).not.toContain("basta un nueve");
+    expect(report.value.markdown).not.toContain("cupón del 20 %");
     // La parte inventada se retiró.
-    expect(report.value.dropped.some((item) => item.claim.includes("nueve"))).toBe(true);
+    expect(report.value.dropped.some((item) => item.claim.includes("cupón"))).toBe(true);
   });
 
   // También se retira el añadido en una comprobación.
@@ -316,7 +340,7 @@ describe("comprobación de afirmaciones", () => {
     // Comprobación con un añadido.
     const report = gradeReport(excerpt, [
       {
-        text: "Un checkpointer de LangGraph guarda el estado del grafo en cada paso y para aprobar basta un nueve.",
+        text: "El vendedor reembolsa al comprador cuando valida la devolución y los estudiantes reciben un cupón del 20 %.",
         sourceIds: ["web-check"],
       },
     ]);
@@ -326,17 +350,17 @@ describe("comprobación de afirmaciones", () => {
       throw new Error(report.reason);
     }
     // Conserva la parte respaldada.
-    expect(report.value.markdown).toContain("guarda el estado del grafo en cada paso");
+    expect(report.value.markdown).toContain("reembolsa al comprador cuando valida la devolución");
     // Sin el añadido.
-    expect(report.value.markdown).not.toContain("basta un nueve");
+    expect(report.value.markdown).not.toContain("cupón del 20 %");
     // El añadido se retiró.
-    expect(report.value.dropped.some((item) => item.claim.includes("basta un nueve"))).toBe(true);
+    expect(report.value.dropped.some((item) => item.claim.includes("cupón del 20 %"))).toBe(true);
   });
 
   // Otra afirmación interna inventada también se retira.
-  it("no deja pasar otra afirmación interna aunque no hable de notas", () => {
+  it("no deja pasar otra afirmación interna aunque no hable de cupones", () => {
     // Respuesta con un requisito inventado.
-    const report = gradeReport(`${excerpt} y el profesor exige asistencia obligatoria.`);
+    const report = gradeReport(`${excerpt} y la tienda exige el ticket de compra original.`);
     // Forma válida.
     if (!report.ok) {
       // Si no, falla.
@@ -344,16 +368,16 @@ describe("comprobación de afirmaciones", () => {
     }
     // Parte de la respuesta directa.
     const direct = report.value.markdown.split("**Hallazgos")[0] ?? "";
-    // Conserva la parte técnica.
-    expect(direct).toContain("guarda el estado");
+    // Conserva la parte respaldada.
+    expect(direct).toContain("reembolsa al comprador");
     // Sin el requisito.
-    expect(direct).not.toContain("asistencia obligatoria");
+    expect(direct).not.toContain("ticket de compra original");
     // Tampoco en el resto.
-    expect(report.value.markdown).not.toContain("asistencia obligatoria");
+    expect(report.value.markdown).not.toContain("ticket de compra original");
   });
 
-  // Una respuesta técnica literal se muestra.
-  it("mantiene visible una respuesta técnica contenida en el extracto", () => {
+  // Una respuesta literal se muestra.
+  it("mantiene visible una respuesta contenida en el extracto", () => {
     // Respuesta igual al extracto.
     const report = gradeReport(excerpt);
     // Forma válida.
@@ -369,17 +393,17 @@ describe("comprobación de afirmaciones", () => {
     expect(report.value.outcome).toBe("partial");
   });
 
-  // Informe de prueba sobre dimensiones de índice y modelo.
-  function dimensionReport(answer: string, findingText: string) {
+  // Informe de prueba sobre los plazos de reembolso.
+  function refundReport(answer: string, findingText: string) {
     // Extracto con las dos cifras.
-    const source = "El índice espera 1024 dimensiones y el modelo produce 768 dimensiones.";
-    // Subpregunta técnica.
-    const technicalSub: PlanItem = {
+    const source = "La tarjeta tarda 5 días hábiles y Bizum tarda 2 días hábiles.";
+    // Subpregunta externa.
+    const externalSub: PlanItem = {
       id: "q1",
-      text: "Qué dimensiones esperan el índice y el modelo.",
-      kind: "technical",
+      text: "Cuánto tardan los reembolsos con tarjeta y con Bizum.",
+      kind: "external",
       external: true,
-      query: "vectorize dimensions",
+      query: "plazos reembolso tarjeta bizum",
     };
     // Verifica con ese extracto.
     return verifyReport(
@@ -390,10 +414,10 @@ describe("comprobación de afirmaciones", () => {
         checks: [],
         unresolved: [],
       },
-      // Contexto: una subpregunta técnica cubierta por «web-dim».
+      // Contexto: una subpregunta externa cubierta por «web-dim».
       {
-        // Una subpregunta técnica.
-        subquestions: [technicalSub],
+        // Una subpregunta externa.
+        subquestions: [externalSub],
         // Cubierta por la fuente.
         coverage: [
           {
@@ -414,12 +438,12 @@ describe("comprobación de afirmaciones", () => {
     );
   }
 
-  // Intercambiar 1024 y 768 entre índice y modelo se rechaza.
-  it("no acepta el intercambio de 1024 y 768 entre el índice y el modelo", () => {
+  // Intercambiar los plazos de la tarjeta y de Bizum se rechaza.
+  it("no acepta intercambiar los plazos de la tarjeta y de Bizum", () => {
     // Frase con las cifras cambiadas de sitio.
-    const reversed = "El índice espera 768 dimensiones y el modelo produce 1024 dimensiones.";
+    const reversed = "La tarjeta tarda 2 días hábiles y Bizum tarda 5 días hábiles.";
     // Informe con esa frase.
-    const report = dimensionReport(reversed, reversed);
+    const report = refundReport(reversed, reversed);
     // Forma válida.
     if (!report.ok) {
       // Si no, falla.
@@ -431,23 +455,23 @@ describe("comprobación de afirmaciones", () => {
     expect(report.value.dropped.length).toBeGreaterThan(0);
     // La frase no aparece.
     expect(report.value.markdown).not.toContain(reversed);
-    // Ni «espera 768».
-    expect(report.value.markdown).not.toContain("espera 768");
-    // Ni «produce 1024».
-    expect(report.value.markdown).not.toContain("produce 1024");
+    // Ni «tarjeta tarda 2».
+    expect(report.value.markdown).not.toContain("tarjeta tarda 2");
+    // Ni «Bizum tarda 5».
+    expect(report.value.markdown).not.toContain("Bizum tarda 5");
   });
 
   // Intercambiar otras cifras entre sujetos también se rechaza.
   it("no acepta intercambiar otras cifras entre dos sujetos", () => {
     // Extracto con 6 y 9 horas.
-    const source = "El curso dura 6 horas y el ejercicio dura 9 horas.";
+    const source = "El envío a Baleares tarda 6 días y el envío a Portugal tarda 5 días.";
     // Frase con las cifras intercambiadas.
-    const swapped = "El curso dura 9 horas y el ejercicio dura 6 horas.";
-    // Subpregunta técnica.
-    const technicalSub: PlanItem = {
+    const swapped = "El envío a Baleares tarda 5 días y el envío a Portugal tarda 6 días.";
+    // Subpregunta externa.
+    const externalSub: PlanItem = {
       id: "q1",
-      text: "Cuánto duran el curso y el ejercicio.",
-      kind: "technical",
+      text: "Cuánto tardan los envíos a Baleares y a Portugal.",
+      kind: "external",
       external: true,
       query: null,
     };
@@ -462,8 +486,8 @@ describe("comprobación de afirmaciones", () => {
       },
       // Contexto con la fuente original de esas cifras.
       {
-        // Una subpregunta técnica.
-        subquestions: [technicalSub],
+        // Una subpregunta externa.
+        subquestions: [externalSub],
         // Cubierta por la fuente de las cifras.
         coverage: [
           {
@@ -490,15 +514,15 @@ describe("comprobación de afirmaciones", () => {
     // No es completo.
     expect(report.value.outcome).not.toBe("complete");
     // No aparece la cifra cambiada.
-    expect(report.value.markdown).not.toContain("dura 9 horas");
+    expect(report.value.markdown).not.toContain("Baleares tarda 5");
     // Ni la frase.
     expect(report.value.markdown).not.toContain(swapped);
   });
 
   // Invertir quién hace qué se rechaza aunque las palabras coincidan.
-  it("rechaza un cambio de orden que invierte quién guarda a quién", () => {
+  it("rechaza un cambio de orden que invierte quién reembolsa a quién", () => {
     // Frase con el orden invertido.
-    const reversed = "El estado del grafo guarda un checkpointer de LangGraph.";
+    const reversed = "El comprador reembolsa al vendedor cuando valida la devolución.";
     // Informe con esa frase.
     const report = gradeReport(reversed);
     // Forma válida.
@@ -507,19 +531,21 @@ describe("comprobación de afirmaciones", () => {
       throw new Error(report.reason);
     }
     // No aparece.
-    expect(report.value.markdown).not.toContain("grafo guarda un checkpointer");
+    expect(report.value.markdown).not.toContain("comprador reembolsa al vendedor");
     // Se retiró.
-    expect(report.value.dropped.some((item) => item.claim.includes("grafo guarda"))).toBe(true);
+    expect(report.value.dropped.some((item) => item.claim.includes("comprador reembolsa"))).toBe(
+      true,
+    );
     // El extracto correcto sí aparece.
     expect(report.value.markdown).toContain(excerpt);
   });
 
-  // El extracto original de las dimensiones se conserva entero.
-  it("mantiene el extracto original de las dimensiones", () => {
+  // El extracto original de los plazos se conserva entero.
+  it("mantiene el extracto original de los plazos", () => {
     // Extracto.
-    const source = "El índice espera 1024 dimensiones y el modelo produce 768 dimensiones.";
+    const source = "La tarjeta tarda 5 días hábiles y Bizum tarda 2 días hábiles.";
     // Informe que lo repite.
-    const report = dimensionReport(source, source);
+    const report = refundReport(source, source);
     // Forma válida.
     if (!report.ok) {
       // Si no, falla.
@@ -531,23 +557,23 @@ describe("comprobación de afirmaciones", () => {
     expect(report.value.dropped).toEqual([]);
     // Incluye el extracto.
     expect(report.value.markdown).toContain(source);
-    // Con «espera 1024».
-    expect(report.value.markdown).toContain("espera 1024");
-    // Y «produce 768».
-    expect(report.value.markdown).toContain("produce 768");
+    // Con «tarjeta tarda 5».
+    expect(report.value.markdown).toContain("tarjeta tarda 5");
+    // Y «Bizum tarda 2».
+    expect(report.value.markdown).toContain("Bizum tarda 2");
   });
 
   // La versión afirmativa de una frase negada no se muestra.
   it("no muestra la versión afirmativa de una frase negada en el extracto", () => {
     // Frase negada del extracto.
-    const negative = "La dimensión del índice no se puede cambiar después de crearlo.";
+    const negative = "Los auriculares intraauditivos no se pueden devolver después de abrirlos.";
     // Versión afirmativa.
-    const positive = "La dimensión del índice se puede cambiar después de crearlo.";
-    // Subpregunta técnica.
-    const technicalSub: PlanItem = {
+    const positive = "Los auriculares intraauditivos se pueden devolver después de abrirlos.";
+    // Subpregunta externa.
+    const externalSub: PlanItem = {
       id: "q1",
-      text: "Si la dimensión del índice se puede cambiar.",
-      kind: "technical",
+      text: "Si los auriculares intraauditivos se pueden devolver.",
+      kind: "external",
       external: true,
       query: null,
     };
@@ -564,8 +590,8 @@ describe("comprobación de afirmaciones", () => {
       },
       // Contexto con la página admitida.
       {
-        // Una subpregunta técnica.
-        subquestions: [technicalSub],
+        // Una subpregunta externa.
+        subquestions: [externalSub],
         // Cubierta por la página.
         coverage: [
           {

@@ -1,6 +1,6 @@
 // GUÍA DE LECTURA · apps/web/src/research-panel.tsx
 // Componentes que enseñan el resultado de una investigación: tarjetas de fuentes con sus extractos, pasos
-// del grafo y la traza completa (plan, curso, búsquedas, lecturas, evidencia, seguimiento, comprobación y consumo).
+// del grafo y la traza completa (plan, políticas, búsquedas, lecturas, evidencia, seguimiento, comprobación y consumo).
 // Tipos de fuente, paso y resumen.
 import type { ResearchSource, ResearchStep, ResearchSummary } from "@thepower-rag/contracts";
 // Tipo de los hijos de React.
@@ -43,7 +43,7 @@ export function ResearchSourceCard({ source }: { source: ResearchSource }) {
         ? "tool"
         : source.kind === "attachment"
           ? "note"
-          : "session";
+          : "store";
   // Elemento de la lista con el id en el título.
   return (
     <li className="citation is-shown research-source" title={source.sourceId}>
@@ -82,20 +82,19 @@ export function ResearchSourceCard({ source }: { source: ResearchSource }) {
         </p>
       ) : source.kind === "tool" ? (
         <p className="research-meta">
-          get_course_session · grupo {source.audience} · fuentes del curso:{" "}
-          {/* Fuentes del curso que respaldan la herramienta. */}
-          {source.backingSourceIds.join(", ")}
+          {/* Herramienta y versión de los datos de pedidos que leyó. */}
+          get_order · datos {source.dataVersion}
         </p>
       ) : source.kind === "attachment" ? (
         <p className="research-meta">
-          {/* Imagen o audio del alumno. */}
+          {/* Imagen o audio del usuario. */}
           {source.role === "image" ? "Imagen" : "Audio"} · {shortHash(source.contentHash)}. No es
-          evidencia del curso ni de una fuente técnica.
+          evidencia de la tienda ni de una fuente externa.
         </p>
       ) : (
         <p className="research-meta">
-          {/* Fragmento del curso. */}
-          {source.section} · corpus {source.corpusVersion} · grupo {source.audience}
+          {/* Fragmento de las políticas de la tienda. */}
+          {source.section} · corpus {source.corpusVersion}
         </p>
       )}
       {/* Extractos plegables. */}
@@ -188,7 +187,8 @@ export function ResearchTrace({ summary }: { summary: ResearchSummary }) {
         {/* Aviso si se contextualizó. */}
         {summary.contextualizedQuestion ? (
           <p className="research-meta">
-            Pregunta contextualizada, distinta de la original. La memoria no es evidencia del curso.
+            Pregunta contextualizada, distinta de la original. La memoria no es evidencia de la
+            tienda.
           </p>
         ) : null}
       </Section>
@@ -243,15 +243,15 @@ export function ResearchTrace({ summary }: { summary: ResearchSummary }) {
           </>
         )}
       </Section>
-      {/* Curso y herramienta. */}
-      <Section title="Material del curso y herramienta">
+      {/* Políticas de la tienda y herramienta de pedidos. */}
+      <Section title="Políticas de la tienda y herramienta de pedidos">
         {/* Sin consultas o con la lista. */}
-        {summary.courseQueries.length === 0 && summary.toolCalls.length === 0 ? (
-          <p>Sin consultas al curso.</p>
+        {summary.storeQueries.length === 0 && summary.toolCalls.length === 0 ? (
+          <p>Sin consultas a las políticas ni a la herramienta.</p>
         ) : (
           <ul className="trace-list">
-            {/* Consultas al curso. */}
-            {summary.courseQueries.map((item, index) => (
+            {/* Consultas a las políticas. */}
+            {summary.storeQueries.map((item, index) => (
               <li key={`c-${String(index)}`}>
                 Ronda {item.round} · {item.subquestionId} · {item.status}: {item.sourceIds.length}{" "}
                 fragmentos en alcance.
@@ -260,8 +260,7 @@ export function ResearchTrace({ summary }: { summary: ResearchSummary }) {
             {/* Llamadas a la herramienta. */}
             {summary.toolCalls.map((item, index) => (
               <li key={`t-${String(index)}`}>
-                get_course_session({item.args.sessionId}, {item.args.audience}) · {item.status}:{" "}
-                {/* Detalle. */}
+                get_order({item.args.orderId}) · {item.status}: {/* Detalle. */}
                 {item.detail}
               </li>
             ))}

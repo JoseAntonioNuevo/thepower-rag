@@ -17,7 +17,7 @@ export const OUTCOME_LABEL: Record<ResearchSummary["outcome"], string> = {
 export const STOP_LABEL: Record<ResearchSummary["stop"], string> = {
   // Paradas normales.
   "all-covered": "Todas las subpreguntas tienen evidencia",
-  "course-answer": "Respuesta con el material del curso, sin búsqueda externa",
+  "store-answer": "Respuesta con las políticas de la tienda, sin búsqueda externa",
   clarify: "Falta información para empezar",
   // Topes del laboratorio.
   "max-rounds": "Máximo de rondas alcanzado",
@@ -40,17 +40,17 @@ export const STOP_LABEL: Record<ResearchSummary["stop"], string> = {
 
 // Texto de cada ruta.
 export const ROUTE_LABEL: Record<NonNullable<ResearchSummary["route"]>, string> = {
-  course: "Material del curso",
-  tool: "Herramienta de sesión",
+  store: "Políticas de la tienda",
+  tool: "Herramienta de pedidos",
   investigate: "Investigación externa acotada",
   clarify: "Aclaración",
 };
 
 // Tipo de subpregunta.
 export const KIND_LABEL = {
-  course: "Curso",
-  session: "Sesión",
-  technical: "Técnica",
+  store: "Política",
+  order: "Pedido",
+  external: "Externa",
 } as const;
 
 // Estado de cobertura.
@@ -79,10 +79,10 @@ export const DECISION_LABEL = {
 
 // Tipo de fuente.
 export const SOURCE_KIND_LABEL = {
-  course: "Curso",
+  store: "Política",
   tool: "Herramienta",
   web: "Web",
-  attachment: "Entrada del alumno",
+  attachment: "Entrada del usuario",
 } as const;
 
 // Importe en USD con 4 decimales, o por qué no hay.

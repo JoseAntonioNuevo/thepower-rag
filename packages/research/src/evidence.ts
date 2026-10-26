@@ -3,12 +3,10 @@
 // literales, autoridad de cada fuente) y cómo se mantiene la cobertura de cada subpregunta.
 // Límites y tipo de fuente pública.
 import { RESEARCH_LIMITS, type ResearchSource } from "@thepower-rag/contracts";
-// Regla de visibilidad por audiencia.
-import { allowsAudience } from "@thepower-rag/core";
 // Texto acotado y tipo de subpregunta.
 import { boundedText, type PlanItem } from "./plan";
 // Tipos de evidencia.
-import type { CourseEvidence, EvidenceItem, ShownEvidence } from "./ports";
+import type { EvidenceItem, ShownEvidence, StoreEvidence } from "./ports";
 
 // Evidencia aceptada en una ronda.
 export interface AcceptedEvidence {
@@ -54,7 +52,7 @@ export interface CoverageEntry {
 }
 
 // Caracteres máximos por tipo de evidencia al enseñarla al modelo.
-const PER_KIND_CHARS = { course: 1_500, tool: 1_200, web: 4_000 } as const;
+const PER_KIND_CHARS = { store: 1_500, tool: 1_200, web: 4_000 } as const;
 // Laguna por defecto cuando el modelo no nombra ninguna.
 const DEFAULT_GAP = "Sin laguna concreta nombrada.";
 
@@ -64,17 +62,22 @@ export function flatten(text: string): string {
   return text.replace(/\s+/g, " ").trim();
 }
 
-/** Fuera de alcance: otra versión del corpus, otra audiencia o texto vacío. */
-export function courseInScope(
-  chunk: CourseEvidence,
-  scope: { corpusVersion: string; audience: CourseEvidence["audience"] },
-): boolean {
-  // Misma versión, id con esa versión, texto y audiencia visible.
+/**
+ * Texto de un fragmento de las políticas sin sus títulos Markdown («## Sección»). La sección ya
+ * viaja aparte; así los extractos y el informe empiezan por la frase y no por el título.
+ */
+export function withoutHeadings(text: string): string {
+  // Quita las líneas que empiezan por «#» y los saltos que las siguen.
+  return text.replace(/^#+ [^\n]*\n*/gm, "").trim();
+}
+
+/** Fuera de alcance: otra versión del corpus de la tienda o texto vacío. */
+export function storeInScope(chunk: StoreEvidence, scope: { corpusVersion: string }): boolean {
+  // Misma versión, id con esa versión y texto.
   return (
     chunk.corpusVersion === scope.corpusVersion &&
     chunk.sourceId.startsWith(`${scope.corpusVersion}:`) &&
-    chunk.text.trim().length > 0 &&
-    allowsAudience(chunk.audience, scope.audience)
+    chunk.text.trim().length > 0
   );
 }
 
@@ -129,10 +132,10 @@ function record(value: unknown): Record<string, unknown> | null {
     : null;
 }
 
-/** Una página externa no apoya fechas, profesores, ejercicios ni requisitos del curso. */
+/** Una página externa no apoya políticas de la tienda ni datos de un pedido. */
 export function authorityAllows(kind: EvidenceItem["kind"], subquestion: PlanItem): boolean {
-  // Lo técnico admite cualquier fuente; lo interno solo curso o herramienta.
-  return subquestion.kind === "technical" || kind === "course" || kind === "tool";
+  // Lo externo admite cualquier fuente; lo interno solo políticas o herramienta.
+  return subquestion.kind === "external" || kind === "store" || kind === "tool";
 }
 
 // Evidencia aceptada que respalda una subpregunta y tiene autoridad para hacerlo.
@@ -310,7 +313,7 @@ export function validateAssessment(
         sourceId,
         kind: item.kind,
         round: input.round,
-        reason: "Una página externa no documenta hechos internos del curso.",
+        reason: "Una página externa no documenta hechos internos de la tienda.",
       });
       // Siguiente.
       continue;
@@ -535,18 +538,17 @@ export function sourceFor(entry: AcceptedEvidence): ResearchSource {
   const subquestionIds = entry.subquestionIds.filter(
     (id): id is "q1" | "q2" | "q3" => id === "q1" || id === "q2" || id === "q3",
   );
-  // Fuente del curso.
-  if (item.kind === "course") {
-    // Fuente pública del curso.
+  // Fuente de las políticas de la tienda.
+  if (item.kind === "store") {
+    // Fuente pública de la política.
     return {
-      kind: "course",
+      kind: "store",
       sourceId: item.sourceId,
       documentId: item.documentId,
       title: item.title.slice(0, RESEARCH_LIMITS.maxTitleChars),
       section: item.section.slice(0, RESEARCH_LIMITS.maxTitleChars),
       excerpts,
       corpusVersion: item.corpusVersion,
-      audience: item.audience,
       subquestionIds,
     };
   }
@@ -559,9 +561,7 @@ export function sourceFor(entry: AcceptedEvidence): ResearchSource {
       toolName: item.toolName,
       title: item.title.slice(0, RESEARCH_LIMITS.maxTitleChars),
       excerpts,
-      backingSourceIds: item.backingSourceIds.slice(0, 4),
-      corpusVersion: item.corpusVersion,
-      audience: item.audience,
+      dataVersion: item.dataVersion,
       subquestionIds,
     };
   }

@@ -156,15 +156,15 @@ function realEnv(
     // Generación con clave de prueba.
     ANTHROPIC_API_KEY: "local-test-key",
     MODEL_ID: "example/generator",
-    // RAG real configurado con bindings vacíos.
+    // Búsqueda real en las políticas de la tienda con bindings vacíos.
     EMBEDDING_MODEL: "example/embed",
     EMBEDDING_DIMENSIONS: "1024",
-    CORPUS_VERSION: "test-corpus",
-    INDEX_PROFILE: "test-profile",
     VECTOR_METRIC: "cosine",
-    MIN_RETRIEVAL_SCORE: "0.5",
+    STORE_CORPUS_VERSION: "test-store",
+    STORE_INDEX_PROFILE: "test-store-profile",
+    STORE_MIN_RETRIEVAL_SCORE: "0.6",
     AI: {},
-    VECTORIZE: {},
+    VECTORIZE_STORE: {},
     DB: {},
     CORPUS: {},
     // Investigación real: modelo, buscador, autorización y precio del crédito.
@@ -213,7 +213,7 @@ describe("HTTP durable de investigación", () => {
         cookie,
         origin: "https://other.example",
       },
-      body: JSON.stringify({ audience: "M/J" }),
+      body: JSON.stringify({}),
     });
     // 403.
     expect(foreign.status).toBe(403);
@@ -226,7 +226,7 @@ describe("HTTP durable de investigación", () => {
     const created = await send(env, `${demoOrigin}/api/research/conversations`, {
       method: "POST",
       headers: { "content-type": "application/json", cookie, origin: demoOrigin },
-      body: JSON.stringify({ audience: "M/J" }),
+      body: JSON.stringify({}),
     });
     // 201.
     expect(created.status).toBe(201);
@@ -426,7 +426,7 @@ describe("HTTP durable de investigación", () => {
     const created = await send(env, `${demoOrigin}/api/research/conversations`, {
       method: "POST",
       headers: { "content-type": "application/json", cookie, origin: demoOrigin },
-      body: JSON.stringify({ audience: "L/X" }),
+      body: JSON.stringify({}),
     });
     // Id.
     const conversation = (await created.json()) as { id: string };
@@ -495,7 +495,7 @@ describe("HTTP durable de investigación", () => {
     const created = await send(env, `${demoOrigin}/api/research/conversations`, {
       method: "POST",
       headers: { "content-type": "application/json", cookie, origin: demoOrigin },
-      body: JSON.stringify({ audience: "program" }),
+      body: JSON.stringify({}),
     });
     // Id.
     const conversation = (await created.json()) as { id: string };
@@ -576,7 +576,7 @@ describe("HTTP durable de investigación", () => {
     const live = await send(env, `${demoOrigin}/api/research/conversations`, {
       method: "POST",
       headers: { "content-type": "application/json", cookie, origin: demoOrigin },
-      body: JSON.stringify({ audience: "M/J" }),
+      body: JSON.stringify({}),
     });
     // Id.
     const other = (await live.json()) as { id: string };
@@ -700,7 +700,7 @@ describe("HTTP durable de investigación", () => {
         "cf-connecting-ip": ip,
         "x-turnstile-token": "synthetic-token",
       },
-      body: JSON.stringify({ audience: "M/J" }),
+      body: JSON.stringify({}),
     });
     // 403.
     expect(foreign.status).toBe(403);
@@ -716,7 +716,7 @@ describe("HTTP durable de investigación", () => {
         origin: publicOrigin,
         "cf-connecting-ip": ip,
       },
-      body: JSON.stringify({ audience: "M/J" }),
+      body: JSON.stringify({}),
     });
     // 403.
     expect(missing.status).toBe(403);
@@ -735,7 +735,7 @@ describe("HTTP durable de investigación", () => {
         "cf-connecting-ip": ip,
         "x-turnstile-token": "synthetic-token",
       },
-      body: JSON.stringify({ audience: "M/J" }),
+      body: JSON.stringify({}),
     });
     // 403.
     expect(invalid.status).toBe(403);
@@ -757,7 +757,7 @@ describe("HTTP durable de investigación", () => {
         "cf-connecting-ip": ip,
         "x-turnstile-token": "synthetic-token",
       },
-      body: JSON.stringify({ audience: "M/J" }),
+      body: JSON.stringify({}),
     });
     // 429.
     expect(limited.status).toBe(429);
@@ -779,7 +779,7 @@ describe("HTTP durable de investigación", () => {
         "cf-connecting-ip": ip,
         "x-turnstile-token": "synthetic-token",
       },
-      body: JSON.stringify({ audience: "M/J" }),
+      body: JSON.stringify({}),
     });
     // 403.
     expect(expired.status).toBe(403);
@@ -804,7 +804,7 @@ describe("HTTP durable de investigación", () => {
         "cf-connecting-ip": ip,
         "x-turnstile-token": "synthetic-token",
       },
-      body: JSON.stringify({ audience: "M/J" }),
+      body: JSON.stringify({}),
     });
     // 201.
     expect(created.status).toBe(201);

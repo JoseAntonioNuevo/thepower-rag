@@ -1,14 +1,17 @@
 // GUÍA DE LECTURA · apps/api/src/research-real.ts
 // Adaptadores reales de la investigación: el modelo planifica, evalúa, pide más búsquedas y sintetiza
-// con salida estructurada; el curso sale de Vectorize y la web de Firecrawl o Tavily. Construir los
-// puertos no llama a la red; las llamadas ocurren cuando el grafo las pide.
-// Límites de la investigación y tipo de audiencia.
-import { RESEARCH_LIMITS, type Audience } from "@thepower-rag/contracts";
+// con salida estructurada; las políticas de ThePower Shop salen de su índice de Vectorize, los
+// pedidos de la herramienta get_order y la web de Firecrawl o Tavily. Construir los puertos no
+// llama a la red; las llamadas ocurren cuando el grafo las pide.
+// Límites de la investigación.
+import { RESEARCH_LIMITS } from "@thepower-rag/contracts";
+// Texto de un fragmento sin sus títulos Markdown.
+import { withoutHeadings } from "@thepower-rag/research";
 // Tipos de los puertos de la investigación.
 import type {
   Consumption,
-  CourseEvidence,
-  CourseEvidencePort,
+  StoreEvidence,
+  StoreEvidencePort,
   PortResult,
   ResearchModelPort,
   ResearchPorts,
@@ -29,8 +32,8 @@ import { tokenEstimateConsumption } from "./provider-cost";
 import { excerptChoices, resolveExcerpt } from "./research-excerpts";
 // Prompts de cada etapa.
 import { ASSESS_PROMPT, FOLLOW_UP_PROMPT, PLAN_PROMPT, SYNTHESIS_PROMPT } from "./research-prompts";
-// Herramienta de sesiones del curso.
-import { createCourseSessionTool } from "./research-tool";
+// Herramienta de pedidos y sus datos ficticios.
+import { createOrderTool, ORDER_DATA } from "./research-tool";
 // Acceso a Vectorize y D1.
 import { queryVectorize, readChunk, type SqlDatabase, type VectorIndex } from "./stores";
 // Embeddings con Workers AI.
@@ -41,11 +44,11 @@ const sid = z.enum(["q1", "q2", "q3"]);
 
 // Esquema del plan: ruta, explicación, aclaración, subpreguntas y herramienta.
 const planSchema = z.object({
-  route: z.enum(["course", "tool", "investigate", "clarify"]),
+  route: z.enum(["store", "tool", "investigate", "clarify"]),
   // La explicación se recorta después de generarla; las subpreguntas y los argumentos de
   // herramienta o buscador mantienen sus límites estrictos en el esquema.
   rationale: z.string(),
-  // Pregunta de vuelta al alumno cuando la ruta es «clarify»; null en otro caso.
+  // Pregunta de vuelta al usuario cuando la ruta es «clarify»; null en otro caso.
   clarification: z.string().max(RESEARCH_LIMITS.maxReasonChars).nullable(),
   // De 1 a 3 subpreguntas, cada una con id q1..q3, texto, tipo y si necesita la web.
   subquestions: z
@@ -53,18 +56,16 @@ const planSchema = z.object({
       z.object({
         id: sid,
         text: z.string().max(RESEARCH_LIMITS.maxSubquestionChars),
-        // course: dato del curso; session: ficha de una sesión; technical: tema técnico externo.
-        kind: z.enum(["course", "session", "technical"]),
+        // store: política de la tienda; order: dato de un pedido; external: normativa o fuente pública.
+        kind: z.enum(["store", "order", "external"]),
         external: z.boolean(),
         // Consulta para el buscador web, o null si no busca fuera.
         query: z.string().max(RESEARCH_LIMITS.maxQueryChars).nullable(),
       }),
     )
     .max(RESEARCH_LIMITS.maxSubquestions),
-  // Herramienta get_course_session: qué sesión y qué grupo consultar, o null.
-  tool: z
-    .object({ sessionId: z.string().max(8), audience: z.enum(["program", "L/X", "M/J"]) })
-    .nullable(),
+  // Herramienta get_order: qué pedido consultar, o null.
+  tool: z.object({ orderId: z.string().max(16) }).nullable(),
 });
 
 // Esquema de la evaluación: decisión por fuente, cobertura por subpregunta y contradicciones.
@@ -181,8 +182,8 @@ export function estimateResearchMaxUsd(settings: ResearchSettings): number {
       : (RESEARCH_LIMITS.maxSearchCalls * FIRECRAWL_CREDITS_ESTIMATE.search +
           RESEARCH_LIMITS.maxPagesRead * FIRECRAWL_CREDITS_ESTIMATE.read) *
         settings.firecrawlUsdPerCredit;
-  // Coste aproximado de los embeddings del curso.
-  const embeddings = (RESEARCH_LIMITS.maxCourseQueries * 2_000 * 0.0118) / 1_000_000;
+  // Coste aproximado de los embeddings de las consultas a las políticas.
+  const embeddings = (RESEARCH_LIMITS.maxStoreQueries * 2_000 * 0.0118) / 1_000_000;
   // Suma con un 25 % de margen.
   return 1.25 * (model + crawl + embeddings);
 }
@@ -247,8 +248,7 @@ function validationPaths(error: unknown): string {
     "external",
     "query",
     "tool",
-    "sessionId",
-    "audience",
+    "orderId",
     "route",
     // Campos de la evaluación.
     "items",
@@ -334,7 +334,7 @@ export function createResearchModelPort(input: {
   // Métodos del puerto.
   return {
     // Construye el plan de investigación que consumen los nodos posteriores.
-    async plan({ question, audience }, context) {
+    async plan({ question }, context) {
       // try/catch: un fallo se convierte en resultado tipado.
       try {
         // Plan con esquema, sin reintentos.
@@ -343,9 +343,9 @@ export function createResearchModelPort(input: {
           model: input.planner,
           schema: planSchema,
           schemaName: "research-plan",
-          // Instrucciones del plan y la pregunta con el grupo elegido.
+          // Instrucciones del plan y la pregunta original.
           system: PLAN_PROMPT,
-          prompt: `Grupo seleccionado: ${audience}\n\nPregunta original:\n${question}`,
+          prompt: `Pregunta original:\n${question}`,
           // Tope de salida: el menor entre el del plan y el que permite la reserva del trabajo.
           maxOutputTokens: Math.min(
             RESEARCH_LIMITS.maxOutputTokens.plan,
@@ -534,8 +534,8 @@ export function createResearchModelPort(input: {
   };
 }
 
-/** Material del curso con la recuperación vectorial existente: Workers AI, Vectorize y D1. */
-export function createVectorCoursePort(input: {
+/** Políticas de la tienda con la recuperación vectorial existente: Workers AI, Vectorize y D1. */
+export function createVectorStorePort(input: {
   // Ejecutor de embeddings.
   embedder: EmbeddingRunner;
   // Índice vectorial.
@@ -544,11 +544,11 @@ export function createVectorCoursePort(input: {
   database: SqlDatabase;
   // Ajustes de búsqueda.
   retrieval: RetrievalSettings;
-}): CourseEvidencePort {
+}): StoreEvidencePort {
   // Puerto con retrieve.
   return {
     // Recupera candidatos documentales dentro del ámbito de corpus y consulta del recorrido.
-    async retrieve({ query, audience, corpusVersion, limit }, context) {
+    async retrieve({ query, corpusVersion, limit }, context) {
       // try/catch: cualquier fallo se tipa.
       try {
         // Embedding de la consulta.
@@ -570,15 +570,22 @@ export function createVectorCoursePort(input: {
             consumption: { kind: "unknown" },
           };
         }
-        // Vecinos en Vectorize.
+        // Vecinos en Vectorize. La tienda no tiene grupos: todas sus fichas son de audiencia
+        // «program», el valor común que comparten los índices del proyecto.
         const hits = await queryVectorize(
           input.index,
-          { vector, audience, corpusVersion, profileId: input.retrieval.indexProfile, limit },
+          {
+            vector,
+            audience: "program",
+            corpusVersion,
+            profileId: input.retrieval.indexProfile,
+            limit,
+          },
           context.signal,
           context.timeoutMs,
         );
-        // Evidencia del curso.
-        const rows: CourseEvidence[] = [];
+        // Evidencia de las políticas.
+        const rows: StoreEvidence[] = [];
         // Hasta el límite pedido.
         for (const hit of hits.slice(0, limit)) {
           // Por debajo del umbral: se descarta.
@@ -590,8 +597,17 @@ export function createVectorCoursePort(input: {
           const record = await readChunk(input.database, corpusVersion, hit.chunkId);
           // Si existe.
           if (record !== null) {
-            // Lo añade como evidencia del curso.
-            rows.push({ kind: "course", sourceId: record.chunkId, ...record, score: hit.score });
+            // Lo añade como evidencia de las políticas, solo con los campos de la tienda.
+            rows.push({
+              kind: "store",
+              sourceId: record.chunkId,
+              documentId: record.documentId,
+              title: record.title,
+              section: record.section,
+              text: withoutHeadings(record.text),
+              corpusVersion: record.corpusVersion,
+              score: hit.score,
+            });
           }
         }
         // Evidencia con consumo desconocido.
@@ -608,9 +624,7 @@ export function createVectorCoursePort(input: {
 export interface RealResearchInput {
   // Señal de cancelación.
   signal: AbortSignal;
-  // Audiencia.
-  audience: Audience;
-  // Versión del corpus.
+  // Versión del corpus de la tienda.
   corpusVersion: string;
   // Ajustes de investigación.
   settings: ResearchSettings;
@@ -648,7 +662,7 @@ export function createRealResearchPorts(input: RealResearchInput): ResearchPorts
   }
   // Precio por crédito de Firecrawl.
   const usdPerCredit = input.settings.firecrawlUsdPerCredit;
-  // Puertos con modelo, curso, herramienta, buscador y lector.
+  // Puertos con modelo, políticas, herramienta, buscador y lector.
   return {
     measured: true,
     fixture: false,
@@ -666,20 +680,15 @@ export function createRealResearchPorts(input: RealResearchInput): ResearchPorts
         outputUsdPerMillion: input.settings.outputUsdPerMillion,
       },
     }),
-    // Curso: Vectorize + D1 con los ajustes de recuperación del RAG.
-    course: createVectorCoursePort({
+    // Políticas: Vectorize + D1 con los ajustes de recuperación de la tienda.
+    store: createVectorStorePort({
       embedder: input.embedder,
       index: input.index,
       database: input.database,
       retrieval: input.retrieval,
     }),
-    // Herramienta de sesiones: solo lectura del corpus de esta versión y grupo.
-    tool: createCourseSessionTool({
-      corpusVersion: input.corpusVersion,
-      audience: input.audience,
-      // Lee el recurso solicitado y devuelve el resultado de este adaptador al consumidor.
-      read: (corpusVersion, chunkId) => readChunk(input.database, corpusVersion, chunkId),
-    }),
+    // Herramienta de pedidos: solo lectura de los pedidos de la cuenta de la demo.
+    tool: createOrderTool({ data: ORDER_DATA, customerId: ORDER_DATA.customerId }),
     // Buscador web: Tavily o Firecrawl, según RESEARCH_SEARCH_PROVIDER.
     search:
       input.settings.searchProvider === "tavily"

@@ -5,7 +5,7 @@
 // y
 // cada cambio de una operación exige la ficha (fence) del arrendamiento vigente.
 // Tipos de audiencia, resultado y escenario.
-import type { Audience, ResearchOutcome, ResearchScenarioId } from "@thepower-rag/contracts";
+import type { ResearchOutcome, ResearchScenarioId } from "@thepower-rag/contracts";
 // Tipo de consumo.
 import type { Consumption } from "@thepower-rag/research";
 // Tipo de la base de datos.
@@ -25,8 +25,6 @@ export interface ConversationRow {
   id: string;
   // Propietario.
   owner_id: string;
-  // Audiencia.
-  audience: Audience;
   // Creación.
   created_at: number;
   // Última actividad.
@@ -63,8 +61,6 @@ export interface JobRow {
   owner_id: string;
   // Ejecución.
   run_id: string;
-  // Audiencia.
-  audience: Audience;
   // Estado de ejecución.
   execution_status: "queued" | "running" | "complete" | "cancelled" | "attention" | "failed";
   // Resultado del informe.
@@ -227,7 +223,7 @@ function assetGuardBinds(
 }
 
 // Columnas de research_jobs.
-const JOB_COLUMNS = `id, conversation_id, owner_id, run_id, audience, execution_status, report_outcome,
+const JOB_COLUMNS = `id, conversation_id, owner_id, run_id, execution_status, report_outcome,
   idempotency_key, fingerprint, original_question, contextualized_question, scenario_id, corpus_version,
   deadline_at, queue_deadline_at, started_at, created_at, finished_at, lease_token, lease_until,
   executor_id, cancel_requested, dispatch_state, reserved_micros, unknown_micros, consumed_micros,
@@ -237,7 +233,6 @@ const JOB_COLUMNS = `id, conversation_id, owner_id, run_id, audience, execution_
 export async function createConversation(
   database: ResearchDatabase,
   ownerId: string,
-  audience: Audience,
   now: number,
 ): Promise<ConversationRow> {
   // Id nuevo.
@@ -245,13 +240,13 @@ export async function createConversation(
   // INSERT.
   await database
     .prepare(
-      `INSERT INTO research_conversations (id, owner_id, audience, created_at, updated_at)
-       VALUES (?, ?, ?, ?, ?)`,
+      `INSERT INTO research_conversations (id, owner_id, created_at, updated_at)
+       VALUES (?, ?, ?, ?)`,
     )
-    .bind(id, ownerId, audience, now, now)
+    .bind(id, ownerId, now, now)
     .run();
   // Fila creada.
-  return { id, owner_id: ownerId, audience, created_at: now, updated_at: now };
+  return { id, owner_id: ownerId, created_at: now, updated_at: now };
 }
 
 // Conversaciones del propietario, recientes primero.
@@ -262,7 +257,7 @@ export async function listConversations(
   // SELECT.
   return database
     .prepare(
-      `SELECT id, owner_id, audience, created_at, updated_at
+      `SELECT id, owner_id, created_at, updated_at
        FROM research_conversations WHERE owner_id = ? ORDER BY updated_at DESC`,
     )
     .bind(ownerId)
@@ -278,7 +273,7 @@ export async function getConversation(
   // SELECT.
   return database
     .prepare(
-      `SELECT id, owner_id, audience, created_at, updated_at
+      `SELECT id, owner_id, created_at, updated_at
        FROM research_conversations WHERE id = ? AND owner_id = ?`,
     )
     .bind(conversationId, ownerId)
@@ -471,14 +466,14 @@ export async function admitJob(
         // abortan si no cabe.
         .prepare(
           `INSERT INTO research_jobs (
-             id, conversation_id, owner_id, run_id, audience, execution_status, report_outcome,
+             id, conversation_id, owner_id, run_id, execution_status, report_outcome,
              idempotency_key, fingerprint, original_question, contextualized_question, scenario_id,
              corpus_version, deadline_at, queue_deadline_at, started_at, created_at, finished_at,
              lease_token, lease_until, executor_id, cancel_requested, dispatch_state,
              reserved_micros, unknown_micros, consumed_micros, limit_micros, price_json,
              result_json, progress_text, crash_consumed, attention_reason
            )
-           SELECT ?, ?, ?, ?, ?, 'queued', NULL, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, NULL,
+           SELECT ?, ?, ?, ?, 'queued', NULL, ?, ?, ?, ?, ?, ?, ?, ?, NULL, ?, NULL,
                   0, NULL, NULL, 0, 'pending', ?, 0, 0, ?, ?, NULL, NULL, 0, NULL
            WHERE EXISTS (
              SELECT 1 FROM research_submissions
@@ -494,7 +489,6 @@ export async function admitJob(
           input.conversationId,
           input.ownerId,
           runId,
-          conversation.audience,
           // Petición: clave, huella, preguntas, guion y versión del corpus.
           input.idempotencyKey,
           input.fingerprint,
@@ -1338,7 +1332,7 @@ export async function rememberAdmittedTurn(
 ): Promise<void> {
   // UPDATE del mensaje del usuario.
   await database
-    // Actualiza el texto de la pregunta del alumno (por ejemplo, con la transcripción) solo si la
+    // Actualiza el texto de la pregunta del usuario (por ejemplo, con la transcripción) solo si la
     // conversación es suya.
     .prepare(
       `UPDATE research_messages

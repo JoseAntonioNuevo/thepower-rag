@@ -1,6 +1,6 @@
 // GUÍA DE LECTURA · apps/api/src/research-memory.ts
 // Memoria de la conversación de investigación: resume turnos anteriores para resolver referencias
-// («esa sesión», «lo anterior») sin convertirlos en evidencia del curso.
+// («ese pedido», «lo anterior») sin convertirlos en evidencia de la tienda.
 // Límites de la investigación.
 import { RESEARCH_LIMITS } from "@thepower-rag/contracts";
 
@@ -12,7 +12,7 @@ export const RESEARCH_MEMORY_CHARS = 1_200;
 export const RESEARCH_MAX_USER_TURNS = 12;
 // Cabecera que marca la memoria como contexto, no como evidencia.
 export const RESEARCH_MEMORY_HEADER =
-  "Contexto de esta conversación (no es evidencia del curso ni sustituye fuentes):\n";
+  "Contexto de esta conversación (no es evidencia de la tienda ni sustituye fuentes):\n";
 
 // Turno de la memoria.
 export interface MemoryTurn {
@@ -26,12 +26,12 @@ export interface MemoryTurn {
 export interface ContextualQuestion {
   // Pregunta tal como la escribió el usuario.
   original: string;
-  /** Null cuando no hay turnos previos. No es evidencia del curso. */
+  /** Null cuando no hay turnos previos. No es evidencia de la tienda. */
   contextualized: string | null;
 }
 
 /**
- * La memoria resuelve referencias. No crea hechos del curso ni sustituye
+ * La memoria resuelve referencias. No crea hechos de la tienda ni sustituye
  * una fuente. La pregunta actual no se recorta para hacer sitio al contexto.
  */
 /** Texto de turno para la memoria. No incluye bytes ni base64. */

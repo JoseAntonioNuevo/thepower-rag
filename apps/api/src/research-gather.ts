@@ -1,15 +1,16 @@
 // GUÍA DE LECTURA · apps/api/src/research-gather.ts
-// Nodos del grafo que reúnen evidencia: material del curso, herramienta de sesiones, búsqueda web,
-// selección de páginas y lectura. Todo pasa por topes globales y por la lista de dominios permitidos.
+// Nodos del grafo que reúnen evidencia: políticas de ThePower Shop, herramienta de pedidos, búsqueda
+// web, selección de páginas y lectura. Todo pasa por topes globales y por la lista de dominios
+// permitidos.
 // Límites, nodo y paso del contrato.
 import { RESEARCH_LIMITS, type ResearchNode, type ResearchStep } from "@thepower-rag/contracts";
 // Normaliza consultas para detectar repeticiones.
 import { normalizeQuery } from "@thepower-rag/core";
 // Reglas puras: URL permitidas, alcance, duplicados, instrucciones embebidas y topes.
 import {
-  // URL permitidas, alcance del curso, deduplicación e instrucciones embebidas.
+  // URL permitidas, alcance de las políticas, deduplicación e instrucciones embebidas.
   checkUrl,
-  courseInScope,
+  storeInScope,
   dedupeEvidence,
   flagEmbeddedInstructions,
   // Texto plano, URL canónica y topes restantes.
@@ -19,10 +20,10 @@ import {
   remainingMs,
   searchesLeft,
   // Validación de la herramienta e id de una fuente web.
-  validateSessionArgs,
+  validateOrderArgs,
   webSourceId,
   // Tipos de evidencia y de puertos.
-  type CourseEvidence,
+  type StoreEvidence,
   type EvidenceItem,
   type ResearchPorts,
   type WebEvidence,
@@ -40,14 +41,14 @@ import {
 
 // Dependencias de cada nodo.
 export interface NodeDeps {
-  // Puertos (modelo, curso, web…).
+  // Puertos (modelo, políticas, web…).
   ports: ResearchPorts;
   // Función que emite cada paso.
   emit: (step: ResearchStep) => void;
 }
 
-/** Máximo de fragmentos del curso que entran como candidatos en una ronda. */
-export const COURSE_CANDIDATES_PER_ROUND = 6;
+/** Máximo de fragmentos de las políticas que entran como candidatos en una ronda. */
+export const STORE_CANDIDATES_PER_ROUND = 6;
 
 /** Corta el recorrido si la petición se abortó o se agotó el plazo total. */
 export function halt(
@@ -108,55 +109,54 @@ function knownIds(state: ResearchState): Set<string> {
   ]);
 }
 
-// Nodo course: consulta el material del curso por cada subpregunta pendiente.
-export async function courseNode(
+// Nodo store: consulta las políticas de la tienda por cada subpregunta pendiente.
+export async function storeNode(
   state: ResearchState,
   deps: NodeDeps,
 ): Promise<Partial<ResearchState>> {
   // Parada.
-  const stop = halt(state, deps, "course");
+  const stop = halt(state, deps, "store");
   // Si toca.
   if (stop) {
     // Devuelve.
     return stop;
   }
   // Traza local.
-  const t = tracer(state, deps, "course");
+  const t = tracer(state, deps, "store");
   // Contadores.
   const counters = { ...state.counters };
   // Registros.
-  const logs = [...state.courseQueries];
+  const logs = [...state.storeQueries];
   // Consumo.
   let ledger = state.ledger;
   // Ids ya vistos.
   const known = knownIds(state);
   // Fragmentos nuevos.
-  const found: CourseEvidence[] = [];
+  const found: StoreEvidence[] = [];
   // Cada consulta pendiente.
-  for (const pending of state.pendingCourse) {
+  for (const pending of state.pendingStore) {
     // Tope de consultas.
-    if (counters.courseQueries >= RESEARCH_LIMITS.maxCourseQueries) {
+    if (counters.storeQueries >= RESEARCH_LIMITS.maxStoreQueries) {
       // Lo registra.
-      t.log("Tope de consultas al material del curso alcanzado.");
+      t.log("Tope de consultas a las políticas de la tienda alcanzado.");
       // Sale.
       break;
     }
     // Cuenta la consulta.
-    counters.courseQueries += 1;
-    // Búsqueda en el curso con plazo.
+    counters.storeQueries += 1;
+    // Búsqueda en las políticas con plazo.
     const result = await guardedCall(
       // Puertos, inicio del trabajo y plazo de esta llamada.
       deps.ports,
       state.startedAt,
-      RESEARCH_LIMITS.timeouts.courseMs,
+      RESEARCH_LIMITS.timeouts.storeMs,
       (context) =>
-        // Consulta al curso: texto, grupo, versión del corpus y número máximo de fragmentos.
-        deps.ports.course.retrieve(
+        // Consulta a las políticas: texto, versión del corpus y número máximo de fragmentos.
+        deps.ports.store.retrieve(
           {
             query: pending.query,
-            audience: state.audience,
             corpusVersion: state.corpusVersion,
-            limit: RESEARCH_LIMITS.maxCourseFragmentsPerQuery,
+            limit: RESEARCH_LIMITS.maxStoreFragmentsPerQuery,
           },
           context,
         ),
@@ -174,14 +174,14 @@ export async function courseNode(
         sourceIds: [],
       });
       // Paso visible.
-      t.log(`Material del curso para ${pending.subquestionId}: fallo (${result.detail})`);
+      t.log(`Políticas de la tienda para ${pending.subquestionId}: fallo (${result.detail})`);
       // Cancelado.
       if (result.error === "aborted") {
         // Termina con lo acumulado.
         return {
-          ...halt(state, deps, "course"),
+          ...halt(state, deps, "store"),
           counters,
-          courseQueries: logs,
+          storeQueries: logs,
           ledger,
           trace: t.trace,
         };
@@ -190,10 +190,10 @@ export async function courseNode(
       continue;
     }
     // Fragmentos con tope.
-    const rows = result.value.slice(0, RESEARCH_LIMITS.maxCourseFragmentsPerQuery);
-    // Solo de la versión y audiencia correctas.
+    const rows = result.value.slice(0, RESEARCH_LIMITS.maxStoreFragmentsPerQuery);
+    // Solo de la versión correcta.
     const inScope = rows.filter((chunk) =>
-      courseInScope(chunk, { corpusVersion: state.corpusVersion, audience: state.audience }),
+      storeInScope(chunk, { corpusVersion: state.corpusVersion }),
     );
     // Registro correcto.
     logs.push({
@@ -207,24 +207,24 @@ export async function courseNode(
     const outside = rows.length - inScope.length;
     // Paso visible.
     t.log(
-      `Material del curso para ${pending.subquestionId}: ${String(inScope.length)} fragmentos en alcance${outside > 0 ? `, ${String(outside)} fuera de grupo o versión` : ""}.`,
+      `Políticas de la tienda para ${pending.subquestionId}: ${String(inScope.length)} fragmentos en alcance${outside > 0 ? `, ${String(outside)} de otra versión` : ""}.`,
     );
     // Añade los nuevos.
     found.push(...inScope.filter((chunk) => !known.has(chunk.sourceId)));
   }
   // Candidatos sin duplicar y con tope por ronda.
-  const course = dedupeEvidence(found).slice(0, COURSE_CANDIDATES_PER_ROUND);
+  const store = dedupeEvidence(found).slice(0, STORE_CANDIDATES_PER_ROUND);
   // Estado actualizado.
   return {
     counters,
-    courseQueries: logs,
+    storeQueries: logs,
     ledger,
-    candidates: [...state.candidates, ...course],
+    candidates: [...state.candidates, ...store],
     trace: t.trace,
   };
 }
 
-// Nodo tool: llama a get_course_session si el plan lo pidió.
+// Nodo tool: llama a get_order si el plan lo pidió.
 export async function toolNode(
   state: ResearchState,
   deps: NodeDeps,
@@ -253,13 +253,13 @@ export async function toolNode(
     return { trace: t.trace };
   }
   // Valida los argumentos.
-  const args = validateSessionArgs(requested, state.audience);
+  const args = validateOrderArgs(requested);
   // Una llamada más.
   const counters = { ...state.counters, toolCalls: state.counters.toolCalls + 1 };
   // Argumentos inválidos.
   if (!args.ok) {
     // Lo registra.
-    t.log(`get_course_session rechazada: ${args.reason}`);
+    t.log(`get_order rechazada: ${args.reason}`);
     // Llamada rechazada sin ejecutar.
     return {
       // Solo cuenta la llamada; no se ejecuta.
@@ -269,9 +269,9 @@ export async function toolNode(
         ...state.toolCalls,
         {
           round: state.round,
-          name: "get_course_session",
-          // Argumentos recortados y grupo del estado (el modelo no puede pedir otro grupo).
-          args: { sessionId: requested.sessionId.slice(0, 8), audience: state.audience },
+          name: "get_order",
+          // Argumento recortado tal como lo propuso el modelo.
+          args: { orderId: requested.orderId.slice(0, 16) },
           // Estado «rejected», motivo y sin fuentes.
           status: "rejected",
           detail: args.reason,
@@ -286,22 +286,24 @@ export async function toolNode(
     deps.ports,
     state.startedAt,
     RESEARCH_LIMITS.timeouts.toolMs,
-    (context) => deps.ports.tool.getCourseSession(args.value, context),
+    (context) => deps.ports.tool.getOrder(args.value, context),
   );
   // Consumo.
   const ledger = addConsumption(state.ledger, result.consumption);
-  // Fallo.
+  // Fallo o rechazo.
   if (!result.ok) {
+    // Pedido de otra cuenta: la herramienta lo rechaza sin enseñar datos.
+    const blocked = result.error === "blocked";
     // Lo registra.
-    t.log(`get_course_session falló: ${result.detail}`);
-    // Registro del fallo.
+    t.log(`get_order ${blocked ? "rechazada" : "falló"}: ${result.detail}`);
+    // Registro del fallo o del rechazo.
     const toolCalls = [
       ...state.toolCalls,
       {
         round: state.round,
-        name: "get_course_session" as const,
+        name: "get_order" as const,
         args: args.value,
-        status: "error" as const,
+        status: blocked ? ("rejected" as const) : ("error" as const),
         detail: result.detail.slice(0, RESEARCH_LIMITS.maxReasonChars),
         sourceIds: [],
       },
@@ -320,21 +322,15 @@ export async function toolNode(
     // Sigue sin la herramienta.
     return { counters, ledger, toolCalls, trace: t.trace };
   }
-  // Ficha devuelta.
+  // Pedido devuelto.
   const evidence = result.value;
-  // Válida si es de la audiencia y versión, con fuentes de esa versión.
-  const valid =
-    evidence !== null &&
-    evidence.audience === state.audience &&
-    evidence.corpusVersion === state.corpusVersion &&
-    evidence.backingSourceIds.every((id) => id.startsWith(`${state.corpusVersion}:`));
   // Paso visible.
   t.log(
-    valid
-      ? `get_course_session(${args.value.sessionId}, ${args.value.audience}) devolvió datos con ${String(evidence.backingSourceIds.length)} fuentes del curso.`
-      : "get_course_session no encontró datos documentados en este alcance.",
+    evidence !== null
+      ? `get_order(${args.value.orderId}) devolvió los datos del pedido.`
+      : `get_order(${args.value.orderId}) no encontró ese pedido.`,
   );
-  // Registro y candidato si es válida.
+  // Registro y candidato si hay datos.
   return {
     // Contadores y consumo.
     counters,
@@ -344,18 +340,18 @@ export async function toolNode(
       ...state.toolCalls,
       {
         round: state.round,
-        name: "get_course_session",
+        name: "get_order",
         // Argumentos ya validados.
         args: args.value,
-        // ok si devolvió datos documentados; rejected si la sesión no los tiene.
-        status: valid ? "ok" : "rejected",
-        detail: valid ? "Datos documentados del curso." : "Sin datos documentados para esa sesión.",
-        // Fuentes del corpus que respaldan la ficha (como mucho 4).
-        sourceIds: valid ? evidence.backingSourceIds.slice(0, 4) : [],
+        // ok si devolvió el pedido; rejected si no existe.
+        status: evidence !== null ? "ok" : "rejected",
+        detail: evidence !== null ? "Datos del pedido." : "No existe un pedido con ese número.",
+        // Fuente que produjo la herramienta.
+        sourceIds: evidence !== null ? [evidence.sourceId] : [],
       },
     ],
-    // Solo una ficha válida pasa a candidata para el evaluador.
-    candidates: valid ? [...state.candidates, evidence] : state.candidates,
+    // Solo un pedido encontrado pasa a candidato para el evaluador.
+    candidates: evidence !== null ? [...state.candidates, evidence] : state.candidates,
     trace: t.trace,
   };
 }

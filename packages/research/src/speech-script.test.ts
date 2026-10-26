@@ -7,27 +7,27 @@ import { describe, expect, it } from "vite-plus/test";
 import { spokenScript } from "./speech-script";
 
 // Extracto admitido de prueba.
-const excerpt = "La dimensión del índice no se puede cambiar después de crearlo.";
+const excerpt = "Los auriculares intraauditivos no se pueden devolver después de abrirlos.";
 
 // Grupo de pruebas del guion.
 describe("guion hablado", () => {
   // Lee frases completas y excluye los puntos sin resolver aunque citen.
   it("lee la frase completa del informe y excluye lagunas aunque simulen una cita", () => {
-    // Frase del curso con una coordinación.
-    const course =
-      "Objetivo para el alumno: construir un agente con imagen y audio, y que también pueda producir voz.";
+    // Frase de la tienda con una coordinación.
+    const policy =
+      "El reembolso se ordena por el mismo método de pago, y con Bizum tarda 2 días hábiles.";
     // Dato inventado.
-    const invented = "El curso exige nota mínima 9.";
+    const invented = "ThePower Shop da un cupón del 20 % a los estudiantes.";
     // Guion de un informe completo.
     const text = spokenScript({
       outcome: "complete",
-      reportText: `**Respuesta directa.** ${excerpt} [cite:web]\n\n**Hallazgos con evidencia**\n- q2 · ${course} [cite:tool]\n\n**Puntos sin resolver**\n- ${invented} [cite:web]`,
-      excerpts: [excerpt, course, invented],
+      reportText: `**Respuesta directa.** ${excerpt} [cite:web]\n\n**Hallazgos con evidencia**\n- q2 · ${policy} [cite:store]\n\n**Puntos sin resolver**\n- ${invented} [cite:web]`,
+      excerpts: [excerpt, policy, invented],
       conflict: null,
       perceptionFailed: false,
     });
-    // Incluye la frase del curso entera.
-    expect(text).toContain(course);
+    // Incluye la frase de la tienda entera.
+    expect(text).toContain(policy);
     // Sin el id de subpregunta.
     expect(text).not.toContain("q2");
     // Sin marcas de cita.
@@ -76,7 +76,7 @@ describe("guion hablado", () => {
     // Guion con una afirmación sin respaldo.
     const text = spokenScript({
       outcome: "partial",
-      reportText: "Según el modelo, la nota mínima es un cinco.",
+      reportText: "Según el modelo, el cupón para estudiantes es del 20 %.",
       excerpts: [excerpt],
       conflict: null,
       perceptionFailed: false,
@@ -84,6 +84,6 @@ describe("guion hablado", () => {
     // Remite al informe.
     expect(text).toContain("Consulta el informe");
     // No lee la afirmación.
-    expect(text).not.toContain("nota mínima");
+    expect(text).not.toContain("cupón para estudiantes");
   });
 });

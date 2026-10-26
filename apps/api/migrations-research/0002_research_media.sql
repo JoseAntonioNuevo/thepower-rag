@@ -1,5 +1,5 @@
 -- Medios de la fase 3. Los bytes viven en R2. Aquí solo hay metadatos.
--- Qué guarda: cada imagen o audio subido por el alumno y cada voz generada, y qué medios usa
+-- Qué guarda: cada imagen o audio subido por el usuario y cada voz generada, y qué medios usa
 -- cada trabajo. Por qué: los bytes pesan y van a un R2 privado distinto del corpus. D1 solo
 -- guarda lo necesario para validar, enlazar con su dueño y limpiar los huérfanos.
 
@@ -47,7 +47,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS research_media_idem
 CREATE TABLE IF NOT EXISTS research_job_inputs (
   -- Trabajo.
   job_id TEXT PRIMARY KEY,
-  -- 1 si el alumno pidió la respuesta hablada.
+  -- 1 si el usuario pidió la respuesta hablada.
   voice INTEGER NOT NULL,
   -- Archivos asociados y sus huellas, congeladas al crear el trabajo.
   image_asset_id TEXT,

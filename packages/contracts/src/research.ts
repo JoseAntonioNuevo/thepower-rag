@@ -1,10 +1,8 @@
 // GUÍA DE LECTURA · packages/contracts/src/research.ts
-// Contrato de la investigación de S12: límites del laboratorio, guiones de la demo, fuentes
-// (curso, herramienta, web y adjuntos), pasos del grafo y el resumen completo que ve el navegador.
-// Zod declara y valida la forma de los datos.
+// Contrato de la investigación de S12 sobre ThePower Shop: límites del laboratorio, guiones de la
+// demo, fuentes (políticas de la tienda, herramienta de pedidos, web y adjuntos), pasos del grafo y
+// el resumen completo que ve el navegador. Zod declara y valida la forma de los datos.
 import { z } from "zod";
-// Audiencia del curso: programa o cohorte.
-import { audienceSchema } from "./domain";
 
 /**
  * Límites de laboratorio de la etapa de investigación (fase 1 de S12).
@@ -26,10 +24,10 @@ export const RESEARCH_LIMITS = {
   maxResultsPerSearch: 5,
   // URLs descubiertas que se registran.
   maxDiscovered: 20,
-  // Llamadas a la herramienta de sesiones del curso.
+  // Llamadas a la herramienta de pedidos.
   maxToolCalls: 2,
-  // Consultas al corpus del curso.
-  maxCourseQueries: 6,
+  // Consultas a las políticas de la tienda.
+  maxStoreQueries: 6,
   // Llamadas al modelo (plan, evaluación, seguimiento y síntesis).
   maxModelCalls: 5,
   // Plazo total de la investigación: 2 minutos.
@@ -39,7 +37,7 @@ export const RESEARCH_LIMITS = {
   // Plazos de cada tipo de llamada en milisegundos.
   timeouts: {
     planMs: 20_000,
-    courseMs: 10_000,
+    storeMs: 10_000,
     toolMs: 5_000,
     searchMs: 15_000,
     readMs: 25_000,
@@ -53,8 +51,8 @@ export const RESEARCH_LIMITS = {
   maxReadResponseBytes: 1_048_576,
   // Caracteres de una página que se conservan.
   maxPageChars: 12_000,
-  // Fragmentos del curso por consulta.
-  maxCourseFragmentsPerQuery: 4,
+  // Fragmentos de las políticas por consulta.
+  maxStoreFragmentsPerQuery: 4,
   // Evidencias aceptadas como máximo.
   maxEvidenceItems: 16,
   // Caracteres de contexto que se envían al modelo.
@@ -96,12 +94,11 @@ export const RESEARCH_LIMITS = {
   maxTraceEntries: 80,
 } as const;
 
-/** Dominios de documentación oficial admitidos por defecto para leer páginas. */
-export const DEFAULT_RESEARCH_DOMAINS = [
-  "developers.cloudflare.com",
-  "docs.langchain.com",
-  "langchain-ai.github.io",
-] as const;
+/**
+ * Dominios oficiales admitidos por defecto para leer páginas: la información
+ * de la UE para consumidores (Tu Europa, EUR-Lex) y el Boletín Oficial del Estado.
+ */
+export const DEFAULT_RESEARCH_DOMAINS = ["europa.eu", "eur-lex.europa.eu", "www.boe.es"] as const;
 
 // Variables que la investigación real necesita además del RAG.
 export const RESEARCH_VARIABLES = [
@@ -126,9 +123,9 @@ export const RESEARCH_SPEND_TOKEN = "s12-research-phase1";
  */
 export const RESEARCH_ACCOUNTING_MISSING = "RESEARCH_DURABLE_ACCOUNTING";
 
-// Pregunta de la demo: un error real de dimensiones de embeddings que hay que investigar.
+// Pregunta de la demo: un cliente de ThePower Shop con unos auriculares abiertos que fallan.
 export const DEMO_RESEARCH_QUESTION =
-  "He cambiado el modelo de embeddings y mi RAG muestra:\nDimension mismatch: expected 1024, got 768.\nInvestiga qué significa, cómo comprobar la configuración y qué opciones tengo para corregirlo. Relaciónalo con lo visto en el curso.";
+  "Pedido TPS-20481: abrí los auriculares intraauditivos y el derecho no suena. ¿Puedo devolverlos y cuándo recibiría el dinero? Compara la política de ThePower Shop con lo que dice la normativa europea de consumo.";
 
 // Guiones de la demo de investigación; cada uno enseña un recorrido del grafo sin gastar.
 export const DEMO_RESEARCH_SCENARIOS = [
@@ -153,9 +150,9 @@ export const DEMO_RESEARCH_SCENARIOS = [
   // Dato interno que no consta: se dice que falta en vez de inventarlo.
   {
     id: "internal-fact-missing",
-    label: "Dato interno del curso sin documentar",
+    label: "Dato interno de la tienda sin documentar",
     question:
-      "¿Qué nota mínima exige el profesor para aprobar el ejercicio de S12? Y, técnicamente, ¿para qué sirve un checkpointer en LangGraph?",
+      "¿Qué descuento hace ThePower Shop a los estudiantes? Y, según la normativa europea, ¿quién paga el envío de una devolución por desistimiento?",
   },
   // El buscador y una lectura fallan: el informe lo refleja.
   {
@@ -175,11 +172,11 @@ export const DEMO_RESEARCH_SCENARIOS = [
     label: "Cita inválida y conclusión sin apoyo",
     question: DEMO_RESEARCH_QUESTION,
   },
-  // Usa la herramienta get_course_session para la fecha y el ejercicio.
+  // Usa la herramienta get_order para el estado y el pago de un pedido.
   {
-    id: "course-tool",
-    label: "Dato interno con la herramienta de sesión",
-    question: "¿Cuándo es la sesión 12 de mi grupo y qué ejercicio tiene?",
+    id: "order-tool",
+    label: "Dato de un pedido con la herramienta get_order",
+    question: "¿En qué estado está mi pedido TPS-20481 y cómo lo pagué?",
   },
   // Una búsqueda lenta, útil para probar el botón de cancelar.
   {
@@ -205,7 +202,7 @@ export const researchScenarioSchema = z.enum([
   "provider-failure",
   "no-progress-stop",
   "invalid-citation",
-  "course-tool",
+  "order-tool",
   "slow-search",
   "ambiguous-operation",
   // …más «crash-after-plan», que simula una caída tras el plan (solo pruebas).
@@ -228,13 +225,13 @@ const subquestionId = z.enum(["q1", "q2", "q3"]);
 // Extracto citado con su tope.
 const excerpt = z.string().min(1).max(L.maxExcerptChars);
 
-// Tipo de subpregunta: del curso, de una sesión concreta o técnica.
-export const subquestionKindSchema = z.enum(["course", "session", "technical"]);
+// Tipo de subpregunta: política de la tienda, dato de un pedido o fuente externa.
+export const subquestionKindSchema = z.enum(["store", "order", "external"]);
 // Tipo correspondiente.
 export type SubquestionKind = z.infer<typeof subquestionKindSchema>;
 
-// Ruta del plan: responder con el curso, usar la herramienta, investigar fuera o aclarar.
-export const researchRouteSchema = z.enum(["course", "tool", "investigate", "clarify"]);
+// Ruta del plan: responder con las políticas, usar la herramienta, investigar fuera o aclarar.
+export const researchRouteSchema = z.enum(["store", "tool", "investigate", "clarify"]);
 // Tipo correspondiente.
 export type ResearchRoute = z.infer<typeof researchRouteSchema>;
 
@@ -254,28 +251,25 @@ export type ResearchSubquestion = z.infer<typeof researchSubquestionSchema>;
 
 // Fuente de evidencia; kind indica de cuál de los cuatro tipos es.
 export const researchSourceSchema = z.discriminatedUnion("kind", [
-  // Fragmento del corpus del curso.
+  // Fragmento de las políticas de ThePower Shop.
   z.object({
-    kind: z.literal("course"),
+    kind: z.literal("store"),
     sourceId: researchSourceIdSchema,
     documentId: z.string().min(1).max(128),
     title: z.string().min(1).max(L.maxTitleChars),
     section: z.string().max(L.maxTitleChars),
     excerpts: z.array(excerpt).min(1).max(L.maxExcerptsPerSource),
     corpusVersion: z.string().min(1).max(128),
-    audience: audienceSchema,
     subquestionIds: z.array(subquestionId).max(L.maxSubquestions),
   }),
-  // Resultado de la herramienta de sesiones, respaldado por fragmentos del curso.
+  // Resultado de la herramienta de pedidos, con la versión de los datos que leyó.
   z.object({
     kind: z.literal("tool"),
     sourceId: researchSourceIdSchema,
-    toolName: z.literal("get_course_session"),
+    toolName: z.literal("get_order"),
     title: z.string().min(1).max(L.maxTitleChars),
     excerpts: z.array(excerpt).min(1).max(L.maxExcerptsPerSource),
-    backingSourceIds: z.array(researchSourceIdSchema).min(1).max(4),
-    corpusVersion: z.string().min(1).max(128),
-    audience: audienceSchema,
+    dataVersion: z.string().min(1).max(64),
     subquestionIds: z.array(subquestionId).max(L.maxSubquestions),
   }),
   // Página web leída, con fecha de lectura y hash del contenido.
@@ -297,7 +291,7 @@ export const researchSourceSchema = z.discriminatedUnion("kind", [
   }),
   // Imagen o audio que subió el usuario; su autoridad es la de una entrada del usuario.
   z.object({
-    // Adjunto del alumno: imagen o audio.
+    // Adjunto del usuario: imagen o audio.
     kind: z.literal("attachment"),
     sourceId: researchSourceIdSchema,
     role: z.enum(["image", "audio"]),
@@ -319,8 +313,8 @@ export const researchNodeSchema = z.enum([
   // Validar y planificar.
   "validate",
   "plan",
-  // Reunir evidencia: curso, herramienta, búsqueda, selección y lectura.
-  "course",
+  // Reunir evidencia: políticas, herramienta, búsqueda, selección y lectura.
+  "store",
   "tool",
   "search",
   "select",
@@ -353,9 +347,9 @@ export type ResearchStep = z.infer<typeof researchStepSchema>;
 
 // Motivo por el que se detuvo la investigación.
 export const researchStopSchema = z.enum([
-  // Paradas normales: todo cubierto, respuesta del curso o aclaración.
+  // Paradas normales: todo cubierto, respuesta de las políticas o aclaración.
   "all-covered",
-  "course-answer",
+  "store-answer",
   "clarify",
   // Topes del laboratorio: rondas, búsquedas, páginas y plazo.
   "max-rounds",
@@ -459,9 +453,7 @@ export const researchSummarySchema = z.object({
   scenarioId: researchScenarioSchema.nullable(),
   // Si el consumo se midió de verdad.
   measured: z.boolean(),
-  // Grupo de la pregunta.
-  audience: audienceSchema,
-  // Versión del corpus.
+  // Versión del corpus de la tienda.
   corpusVersion: z.string().min(1).max(128),
   // Pregunta original.
   originalQuestion: z.string().min(1).max(L.maxQuestionChars),
@@ -473,26 +465,26 @@ export const researchSummarySchema = z.object({
   subquestions: z.array(researchSubquestionSchema).max(L.maxSubquestions),
   // Rondas hechas.
   rounds: z.number().int().min(0).max(L.maxRounds),
-  // Consultas al corpus del curso.
-  courseQueries: z
+  // Consultas a las políticas de la tienda.
+  storeQueries: z
     .array(
       z.object({
         round: z.number().int().min(1).max(L.maxRounds),
         subquestionId,
         query,
         status: callStatus,
-        sourceIds: z.array(researchSourceIdSchema).max(L.maxCourseFragmentsPerQuery),
+        sourceIds: z.array(researchSourceIdSchema).max(L.maxStoreFragmentsPerQuery),
       }),
     )
-    .max(L.maxCourseQueries),
-  // Llamadas a la herramienta de sesiones.
+    .max(L.maxStoreQueries),
+  // Llamadas a la herramienta de pedidos.
   toolCalls: z
     .array(
       z.object({
         // Ronda, nombre fijo de la herramienta y sus argumentos.
         round: z.number().int().min(1).max(L.maxRounds),
-        name: z.literal("get_course_session"),
-        args: z.object({ sessionId: z.string().max(8), audience: audienceSchema }),
+        name: z.literal("get_order"),
+        args: z.object({ orderId: z.string().max(16) }),
         // Resultado, detalle y fuentes que produjo.
         status: z.enum(["ok", "rejected", "error"]),
         detail: reason,
@@ -551,7 +543,7 @@ export const researchSummarySchema = z.object({
     .array(
       z.object({
         sourceId: researchSourceIdSchema,
-        kind: z.enum(["course", "tool", "web"]),
+        kind: z.enum(["store", "tool", "web"]),
         subquestionIds: z.array(subquestionId).min(1).max(L.maxSubquestions),
         reason,
       }),
@@ -562,7 +554,7 @@ export const researchSummarySchema = z.object({
     .array(
       z.object({
         sourceId: researchSourceIdSchema,
-        kind: z.enum(["course", "tool", "web"]),
+        kind: z.enum(["store", "tool", "web"]),
         round: z.number().int().min(1).max(L.maxRounds),
         reason,
       }),
@@ -622,7 +614,7 @@ export const researchSummarySchema = z.object({
     pagesRead: z.number().int().min(0).max(L.maxPagesRead),
     modelCalls: z.number().int().min(0).max(L.maxModelCalls),
     toolCalls: z.number().int().min(0).max(L.maxToolCalls),
-    courseQueries: z.number().int().min(0).max(L.maxCourseQueries),
+    storeQueries: z.number().int().min(0).max(L.maxStoreQueries),
     elapsedMs: z.number().int().min(0).nullable(),
   }),
   // Límites aplicados en esta ejecución.

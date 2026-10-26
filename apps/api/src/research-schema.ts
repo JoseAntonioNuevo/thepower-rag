@@ -3,9 +3,11 @@
 // trabajos, operaciones de pago, checkpoints, eventos y medios, con triggers que impiden superar el
 // presupuesto. La copia aplicable con Wrangler está en apps/api/migrations-research/ y lleva los
 // mismos comentarios. Si cambias una tabla aquí, cambia también esa migración (y al revés).
+// Las bases creadas antes del 26/10/2026 guardaban el grupo del curso; dropLegacyGroupColumns
+// (research-db.ts) quita esa columna al arrancar.
 /**
  * Esquema aditivo de la investigación. Vive en RESEARCH_DB, no en la base
- * del curso. Las sentencias son idempotentes. No borra filas de presupuesto.
+ * del chat (DB). Las sentencias son idempotentes. No borra filas de presupuesto.
  * Las líneas «--» son comentarios SQL: «schemaStatements» (research-db.ts) las salta
  * antes de enviar cada sentencia a D1, así que solo documentan.
  */
@@ -38,14 +40,12 @@ CREATE TABLE IF NOT EXISTS research_accounts (
   config_version TEXT NOT NULL
 );
 
--- Conversación de investigación. Cada una pertenece a un propietario y a un grupo.
+-- Conversación de investigación. Cada una pertenece a un propietario.
 CREATE TABLE IF NOT EXISTS research_conversations (
   -- Id aleatorio de la conversación.
   id TEXT PRIMARY KEY,
   -- Propietario: la sesión anónima (producción) o la cookie local firmada.
   owner_id TEXT NOT NULL,
-  -- Grupo: «program», «L/X» o «M/J». No se mezcla con otro grupo.
-  audience TEXT NOT NULL,
   -- Fechas en milisegundos desde 1970.
   created_at INTEGER NOT NULL,
   updated_at INTEGER NOT NULL
@@ -54,7 +54,7 @@ CREATE TABLE IF NOT EXISTS research_conversations (
 CREATE INDEX IF NOT EXISTS research_conversations_owner
   ON research_conversations(owner_id, updated_at DESC);
 
--- Mensajes de una conversación: preguntas del alumno y respuestas del sistema.
+-- Mensajes de una conversación: preguntas del usuario y respuestas del sistema.
 CREATE TABLE IF NOT EXISTS research_messages (
   -- Id del mensaje.
   id TEXT PRIMARY KEY,
@@ -87,8 +87,6 @@ CREATE TABLE IF NOT EXISTS research_jobs (
   owner_id TEXT NOT NULL,
   -- Id de ejecución que se muestra en la traza.
   run_id TEXT NOT NULL,
-  -- Grupo del alumno.
-  audience TEXT NOT NULL,
   -- queued, running, attention (necesita revisión), complete, cancelled o failed.
   execution_status TEXT NOT NULL,
   -- Resultado del informe (completo, parcial, rechazo, abortado…). NULL mientras corre.
@@ -97,13 +95,13 @@ CREATE TABLE IF NOT EXISTS research_jobs (
   idempotency_key TEXT NOT NULL,
   -- Huella del contenido de la petición, para detectar una clave reutilizada con otra pregunta.
   fingerprint TEXT NOT NULL,
-  -- Pregunta tal y como la escribió el alumno.
+  -- Pregunta tal y como la escribió el usuario.
   original_question TEXT NOT NULL,
   -- Pregunta con la memoria de la conversación resuelta («esa sesión» → «S5»).
   contextualized_question TEXT,
   -- Guion de la demo, si es una ejecución local de prueba.
   scenario_id TEXT,
-  -- Versión del corpus del curso consultada.
+  -- Versión del corpus de ThePower Shop consultada.
   corpus_version TEXT NOT NULL,
   -- Plazo total del trabajo y plazo para empezar a correr (milisegundos).
   deadline_at INTEGER NOT NULL,
@@ -118,7 +116,7 @@ CREATE TABLE IF NOT EXISTS research_jobs (
   lease_until INTEGER,
   -- Ejecutor que tiene el arrendamiento.
   executor_id TEXT,
-  -- 1 si el alumno pidió cancelar.
+  -- 1 si el usuario pidió cancelar.
   cancel_requested INTEGER NOT NULL DEFAULT 0,
   -- Estado de la creación del Workflow: pending, created o create_unknown.
   dispatch_state TEXT NOT NULL,
@@ -332,7 +330,7 @@ BEGIN
 END;
 
 -- Medios de la fase 3. Los bytes viven en R2. Aquí solo hay metadatos.
--- Qué guarda: cada imagen o audio subido por el alumno y cada voz generada, y qué medios usa
+-- Qué guarda: cada imagen o audio subido por el usuario y cada voz generada, y qué medios usa
 -- cada trabajo. Por qué: los bytes pesan y van a un R2 privado distinto del corpus. D1 solo
 -- guarda lo necesario para validar, enlazar con su dueño y limpiar los huérfanos.
 
@@ -380,7 +378,7 @@ CREATE UNIQUE INDEX IF NOT EXISTS research_media_idem
 CREATE TABLE IF NOT EXISTS research_job_inputs (
   -- Trabajo.
   job_id TEXT PRIMARY KEY,
-  -- 1 si el alumno pidió la respuesta hablada.
+  -- 1 si el usuario pidió la respuesta hablada.
   voice INTEGER NOT NULL,
   -- Archivos asociados y sus huellas, congeladas al crear el trabajo.
   image_asset_id TEXT,

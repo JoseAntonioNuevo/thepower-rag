@@ -2,13 +2,8 @@
 // Rutas HTTP de la investigación durable bajo /api/research: sesión, conversaciones, envío de trabajos,
 // estado y eventos, cancelación, recuperación, resultado, subida y descarga de medios y limpieza.
 // Las mutaciones pasan antes por origen, Turnstile y límites; cada lectura comprueba el propietario.
-// Límites, esquema de escenario y tipo de audiencia.
-import {
-  MEDIA_LIMITS,
-  RESEARCH_LIMITS,
-  researchScenarioSchema,
-  type Audience,
-} from "@thepower-rag/contracts";
+// Límites y esquema de escenario.
+import { MEDIA_LIMITS, RESEARCH_LIMITS, researchScenarioSchema } from "@thepower-rag/contracts";
 // Hono: enrutador HTTP.
 import { Hono } from "hono";
 // Protección del chat público.
@@ -70,7 +65,7 @@ import {
   resumeRecoverable,
 } from "./research-store";
 // Versión del corpus de ejemplo.
-import { fixtureCorpusVersion } from "./fixture";
+import { storeFixtureCorpusVersion } from "./fixture";
 
 // Formato de un UUID.
 const UUID = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
@@ -177,14 +172,14 @@ export function researchRoutes() {
       {
         durable: true,
         anonymous: true,
-        note: "La cookie identifica esta demostración en loopback. No es una cuenta de alumno.",
+        note: "La cookie identifica esta demostración en loopback. No es una cuenta de cliente.",
       },
       200,
       owner.setCookie,
     );
   });
 
-  // POST /conversations: crea una conversación con su grupo.
+  // POST /conversations: crea una conversación del propietario.
   routes.post("/conversations", async (context) => {
     // Protección de la mutación.
     const blocked = await guardMutation(context.req.raw, context.env);
@@ -236,19 +231,10 @@ export function researchRoutes() {
         500,
       );
     }
-    // Cuerpo.
-    const body = (await context.req.json().catch(() => null)) as { audience?: Audience } | null;
-    // Grupo.
-    const audience = body?.audience;
-    // Grupo inválido.
-    if (audience !== "program" && audience !== "L/X" && audience !== "M/J") {
-      // 400.
-      return json({ error: "invalid_request", message: "El grupo no es válido.", issues: [] }, 400);
-    }
     // Crea la conversación.
-    const conversation = await createConversation(database, owner.id, audience, Date.now());
+    const conversation = await createConversation(database, owner.id, Date.now());
     // 201.
-    return json({ id: conversation.id, audience: conversation.audience }, 201, owner.setCookie);
+    return json({ id: conversation.id }, 201, owner.setCookie);
   });
 
   // GET /conversations: lista las del propietario.
@@ -366,8 +352,8 @@ export function researchRoutes() {
         409,
       );
     }
-    // Versión del corpus.
-    const corpusVersion = assessment?.retrieval?.corpusVersion ?? fixtureCorpusVersion();
+    // Versión del corpus de la tienda.
+    const corpusVersion = assessment?.storeRetrieval?.corpusVersion ?? storeFixtureCorpusVersion();
     // Prepara las tablas.
     await ensureResearchSchema(database, prices.budgetMicros);
     // Conversación del propietario.
@@ -388,8 +374,6 @@ export function researchRoutes() {
       question?: string;
       // Escenario de prueba.
       scenarioId?: string | null;
-      // Grupo.
-      audience?: string;
       // Voz.
       voice?: boolean;
       // Imagen subida.
@@ -424,18 +408,6 @@ export function researchRoutes() {
       return json(
         { error: "invalid_request", message: "La pregunta no es válida.", issues: [] },
         400,
-      );
-    }
-    // Otro grupo.
-    if (body.audience && body.audience !== conversation.audience) {
-      // 409.
-      return json(
-        {
-          error: "invalid_request",
-          message: "El grupo de la conversación no cambia. Abre otra conversación.",
-          issues: [],
-        },
-        409,
       );
     }
     // Escenario validado.
@@ -519,11 +491,10 @@ export function researchRoutes() {
       : null;
     // Huella de la petición: igual pregunta y medios dan la misma huella.
     const fingerprint = await fingerprintOf(
-      // La huella cubre pregunta, grupo, guion y adjuntos: reenviar lo mismo da la misma huella.
+      // La huella cubre pregunta, guion y adjuntos: reenviar lo mismo da la misma huella.
       mediaBinding
         ? {
             question,
-            audience: conversation.audience,
             scenarioId: scenario?.success ? scenario.data : null,
             voice,
             image: mediaBinding.image,
@@ -534,7 +505,6 @@ export function researchRoutes() {
         : // Sin adjuntos la huella conserva la forma de la fase 2.
           {
             question,
-            audience: conversation.audience,
             scenarioId: scenario?.success ? scenario.data : null,
           },
     );

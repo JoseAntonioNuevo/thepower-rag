@@ -202,6 +202,8 @@ export async function ensureResearchSchema(
     // Ejecuta.
     await database.prepare(statement).run();
   }
+  // Quita la columna de grupo de las bases creadas antes de pasar a ThePower Shop.
+  await dropLegacyGroupColumns(database);
   // Crea la fila de presupuesto si no existe.
   await database
     .prepare(
@@ -211,6 +213,33 @@ export async function ensureResearchSchema(
     )
     .bind(budgetMicros)
     .run();
+}
+
+// Tablas que guardaban el grupo del curso hasta el 26/10/2026.
+const LEGACY_GROUP_TABLES = ["research_conversations", "research_jobs"] as const;
+
+/**
+ * Hasta el 26/10/2026 la investigación leía el curso y guardaba el grupo del alumno
+ * («audience») en conversaciones y trabajos. Con ThePower Shop no hay grupos: si una
+ * base existente aún tiene esa columna, se elimina. Es idempotente: una base nueva
+ * no la tiene y una segunda llamada no encuentra nada que quitar.
+ */
+export async function dropLegacyGroupColumns(database: ResearchDatabase): Promise<void> {
+  // Cada tabla afectada.
+  for (const table of LEGACY_GROUP_TABLES) {
+    // Columnas actuales de la tabla.
+    const columns = await database.prepare(`PRAGMA table_info(${table})`).all<{ name: string }>();
+    // Sin la columna antigua: nada que hacer.
+    if (!columns.some((column) => column.name === "audience")) continue;
+    // Otra petición puede haberla quitado a la vez: ese error se ignora.
+    try {
+      // Quita la columna.
+      await database.prepare(`ALTER TABLE ${table} DROP COLUMN audience`).run();
+    } catch (error) {
+      // Solo se ignora si la columna ya no existe.
+      if (!/no such column/i.test(sqlError(error))) throw error;
+    }
+  }
 }
 
 // Texto de un error.

@@ -77,8 +77,7 @@ describe("entrada privada local", () => {
         headers: { origin: "http://127.0.0.1:5173", "content-type": "application/json" },
         body: JSON.stringify({
           mode: "research",
-          audience: "M/J",
-          researchScenario: "course-tool",
+          researchScenario: "order-tool",
           messages: [
             {
               id: "user-1",
@@ -86,7 +85,7 @@ describe("entrada privada local", () => {
               parts: [
                 {
                   type: "text",
-                  text: "¿Cuándo es la sesión 12 de mi grupo y qué ejercicio tiene?",
+                  text: "¿En qué estado está mi pedido TPS-20481 y cómo lo pagué?",
                 },
               ],
             },
