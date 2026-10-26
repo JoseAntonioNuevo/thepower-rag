@@ -13,6 +13,11 @@ const capabilitySchema = z.object({
   missing: z.array(z.string()),
 });
 
+// Corpus que consulta el chat: el material del curso o la tienda ficticia Zocomar.
+export const chatCorpusIdSchema = z.enum(["course", "zocomar"]);
+// Tipo del identificador del corpus del chat.
+export type ChatCorpusId = z.infer<typeof chatCorpusIdSchema>;
+
 // Esquema completo de la salud del servicio.
 export const healthResponseSchema = z.object({
   // Nombre fijo de la aplicación.
@@ -51,6 +56,25 @@ export const healthResponseSchema = z.object({
     dimensions: z.number().int().positive().nullable(),
     remoteRevision: z.null(),
   }),
+  /**
+   * Corpus del chat (Sin RAG, RAG y CRAG). `corpus` describe siempre el del curso, que es el que
+   * usa la investigación de S12; cuando el chat usa la tienda, sus datos van aquí.
+   */
+  chatCorpus: z
+    .object({
+      id: chatCorpusIdSchema,
+      label: z.string().min(1),
+      // Versión y perfil configurados (null en la demo o si faltan).
+      version: z.string().nullable(),
+      profileId: z.string().nullable(),
+      // Umbral del RAG básico de este corpus.
+      minScore: z.number().nullable(),
+      // Si el chat usa grupos y calendario (solo el curso).
+      groups: z.boolean(),
+      // Si se leyó en D1 un perfil listo y coincidente.
+      remote: z.enum(["not-verified", "index-verified"]),
+    })
+    .optional(),
   // Comprobación de que LangGraph y el SDK de Anthropic cargan; no es una llamada real.
   compatibility: z.object({
     langgraph: z.enum(["ok", "failed"]),

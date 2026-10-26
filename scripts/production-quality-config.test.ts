@@ -45,7 +45,13 @@ describe("preparación de configuración de calidad", () => {
     // Contrasta el valor observado con el resultado exacto que define este caso.
     expect(updated.env.production.vars.RESEARCH_MODEL_ID).toBe("claude-haiku-5-5");
     // Contrasta el valor observado con el resultado exacto que define este caso.
-    expect(updated.env.production.vars.MODEL_ID).toBe("claude-sonnet-5-5");
+    expect(updated.env.production.vars.MODEL_ID).toBe("claude-haiku-5-5");
+    // El evaluador de CRAG conserva Sonnet y sus tarifas, distintas de las del generador.
+    const evaluatorVars = updated.env.production.vars as Record<string, unknown>;
+    // Contrasta el valor observado con el resultado exacto que define este caso.
+    expect(evaluatorVars.EVALUATOR_MODEL_ID).toBe("claude-sonnet-5-5");
+    // Contrasta el valor observado con el resultado exacto que define este caso.
+    expect(evaluatorVars.EVALUATOR_INPUT_USD_PER_MILLION).toBe("2");
   });
 
   // Verifica este escenario: no inventa un destino ni cambia un proveedor ajeno.

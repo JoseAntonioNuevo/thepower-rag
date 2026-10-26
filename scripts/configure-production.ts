@@ -59,7 +59,8 @@ if (process.argv.includes("--write")) {
 }
 // Presenta el resultado de este paso en la terminal para que pueda contrastarse durante la demostración.
 console.log({
-  model: COURSE_QUALITY_PROFILE.modelId,
+  generator: COURSE_QUALITY_PROFILE.generator.modelId,
+  evaluator: COURSE_QUALITY_PROFILE.evaluator.modelId,
   cragBudgetMs: COURSE_QUALITY_PROFILE.cragBudgetMs,
   written: process.argv.includes("--write"),
   deployment: false,

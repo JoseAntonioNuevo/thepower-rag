@@ -238,6 +238,8 @@ export function retrieveBasic(input: {
   corpusVersion: string;
   // Qué significa la puntuación.
   scoreMeaning: string;
+  // Si el corpus tiene grupos y calendario. Sin valor, sí (curso); la tienda no los tiene.
+  groups?: boolean;
 }): RetrievalOutcome {
   // Campos comunes de la traza.
   const base = {
@@ -247,8 +249,10 @@ export function retrieveBasic(input: {
     embedding: input.embeddingLabel,
     scoreMeaning: input.scoreMeaning,
   };
+  // ¿Corpus con grupos y calendario?
+  const groups = input.groups !== false;
   // Pregunta de calendario sin cohorte: se pide aclaración antes de buscar.
-  if (input.audience === "program" && isScheduleQuestion(input.question)) {
+  if (groups && input.audience === "program" && isScheduleQuestion(input.question)) {
     // Aclaración sin llamar al modelo.
     return {
       decision: "clarify",
@@ -262,8 +266,8 @@ export function retrieveBasic(input: {
       },
     };
   }
-  // Horario semanal: atajo exacto por metadatos.
-  if (isWeeklyScheduleQuestion(input.question)) {
+  // Horario semanal: atajo exacto por metadatos (solo con calendarios).
+  if (groups && isWeeklyScheduleQuestion(input.question)) {
     // Id de la ficha del calendario del grupo.
     const id = calendarOverviewId(input.audience, input.corpusVersion);
     // Busca esa ficha entre los fragmentos.

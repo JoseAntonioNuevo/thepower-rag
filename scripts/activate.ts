@@ -66,11 +66,40 @@ const read = argv.includes("--read");
 const profileFlag = argv.find((item) => item.startsWith("--profile="));
 // Perfil pedido.
 const profileId = profileFlag === undefined ? null : profileFlag.slice("--profile=".length);
+// --corpus=zocomar: la tienda del chat; sin la opción, el curso. Solo la forma con «=», para que
+// el valor no se confunda con el comando.
+const corpusFlag = argv.find((item) => item.startsWith("--corpus="));
+// Corpus pedido.
+const corpusName = corpusFlag === undefined ? "course" : corpusFlag.slice("--corpus=".length);
+// ¿Tienda Zocomar?
+const store = corpusName === "zocomar";
+// Corpus preparado, fuentes y carpeta de recibos de cada corpus: la tienda no toca los del curso.
+const preparedPath = path.join(
+  root,
+  store ? "corpus/prepared/zocomar.json" : "corpus/prepared/corpus.json",
+);
+const sourcesDir = path.join(root, store ? "corpus/zocomar/sources" : "corpus/sources");
+const receiptsRoot = path.join(root, store ? "activation-receipts/zocomar" : "activation-receipts");
+// Con la tienda solo se crea su índice y se ingesta: elegir el perfil activo y la verificación
+// de cinco turnos son del curso y no se ejecutan sobre Zocomar.
+const STORE_COMMANDS: readonly string[] = ["plan", "status", "provision", "ingest", "resume"];
 
 // Comando desconocido.
 if (!ACTIVATION_COMMANDS.includes(command)) {
   // Mensaje.
   console.log("comando no reconocido");
+  // Código 2.
+  process.exitCode = 2;
+} else if (corpusName !== "course" && !store) {
+  // Corpus desconocido: no se adivina.
+  console.log("--corpus debe ser course o zocomar");
+  // Código 2.
+  process.exitCode = 2;
+} else if (store && !STORE_COMMANDS.includes(command)) {
+  // Comando no admitido con la tienda.
+  console.log(
+    `con --corpus=zocomar solo se admiten ${STORE_COMMANDS.join(", ")}; select-active, probe-embeddings, migrate y verify son del curso`,
+  );
   // Código 2.
   process.exitCode = 2;
 } else {
@@ -141,14 +170,13 @@ if (!ACTIVATION_COMMANDS.includes(command)) {
           // Puerto.
           const port = Number(process.env.THEPOWER_BRIDGE_PORT ?? "8791");
           // Carpeta de sesión.
-          const sessionDir =
-            process.env.THEPOWER_SESSION_DIR ?? path.join(root, "activation-receipts");
-          // Corpus.
-          const corpusPath = path.join(root, "corpus/prepared/corpus.json");
+          const sessionDir = process.env.THEPOWER_SESSION_DIR ?? receiptsRoot;
+          // Corpus preparado del curso o de la tienda.
+          const corpusPath = preparedPath;
           // Con los textos.
           const corpus = await attachSourceBodies(
             JSON.parse(readFileSync(corpusPath, "utf8")) as PreparedCorpus,
-            path.join(root, "corpus/sources"),
+            sourcesDir,
           );
           // Dimensiones medidas.
           const dimensions = parsed.auth.observedDimensions;
@@ -184,7 +212,7 @@ if (!ACTIVATION_COMMANDS.includes(command)) {
           if (remote && role === "verify") {
             // Calibración.
             const calibration = JSON.parse(
-              readFileSync(path.join(root, "activation-receipts/calibration.json"), "utf8"),
+              readFileSync(path.join(receiptsRoot, "calibration.json"), "utf8"),
             );
             // Debe coincidir con el perfil.
             if (
@@ -342,7 +370,7 @@ if (!ACTIVATION_COMMANDS.includes(command)) {
               runner,
               cwd: root,
               migrationsDir: path.join(root, "apps/api/migrations"),
-              corpusPath: path.join(root, "corpus/prepared/corpus.json"),
+              corpusPath: preparedPath,
             })
         : undefined;
     // Ejecuta el comando.
@@ -357,7 +385,7 @@ if (!ACTIVATION_COMMANDS.includes(command)) {
     // Lectura correcta: guarda el estado.
     if (read && result.code === 0 && !offline) {
       // Carpeta.
-      const receiptDir = path.join(root, "activation-receipts");
+      const receiptDir = receiptsRoot;
       // La crea.
       mkdirSync(receiptDir, { recursive: true });
       // writeFileSync.

@@ -42,6 +42,22 @@ SET application_name = 'thepower-aula-tableplus';
 
 Abre [consultas-tableplus.sql](consultas-tableplus.sql). Selecciona solo el bloque que quieras enseñar y pulsa **Run Current**. El bloque **00** debe devolver `aether_rag`, `aether`, `on`. Es un ajuste de la sesión de TablePlus; el servidor del laboratorio usa otra conexión para escribir.
 
+## D1 de producción en TablePlus (solo lectura)
+
+Para enseñar lo que guarda la web publicada, TablePlus 6.8 trae un driver **Cloudflare D1** que consulta la API de Cloudflare. La conexión se llama **thePower · D1 producción · Solo lectura**:
+
+| Campo       | Valor                                                                |
+| ----------- | -------------------------------------------------------------------- |
+| Account ID  | `9c1493e94ba21f2c6872a9dd17ba19f7`                                   |
+| Database ID | `86110dc2-321f-4003-85ef-b451d133986a` (`thepower-ai-course-rag-d1`) |
+| Token       | Token propio con solo **Account · D1 · Read**                        |
+
+El token lo crea el profesor en el panel de Cloudflare (**Account API tokens → Create custom token**) y lo pega en TablePlus, que lo guarda en el llavero. Con `D1 Read` cualquier `INSERT`, `UPDATE` o `DELETE` falla en Cloudflare: no hay forma de tocar producción desde la clase. El permiso vale para todas las bases D1 de la cuenta, así que en clase solo se abre esta; la de investigación (`thepower-ai-course-research-d1`) guarda conversaciones de S12.
+
+Abre [consultas-d1-tableplus.sql](consultas-d1-tableplus.sql). Cada bloque lee D1 en el momento de ejecutarlo; no hay notificaciones en vivo, se repite el bloque. D1 guarda el texto de los 123 fragmentos (69 del curso y 54 de Zocomar), sus documentos, los perfiles con modelo BGE-M3, 1024 dimensiones, coseno, 900/80 caracteres, el mapa fragmento → vector y el diario de ingesta. Los vectores están en Vectorize. Una pregunta en el chat no añade filas de RAG: solo cambia `public_budget` (bloque **11**), que sube un turno y la reserva del peor caso. La traza de cada respuesta vive en el panel de la web.
+
+## Recorridos del laboratorio en TablePlus
+
 El bloque **04** lista los recorridos. Copia el UUID del lateral de Aula al bloque **04b** y ejecútalo una vez. Los bloques **05–10** usarán ese mismo UUID: así no mezclas el vector de una pregunta con el prompt de otra. La selección vive en la sesión; repite 04b si reconectas. El UUID inicial corresponde a la respuesta real de cifrado ya ensayada.
 
 | Tabla                 | Qué se enseña                                                | Relación                                       |

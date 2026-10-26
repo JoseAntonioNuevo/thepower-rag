@@ -1,6 +1,7 @@
 // GUÍA DE LECTURA · scripts/prepare-corpus.ts
-// Prepara el corpus del curso: lee los Markdown de corpus/sources, los trocea, calcula hashes y escribe
-// corpus/prepared/corpus.json y corpus/COVERAGE.md. No llama a ningún proveedor.
+// Prepara un corpus: por defecto el del curso (corpus/sources → corpus/prepared/corpus.json y
+// corpus/COVERAGE.md); con --corpus zocomar, la tienda ficticia del chat (corpus/zocomar/sources →
+// corpus/prepared/zocomar.json, sin informe de cobertura del temario). No llama a ningún proveedor.
 // Ejecuta comandos (vp fmt).
 import { execFileSync } from "node:child_process";
 // Lectura y escritura de archivos.
@@ -18,8 +19,24 @@ import {
 
 // Raíz del repositorio.
 const root = path.resolve(import.meta.dirname, "..");
+// Corpus pedido: --corpus zocomar o --corpus=zocomar; sin la opción, el del curso.
+const corpusFlagIndex = process.argv.findIndex(
+  (arg) => arg === "--corpus" || arg.startsWith("--corpus="),
+);
+// Valor de la opción en cualquiera de sus dos formas.
+const corpusName =
+  corpusFlagIndex < 0
+    ? "course"
+    : (process.argv[corpusFlagIndex]!.split("=")[1] ?? process.argv[corpusFlagIndex + 1] ?? "");
+// Solo hay dos corpus preparados; cualquier otro nombre se rechaza antes de leer archivos.
+if (corpusName !== "course" && corpusName !== "zocomar") {
+  // Detiene el script sin escribir nada.
+  throw new Error("--corpus debe ser course o zocomar.");
+}
+// ¿Es la tienda ficticia del chat?
+const store = corpusName === "zocomar";
 // Carpeta de las fuentes.
-const sourceRoot = path.join(root, "corpus/sources");
+const sourceRoot = path.join(root, store ? "corpus/zocomar/sources" : "corpus/sources");
 
 // Recorre una carpeta y devuelve los Markdown con su ruta relativa y su texto.
 function collect(directory: string): SourceFile[] {
@@ -72,20 +89,27 @@ const publicCorpus = {
 const preparedDir = path.join(root, "corpus/prepared");
 // La crea si no existe.
 mkdirSync(preparedDir, { recursive: true });
-// Escribe corpus.json.
-writeFileSync(path.join(preparedDir, "corpus.json"), `${JSON.stringify(publicCorpus, null, 2)}\n`);
-// Escribe el informe de cobertura.
-writeFileSync(path.join(root, "corpus/COVERAGE.md"), formatCoverage(corpus));
-// Lo formatea con vp fmt.
-execFileSync(path.join(root, "node_modules/.bin/vp"), ["fmt", "corpus/COVERAGE.md"], {
-  cwd: root,
-  stdio: "ignore",
-});
+// Escribe corpus.json (curso) o zocomar.json (tienda).
+writeFileSync(
+  path.join(preparedDir, store ? "zocomar.json" : "corpus.json"),
+  `${JSON.stringify(publicCorpus, null, 2)}\n`,
+);
+// La tienda no tiene temario ni calendarios: solo el curso escribe el informe de cobertura.
+if (!store) {
+  // Escribe el informe de cobertura.
+  writeFileSync(path.join(root, "corpus/COVERAGE.md"), formatCoverage(corpus));
+  // Lo formatea con vp fmt.
+  execFileSync(path.join(root, "node_modules/.bin/vp"), ["fmt", "corpus/COVERAGE.md"], {
+    cwd: root,
+    stdio: "ignore",
+  });
+}
 // Resumen del corpus.
 console.log(
   `corpus ${corpus.preparationId} contenido ${corpus.contentVersion} perfil ${corpus.indexProfile.id}: ${String(corpus.documents.length)} documentos`,
 );
-// Resumen de cobertura.
-console.log(
-  `cobertura temario ${corpus.coverage.curriculum}, L/X ${corpus.coverage.calendarLx}, M/J ${corpus.coverage.calendarMj}, ejercicios ${corpus.coverage.exerciseDetail}`,
-);
+// Resumen de cobertura (solo tiene sentido en el curso).
+if (!store)
+  console.log(
+    `cobertura temario ${corpus.coverage.curriculum}, L/X ${corpus.coverage.calendarLx}, M/J ${corpus.coverage.calendarMj}, ejercicios ${corpus.coverage.exerciseDetail}`,
+  );

@@ -6,7 +6,7 @@ import type { UIMessage } from "ai";
 // Tipos de CRAG.
 import type { CragStep, CragSummary } from "./crag";
 // Tipos de citas, demo, metadatos y traza.
-import type { Citation, DemoEvent, RunMetadata, TraceEvent } from "./domain";
+import type { Citation, DemoEvent, RagStep, RunMetadata, TraceEvent } from "./domain";
 // Tipos de la investigación de S12.
 import type { ResearchSource, ResearchStep, ResearchSummary } from "./research";
 
@@ -18,6 +18,8 @@ export type CourseDataParts = {
   source: Citation;
   // Traza del RAG.
   trace: TraceEvent;
+  // Paso del RAG básico para el modo clase.
+  "rag-step": RagStep;
   // Resumen de CRAG.
   crag: CragSummary;
   // Paso intermedio de CRAG.

@@ -2,6 +2,14 @@
 
 Verificado el 3 de octubre de 2026. URL: https://rag-thepower.josenuevo.dev.
 
+## Modo clase: publicación del 26 de octubre de 2026
+
+La versión `cfbccfcf-735b-42bd-8800-128b2622545e` (deployment `75a19b23-bf0e-4518-a4a5-ba0ea353a0b3`, 100 %) añade el modo clase (`?clase`): grafo en directo de RAG básico y CRAG, inspector de cada paso y repetición sin llamadas nuevas. Variables y bindings sin cambios respecto a `35d435a0`: Haiku 5.5 genera y Sonnet 5.5 evalúa. Health en verde. [Recibo](evidence/zocomar-web-2026-10-25.md#modo-clase-publicado-26-de-octubre-de-2026).
+
+## Zocomar en el chat: publicación del 25 de octubre de 2026
+
+La versión `faa8a19c-3254-470a-b51b-54f44f00089c` (deployment `4315ee3f-e258-4110-a73a-8c16ed835417`, 100 %) sirve Sin RAG, RAG básico y CRAG sobre la tienda ficticia Zocomar (`CHAT_CORPUS=zocomar`). Usa el índice `thepower-ai-course-rag-eb8d9e84d3ba`, el perfil `peb8d9e84d3ba` con 54 vectores y el umbral calibrado 0,661926, con `RAG_CONTEXT_MODE=semantic`. La investigación de S12 sigue leyendo el curso. Health en verde para las cuatro etapas. Un turno RAG y uno CRAG reales respondieron 200 desde el navegador del usuario; el navegador automatizado del agente no supera Turnstile (600010). [Recibo, calibración, presupuesto y límites](evidence/zocomar-web-2026-10-25.md).
+
 ## Turnstile: publicación del 23 de octubre de 2026
 
 El código `273641f` está publicado en la versión `dc051851-8cd1-41d0-96f5-21843c62ca4e`, deployment `ef13fc2f-976b-4190-9368-ad71754a162f`, al 100 % del tráfico. Turnstile verifica antes del envío, solo muestra interacción cuando Cloudflare la exige y no precarga otro desafío después de la respuesta. La revisión admite dos recuperaciones nativas de errores transitorios dentro de la misma verificación y plazo.

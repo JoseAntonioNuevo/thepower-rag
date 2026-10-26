@@ -42,6 +42,7 @@ function config(wrangler: string, devVars: string | null): LocalWorkerConfig {
     devVarsFile: devVars === null ? null : ".dev.vars",
     vars,
     bindings: inspected.bindings,
+    storeBinding: inspected.storeBinding,
     assessment: assessWorker(vars),
   };
 }

@@ -19,11 +19,32 @@ import {
   runMetadataSchema,
   type Citation,
   type CourseUIMessage,
+  type RagStep,
   type RunMetadata,
   type TraceEvent,
 } from "@thepower-rag/contracts";
 // Utilidades del núcleo para validar citas [cite:id].
 import { splitCitationBuffer, suppressUnknownCitations } from "@thepower-rag/core";
+// Pasos de generación y respuesta del modo clase.
+import { ragAnswerStep, ragGenerateStep } from "./rag-steps";
+
+// Pasos del modo clase para el RAG básico: los de la búsqueda y el generador que actúa.
+export interface RagStepsInput {
+  // Pasos ya medidos de la búsqueda y la decisión (rag-steps.ts).
+  retrieval: readonly RagStep[];
+  // Pregunta original.
+  query: string;
+  // Generador, o null si la respuesta es una plantilla.
+  model: string | null;
+}
+
+// Ids citados y permitidos dentro de un trozo de texto ya validado.
+function citedIn(text: string, allowed: ReadonlySet<string>): string[] {
+  // Cada [cite:id] reconocido que pertenece a la evidencia.
+  return [...text.matchAll(/\[cite:([A-Za-z0-9:_-]{1,128})\]/g)]
+    .map((match) => match[1]!)
+    .filter((id) => allowed.has(id));
+}
 
 // Mensaje público de error del proveedor; no expone el detalle interno.
 export const PUBLIC_PROVIDER_MESSAGE =
@@ -76,6 +97,8 @@ export function streamFixedCourseResponse(input: {
   signal: AbortSignal;
   // Si se filtran las citas desconocidas.
   validateCitations: boolean;
+  // Pasos del modo clase, solo en el RAG básico.
+  ragSteps?: RagStepsInput;
 }): Response {
   // Crea el flujo; execute escribe las partes en orden.
   const stream = createUIMessageStream<CourseUIMessage>({
@@ -91,10 +114,30 @@ export function streamFixedCourseResponse(input: {
         // Parte data-trace.
         writer.write({ type: "data-trace", id: "trace", data: input.trace });
       }
+      // Pasos de la búsqueda del modo clase: transitorios, no se guardan en el mensaje.
+      for (const step of input.ragSteps?.retrieval ?? [])
+        // Publica el paso para el grafo en directo.
+        writer.write({ type: "data-rag-step", data: step, transient: true });
+      // ¿La búsqueda terminó sin generar (rechazo o aclaración)?
+      const lastStep = input.ragSteps?.retrieval.at(-1);
+      const generates =
+        input.ragSteps !== undefined && lastStep?.kind !== "refuse" && lastStep?.kind !== "clarify";
       // Una parte data-source por fuente.
       for (const source of input.sources)
         // Publica una parte del protocolo de mensajes para que la interfaz reciba la evidencia del stream.
         writer.write({ type: "data-source", id: source.chunkId, data: source });
+      // Paso de generación de la plantilla, si la búsqueda llevó a responder.
+      if (generates)
+        // Publica el paso para el grafo en directo.
+        writer.write({
+          type: "data-rag-step",
+          data: ragGenerateStep({
+            query: input.ragSteps!.query,
+            model: input.ragSteps!.model,
+            chunkIds: input.sources.map((source) => source.chunkId),
+          }),
+          transient: true,
+        });
       // Empieza el bloque de texto "answer".
       writer.write({ type: "text-start", id: "answer" });
       // Ids de fragmentos permitidos en las citas.
@@ -117,6 +160,19 @@ export function streamFixedCourseResponse(input: {
       }
       // Cierra el bloque de texto.
       writer.write({ type: "text-end", id: "answer" });
+      // Paso final de la plantilla con sus citas.
+      if (generates)
+        // Publica el paso para el grafo en directo.
+        writer.write({
+          type: "data-rag-step",
+          data: ragAnswerStep({
+            query: input.ragSteps!.query,
+            model: input.ragSteps!.model,
+            durationMs: null,
+            citedIds: [...new Set(citedIn(input.text, allowed))],
+          }),
+          transient: true,
+        });
       // Fin con los metadatos.
       writer.write({ type: "finish", messageMetadata: input.metadata });
     },
@@ -159,6 +215,8 @@ export function streamProviderCourseResponse(input: {
   timeoutMs?: number;
   /** Tarifa del coste mostrado; null lo deja desconocido y sin valor usa la de Claude Haiku 5.5. */
   costPricing?: CostPricing | null;
+  // Pasos del modo clase, solo en el RAG básico.
+  ragSteps?: RagStepsInput;
 }): Response {
   // Ids permitidos en las citas.
   const allowed = new Set(input.sources.map((source) => source.chunkId));
@@ -173,6 +231,12 @@ export function streamProviderCourseResponse(input: {
       });
       // Envía la traza.
       writer.write({ type: "data-trace", id: "trace", data: input.trace });
+      // Pasos de la búsqueda del modo clase: transitorios, no se guardan en el mensaje.
+      for (const step of input.ragSteps?.retrieval ?? [])
+        // Publica el paso para el grafo en directo.
+        writer.write({ type: "data-rag-step", data: step, transient: true });
+      // Citas válidas que ya se han escrito, para el paso final.
+      const cited = new Set<string>();
       // Fuentes ya mostradas.
       const shown = new Set<string>();
       // Fuente por chunkId.
@@ -210,6 +274,19 @@ export function streamProviderCourseResponse(input: {
           abortSignal: input.signal,
           timeout: { totalMs: input.timeoutMs ?? LIMITS.generationTimeoutMs },
         });
+        // Paso de generación en directo, justo cuando el modelo empieza a escribir.
+        const generationStarted = Date.now();
+        if (input.ragSteps)
+          // Publica el paso para el grafo en directo.
+          writer.write({
+            type: "data-rag-step",
+            data: ragGenerateStep({
+              query: input.ragSteps.query,
+              model: input.ragSteps.model,
+              chunkIds: input.sources.map((source) => source.chunkId),
+            }),
+            transient: true,
+          });
         // Empieza el bloque de texto.
         writer.write({ type: "text-start", id: "answer" });
         // Texto retenido que puede contener una cita a medias.
@@ -233,6 +310,8 @@ export function streamProviderCourseResponse(input: {
             if (input.onlyCitedSources)
               // Entrega texto al filtro de citas antes de publicarlo en la respuesta visible.
               showCited(split.emit);
+            // Anota las citas válidas para el paso final.
+            for (const id of citedIn(split.emit, allowed)) cited.add(id);
             // Envía el texto.
             writer.write({ type: "text-delta", id: "answer", delta: split.emit });
           }
@@ -243,12 +322,14 @@ export function streamProviderCourseResponse(input: {
           if (input.onlyCitedSources)
             // Entrega texto al filtro de citas antes de publicarlo en la respuesta visible.
             showCited(pending);
-          // Lo envía, filtrando citas desconocidas.
-          writer.write({
-            type: "text-delta",
-            id: "answer",
-            delta: input.validateCitations ? suppressUnknownCitations(pending, allowed) : pending,
-          });
+          // Texto final, filtrando citas desconocidas.
+          const tail = input.validateCitations
+            ? suppressUnknownCitations(pending, allowed)
+            : pending;
+          // Anota sus citas válidas para el paso final.
+          for (const id of citedIn(tail, allowed)) cited.add(id);
+          // Lo envía.
+          writer.write({ type: "text-delta", id: "answer", delta: tail });
         }
         // Cancelado: cierra como aborted sin consumo ni coste.
         if (input.signal.aborted) {
@@ -273,6 +354,19 @@ export function streamProviderCourseResponse(input: {
         const usage = await result.totalUsage;
         // Cierra el bloque de texto.
         writer.write({ type: "text-end", id: "answer" });
+        // Paso final con la duración de la generación y las citas validadas.
+        if (input.ragSteps)
+          // Publica el paso para el grafo en directo.
+          writer.write({
+            type: "data-rag-step",
+            data: ragAnswerStep({
+              query: input.ragSteps.query,
+              model: input.ragSteps.model,
+              durationMs: Date.now() - generationStarted,
+              citedIds: [...cited],
+            }),
+            transient: true,
+          });
         // Fin con metadatos validados: completo, consumo y coste.
         writer.write({
           type: "finish",

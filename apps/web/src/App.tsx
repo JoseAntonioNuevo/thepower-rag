@@ -38,6 +38,9 @@ import { conversationStatus, prefersReducedMotion } from "./chat-motion";
 import { CourseAnswer } from "./course-answer";
 // Utilidades del panel CRAG.
 import { acceptScenarioChange, discardedRowKey, retainedRowKey } from "./crag-panel";
+// Modo clase: tipos de los pasos y grafo en directo.
+import type { ClassEvent } from "./class-mode";
+import { ClassModeView, type ClassModels } from "./class-mode-view";
 // Mesa de investigación durable.
 import { ResearchDesk } from "./research-desk";
 // Fuentes, pasos y traza de investigación.
@@ -74,11 +77,20 @@ const AUDIENCES: readonly { id: Audience; label: string; title?: string }[] = [
   { id: "M/J", label: "M/J", title: "Grupo con clases los martes y jueves" },
 ];
 
-// Pregunta de ejemplo de cada etapa.
+// Pregunta de ejemplo de cada etapa con el material del curso.
 const EXAMPLES: Record<ChatMode, string> = {
   "sin-rag": "¿Qué es un embedding?",
   rag: "¿Qué vemos en la sesión 10?",
   crag: "¿Qué cambia CRAG respecto a una sola búsqueda?",
+  research: DEMO_RESEARCH_QUESTION,
+};
+
+// Preguntas de ejemplo con la tienda Zocomar. Son casos de demostración, nunca del test de 20.
+// La investigación sigue con el material del curso.
+const STORE_EXAMPLES: Record<ChatMode, string> = {
+  "sin-rag": "¿Cuántos días tengo para devolver un pedido en Zocomar?",
+  rag: "¿A partir de qué importe es gratis el envío estándar a la península?",
+  crag: "Devolví en un Zocopunto un pedido que pagué con Bizum. ¿Cuánto puede tardar en llegarme el dinero?",
   research: DEMO_RESEARCH_QUESTION,
 };
 
@@ -566,17 +578,26 @@ function AssistantMessage({ message }: { message: CourseUIMessage }) {
 function ChatPane({
   mode,
   audience,
+  store,
   allowScenario,
   onBusy,
+  classMode,
+  models,
 }: {
   // Etapa.
   mode: ChatMode;
   // Grupo.
   audience: Audience;
+  // Si el chat consulta la tienda Zocomar en lugar del curso.
+  store: boolean;
   // Si se pueden elegir escenarios.
   allowScenario: boolean;
   // Avisa de si está ocupado.
   onBusy: (busy: boolean) => void;
+  // Si se muestra el grafo del modo clase.
+  classMode: boolean;
+  // Modelos que nombra el grafo.
+  models: ClassModels;
 }) {
   // Turnstile.
   const {
@@ -596,6 +617,12 @@ function ChatPane({
   const [scenario, setScenario] = useState<DemoScenarioId | null>(null);
   // Pasos CRAG en directo.
   const [liveSteps, setLiveSteps] = useState<CragStep[]>([]);
+  // Pasos del modo clase (RAG y CRAG) con su instante de llegada.
+  const [classEvents, setClassEvents] = useState<ClassEvent[]>([]);
+  // Instante del envío, para medir cuándo llega cada paso.
+  const sentAt = useRef(0);
+  // Turno del modo clase: cambia en cada envío para que el grafo vuelva al directo.
+  const [classTurn, setClassTurn] = useState(0);
   // Escenario de investigación.
   const [researchScenario, setResearchScenario] = useState<ResearchScenarioId | null>(null);
   // Pasos de investigación en directo.
@@ -654,6 +681,20 @@ function ChatPane({
         if (part.type === "data-step") {
           // Lo añade (máximo 16).
           setLiveSteps((current) => [...current, part.data].slice(-16));
+          // Y al grafo del modo clase, con su instante (máximo 40).
+          const at = performance.now() - sentAt.current;
+          setClassEvents((current) =>
+            [...current, { stage: "crag" as const, at, step: part.data }].slice(-40),
+          );
+        }
+        // Paso del RAG básico para el modo clase.
+        if (part.type === "data-rag-step") {
+          // Instante de llegada.
+          const at = performance.now() - sentAt.current;
+          // Lo añade (máximo 40).
+          setClassEvents((current) =>
+            [...current, { stage: "rag" as const, at, step: part.data }].slice(-40),
+          );
         }
         // Paso de investigación.
         if (part.type === "data-research-step") {
@@ -733,6 +774,10 @@ function ChatPane({
       clearError();
       // Limpia los pasos.
       setLiveSteps([]);
+      // Limpia los pasos del modo clase y empieza a medir desde aquí.
+      setClassEvents([]);
+      setClassTurn((current) => current + 1);
+      sentAt.current = performance.now();
       // Limpia los pasos.
       setResearchSteps([]);
       // Conserva cualquier borrador que se haya editado durante la espera.
@@ -793,497 +838,523 @@ function ChatPane({
     node.style.height = `${String(Math.min(node.scrollHeight, 140))}px`;
   }, [input]);
 
-  // Diseño con o sin panel lateral.
+  // Diseño con o sin panel lateral, y el grafo del modo clase encima en RAG y CRAG.
   return (
-    <div className={showRail ? "layout" : "layout layout-single"}>
-      {/* Conversación. */}
-      <section className="conversation" aria-label="Conversación">
-        {/* Mensajes. */}
-        <div className="transcript" aria-live="polite">
-          {/* Cada mensaje. */}
-          {messages.map((message) => (
-            <PanelSlide key={message.id}>
-              {/* Respuesta o pregunta. */}
-              {message.role === "assistant" ? (
-                <AssistantMessage message={message} />
-              ) : (
-                <article className="message message-user">
-                  {/* Pregunta. */}
-                  <p>{partText(message)}</p>
-                </article>
-              )}
-            </PanelSlide>
-          ))}
-        </div>
-        {/* Error de useChat. */}
-        {error === undefined ? null : <ChatError message={readableError(error)} />}
-        {/* Formulario. */}
-        <form className="composer" onSubmit={onSubmit}>
-          {/* Selector de guion CRAG. */}
-          {mode === "crag" && allowScenario ? (
-            <label className="composer-script" htmlFor="guion-crag">
-              Guion
-              <select
-                id="guion-crag"
-                value={scenario ?? ""}
-                disabled={busy || !acceptScenarioChange(busy)}
-                onChange={(event) => {
-                  // Ocupado.
-                  if (!acceptScenarioChange(busy)) {
-                    // Nada.
-                    return;
-                  }
-                  // Valor.
-                  const next = event.target.value;
-                  // Sin guion.
-                  if (next === "") {
-                    // Libre.
-                    setScenario(null);
+    <>
+      {/* Grafo en directo y repetición paso a paso. */}
+      {classMode && (mode === "rag" || mode === "crag") ? (
+        <ClassModeView
+          key={classTurn}
+          stage={mode}
+          events={classEvents}
+          live={busy}
+          models={models}
+        />
+      ) : null}
+      <div className={showRail ? "layout" : "layout layout-single"}>
+        {/* Conversación. */}
+        <section className="conversation" aria-label="Conversación">
+          {/* Mensajes. */}
+          <div className="transcript" aria-live="polite">
+            {/* Cada mensaje. */}
+            {messages.map((message) => (
+              <PanelSlide key={message.id}>
+                {/* Respuesta o pregunta. */}
+                {message.role === "assistant" ? (
+                  <AssistantMessage message={message} />
+                ) : (
+                  <article className="message message-user">
+                    {/* Pregunta. */}
+                    <p>{partText(message)}</p>
+                  </article>
+                )}
+              </PanelSlide>
+            ))}
+          </div>
+          {/* Error de useChat. */}
+          {error === undefined ? null : <ChatError message={readableError(error)} />}
+          {/* Formulario. */}
+          <form className="composer" onSubmit={onSubmit}>
+            {/* Selector de guion CRAG. */}
+            {mode === "crag" && allowScenario ? (
+              <label className="composer-script" htmlFor="guion-crag">
+                Guion
+                <select
+                  id="guion-crag"
+                  value={scenario ?? ""}
+                  disabled={busy || !acceptScenarioChange(busy)}
+                  onChange={(event) => {
+                    // Ocupado.
+                    if (!acceptScenarioChange(busy)) {
+                      // Nada.
+                      return;
+                    }
+                    // Valor.
+                    const next = event.target.value;
+                    // Sin guion.
+                    if (next === "") {
+                      // Libre.
+                      setScenario(null);
+                      // Vacía la conversación.
+                      setMessages([]);
+                      // Vacía los pasos.
+                      setLiveSteps([]);
+                      // Vacía el grafo del modo clase.
+                      setClassEvents([]);
+                      // Sale.
+                      return;
+                    }
+                    // Escenario.
+                    const found = DEMO_CRAG_SCENARIOS.find((item) => item.id === next);
+                    // Desconocido.
+                    if (found === undefined) {
+                      // Nada.
+                      return;
+                    }
+                    // Lo elige.
+                    setScenario(found.id);
+                    // Rellena su pregunta.
+                    setInput(found.question);
                     // Vacía la conversación.
                     setMessages([]);
                     // Vacía los pasos.
                     setLiveSteps([]);
-                    // Sale.
-                    return;
-                  }
-                  // Escenario.
-                  const found = DEMO_CRAG_SCENARIOS.find((item) => item.id === next);
-                  // Desconocido.
-                  if (found === undefined) {
-                    // Nada.
-                    return;
-                  }
-                  // Lo elige.
-                  setScenario(found.id);
-                  // Rellena su pregunta.
-                  setInput(found.question);
-                  // Vacía la conversación.
-                  setMessages([]);
-                  // Vacía los pasos.
-                  setLiveSteps([]);
-                }}
-              >
-                {/* Sin guion. */}
-                <option value="">Libre, con el índice lexical de prueba</option>
-                {/* Un guion por escenario. */}
-                {DEMO_CRAG_SCENARIOS.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {/* Nombre. */}
-                    {item.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          ) : null}
-          {/* Selector de guion de investigación. */}
-          {mode === "research" && allowScenario ? (
-            <label className="composer-script" htmlFor="guion-investigacion">
-              Guion
-              <select
-                id="guion-investigacion"
-                value={researchScenario ?? ""}
-                disabled={busy || !acceptScenarioChange(busy)}
-                onChange={(event) => {
-                  // Ocupado.
-                  if (!acceptScenarioChange(busy)) {
-                    // Nada.
-                    return;
-                  }
-                  // Escenario.
-                  const found = DEMO_RESEARCH_SCENARIOS.find(
-                    (item) => item.id === event.target.value,
-                  );
-                  // Lo elige.
-                  setResearchScenario(found?.id ?? null);
-                  // Si existe.
-                  if (found !== undefined) {
-                    // Rellena su pregunta.
-                    setInput(found.question);
-                  }
-                  // Vacía la conversación.
-                  setMessages([]);
-                  // Vacía los pasos.
-                  setResearchSteps([]);
-                }}
-              >
-                {/* Sin guion. */}
-                <option value="">Libre, con el material del curso de prueba</option>
-                {/* Un guion por escenario. */}
-                {DEMO_RESEARCH_SCENARIOS.map((item) => (
-                  <option key={item.id} value={item.id}>
-                    {/* Nombre. */}
-                    {item.label}
-                  </option>
-                ))}
-              </select>
-            </label>
-          ) : null}
-          {/* Aviso de la investigación sin trabajo durable. */}
-          {mode === "research" ? (
-            <p className="composer-caption">
-              Se ejecuta mientras la petición sigue abierta. No es un trabajo en segundo plano ni
-              recuerda turnos anteriores.
-            </p>
-          ) : null}
-          {/* Línea de estado bajo el formulario: error, actividad, ejemplo o nueva conversación. */}
-          <div className="composer-caption">
-            {/* Según el estado. */}
-            {alertMessage !== null ? (
-              <span role="alert">
-                {/* Error. */}
-                {visibleError(alertMessage)}
-                {/* Reintentar la verificación. */}
-                {verificationError !== null ? (
-                  <button className="caption-action" type="button" onClick={retryVerification}>
-                    Reintentar
-                  </button>
-                ) : null}
-              </span>
-            ) : busy ? (
-              <div className="conversation-status" role="status">
-                {/* Indicador de carga. */}
-                <div className="status-loader">
-                  {/* Matriz. */}
-                  <MatrixLoader variant="scan" />
-                </div>
-                {/* Estado. */}
-                <ThinkStatus label={statusLabel} live />
-              </div>
-            ) : messages.length === 0 ? (
-              <button
-                className="caption-action"
-                type="button"
-                onClick={() => {
-                  // Ocupado.
-                  if (!acceptScenarioChange(busy)) {
-                    // Nada.
-                    return;
-                  }
-                  // Sin guion CRAG.
-                  setScenario(null);
-                  // Sin guion de investigación.
-                  setResearchScenario(null);
-                  // Pregunta de ejemplo.
-                  setInput(EXAMPLES[mode]);
-                  // Foco en el textarea.
-                  questionRef.current?.focus();
-                }}
-              >
-                {/* Ejemplo. */}
-                {EXAMPLES[mode]}
-              </button>
-            ) : (
-              <button
-                className="caption-action"
-                type="button"
-                onClick={() => {
-                  // Limpia el error.
-                  clearError();
-                  // Vacía la conversación.
-                  setMessages([]);
-                  // Vacía el texto.
-                  setInput("");
-                }}
-              >
-                Nueva conversación
-              </button>
-            )}
-          </div>
-          {/* Caja de la pregunta. */}
-          <div className="composer-pill">
-            {/* Textarea. */}
-            <textarea
-              id="pregunta"
-              ref={questionRef}
-              aria-label="Pregunta"
-              rows={1}
-              value={input}
-              onChange={(event) => {
-                // Texto.
-                const next = event.target.value;
-                // Lo guarda.
-                setInput(next);
-                // Ocupado.
-                if (!acceptScenarioChange(busy)) {
-                  // Nada.
-                  return;
-                }
-                // Si el texto ya no es el del guion CRAG, lo quita.
-                setScenario((current) => {
-                  // Escenario.
-                  const selected = DEMO_CRAG_SCENARIOS.find((item) => item.id === current);
-                  // Se conserva solo si coincide.
-                  return selected !== undefined && selected.question === next ? current : null;
-                });
-                // Lo mismo con el guion de investigación.
-                setResearchScenario((current) => {
-                  // Escenario.
-                  const selected = DEMO_RESEARCH_SCENARIOS.find((item) => item.id === current);
-                  // Se conserva solo si coincide.
-                  return selected !== undefined && selected.question === next ? current : null;
-                });
-              }}
-              placeholder="Escribe una pregunta"
-              onKeyDown={onQuestionKeyDown}
-            />
-            {/* Detener o enviar. */}
-            {busy ? (
-              // Antes del envío cancela la verificación; después, detiene el stream.
-              <button
-                className="send"
-                type="button"
-                onClick={(event) => {
-                  // El mismo nodo puede volver a type=submit durante este clic: evita su acción por defecto.
-                  event.preventDefault();
-                  if (verifying) cancelVerification();
-                  else void stop();
-                }}
-              >
-                {verifying ? "Cancelar envío" : "Detener"}
-              </button>
-            ) : (
-              // En reposo: enviar, desactivado sin verificación o sin texto.
-              <button
-                className="send"
-                type="submit"
-                disabled={!verificationReady || input.trim().length === 0}
-              >
-                Enviar
-              </button>
-            )}
-          </div>
-          {/* Contenedor del widget de Turnstile. */}
-          <div ref={verificationContainer} aria-label="Verificación de seguridad" />
-        </form>
-      </section>
-      {/* Panel lateral. */}
-      {showRail ? (
-        <PanelSlide as="aside" className="panel">
-          {/* Zona con scroll. */}
-          <div className="panel-scroll">
-            {/* Fuentes. */}
-            <section className="sources-section">
-              {/* Título fijo. */}
-              <h2 className="sources-sticky">Fuentes</h2>
-              {/* Según la etapa. */}
-              {mode === "sin-rag" ? (
-                <p>Sin fuentes. Este modo no recupera documentos.</p>
-              ) : mode === "research" ? (
-                <RevealSlot
-                  loading={sourcesLoading}
-                  label="Fuentes"
-                  skeleton={
-                    <>
-                      {/* Línea de esqueleto. */}
-                      <span className="skel-line skel-line-short" />
-                      {/* Línea. */}
-                      <span className="skel-line" />
-                    </>
-                  }
+                    // Vacía el grafo del modo clase.
+                    setClassEvents([]);
+                  }}
                 >
-                  {/* Fuentes de investigación. */}
-                  <ResearchSources sources={researchSources} />
-                </RevealSlot>
+                  {/* Sin guion. */}
+                  <option value="">Libre, con el índice lexical de prueba</option>
+                  {/* Un guion por escenario. */}
+                  {DEMO_CRAG_SCENARIOS.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {/* Nombre. */}
+                      {item.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
+            {/* Selector de guion de investigación. */}
+            {mode === "research" && allowScenario ? (
+              <label className="composer-script" htmlFor="guion-investigacion">
+                Guion
+                <select
+                  id="guion-investigacion"
+                  value={researchScenario ?? ""}
+                  disabled={busy || !acceptScenarioChange(busy)}
+                  onChange={(event) => {
+                    // Ocupado.
+                    if (!acceptScenarioChange(busy)) {
+                      // Nada.
+                      return;
+                    }
+                    // Escenario.
+                    const found = DEMO_RESEARCH_SCENARIOS.find(
+                      (item) => item.id === event.target.value,
+                    );
+                    // Lo elige.
+                    setResearchScenario(found?.id ?? null);
+                    // Si existe.
+                    if (found !== undefined) {
+                      // Rellena su pregunta.
+                      setInput(found.question);
+                    }
+                    // Vacía la conversación.
+                    setMessages([]);
+                    // Vacía los pasos.
+                    setResearchSteps([]);
+                  }}
+                >
+                  {/* Sin guion. */}
+                  <option value="">Libre, con el material del curso de prueba</option>
+                  {/* Un guion por escenario. */}
+                  {DEMO_RESEARCH_SCENARIOS.map((item) => (
+                    <option key={item.id} value={item.id}>
+                      {/* Nombre. */}
+                      {item.label}
+                    </option>
+                  ))}
+                </select>
+              </label>
+            ) : null}
+            {/* Aviso de la investigación sin trabajo durable. */}
+            {mode === "research" ? (
+              <p className="composer-caption">
+                Se ejecuta mientras la petición sigue abierta. No es un trabajo en segundo plano ni
+                recuerda turnos anteriores.
+              </p>
+            ) : null}
+            {/* Línea de estado bajo el formulario: error, actividad, ejemplo o nueva conversación. */}
+            <div className="composer-caption">
+              {/* Según el estado. */}
+              {alertMessage !== null ? (
+                <span role="alert">
+                  {/* Error. */}
+                  {visibleError(alertMessage)}
+                  {/* Reintentar la verificación. */}
+                  {verificationError !== null ? (
+                    <button className="caption-action" type="button" onClick={retryVerification}>
+                      Reintentar
+                    </button>
+                  ) : null}
+                </span>
+              ) : busy ? (
+                <div className="conversation-status" role="status">
+                  {/* Indicador de carga. */}
+                  <div className="status-loader">
+                    {/* Matriz. */}
+                    <MatrixLoader variant="scan" />
+                  </div>
+                  {/* Estado. */}
+                  <ThinkStatus label={statusLabel} live />
+                </div>
+              ) : messages.length === 0 ? (
+                <button
+                  className="caption-action"
+                  type="button"
+                  onClick={() => {
+                    // Ocupado.
+                    if (!acceptScenarioChange(busy)) {
+                      // Nada.
+                      return;
+                    }
+                    // Sin guion CRAG.
+                    setScenario(null);
+                    // Sin guion de investigación.
+                    setResearchScenario(null);
+                    // Pregunta de ejemplo del corpus del chat.
+                    setInput((store ? STORE_EXAMPLES : EXAMPLES)[mode]);
+                    // Foco en el textarea.
+                    questionRef.current?.focus();
+                  }}
+                >
+                  {/* Ejemplo. */}
+                  {(store ? STORE_EXAMPLES : EXAMPLES)[mode]}
+                </button>
               ) : (
+                <button
+                  className="caption-action"
+                  type="button"
+                  onClick={() => {
+                    // Limpia el error.
+                    clearError();
+                    // Vacía la conversación.
+                    setMessages([]);
+                    // Vacía el texto.
+                    setInput("");
+                  }}
+                >
+                  Nueva conversación
+                </button>
+              )}
+            </div>
+            {/* Caja de la pregunta. */}
+            <div className="composer-pill">
+              {/* Textarea. */}
+              <textarea
+                id="pregunta"
+                ref={questionRef}
+                aria-label="Pregunta"
+                rows={1}
+                value={input}
+                onChange={(event) => {
+                  // Texto.
+                  const next = event.target.value;
+                  // Lo guarda.
+                  setInput(next);
+                  // Ocupado.
+                  if (!acceptScenarioChange(busy)) {
+                    // Nada.
+                    return;
+                  }
+                  // Si el texto ya no es el del guion CRAG, lo quita.
+                  setScenario((current) => {
+                    // Escenario.
+                    const selected = DEMO_CRAG_SCENARIOS.find((item) => item.id === current);
+                    // Se conserva solo si coincide.
+                    return selected !== undefined && selected.question === next ? current : null;
+                  });
+                  // Lo mismo con el guion de investigación.
+                  setResearchScenario((current) => {
+                    // Escenario.
+                    const selected = DEMO_RESEARCH_SCENARIOS.find((item) => item.id === current);
+                    // Se conserva solo si coincide.
+                    return selected !== undefined && selected.question === next ? current : null;
+                  });
+                }}
+                placeholder="Escribe una pregunta"
+                onKeyDown={onQuestionKeyDown}
+              />
+              {/* Detener o enviar. */}
+              {busy ? (
+                // Antes del envío cancela la verificación; después, detiene el stream.
+                <button
+                  className="send"
+                  type="button"
+                  onClick={(event) => {
+                    // El mismo nodo puede volver a type=submit durante este clic: evita su acción por defecto.
+                    event.preventDefault();
+                    if (verifying) cancelVerification();
+                    else void stop();
+                  }}
+                >
+                  {verifying ? "Cancelar envío" : "Detener"}
+                </button>
+              ) : (
+                // En reposo: enviar, desactivado sin verificación o sin texto.
+                <button
+                  className="send"
+                  type="submit"
+                  disabled={!verificationReady || input.trim().length === 0}
+                >
+                  Enviar
+                </button>
+              )}
+            </div>
+            {/* Contenedor del widget de Turnstile. */}
+            <div ref={verificationContainer} aria-label="Verificación de seguridad" />
+          </form>
+        </section>
+        {/* Panel lateral. */}
+        {showRail ? (
+          <PanelSlide as="aside" className="panel">
+            {/* Zona con scroll. */}
+            <div className="panel-scroll">
+              {/* Fuentes. */}
+              <section className="sources-section">
+                {/* Título fijo. */}
+                <h2 className="sources-sticky">Fuentes</h2>
+                {/* Según la etapa. */}
+                {mode === "sin-rag" ? (
+                  <p>Sin fuentes. Este modo no recupera documentos.</p>
+                ) : mode === "research" ? (
+                  <RevealSlot
+                    loading={sourcesLoading}
+                    label="Fuentes"
+                    skeleton={
+                      <>
+                        {/* Línea de esqueleto. */}
+                        <span className="skel-line skel-line-short" />
+                        {/* Línea. */}
+                        <span className="skel-line" />
+                      </>
+                    }
+                  >
+                    {/* Fuentes de investigación. */}
+                    <ResearchSources sources={researchSources} />
+                  </RevealSlot>
+                ) : (
+                  <RevealSlot
+                    loading={sourcesLoading}
+                    label="Fuentes"
+                    skeleton={
+                      <>
+                        {/* Línea. */}
+                        <span className="skel-line skel-line-short" />
+                        {/* Línea. */}
+                        <span className="skel-line" />
+                        {/* Línea. */}
+                        <span className="skel-line skel-line-mid" />
+                      </>
+                    }
+                  >
+                    {/* Sin fuentes o con su lista. */}
+                    {sources.length === 0 ? (
+                      <p>Sin fuentes en esta respuesta.</p>
+                    ) : (
+                      <ul className="citations">
+                        {/* Una tarjeta por fuente. */}
+                        {sources.map((source, index) =>
+                          // Solo las partes de tipo data-source son fuentes citables.
+                          source.type === "data-source" ? (
+                            // La clave es el id del fragmento: estable entre renders.
+                            <CitationCard
+                              key={source.data.chunkId}
+                              index={index}
+                              title={source.data.title}
+                              section={source.data.section}
+                              excerpt={source.data.excerpt}
+                              chunkId={source.data.chunkId}
+                            />
+                          ) : null,
+                        )}
+                      </ul>
+                    )}
+                  </RevealSlot>
+                )}
+              </section>
+              {/* Traza. */}
+              <section>
+                {/* Título. */}
+                <h2>Traza de la clase</h2>
+                {/* Traza con esqueleto mientras carga. */}
                 <RevealSlot
-                  loading={sourcesLoading}
-                  label="Fuentes"
+                  loading={traceLoading}
+                  label="Traza de la clase"
                   skeleton={
                     <>
-                      {/* Línea. */}
-                      <span className="skel-line skel-line-short" />
-                      {/* Línea. */}
-                      <span className="skel-line" />
                       {/* Línea. */}
                       <span className="skel-line skel-line-mid" />
+                      {/* Línea. */}
+                      <span className="skel-line" />
                     </>
                   }
                 >
-                  {/* Sin fuentes o con su lista. */}
-                  {sources.length === 0 ? (
-                    <p>Sin fuentes en esta respuesta.</p>
-                  ) : (
-                    <ul className="citations">
-                      {/* Una tarjeta por fuente. */}
-                      {sources.map((source, index) =>
-                        // Solo las partes de tipo data-source son fuentes citables.
-                        source.type === "data-source" ? (
-                          // La clave es el id del fragmento: estable entre renders.
-                          <CitationCard
-                            key={source.data.chunkId}
-                            index={index}
-                            title={source.data.title}
-                            section={source.data.section}
-                            excerpt={source.data.excerpt}
-                            chunkId={source.data.chunkId}
-                          />
-                        ) : null,
-                      )}
-                    </ul>
-                  )}
-                </RevealSlot>
-              )}
-            </section>
-            {/* Traza. */}
-            <section>
-              {/* Título. */}
-              <h2>Traza de la clase</h2>
-              {/* Traza con esqueleto mientras carga. */}
-              <RevealSlot
-                loading={traceLoading}
-                label="Traza de la clase"
-                skeleton={
-                  <>
-                    {/* Línea. */}
-                    <span className="skel-line skel-line-mid" />
-                    {/* Línea. */}
-                    <span className="skel-line" />
-                  </>
-                }
-              >
-                {/* Según la etapa. */}
-                {mode === "research" ? (
-                  research === null ? (
-                    <div aria-live="polite">
-                      {/* Aviso. */}
-                      <p>La traza completa aparece con el resultado.</p>
-                      {/* Pasos en directo. */}
-                      <ResearchSteps steps={researchSteps} />
-                    </div>
-                  ) : (
-                    <PanelSlide>
-                      {/* Traza completa. */}
-                      <ResearchTrace summary={research} />
-                    </PanelSlide>
-                  )
-                ) : mode === "crag" ? (
-                  <div>
-                    {/* Resumen CRAG. */}
-                    {crag === null ? (
-                      <p>La traza aparece con la respuesta.</p>
+                  {/* Según la etapa. */}
+                  {mode === "research" ? (
+                    research === null ? (
+                      <div aria-live="polite">
+                        {/* Aviso. */}
+                        <p>La traza completa aparece con el resultado.</p>
+                        {/* Pasos en directo. */}
+                        <ResearchSteps steps={researchSteps} />
+                      </div>
                     ) : (
                       <PanelSlide>
-                        {/* Resumen. */}
-                        <div>
-                          {/* Resultado. */}
-                          <p className="trace-summary">
-                            {/* Origen, final y motivo. */}
-                            {crag.fixture ? "Guion de prueba." : "Recorrido real."} {crag.terminal}.{" "}
-                            {crag.reason}
-                          </p>
-                          {/* Detalles. */}
-                          <ul className="trace-list">
-                            {/* Búsquedas. */}
-                            <li>
-                              Búsquedas {crag.retrievalCount}. Quedan {crag.attemptsRemaining}.
-                            </li>
-                            {/* Reformulaciones. */}
-                            <li>
-                              Reformulaciones {crag.reformulationCount}. Quedan{" "}
-                              {crag.rewritesRemaining}.
-                            </li>
-                            {/* Consumo sin totales inventados. */}
-                            <li>
-                              {/* Llamadas de pago: medidas una a una, nunca un total inventado. */}
-                              Llamadas de pago:{" "}
-                              {crag.measured
-                                ? "contadas por separado, sin total inventado"
-                                : "no medidas"}
-                              . Uso: {/* Uso de tokens: desconocido, no medido o parcial. */}
-                              {crag.usage === null
-                                ? crag.measured
-                                  ? "desconocido"
-                                  : "no medido"
-                                : "parcial"}
-                              . Coste: {/* Coste: importe o por qué no se conoce. */}
-                              {crag.cost === null
-                                ? crag.measured
-                                  ? "desconocido"
-                                  : "no medido"
-                                : crag.cost.amount}
-                              .
-                            </li>
-                            {/* Pregunta original. */}
-                            <li>Consulta original: {crag.originalQuestion}</li>
-                            {/* Consulta actual. */}
-                            <li>Consulta de búsqueda: {crag.currentQuery}</li>
-                            {/* Conservados. */}
-                            {crag.retained.map((item, index) => (
-                              <li key={retainedRowKey(item.chunkId, index)}>
-                                Conservado {item.chunkId}
-                                {item.score === null ? "" : ` (${item.score.toFixed(3)})`}:{" "}
-                                {item.reason}
-                              </li>
-                            ))}
-                            {/* Descartados. */}
-                            {crag.discarded.map((item, index) => (
-                              <li key={discardedRowKey(item, index)}>
-                                Descartado {item.chunkId}, intento {item.attempt}: {item.reason}
-                              </li>
-                            ))}
-                          </ul>
-                        </div>
+                        {/* Traza completa. */}
+                        <ResearchTrace summary={research} />
                       </PanelSlide>
-                    )}
-                    {/* Pasos en directo. */}
-                    {liveSteps.length === 0 ? null : (
-                      <ol className="steps" aria-live="polite" aria-label="Pasos del grafo">
-                        {/* Un paso por línea. */}
-                        {liveSteps.map((step, index) => (
-                          <PanelSlide key={`${step.kind}-${String(index)}`} as="li">
-                            {step.kind}. Búsqueda {step.retrieval ?? 0}. {step.status}
-                          </PanelSlide>
-                        ))}
-                      </ol>
-                    )}
-                  </div>
-                ) : trace?.type === "data-trace" ? (
-                  <PanelSlide>
-                    {/* Traza del RAG. */}
-                    <ul className="trace-list">
-                      {/* Consulta. */}
-                      <li>Consulta: {trace.data.query}</li>
-                      {/* Reescritura. */}
-                      <li>
-                        {/* Contexto completo o pendiente. */}
-                        {trace.data.queryRewrite === "context-complete"
-                          ? "El modelo dispone del contexto completo del grupo y del historial para interpretar seguimientos."
-                          : "Reescritura de seguimiento: pendiente."}
-                      </li>
-                      {/* Significado de la puntuación. */}
-                      <li>{trace.data.scoreMeaning}</li>
-                      {/* Fragmentos recuperados. */}
-                      {trace.data.retrieved.map((item) => (
-                        <li key={item.chunkId}>
-                          {item.chunkId}:{" "}
-                          {item.score === null ? "puntuación desconocida" : item.score.toFixed(3)}{" "}
-                          {item.selected ? "seleccionado" : "descartado"}
+                    )
+                  ) : mode === "crag" ? (
+                    <div>
+                      {/* Resumen CRAG. */}
+                      {crag === null ? (
+                        <p>La traza aparece con la respuesta.</p>
+                      ) : (
+                        <PanelSlide>
+                          {/* Resumen. */}
+                          <div>
+                            {/* Resultado. */}
+                            <p className="trace-summary">
+                              {/* Origen, final y motivo. */}
+                              {crag.fixture ? "Guion de prueba." : "Recorrido real."}{" "}
+                              {crag.terminal}. {crag.reason}
+                            </p>
+                            {/* Detalles. */}
+                            <ul className="trace-list">
+                              {/* Búsquedas. */}
+                              <li>
+                                Búsquedas {crag.retrievalCount}. Quedan {crag.attemptsRemaining}.
+                              </li>
+                              {/* Reformulaciones. */}
+                              <li>
+                                Reformulaciones {crag.reformulationCount}. Quedan{" "}
+                                {crag.rewritesRemaining}.
+                              </li>
+                              {/* Consumo sin totales inventados. */}
+                              <li>
+                                {/* Llamadas de pago: medidas una a una, nunca un total inventado. */}
+                                Llamadas de pago:{" "}
+                                {crag.measured
+                                  ? "contadas por separado, sin total inventado"
+                                  : "no medidas"}
+                                . Uso: {/* Uso de tokens: desconocido, no medido o parcial. */}
+                                {crag.usage === null
+                                  ? crag.measured
+                                    ? "desconocido"
+                                    : "no medido"
+                                  : "parcial"}
+                                . Coste: {/* Coste: importe o por qué no se conoce. */}
+                                {crag.cost === null
+                                  ? crag.measured
+                                    ? "desconocido"
+                                    : "no medido"
+                                  : crag.cost.amount}
+                                .
+                              </li>
+                              {/* Pregunta original. */}
+                              <li>Consulta original: {crag.originalQuestion}</li>
+                              {/* Consulta actual. */}
+                              <li>Consulta de búsqueda: {crag.currentQuery}</li>
+                              {/* Conservados. */}
+                              {crag.retained.map((item, index) => (
+                                <li key={retainedRowKey(item.chunkId, index)}>
+                                  Conservado {item.chunkId}
+                                  {item.score === null ? "" : ` (${item.score.toFixed(3)})`}:{" "}
+                                  {item.reason}
+                                </li>
+                              ))}
+                              {/* Descartados. */}
+                              {crag.discarded.map((item, index) => (
+                                <li key={discardedRowKey(item, index)}>
+                                  Descartado {item.chunkId}, intento {item.attempt}: {item.reason}
+                                </li>
+                              ))}
+                            </ul>
+                          </div>
+                        </PanelSlide>
+                      )}
+                      {/* Pasos en directo. */}
+                      {liveSteps.length === 0 ? null : (
+                        <ol className="steps" aria-live="polite" aria-label="Pasos del grafo">
+                          {/* Un paso por línea. */}
+                          {liveSteps.map((step, index) => (
+                            <PanelSlide key={`${step.kind}-${String(index)}`} as="li">
+                              {step.kind}. Búsqueda {step.retrieval ?? 0}. {step.status}
+                            </PanelSlide>
+                          ))}
+                        </ol>
+                      )}
+                    </div>
+                  ) : trace?.type === "data-trace" ? (
+                    <PanelSlide>
+                      {/* Traza del RAG. */}
+                      <ul className="trace-list">
+                        {/* Consulta. */}
+                        <li>Consulta: {trace.data.query}</li>
+                        {/* Reescritura. */}
+                        <li>
+                          {/* Contexto completo o pendiente. */}
+                          {trace.data.queryRewrite === "context-complete"
+                            ? "El modelo dispone del contexto completo del grupo y del historial para interpretar seguimientos."
+                            : "Reescritura de seguimiento: pendiente."}
                         </li>
-                      ))}
-                      {/* Decisión y generación. */}
-                      <li>
-                        Decisión: {trace.data.decision}. Generación: {trace.data.generation}.
-                      </li>
-                      {/* Estado. */}
-                      <li>{trace.data.status}</li>
-                    </ul>
-                  </PanelSlide>
-                ) : (
-                  <p>
-                    {/* Sin traza. */}
-                    {mode === "sin-rag"
-                      ? // Mensaje según el modo.
-                        "Sin RAG no recupera ni puntúa documentos."
-                      : "La traza aparece con la respuesta."}
-                  </p>
-                )}
-              </RevealSlot>
-            </section>
-          </div>
-        </PanelSlide>
-      ) : null}
-    </div>
+                        {/* Significado de la puntuación. */}
+                        <li>{trace.data.scoreMeaning}</li>
+                        {/* Fragmentos recuperados. */}
+                        {trace.data.retrieved.map((item) => (
+                          <li key={item.chunkId}>
+                            {item.chunkId}:{" "}
+                            {item.score === null ? "puntuación desconocida" : item.score.toFixed(3)}{" "}
+                            {item.selected ? "seleccionado" : "descartado"}
+                          </li>
+                        ))}
+                        {/* Decisión y generación. */}
+                        <li>
+                          Decisión: {trace.data.decision}. Generación: {trace.data.generation}.
+                        </li>
+                        {/* Estado. */}
+                        <li>{trace.data.status}</li>
+                      </ul>
+                    </PanelSlide>
+                  ) : (
+                    <p>
+                      {/* Sin traza. */}
+                      {mode === "sin-rag"
+                        ? // Mensaje según el modo.
+                          "Sin RAG no recupera ni puntúa documentos."
+                        : "La traza aparece con la respuesta."}
+                    </p>
+                  )}
+                </RevealSlot>
+              </section>
+            </div>
+          </PanelSlide>
+        ) : null}
+      </div>
+    </>
   );
+}
+
+// Modo clase activado por la URL (?clase), para dejarlo listo antes de proyectar.
+function classModeFromUrl(): boolean {
+  // Sin ventana (pruebas): apagado.
+  if (typeof window === "undefined") {
+    return false;
+  }
+  // Parámetro presente.
+  return new URLSearchParams(window.location.search).has("clase");
 }
 
 // Aplicación: barra de etapa y grupo, y el panel que corresponde.
@@ -1298,6 +1369,8 @@ export function App() {
   const [busy, setBusy] = useState(false);
   // Salud del servidor.
   const [health, setHealth] = useState<HealthResponse | null>(null);
+  // Modo clase: grafo en directo encima del chat.
+  const [classMode, setClassMode] = useState(classModeFromUrl);
   // Callback estable.
   const onBusy = useCallback((value: boolean) => {
     // Actualiza.
@@ -1334,6 +1407,13 @@ export function App() {
     };
   }, []);
 
+  // ¿El chat consulta la tienda? Solo lo dice /api/health; la investigación sigue con el curso.
+  const store = health?.chatCorpus?.id === "zocomar";
+  // Con la tienda, el chat no tiene grupos: siempre «General». La investigación conserva el grupo.
+  const chatAudience: Audience = store && mode !== "research" ? "program" : audience;
+  // Selector de grupo: con la tienda solo se muestra en la investigación.
+  const showGroups = !store || mode === "research";
+
   // Cambia de etapa o grupo (nunca con una respuesta en curso).
   function choose(nextMode: ChatMode, nextAudience: Audience) {
     // Ocupado o sin cambios.
@@ -1355,14 +1435,24 @@ export function App() {
       {/* Cabecera. */}
       <header className="masthead">
         {/* Título. */}
-        <h1>The Power RAG, CRAG e investigación</h1>
-        {/* Descripción. */}
-        <p>
-          Clases 10, 11 y 12. Las cuatro etapas consultan el mismo material del curso: el temario de
-          las sesiones 1 a 20, los ejercicios documentados y el calendario de cada grupo. La
-          investigación añade un plan acotado, documentación técnica externa y un informe con
-          fuentes.
-        </p>
+        <h1>
+          {store ? "Zocomar: RAG, CRAG e investigación" : "The Power RAG, CRAG e investigación"}
+        </h1>
+        {/* Descripción según el corpus del chat. */}
+        {store ? (
+          <p>
+            Sin RAG, RAG básico y CRAG consultan las políticas de Zocomar, una tienda en línea
+            ficticia: devoluciones, envíos, pagos, garantías y vendedores. La investigación sigue
+            usando el material del curso, con su temario, ejercicios y calendario de cada grupo.
+          </p>
+        ) : (
+          <p>
+            Clases 10, 11 y 12. Las cuatro etapas consultan el mismo material del curso: el temario
+            de las sesiones 1 a 20, los ejercicios documentados y el calendario de cada grupo. La
+            investigación añade un plan acotado, documentación técnica externa y un informe con
+            fuentes.
+          </p>
+        )}
       </header>
       {/* Barra de herramientas. */}
       <div className="toolbar">
@@ -1383,23 +1473,50 @@ export function App() {
           {/* Estado de la etapa. */}
           <p className="stage-note">{capabilityNote(health?.capabilities[mode].status)}</p>
         </div>
-        {/* Grupo. */}
-        <div>
-          {/* Selector de grupo. */}
-          <SegmentedChoice
-            legend="Grupo del curso"
-            name="audience"
-            value={audience}
-            options={AUDIENCES}
-            disabled={busy}
-            onChange={(nextAudience) => {
-              // Cambia.
-              choose(mode, nextAudience);
-            }}
-          />
-          {/* Leyenda de los grupos. */}
-          <p className="group-note">L/X, lunes y miércoles. M/J, martes y jueves.</p>
-        </div>
+        {/* Grupo: con la tienda, solo para la investigación. */}
+        {showGroups ? (
+          <div>
+            {/* Selector de grupo. */}
+            <SegmentedChoice
+              legend="Grupo del curso"
+              name="audience"
+              value={audience}
+              options={AUDIENCES}
+              disabled={busy}
+              onChange={(nextAudience) => {
+                // Cambia.
+                choose(mode, nextAudience);
+              }}
+            />
+            {/* Leyenda de los grupos. */}
+            <p className="group-note">L/X, lunes y miércoles. M/J, martes y jueves.</p>
+          </div>
+        ) : null}
+        {/* Modo clase: solo en las etapas con grafo. */}
+        {mode === "rag" || mode === "crag" ? (
+          <div className="class-switch">
+            {/* Interruptor con rebote de transitions.dev. */}
+            <button
+              type="button"
+              role="switch"
+              className="t-toggle"
+              aria-checked={classMode}
+              aria-labelledby="modo-clase-etiqueta"
+              data-on={classMode ? "true" : "false"}
+              onClick={(event) => {
+                // Activa los fotogramas solo tras la primera interacción.
+                event.currentTarget.classList.add("is-init");
+                // Alterna.
+                setClassMode((current) => !current);
+              }}
+            >
+              {/* Pulgar. */}
+              <span className="t-toggle-thumb" />
+            </button>
+            {/* Etiqueta. */}
+            <span id="modo-clase-etiqueta">Modo clase: grafo en directo</span>
+          </div>
+        ) : null}
       </div>
       {/* Investigación durable o chat, con clave para reiniciar al cambiar. */}
       {health?.durableResearch && mode === "research" ? (
@@ -1413,11 +1530,18 @@ export function App() {
       ) : (
         // En el resto de modos: el chat.
         <ChatPane
-          key={conversationKey(mode, audience, epoch)}
+          key={conversationKey(mode, chatAudience, epoch)}
           mode={mode}
-          audience={audience}
+          audience={chatAudience}
+          store={store}
           allowScenario={health?.execution === "demo"}
           onBusy={onBusy}
+          classMode={classMode}
+          models={{
+            embedding: health?.corpus.embedding ?? null,
+            generator: health?.modelConfiguration?.generator ?? null,
+            evaluator: health?.modelConfiguration?.evaluator ?? null,
+          }}
         />
       )}
     </main>

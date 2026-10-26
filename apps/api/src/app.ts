@@ -87,13 +87,9 @@ import { createGenerationModel } from "./model";
 // Tarifa del coste mostrado.
 import { generationPricing } from "./provider-cost";
 // Prompts de cada modo.
-import {
-  RAG_PROMPT,
-  SIN_RAG_PROMPT,
-  ragSystem,
-  COMPLETE_RAG_PROMPT,
-  completeRagSystem,
-} from "./prompts";
+import { chatPrompts, ragSystem, COMPLETE_RAG_PROMPT, completeRagSystem } from "./prompts";
+// Corpus del chat: binding de su índice, si usa grupos y su nombre visible.
+import { CHAT_CORPUS_LABELS, chatVectorBinding, usesCourseGroups } from "./chat-corpus";
 // Vectorize, D1 y perfil del índice.
 import {
   profileReady,
@@ -106,6 +102,8 @@ import {
 } from "./stores";
 // Embeddings con Workers AI.
 import { embedWithWorkersAi, type EmbeddingRunner } from "./vectors";
+// Pasos del RAG básico para el modo clase.
+import { NO_RAG_TIMINGS, ragRetrievalSteps, type RagTimings } from "./rag-steps";
 
 // Dependencias que los tests pueden sustituir.
 export interface AppDeps {
@@ -254,8 +252,24 @@ export function createApp(deps: AppDeps = {}) {
           : context.env.RAG_CONTEXT_MODE === "complete"
             ? "complete"
             : "semantic",
-        retrievalMinScore: assessment.retrieval?.minScore ?? null,
+        retrievalMinScore: assessment.chatRetrieval?.minScore ?? null,
       },
+      // Corpus del chat: en demo, el del curso; en real, el de CHAT_CORPUS con su perfil.
+      ...(assessment.chatCorpus === null
+        ? {}
+        : {
+            chatCorpus: {
+              id: assessment.chatCorpus,
+              label: CHAT_CORPUS_LABELS[assessment.chatCorpus],
+              version: demoCorpus ? bundled : (assessment.chatRetrieval?.corpusVersion ?? null),
+              profileId: demoCorpus
+                ? fixtureProfile().id
+                : (assessment.chatRetrieval?.indexProfile ?? null),
+              minScore: demoCorpus ? null : (assessment.chatRetrieval?.minScore ?? null),
+              groups: usesCourseGroups(assessment.chatCorpus),
+              remote: "not-verified" as const,
+            },
+          }),
       media: mediaReadiness(context.env),
     };
     // En real con D1, comprueba el perfil del índice.
@@ -273,6 +287,29 @@ export function createApp(deps: AppDeps = {}) {
           body.corpus.coverage.remote = "index-verified";
       } catch {
         /* Declarar el binding no demuestra conexión: sin lectura correcta no se marca verificado. */
+      }
+    }
+    // Perfil del corpus del chat: el mismo del curso o el de la tienda, leído también en D1.
+    if (!demoCorpus && body.chatCorpus && assessment.chatRetrieval && context.env.DB) {
+      // Con el curso coincide con la lectura anterior.
+      if (assessment.chatCorpus === "course") {
+        // Copia el resultado.
+        body.chatCorpus.remote = body.corpus.coverage.remote;
+      } else {
+        // Fallo de lectura: no se marca como verificado.
+        try {
+          // Perfil de la tienda.
+          const row = await readIndexProfile(
+            context.env.DB as SqlDatabase,
+            assessment.chatRetrieval.indexProfile,
+            assessment.chatRetrieval.corpusVersion,
+          );
+          // Si coincide, índice de la tienda verificado.
+          if (profileReady(row, assessment.chatRetrieval).ok)
+            body.chatCorpus.remote = "index-verified";
+        } catch {
+          /* Sin lectura correcta no se marca verificado. */
+        }
       }
     }
     // Respuesta validada con el esquema y sin caché.
@@ -330,6 +367,12 @@ export function createApp(deps: AppDeps = {}) {
     }
     // Capacidades.
     const assessment = assessWorker(context.env);
+    // Corpus del chat (un CHAT_CORPUS inválido ya bloquea las etapas en el diagnóstico).
+    const chatCorpus = assessment.chatCorpus ?? "course";
+    // Instrucciones de cada etapa para ese corpus.
+    const prompts = chatPrompts(chatCorpus);
+    // ¿Tiene grupos y calendario? La tienda no pide grupo ni usa el atajo de horario.
+    const groups = usesCourseGroups(chatCorpus);
     // APP_MODE inválido.
     if (assessment.execution === "misconfigured") {
       // 409.
@@ -488,10 +531,10 @@ export function createApp(deps: AppDeps = {}) {
         return streamProviderCourseResponse({
           // Modelo, instrucciones sin RAG e historial completo.
           model,
-          system: SIN_RAG_PROMPT.text,
+          system: prompts.sinRag.text,
           messages: history,
           // Metadatos (proveedor, modelo, prompt) y tarifas para el coste mostrado.
-          metadata: metadata("provider", settings.modelId, SIN_RAG_PROMPT.id, "complete"),
+          metadata: metadata("provider", settings.modelId, prompts.sinRag.id, "complete"),
           costPricing: generationPricing(settings),
           timeoutMs: settings.timeoutMs,
           // Sin RAG no hay fuentes, así que no se validan citas.
@@ -528,6 +571,8 @@ export function createApp(deps: AppDeps = {}) {
     const useFixture = assessment.execution === "demo" || deps.chunks !== undefined;
     // Resultado de la recuperación.
     let outcome: RetrievalOutcome;
+    // Duraciones medidas de la búsqueda real para el modo clase; la demo no mide.
+    let timings: RagTimings = NO_RAG_TIMINGS;
     // Demo: índice incluido en el código.
     if (useFixture && assessment.execution === "demo") {
       // Recuperación básica con el embedding de prueba.
@@ -547,7 +592,7 @@ export function createApp(deps: AppDeps = {}) {
       });
     } else if (deps.chunks !== undefined) {
       // Fragmentos inyectados por un test.
-      const retrieval = assessment.retrieval;
+      const retrieval = assessment.chatRetrieval;
       // Ajustes de recuperación.
       if (retrieval === null) {
         // Sin ajustes: 409.
@@ -560,8 +605,8 @@ export function createApp(deps: AppDeps = {}) {
           409,
         );
       }
-      // Calendario sin grupo: aclaración.
-      if (isScheduleQuestion(question) && parsed.data.audience === "program") {
+      // Calendario sin grupo: aclaración (solo en un corpus con grupos).
+      if (groups && isScheduleQuestion(question) && parsed.data.audience === "program") {
         // Resultado clarify.
         outcome = {
           // Aclarar: sin evidencia y sin llamar al modelo.
@@ -606,11 +651,13 @@ export function createApp(deps: AppDeps = {}) {
           embeddingLabel: retrieval.embeddingModel,
           corpusVersion: retrieval.corpusVersion,
           scoreMeaning: "Coseno del índice inyectado en la prueba. No es Vectorize.",
+          // La tienda no tiene grupos ni calendario.
+          groups,
         });
       }
     } else {
-      // Ajustes de recuperación.
-      const retrieval = assessment.retrieval;
+      // Ajustes de recuperación del chat.
+      const retrieval = assessment.chatRetrieval;
       // Sin ajustes.
       if (retrieval === null) {
         // 409.
@@ -625,8 +672,8 @@ export function createApp(deps: AppDeps = {}) {
       }
       // Workers AI.
       const runner = context.env.AI as EmbeddingRunner | undefined;
-      // Vectorize.
-      const index = context.env.VECTORIZE as VectorIndex | undefined;
+      // Vectorize del corpus del chat.
+      const index = context.env[chatVectorBinding(chatCorpus)] as VectorIndex | undefined;
       // D1.
       const database = context.env.DB as SqlDatabase | undefined;
       // Falta algún binding.
@@ -641,8 +688,8 @@ export function createApp(deps: AppDeps = {}) {
           409,
         );
       }
-      // Calendario sin grupo: aclaración.
-      if (isScheduleQuestion(question) && parsed.data.audience === "program") {
+      // Calendario sin grupo: aclaración (solo en un corpus con grupos).
+      if (groups && isScheduleQuestion(question) && parsed.data.audience === "program") {
         // Resultado clarify.
         outcome = {
           // Aclarar sin buscar en Vectorize: falta el grupo para una pregunta de horario.
@@ -694,7 +741,7 @@ export function createApp(deps: AppDeps = {}) {
             );
             // Resultado con el contexto completo.
             outcome = completeContextOutcome(question, retrieval.corpusVersion, contextChunks);
-          } else if (isWeeklyScheduleQuestion(question)) {
+          } else if (groups && isWeeklyScheduleQuestion(question)) {
             // Pregunta de calendario semanal: ficha resumen del grupo.
             const id = calendarOverviewId(parsed.data.audience, retrieval.corpusVersion);
             // Ficha leída de D1.
@@ -708,6 +755,8 @@ export function createApp(deps: AppDeps = {}) {
               chunk: record ? { ...record, vector: [] } : null,
             });
           } else {
+            // Inicio del embedding, para el modo clase.
+            const embedStarted = Date.now();
             // RAG con Vectorize: embedding de la pregunta.
             const [vector] = await embedWithWorkersAi(
               runner,
@@ -721,6 +770,8 @@ export function createApp(deps: AppDeps = {}) {
               // 502.
               return jsonError({ error: "provider", message: PUBLIC_PROVIDER_MESSAGE }, 502);
             }
+            // Inicio de la búsqueda (Vectorize y texto en D1), para el modo clase.
+            const searchStarted = Date.now();
             // Vecinos en Vectorize.
             const hits = await queryVectorize(
               index,
@@ -750,6 +801,11 @@ export function createApp(deps: AppDeps = {}) {
                 score: hit.score,
               });
             }
+            // Duraciones medidas del modo clase.
+            timings = {
+              embedMs: searchStarted - embedStarted,
+              searchMs: Date.now() - searchStarted,
+            };
             // Decide con el umbral mínimo.
             outcome = gateScoredChunks({
               question,
@@ -786,6 +842,15 @@ export function createApp(deps: AppDeps = {}) {
 
     // Citas de la evidencia.
     const sources: Citation[] = citationsFor(outcome.evidence);
+    // Pasos de la búsqueda para el modo clase, con el umbral que aplicó esta ruta.
+    const ragRetrieval = ragRetrievalSteps({
+      trace: outcome.trace,
+      threshold:
+        assessment.execution === "demo"
+          ? FIXTURE_MIN_SCORE
+          : (assessment.chatRetrieval?.minScore ?? null),
+      timings,
+    });
     // Sin respuesta (aclarar o rechazar).
     if (outcome.decision !== "answer") {
       // Texto fijo.
@@ -808,6 +873,8 @@ export function createApp(deps: AppDeps = {}) {
         signal,
         // El texto es nuestro, no del modelo: no se validan citas.
         validateCitations: false,
+        // Pasos del modo clase: la búsqueda y el rechazo o la aclaración.
+        ragSteps: { retrieval: ragRetrieval, query: question, model: null },
       });
     }
 
@@ -828,6 +895,8 @@ export function createApp(deps: AppDeps = {}) {
         sources,
         text: fixtureAnswer(outcome.evidence),
         signal,
+        // Pasos del modo clase con la plantilla como generador.
+        ragSteps: { retrieval: ragRetrieval, query: question, model: null },
       });
     }
 
@@ -852,14 +921,14 @@ export function createApp(deps: AppDeps = {}) {
         system:
           context.env.RAG_CONTEXT_MODE === "complete"
             ? completeRagSystem(outcome.evidence, parsed.data.audience)
-            : ragSystem(outcome.evidence),
+            : ragSystem(outcome.evidence, chatCorpus),
         // Historial de la conversación.
         messages: history,
         // Metadatos con el id del prompt usado.
         metadata: metadata(
           "provider",
           settings.modelId,
-          context.env.RAG_CONTEXT_MODE === "complete" ? COMPLETE_RAG_PROMPT.id : RAG_PROMPT.id,
+          context.env.RAG_CONTEXT_MODE === "complete" ? COMPLETE_RAG_PROMPT.id : prompts.rag.id,
           "complete",
         ),
         // Traza y fuentes de la recuperación.
@@ -874,6 +943,8 @@ export function createApp(deps: AppDeps = {}) {
         // Tarifas para el coste estimado.
         costPricing: generationPricing(settings),
         timeoutMs: settings.timeoutMs,
+        // Pasos del modo clase con el generador configurado.
+        ragSteps: { retrieval: ragRetrieval, query: question, model: settings.modelId },
       });
     } catch {
       // 502.

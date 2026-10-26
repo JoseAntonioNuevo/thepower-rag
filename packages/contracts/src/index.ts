@@ -19,6 +19,7 @@ export {
   cohortSchema,
   demoEventSchema,
   evidenceDecisionSchema,
+  ragStepSchema,
   runCostSchema,
   runMetadataSchema,
   runUsageSchema,
@@ -32,6 +33,7 @@ export type {
   CohortId,
   DemoEvent,
   EvidenceDecision,
+  RagStep,
   RunMetadata,
   TraceEvent,
 } from "./domain";
@@ -40,9 +42,9 @@ export { errorResponseSchema } from "./errors";
 // Tipo de una respuesta de error.
 export type { ErrorResponse } from "./errors";
 // Esquema de /api/health.
-export { healthResponseSchema } from "./health";
+export { chatCorpusIdSchema, healthResponseSchema } from "./health";
 // Tipo de la respuesta de salud.
-export type { HealthResponse } from "./health";
+export type { ChatCorpusId, HealthResponse } from "./health";
 // Límites, nombres de variables y elección de proveedor y razonamiento.
 export {
   // Variables de CRAG, proveedor por defecto y variables de generación.

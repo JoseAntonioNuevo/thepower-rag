@@ -147,7 +147,7 @@ En local (`bun run dev`, `http://localhost:5173/`, etapa **CRAG**). Los guiones 
 5. **Calendario sin cohorte** (`clarify-cohort`): `clarify` con 0 búsquedas.
 6. **Fallo controlado del evaluador** (`evaluator-error`): `error`, sin reintentos.
 
-En el panel **Traza de la clase** señala los pasos `retrieve`, `rank` y `assess`, la consulta original frente a la reformulada y los conservados y descartados. Los guiones enseñan el recorrido; **no miden calidad**.
+En el panel **Traza de la clase** señala los pasos `retrieve`, `rank` y `assess`, la consulta original frente a la reformulada y los conservados y descartados. Con **Modo clase** activado (interruptor de la barra o `?clase` en la URL) el mismo recorrido se ve como grafo: el nodo activo en azul, lo recorrido en verde y un inspector con los candidatos, la nota del juez y las lagunas. **Repetir paso a paso** vuelve a recorrer los pasos ya recibidos sin llamar a nada. Los guiones enseñan el recorrido; **no miden calidad**.
 
 ### Parte 2 · Zocomar: RAG frente a CRAG con modelos reales (unos 35 min)
 
@@ -187,6 +187,19 @@ Casos recomendados, con lo que ocurrió en el ensayo real (`docs/evidence/zocoma
 En cada caso señala: vecinos con su **similitud**, **relevancia del juez**, ruta y las dos respuestas. Dilo claramente: **en acierto suelen empatar**; la diferencia está en el margen y en lo que llega al generador.
 
 Si falla la red o el presupuesto, abre los recibos guardados (`docs/evidence/zocomar-2026-10-24/demo-*.json`) o ejecuta el respaldo `bun run lab:demo`, y di qué estás proyectando.
+
+### Parte 3 · La web en modo clase: el caso de los auriculares
+
+En el laboratorio RAG y CRAG empatan porque Gemini recupera bien. En la web, con BGE-M3 y el umbral 0,661926, la medición del 26/10 (`docs/evidence/zocomar-crag-casos-2026-10-26.md`) encontró un caso claro. Abre la web con `?clase`, elige **RAG básico** y pregunta:
+
+> Compré unos auriculares de botón hace 12 días, los he probado y no me convencen. Tengo 30 días para devolverlos, ¿verdad?
+
+- **RAG básico:** el grafo pasa por Embedding, Vectorize y Umbral y termina en **No consta**. En el inspector, los cuatro vecinos quedan por debajo del corte (el mejor, 0,613) y ninguno es la exclusión por higiene.
+- **CRAG**, con la misma pregunta: el inspector de **Buscar** muestra diez candidatos, con la exclusión por higiene (`03-electronica-y-garantia:01`) en 5.º lugar. El **Juez** le da la nota alta y **Decidir** responde con ella.
+
+Remata con la idea de que bajar el umbral no lo arregla. Con un corte en 0,60 RAG respondería con la regla general (30 días) o con la de electrónica desprecintada (14 días), las dos falsas para auriculares intraauditivos. Lo que salva a CRAG es leer más candidatos y juzgarlos con el texto delante.
+
+El modo clase está publicado desde el 26/10 (versión `cfbccfcf`). Las respuestas de CRAG para este caso todavía no se han ejecutado con modelos: ensáyalo antes de la clase. Turnstile pide la casilla a una persona; en el navegador automatizado falla.
 
 ---
 

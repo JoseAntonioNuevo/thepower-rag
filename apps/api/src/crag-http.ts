@@ -36,7 +36,9 @@ import { createEvaluatorModel, createGenerationModel } from "./model";
 // Tarifa del coste mostrado.
 import { generationPricing } from "./provider-cost";
 // Instrucciones de CRAG.
-import { CRAG_PROMPT } from "./prompts";
+import { chatPrompts } from "./prompts";
+// Corpus del chat: binding de su índice y si usa grupos.
+import { chatVectorBinding, usesCourseGroups } from "./chat-corpus";
 // Perfil de índice y tipos de los bindings.
 import {
   profileReady,
@@ -108,8 +110,13 @@ export async function cragHttpResponse(input: {
   // Reserva del presupuesto.
   allowance?: AllowanceLedger;
 }): Promise<Response | { status: 409; missing: string[]; message: string }> {
-  // Pregunta de calendario sin grupo: aclaración.
-  const clarify = input.request.audience === "program" && isScheduleQuestion(input.question);
+  // Corpus del chat; la demo y un CHAT_CORPUS inválido conservan el curso para la aclaración.
+  const corpus = input.assessment.chatCorpus ?? "course";
+  // ¿Tiene grupos y calendario? La tienda no pide grupo.
+  const groups = usesCourseGroups(corpus);
+  // Pregunta de calendario sin grupo: aclaración (solo en el curso).
+  const clarify =
+    groups && input.request.audience === "program" && isScheduleQuestion(input.question);
   // En real (salvo aclaración) hay que comprobar la configuración.
   if (input.assessment.execution === "real" && !clarify) {
     // Estado de CRAG.
@@ -123,12 +130,12 @@ export async function cragHttpResponse(input: {
         message: "CRAG real no está configurado. No se usa la demostración ni RAG básico.",
       };
     }
-    // Ajustes del RAG.
-    const retrieval = input.assessment.retrieval;
+    // Ajustes del RAG del chat (curso o tienda).
+    const retrieval = input.assessment.chatRetrieval;
     // Binding de embeddings.
     const runner = input.env.AI as EmbeddingRunner | undefined;
-    // Binding de Vectorize.
-    const index = input.env.VECTORIZE as VectorIndex | undefined;
+    // Binding de Vectorize del corpus del chat.
+    const index = input.env[chatVectorBinding(corpus)] as VectorIndex | undefined;
     // Binding de D1.
     const database = input.env.DB as SqlDatabase | undefined;
     // Falta algo.
@@ -171,8 +178,8 @@ export async function cragHttpResponse(input: {
   const demo = input.assessment.execution !== "real";
   // Guion de la demo.
   const scenarioId = demo ? resolveDemoScenario(input.request.demoScenario, input.question) : null;
-  // Ajustes del RAG.
-  const retrieval = input.assessment.retrieval;
+  // Ajustes del RAG del chat (curso o tienda).
+  const retrieval = input.assessment.chatRetrieval;
   // Alcance de la ejecución.
   const scope = {
     runId: crypto.randomUUID(),
@@ -196,7 +203,9 @@ export async function cragHttpResponse(input: {
             signal: input.signal,
             scope,
             embedder: input.env.AI as EmbeddingRunner,
-            index: input.env.VECTORIZE as VectorIndex,
+            index: input.env[chatVectorBinding(corpus)] as VectorIndex,
+            // Prompts del evaluador, la reformulación y la respuesta según el corpus.
+            corpus,
             database: input.env.DB as SqlDatabase,
             // Mismo proveedor y clave para los dos papeles; solo cambia el modelo.
             evaluator: createEvaluatorModel(
@@ -233,7 +242,7 @@ export async function cragHttpResponse(input: {
     runId: scope.runId,
     origin: demo ? "offline-fixture" : "pipeline",
     modelId: demo ? null : (input.assessment.generation?.modelId ?? null),
-    promptId: CRAG_PROMPT.id,
+    promptId: chatPrompts(corpus).crag.id,
     completion: "streaming",
     usage: null,
     cost: null,
@@ -254,6 +263,8 @@ export async function cragHttpResponse(input: {
         scenarioId,
         // La demo mantiene su contrato previo. En real el diagnóstico ya validó el plazo.
         executionBudgetMs: demo ? undefined : (cragExecutionBudgetMs(input.env) ?? undefined),
+        // La tienda no tiene grupos: no se pide aclaración de calendario.
+        groups,
         // Publica el paso CRAG para que la interfaz pueda mostrar la traza mientras se ejecuta.
         onStep: (step: CragStep) => {
           // Paso transitorio.

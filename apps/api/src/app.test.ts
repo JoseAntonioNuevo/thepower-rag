@@ -2,7 +2,12 @@
 // Pruebas de la app HTTP sin red: validación, bloqueos de configuración, demo frente a real, RAG con
 // calendarios por grupo, inyección en documentos, salud, embeddings y el recorrido CRAG con guiones.
 // Esquemas de error y de salud.
-import { errorResponseSchema, healthResponseSchema } from "@thepower-rag/contracts";
+import {
+  errorResponseSchema,
+  healthResponseSchema,
+  ragStepSchema,
+  type RagStep,
+} from "@thepower-rag/contracts";
 // Embedding de prueba y tipo de fragmento.
 import { fixtureEmbed, type IndexedChunk } from "@thepower-rag/core";
 // Stream simulado y tipo de modelo del AI SDK.
@@ -58,6 +63,20 @@ function payloads(body: string): unknown[] {
     .map((line) => line.trim())
     .filter((line) => line.startsWith("data: ") && line !== "data: [DONE]")
     .map((line) => JSON.parse(line.slice("data: ".length)) as unknown);
+}
+
+// Pasos del modo clase del RAG básico que llegan por el stream.
+function ragSteps(events: unknown[]): RagStep[] {
+  // Solo las partes data-rag-step, validadas con su esquema.
+  return events.flatMap((event) =>
+    typeof event === "object" &&
+    event !== null &&
+    "type" in event &&
+    event.type === "data-rag-step" &&
+    "data" in event
+      ? [ragStepSchema.parse(event.data)]
+      : [],
+  );
 }
 
 // Texto completo uniendo los text-delta.
@@ -296,6 +315,44 @@ describe("fase 2", () => {
     expect(textOf(payloads(await missing.text()))).toContain("No hay contexto utilizable");
   });
 
+  // Modo clase: la demo emite el recorrido del grafo RAG sin llamar a un modelo.
+  it("emite los pasos del modo clase al responder y al rechazar", async () => {
+    // Pregunta del curso.
+    const answer = await postChat({
+      mode: "rag",
+      audience: "program",
+      messages: [userMessage("¿Cómo modela LangGraph un agente con estado y nodos?")],
+    });
+    // Pasos de la respuesta.
+    const answered = ragSteps(payloads(await answer.text()));
+    // Recorrido completo, con la plantilla como generador.
+    expect(answered.map((step) => step.kind)).toEqual([
+      "embed",
+      "search",
+      "threshold",
+      "generate",
+      "answer",
+    ]);
+    // El umbral marca qué candidatos pasan al generador.
+    const threshold = answered.find((step) => step.kind === "threshold");
+    expect(threshold?.candidates.some((item) => item.selected)).toBe(true);
+    // La plantilla no es un modelo.
+    expect(answered.find((step) => step.kind === "generate")?.model).toBeNull();
+
+    // Pregunta sin respuesta en el corpus.
+    const missing = await postChat({
+      mode: "rag",
+      audience: "program",
+      messages: [userMessage("¿Qué beca interna del año 1991 cubre este programa?")],
+    });
+    // Pasos del rechazo.
+    const refused = ragSteps(payloads(await missing.text()));
+    // Termina en rechazo sin paso de generación.
+    expect(refused.map((step) => step.kind)).toEqual(["embed", "search", "threshold", "refuse"]);
+    // Ningún candidato pasa el umbral.
+    expect(refused[2]?.candidates.every((item) => !item.selected)).toBe(true);
+  });
+
   // Calendario: pide grupo y no mezcla grupos.
   it("pide la cohorte y no mezcla calendarios", async () => {
     // Sin grupo.
@@ -412,6 +469,19 @@ describe("fase 2", () => {
     expect(textOf(payloads(raw))).toContain("items[0]");
     // Cita válida conservada.
     expect(raw).toContain("version-prueba:inyeccion:00");
+    // Modo clase: la generación lleva el modelo y la respuesta solo la cita validada.
+    const steps = ragSteps(payloads(raw));
+    expect(steps.map((step) => step.kind)).toEqual([
+      "embed",
+      "search",
+      "threshold",
+      "generate",
+      "answer",
+    ]);
+    expect(steps.find((step) => step.kind === "generate")?.model).toBe(generationEnv.MODEL_ID);
+    expect(steps.at(-1)?.candidates.map((item) => item.chunkId)).toEqual([
+      "version-prueba:inyeccion:00",
+    ]);
   });
 
   // Crear modelos no llama a la red.

@@ -35,14 +35,16 @@ export function withCourseQualityProfile(previous: unknown): Record<string, unkn
     // Actualiza los roles generativos, sus tarifas y plazos sobre las variables existentes.
     Object.assign(vars, {
       LLM_PROVIDER: "anthropic",
-      MODEL_ID: COURSE_QUALITY_PROFILE.modelId,
-      EVALUATOR_MODEL_ID: COURSE_QUALITY_PROFILE.modelId,
+      MODEL_ID: COURSE_QUALITY_PROFILE.generator.modelId,
+      EVALUATOR_MODEL_ID: COURSE_QUALITY_PROFILE.evaluator.modelId,
       CRAG_EXECUTION_BUDGET_MS: String(COURSE_QUALITY_PROFILE.cragBudgetMs),
       MODEL_TIMEOUT_MS: "30000",
-      MODEL_INPUT_USD_PER_MILLION: String(COURSE_QUALITY_PROFILE.inputUsdPerMillion),
-      MODEL_OUTPUT_USD_PER_MILLION: String(COURSE_QUALITY_PROFILE.outputUsdPerMillion),
-      EVALUATOR_INPUT_USD_PER_MILLION: String(COURSE_QUALITY_PROFILE.inputUsdPerMillion),
-      EVALUATOR_OUTPUT_USD_PER_MILLION: String(COURSE_QUALITY_PROFILE.outputUsdPerMillion),
+      MODEL_INPUT_USD_PER_MILLION: String(COURSE_QUALITY_PROFILE.generator.inputUsdPerMillion),
+      MODEL_OUTPUT_USD_PER_MILLION: String(COURSE_QUALITY_PROFILE.generator.outputUsdPerMillion),
+      EVALUATOR_INPUT_USD_PER_MILLION: String(COURSE_QUALITY_PROFILE.evaluator.inputUsdPerMillion),
+      EVALUATOR_OUTPUT_USD_PER_MILLION: String(
+        COURSE_QUALITY_PROFILE.evaluator.outputUsdPerMillion,
+      ),
     });
   }
   // Devuelve la copia preparada; esta función no escribe archivos ni despliega el Worker.

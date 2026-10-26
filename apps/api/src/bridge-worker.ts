@@ -2,8 +2,9 @@
 // Worker puente que usan los scripts de ingesta y verificación: solo escucha en 127.0.0.1 y exige una
 // ficha compartida. Embebe, describe el índice, ingesta el corpus congelado y elige el perfil activo,
 // con bindings reales (BRIDGE_REMOTE=true) o con emuladores locales. Registra qué adaptador se usó.
-// Corpus preparado y congelado que se empaqueta con el Worker.
+// Corpus preparados y congelados que se empaquetan con el Worker: el curso y la tienda Zocomar.
 import rawCorpus from "../../../corpus/prepared/corpus.json";
+import rawStoreCorpus from "../../../corpus/prepared/zocomar.json";
 // Núcleo: emulador local de embeddings, manifiesto, selección de perfil, nombres y sesión de gasto.
 import {
   // Embedding emulado local y su dimensión.
@@ -42,6 +43,9 @@ import { BGE_M3_MODEL, type EmbeddingRunner } from "./vectors";
 const FROZEN_PREPARATION = "c3a59a406888b";
 // Versión de contenido del corpus congelado.
 const FROZEN_CONTENT = "cc037ef0bb1f7";
+// Preparación y contenido congelados de la tienda Zocomar (chat con CHAT_CORPUS=zocomar).
+const FROZEN_STORE_PREPARATION = "cb7dabfb11854";
+const FROZEN_STORE_CONTENT = "cbb8eb3cb881c";
 
 // Parte de D1 que usa el puente.
 interface SqlDb {
@@ -212,12 +216,40 @@ function frozenCorpus(): PreparedCorpus {
   return body;
 }
 
-// Une los textos enviados al corpus congelado comprobando cada hash.
+// Corpus de la tienda empaquetado, comprobando que es el congelado.
+function frozenStoreCorpus(): PreparedCorpus {
+  // Corpus.
+  const body = rawStoreCorpus as PreparedCorpus;
+  // Otra preparación o contenido.
+  if (
+    body.preparationId !== FROZEN_STORE_PREPARATION ||
+    body.contentVersion !== FROZEN_STORE_CONTENT
+  ) {
+    // Error.
+    throw new Error("El corpus de la tienda empaquetado no es el congelado.");
+  }
+  // Corpus.
+  return body;
+}
+
+// Une los textos enviados al corpus congelado comprobando cada hash. El corpus se elige porque los
+// ids enviados son exactamente los suyos: el curso o la tienda, nunca una mezcla.
 function corpusWithBodies(
   documents: readonly { id?: unknown; body?: unknown }[],
 ): PreparedCorpus | string {
-  // Corpus base.
-  const base = frozenCorpus();
+  // Ids enviados.
+  const sent = new Set(documents.map((document) => document.id));
+  // Corpus congelado cuyos ids coinciden con los enviados.
+  const base = [frozenCorpus(), frozenStoreCorpus()].find(
+    (corpus) =>
+      corpus.documents.length === sent.size &&
+      corpus.documents.every((document) => sent.has(document.id)),
+  );
+  // Ninguno coincide.
+  if (base === undefined) {
+    // Error.
+    return "La ingesta no cubre los documentos congelados.";
+  }
   // Texto por id.
   const byId = new Map<string, string>();
   // Cada documento.
@@ -1083,9 +1115,14 @@ export async function handleBridgeRequest(request: Request, env: BridgeEnv): Pro
     )
       // 400.
       return json({ ok: false, reason: "Consulta inválida" }, 400);
+    // Versión pedida: solo una de las dos congeladas; sin valor, la del curso.
+    const requestedVersion = (body as { corpusVersion?: string }).corpusVersion;
+    // Versión del filtro.
+    const corpusVersion =
+      requestedVersion === FROZEN_STORE_PREPARATION ? FROZEN_STORE_PREPARATION : FROZEN_PREPARATION;
     // Filtro por corpus, perfil y audiencia.
     const filter = {
-      corpusVersion: FROZEN_PREPARATION,
+      corpusVersion,
       profileId: (body as { profileId?: string }).profileId ?? "",
       audience: { $in: audience === "program" ? ["program"] : ["program", audience ?? ""] },
     };

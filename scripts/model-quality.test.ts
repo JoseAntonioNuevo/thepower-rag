@@ -24,23 +24,23 @@ const config = JSON.parse(
 
 // Agrupa las comprobaciones de perfil de calidad de modelos.
 describe("perfil de calidad de modelos", () => {
-  // Verifica este escenario: mantiene Sonnet y sus tarifas en ambos perfiles sin tocar investigación o presupuestos.
-  it("mantiene Sonnet y sus tarifas en ambos perfiles sin tocar investigación o presupuestos", () => {
+  // Verifica este escenario: Haiku genera y Sonnet evalúa, con sus tarifas, sin tocar investigación o presupuestos.
+  it("Haiku genera y Sonnet evalúa con sus tarifas sin tocar investigación o presupuestos", () => {
     for (const name of ["production", "local"]) {
       // Lee las variables del entorno actual para contrastar ambos destinos con el mismo perfil.
       const vars = config.env[name]!.vars;
       // Contrasta el valor observado con el resultado exacto que define este caso.
-      expect(vars.MODEL_ID).toBe(COURSE_QUALITY_PROFILE.modelId);
+      expect(vars.MODEL_ID).toBe(COURSE_QUALITY_PROFILE.generator.modelId);
       // Contrasta el valor observado con el resultado exacto que define este caso.
-      expect(vars.EVALUATOR_MODEL_ID).toBe(vars.MODEL_ID);
+      expect(vars.EVALUATOR_MODEL_ID).toBe(COURSE_QUALITY_PROFILE.evaluator.modelId);
+      // Tarifas de Haiku para el generador.
+      expect(Number(vars.MODEL_INPUT_USD_PER_MILLION)).toBe(0.1);
       // Contrasta el valor observado con el resultado exacto que define este caso.
-      expect(Number(vars.MODEL_INPUT_USD_PER_MILLION)).toBe(2);
+      expect(Number(vars.MODEL_OUTPUT_USD_PER_MILLION)).toBe(0.5);
+      // Tarifas de Sonnet para el evaluador.
+      expect(Number(vars.EVALUATOR_INPUT_USD_PER_MILLION)).toBe(2);
       // Contrasta el valor observado con el resultado exacto que define este caso.
-      expect(Number(vars.MODEL_OUTPUT_USD_PER_MILLION)).toBe(10);
-      // Contrasta el valor observado con el resultado exacto que define este caso.
-      expect(vars.EVALUATOR_INPUT_USD_PER_MILLION).toBe(vars.MODEL_INPUT_USD_PER_MILLION);
-      // Contrasta el valor observado con el resultado exacto que define este caso.
-      expect(vars.EVALUATOR_OUTPUT_USD_PER_MILLION).toBe(vars.MODEL_OUTPUT_USD_PER_MILLION);
+      expect(Number(vars.EVALUATOR_OUTPUT_USD_PER_MILLION)).toBe(10);
       // Contrasta el valor observado con el resultado exacto que define este caso.
       expect(cragExecutionBudgetMs(vars)).toBe(60_000);
       // Contrasta el valor observado con el resultado exacto que define este caso.
@@ -77,8 +77,8 @@ describe("perfil de calidad de modelos", () => {
     ).toBeNull();
   });
 
-  // Verifica este escenario: reserva la tarifa Sonnet completa y no reinicia ni amplía el límite de la cuenta.
-  it("reserva la tarifa Sonnet completa y no reinicia ni amplía el límite de la cuenta", async () => {
+  // Verifica este escenario: CRAG reserva con la tarifa mayor (Sonnet), RAG con la de Haiku, sin ampliar el límite.
+  it("CRAG reserva con la tarifa Sonnet, RAG con la de Haiku, y no amplía el límite", async () => {
     // Captura la cantidad que la reserva intenta descontar en el doble de D1.
     let quoted = 0;
     // Inyecta las variables versionadas y un puerto SQL simulado para inspeccionar la reserva.
@@ -107,6 +107,12 @@ describe("perfil de calidad de modelos", () => {
     expect(ledger?.snapshot().prices.generativeUsdPerMillionInput).toBe(2);
     // Contrasta el valor observado con el resultado exacto que define este caso.
     expect(ledger?.snapshot().prices.generativeUsdPerMillionOutput).toBe(10);
+    // RAG básico solo llama al generador: reserva con la tarifa de Haiku.
+    const ragLedger = await reservePublicTurn(env, "rag");
+    // Contrasta el cálculo numérico con el valor esperado admitiendo la precisión indicada.
+    expect(quoted).toBeCloseTo(0.0075295);
+    // Contrasta el valor observado con el resultado exacto que define este caso.
+    expect(ragLedger?.snapshot().prices.generativeUsdPerMillionInput).toBe(0.1);
     // Contrasta el valor observado con el resultado exacto que define este caso.
     expect(env.PUBLIC_BUDGET_USD).toBe("4.3");
   });
@@ -131,7 +137,7 @@ describe("perfil de calidad de modelos", () => {
       // Contrasta los campos relevantes sin exigir igualdad de los metadatos adicionales.
       expect(body.modelConfiguration).toMatchObject({
         provider: "anthropic",
-        generator: "claude-sonnet-5-5",
+        generator: "claude-haiku-5-5",
         evaluator: "claude-sonnet-5-5",
         research: "claude-haiku-5-5",
         cragExecutionBudgetMs: 60_000,
@@ -142,7 +148,7 @@ describe("perfil de calidad de modelos", () => {
       // El comparador debe rechazar una web anterior aunque esté sana y el índice exista.
       const target = {
         provider: "anthropic",
-        model: "claude-sonnet-5-5",
+        model: "claude-haiku-5-5",
         evaluator: "claude-sonnet-5-5",
         corpus: "c-test",
         profile: "p-test",
@@ -180,7 +186,7 @@ describe("perfil de calidad de modelos", () => {
         "La web no demuestra",
       );
       // Cambia solo el generador para demostrar que un despliegue anterior se rechaza.
-      ready.modelConfiguration!.generator = "claude-haiku-5-5";
+      ready.modelConfiguration!.generator = "claude-sonnet-5-5";
       // Comprueba que la entrada inválida produzca el error previsto antes de continuar.
       expect(() => assertModelComparisonTarget(target, ready)).toThrow("La web no demuestra");
       // Elimina después la identidad de modelos para demostrar que una lectura incompleta también bloquea.

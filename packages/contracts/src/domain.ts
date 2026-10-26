@@ -164,6 +164,36 @@ export const traceEventSchema = z.object({
 // Tipo de una traza.
 export type TraceEvent = z.infer<typeof traceEventSchema>;
 
+// Paso del RAG básico para el modo clase: se emite al abrir la respuesta (búsqueda medida en el
+// servidor) y durante la generación, para recorrer el grafo en directo y repetirlo después.
+export const ragStepSchema = z.object({
+  // Nodo del grafo: embedding, búsqueda, umbral, generación, respuesta, rechazo o aclaración.
+  kind: z.enum(["embed", "search", "threshold", "generate", "answer", "refuse", "clarify"]),
+  // Texto de estado legible.
+  status: z.string().min(1).max(240),
+  // Pregunta o consulta del paso.
+  query: z.string().max(500),
+  // Modelo que actúa en el paso (embeddings o generador), o null si decide el código.
+  model: z.string().max(128).nullable(),
+  // Duración medida en el servidor, o null si no se midió.
+  durationMs: z.number().int().min(0).nullable(),
+  // Umbral de similitud aplicado, o null si el paso no lo usa.
+  threshold: z.number().finite().nullable(),
+  // Candidatos con su puntuación y si pasan al generador.
+  candidates: z
+    .array(
+      z.object({
+        chunkId: z.string().min(1).max(128),
+        score: z.number().finite().nullable(),
+        selected: z.boolean(),
+      }),
+    )
+    .max(10),
+});
+
+// Tipo de un paso del RAG básico.
+export type RagStep = z.infer<typeof ragStepSchema>;
+
 // Estado de cada capacidad en /api/health.
 export const capabilityStatusSchema = z.enum([
   "offline-demo",

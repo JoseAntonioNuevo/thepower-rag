@@ -1,6 +1,8 @@
 // GUÍA DE LECTURA · scripts/calibrate-live.ts
-// Calibra el umbral de similitud del RAG real con 8 preguntas de desarrollo (5 con respuesta y 3 sin ella)
-// contra Vectorize remoto. Solo con --execute; nunca usa el conjunto reservado de comparación.
+// Calibra el umbral de similitud del RAG real contra Vectorize remoto. Con el curso usa 8 preguntas de
+// desarrollo (5 con respuesta y 3 sin ella); con --corpus=zocomar, las 6 de validación de la tienda
+// (lab/src/evaluation.ts) y escribe en activation-receipts/zocomar. Solo con --execute; nunca usa el
+// test reservado de comparación.
 // Lectura de archivos.
 import { readFileSync } from "node:fs";
 // Bytes aleatorios para la ficha del puente.
@@ -23,9 +25,23 @@ import { openExecutionSession, saveExecutionSession } from "./execution-session"
 import { loopbackFetch } from "./loopback-fetch";
 // Escritura atómica.
 import { writeAtomic } from "./course-runtime";
+// Validación de la tienda (6 casos), separada del test y de la demostración.
+import { LAB_VALIDATION_SET } from "../lab/src/evaluation";
 
 // Raíz.
 const root = path.resolve(import.meta.dirname, "..");
+// --corpus=zocomar: la tienda del chat; sin la opción, el curso.
+const corpusFlag = process.argv.find((item) => item.startsWith("--corpus="));
+// Corpus pedido.
+const corpusName = corpusFlag === undefined ? "course" : corpusFlag.slice("--corpus=".length);
+// Solo hay dos corpus.
+if (corpusName !== "course" && corpusName !== "zocomar")
+  // Detiene antes de leer nada.
+  throw new Error("--corpus debe ser course o zocomar.");
+// ¿Tienda Zocomar?
+const store = corpusName === "zocomar";
+// Carpeta de recibos del corpus: la tienda no toca la calibración ni la sesión del curso.
+const receipts = path.join(root, store ? "activation-receipts/zocomar" : "activation-receipts");
 // Sin --execute no hay red.
 if (!process.argv.includes("--execute")) {
   // Mensaje.
@@ -45,12 +61,15 @@ if (!parsed.ok || missingFor("ingest", parsed.auth, null).length || !parsed.auth
 const auth = parsed.auth;
 // Corpus preparado.
 const corpus = JSON.parse(
-  readFileSync(path.join(root, "corpus/prepared/corpus.json"), "utf8"),
+  readFileSync(
+    path.join(root, store ? "corpus/prepared/zocomar.json" : "corpus/prepared/corpus.json"),
+    "utf8",
+  ),
 ) as PreparedCorpus;
 // Perfil semántico.
 const profile = semanticIdentity(corpus, auth.observedDimensions!);
-// Solo ejemplos de desarrollo: el conjunto reservado de comparación nunca se usa para ajustar el umbral.
-const cases = [
+// Solo ejemplos de desarrollo o validación: el test reservado nunca se usa para ajustar el umbral.
+const courseCases = [
   // Cinco preguntas que el corpus sí responde (supported: true).
   {
     text: "¿Cómo modela LangGraph un agente con estado y nodos?",
@@ -82,6 +101,14 @@ const cases = [
   { text: "¿Cuál es la contraseña del wifi del aula?", audience: "program", supported: false },
   { text: "¿Qué menú de comedor hay mañana en el curso?", audience: "program", supported: false },
 ];
+// Con la tienda: las 6 preguntas de validación del laboratorio (4 con respuesta y 2 sin ella).
+const cases = store
+  ? LAB_VALIDATION_SET.map((item) => ({
+      text: item.question,
+      audience: "program",
+      supported: item.answerable,
+    }))
+  : courseCases;
 // Arranca el puente remoto en modo storage.
 const owned = await startOwnedBridge({
   // Cuenta, puertos y ficha aleatoria del puente.
@@ -94,7 +121,7 @@ const owned = await startOwnedBridge({
   role: "storage",
   remote: true,
   offline: false,
-  persistDir: path.join(root, "activation-receipts/wrangler-state"),
+  persistDir: path.join(receipts, "wrangler-state"),
   // Índice del perfil y su dimensión.
   indexName: vectorizeIndexName(profile.id),
   dimensions: auth.observedDimensions!,
@@ -105,7 +132,7 @@ const owned = await startOwnedBridge({
   ),
 });
 // Archivo de sesión.
-const file = path.join(root, "activation-receipts/allowance-session.json");
+const file = path.join(receipts, "allowance-session.json");
 // Sesión de gasto: solo embeddings.
 const ledger = await openExecutionSession({
   // Archivo de la sesión, cuenta, perfil y procedencia real.
@@ -159,6 +186,8 @@ try {
         vector: embedded.vectors[i],
         audience: cases[i]!.audience,
         profileId: profile.id,
+        // Versión del corpus calibrado: el puente filtra por ella.
+        corpusVersion: corpus.preparationId,
       }),
     });
     // Resultado.
@@ -180,7 +209,7 @@ try {
   }
   // Guarda las observaciones.
   await writeAtomic(
-    path.join(root, "activation-receipts/calibration-observations.json"),
+    path.join(receipts, "calibration-observations.json"),
     JSON.stringify({ profileId: profile.id, observations }, null, 2) + "\n",
   );
   // Mejor puntuación de las que tienen respuesta.
@@ -207,7 +236,7 @@ try {
     minScore,
     // Método usado (texto del recibo en inglés, como se guardó).
     method: separated
-      ? "midpoint with separation on 8 development queries"
+      ? `midpoint with separation on ${String(cases.length)} development queries`
       : "conservative cutoff above all development negatives; overlapping positive may be refused",
     // Recall en desarrollo y la separación entre positivos y negativos.
     developmentRecall: positives.filter((s) => s >= minScore).length / positives.length,
@@ -219,7 +248,7 @@ try {
   };
   // Guarda la calibración.
   await writeAtomic(
-    path.join(root, "activation-receipts/calibration.json"),
+    path.join(receipts, "calibration.json"),
     JSON.stringify(receipt, null, 2) + "\n",
   );
   // Resumen.

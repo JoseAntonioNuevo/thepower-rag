@@ -91,6 +91,25 @@ export const cragStepSchema = z.object({
   retainedIds: z.array(z.string().min(1).max(128)).max(6),
   // Fragmentos descartados en este paso.
   discardedIds: z.array(z.string().min(1).max(128)).max(10),
+  // Modo clase: candidatos que vio este paso, con el coseno de Vectorize y, tras el juez, su nota
+  // en [0, 1] y su motivo. Opcional para no romper guiones ni clientes anteriores.
+  candidates: z
+    .array(
+      z.object({
+        // Id del fragmento.
+        chunkId: z.string().min(1).max(128),
+        // Similitud coseno de la búsqueda, o null si no se conoce.
+        cosine: z.number().finite().nullable(),
+        // Nota del juez en [0, 1], o null antes de evaluar.
+        relevance: z.number().min(0).max(1).nullable(),
+        // Motivo del juez, o null antes de evaluar.
+        reason: z.string().max(240).nullable(),
+      }),
+    )
+    .max(10)
+    .optional(),
+  // Modo clase: lagunas que el juez nombró en una evaluación parcial.
+  gaps: z.array(z.string().min(1).max(160)).max(4).optional(),
 });
 
 // Tipo de un paso.

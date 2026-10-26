@@ -9,7 +9,7 @@ export const COURSE_MODEL_PROFILES = {
     outputUsdPerMillion: 0.5,
     cragBudgetMs: 20_000,
   },
-  // Perfil de calidad: mismo generador para RAG y CRAG; evaluación y reformulación con Sonnet.
+  // Evaluador de CRAG: puntúa, valora la cobertura y reformula. Generó en ambos papeles del 18 al 26/10.
   sonnet: {
     modelId: "claude-sonnet-5-5",
     inputUsdPerMillion: 2,
@@ -25,5 +25,11 @@ export const COURSE_MODEL_PROFILES = {
   },
 } as const;
 
-// Perfil de chat y CRAG que se prepara para el siguiente despliegue del curso.
-export const COURSE_QUALITY_PROFILE = COURSE_MODEL_PROFILES.sonnet;
+// Perfil de chat y CRAG del curso desde el 26/10/2026. Haiku genera en Sin RAG, RAG y la respuesta
+// final de CRAG; Sonnet evalúa y reformula en CRAG, el único papel donde la comparación del 18/10
+// (Haiku 3/5, Sonnet 5/5 etiquetas) mostró diferencia. El plazo de CRAG sigue el del evaluador.
+export const COURSE_QUALITY_PROFILE = {
+  generator: COURSE_MODEL_PROFILES.haiku,
+  evaluator: COURSE_MODEL_PROFILES.sonnet,
+  cragBudgetMs: COURSE_MODEL_PROFILES.sonnet.cragBudgetMs,
+} as const;

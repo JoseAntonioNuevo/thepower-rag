@@ -58,13 +58,23 @@
       "vars": {
         // Servicios reales.
         "APP_MODE": "real",
-        // Referencia principal de S10: recuperación semántica con filtro, puntuaciones y umbral.
-        // Para la variante de contexto completo del curso se usa "complete" (docs/rag-contexto-completo.md).
-        "RAG_CONTEXT_MODE": "complete",
+        // Recuperación semántica con filtro, puntuaciones y umbral: la comparación RAG/CRAG de S11
+        // necesita que RAG básico busque. "complete" solo existe para el curso y bloquea la tienda.
+        "RAG_CONTEXT_MODE": "semantic",
+        // Corpus del chat (Sin RAG, RAG y CRAG): la tienda ficticia Zocomar. La investigación de S12
+        // sigue con el curso (CORPUS_VERSION, INDEX_PROFILE y VECTORIZE). Volver al curso: "course".
+        "CHAT_CORPUS": "zocomar",
+        // Versión y perfil de Zocomar (corpus/prepared/zocomar.json, BGE-M3 de 1024 dimensiones).
+        "STORE_CORPUS_VERSION": "cb7dabfb11854",
+        "STORE_INDEX_PROFILE": "peb8d9e84d3ba",
+        // Umbral calibrado el 25/10/2026 con calibrate-live --corpus=zocomar: 6 preguntas de
+        // validación, positivas desde 0,7357 y negativas hasta 0,5882 (activation-receipts/zocomar).
+        "STORE_MIN_RETRIEVAL_SCORE": "0.661926",
         // Proveedor fijo de producción: no cambiarlo sin petición expresa del usuario.
         "LLM_PROVIDER": "anthropic",
-        // Perfil de calidad preparado: mismo generador Sonnet para RAG y CRAG.
-        "MODEL_ID": "claude-sonnet-5-5",
+        // Desde el 26/10/2026 Haiku genera (Sin RAG, RAG y respuesta final de CRAG) y Sonnet evalúa
+        // y reformula en CRAG (apps/api/src/course-models.ts).
+        "MODEL_ID": "claude-haiku-5-5",
         "EVALUATOR_MODEL_ID": "claude-sonnet-5-5",
         // Plazo único, sin reiniciarlo en cada ronda. Las llamadas individuales se acotan a 30 s.
         "CRAG_EXECUTION_BUDGET_MS": "60000",
@@ -99,9 +109,9 @@
         "MIN_RETRIEVAL_SCORE": "0.5",
         // Tope del presupuesto público del chat (tabla public_budget).
         "PUBLIC_BUDGET_USD": "4.3",
-        // Tarifas del generador y del evaluador, para el coste mostrado y la reserva.
-        "MODEL_INPUT_USD_PER_MILLION": "2",
-        "MODEL_OUTPUT_USD_PER_MILLION": "10",
+        // Tarifas del generador (Haiku) y del evaluador (Sonnet), para el coste mostrado y la reserva.
+        "MODEL_INPUT_USD_PER_MILLION": "0.1",
+        "MODEL_OUTPUT_USD_PER_MILLION": "0.5",
         "EVALUATOR_INPUT_USD_PER_MILLION": "2",
         "EVALUATOR_OUTPUT_USD_PER_MILLION": "10",
         // Origen permitido para las peticiones del navegador.
@@ -114,11 +124,17 @@
         "binding": "AI",
         "remote": true,
       },
-      // Índice vectorial del perfil activo.
+      // Índices vectoriales: el del curso (también lo usa la investigación) y el de la tienda Zocomar.
       "vectorize": [
         {
           "binding": "VECTORIZE",
           "index_name": "thepower-ai-course-rag-76509a5f9743",
+          "remote": true,
+        },
+        // Índice de Zocomar, creado e ingerido el 25/10/2026 (perfil peb8d9e84d3ba, 54 vectores).
+        {
+          "binding": "VECTORIZE_STORE",
+          "index_name": "thepower-ai-course-rag-eb8d9e84d3ba",
           "remote": true,
         },
       ],
@@ -230,7 +246,7 @@
       "vars": {
         "APP_MODE": "real",
         "RAG_CONTEXT_MODE": "semantic",
-        "MODEL_ID": "claude-sonnet-5-5",
+        "MODEL_ID": "claude-haiku-5-5",
         "EVALUATOR_MODEL_ID": "claude-sonnet-5-5",
         "CRAG_EXECUTION_BUDGET_MS": "60000",
         "MODEL_TIMEOUT_MS": "30000",
@@ -241,8 +257,8 @@
         "INDEX_PROFILE": "p76509a5f9743",
         "VECTOR_METRIC": "cosine",
         "MIN_RETRIEVAL_SCORE": "0.5",
-        "MODEL_INPUT_USD_PER_MILLION": "2",
-        "MODEL_OUTPUT_USD_PER_MILLION": "10",
+        "MODEL_INPUT_USD_PER_MILLION": "0.1",
+        "MODEL_OUTPUT_USD_PER_MILLION": "0.5",
         "EVALUATOR_INPUT_USD_PER_MILLION": "2",
         "EVALUATOR_OUTPUT_USD_PER_MILLION": "10",
         // Tope del presupuesto de este perfil local.

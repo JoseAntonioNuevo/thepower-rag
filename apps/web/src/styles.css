@@ -1640,3 +1640,262 @@ button.t-toggle[data-on="true"] {
   padding-left: 18px;
   font-size: 0.88rem;
 }
+
+/* ===== Modo clase: grafo en directo de RAG básico y CRAG ===== */
+
+/* Interruptor del modo clase en la barra de herramientas. */
+.class-switch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  align-self: end;
+  color: var(--ink-soft);
+  font-size: 0.92rem;
+}
+
+/* Hoja del modo clase, a todo el ancho encima del chat. */
+.class-mode {
+  margin-top: 24px;
+  padding: 16px 18px;
+  border: 1px solid var(--line);
+  border-radius: 12px;
+  background: var(--sheet);
+}
+
+/* Cabecera: título y estado del paso en la misma línea si caben. */
+.class-mode-head {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 6px 16px;
+}
+
+/* Título en versalitas pequeñas, como los del panel. */
+.class-mode-head h2 {
+  margin: 0;
+  font-size: 0.78rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: #57534e;
+}
+
+/* El lienzo del grafo ocupa el ancho y conserva la proporción. */
+.class-graph {
+  display: block;
+  width: 100%;
+  height: auto;
+  margin-top: 10px;
+}
+
+/* Caja de un nodo: el color cambia con los tokens de transitions.dev (cambio de estado). */
+.class-node rect {
+  fill: var(--sheet);
+  stroke: var(--line);
+  stroke-width: 1.2;
+  transition:
+    fill var(--duration-fast) var(--ease-smooth-out),
+    stroke var(--duration-fast) var(--ease-smooth-out);
+}
+
+/* Título del nodo. */
+.class-node-title {
+  fill: var(--ink);
+  font-family: var(--font-ui);
+  font-size: 14px;
+  font-weight: 600;
+}
+
+/* Subtítulo: modelo o dato del paso. */
+.class-node-sub {
+  fill: #57534e;
+  font-family: var(--font-ui);
+  font-size: 12px;
+}
+
+/* Nodo ya recorrido: verde suave. */
+.class-node[data-state="visited"] rect {
+  fill: #e8f1ec;
+  stroke: #2f6b4f;
+}
+
+/* Nodo activo: azul de acción con borde grueso. */
+.class-node[data-state="active"] rect {
+  fill: #e4edf8;
+  stroke: var(--navy);
+  stroke-width: 2.4;
+}
+
+/* Arista sin recorrer. */
+.class-edge {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 1.5;
+  transition: stroke var(--duration-fast) var(--ease-smooth-out);
+}
+
+/* Arista recorrida en este turno. */
+.class-edge[data-used="true"] {
+  stroke: #2f6b4f;
+  stroke-width: 2;
+}
+
+/* Puntas de flecha: gris y verde. */
+.class-arrow {
+  fill: none;
+  stroke: var(--line);
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+}
+.class-arrow-used {
+  stroke: #2f6b4f;
+}
+
+/* Controles de repetición en una fila que se parte en móvil. */
+.class-controls {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  margin-top: 8px;
+}
+
+/* Botones secundarios del modo clase: contorno azul sobre la hoja. */
+button.class-button {
+  min-height: 36px;
+  padding: 0 12px;
+  background: var(--sheet);
+  color: var(--navy);
+  font-size: 0.9rem;
+}
+
+/* Posición del paso y momento de llegada. */
+.class-position {
+  color: var(--ink-soft);
+  font-size: 0.88rem;
+}
+
+/* Inspector del paso mostrado. */
+.class-inspector {
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid var(--line);
+}
+
+/* Estado del paso en serifa, para leerlo en voz alta. */
+.class-status {
+  margin: 0 0 8px;
+  font-family: var(--font-serif);
+  font-size: 1.02rem;
+}
+
+/* Datos clave en dos columnas. */
+.class-facts {
+  display: grid;
+  grid-template-columns: max-content 1fr;
+  gap: 4px 12px;
+  margin: 0 0 10px;
+  font-size: 0.9rem;
+}
+.class-facts dt {
+  color: #57534e;
+}
+.class-facts dd {
+  margin: 0;
+}
+
+/* Candidatos: id, barra, puntuación y marca; el motivo del juez ocupa una línea propia. */
+.class-candidates {
+  display: grid;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  font-size: 0.86rem;
+}
+.class-candidates li {
+  display: grid;
+  grid-template-columns: minmax(0, 1.4fr) minmax(80px, 1fr) max-content max-content;
+  align-items: center;
+  gap: 2px 10px;
+}
+.class-chunk {
+  overflow-wrap: anywhere;
+}
+.class-score,
+.class-flag {
+  font-variant-numeric: tabular-nums;
+  color: var(--ink-soft);
+}
+.class-candidates li[data-selected="true"] .class-flag,
+.class-candidates li[data-selected="true"] .class-chunk {
+  color: #2f6b4f;
+  font-weight: 600;
+}
+.class-reason {
+  grid-column: 1 / -1;
+  color: #57534e;
+  font-size: 0.82rem;
+}
+
+/* Ids de evidencia o citas, sin puntuación. */
+.class-ids {
+  display: grid;
+  gap: 4px;
+  margin: 0;
+  padding-left: 18px;
+  color: #2f6b4f;
+  font-size: 0.86rem;
+}
+
+/* Barra de puntuación con la marca del corte. */
+.class-bar {
+  position: relative;
+  display: block;
+  height: 8px;
+  border-radius: 4px;
+  background: var(--wash);
+}
+.class-bar-fill {
+  position: absolute;
+  inset: 0 auto 0 0;
+  border-radius: 4px;
+  background: #a8a29e;
+}
+.class-bar-fill[data-strong="true"] {
+  background: #2f6b4f;
+}
+.class-bar-cut {
+  position: absolute;
+  top: -3px;
+  bottom: -3px;
+  width: 2px;
+  background: var(--navy);
+}
+
+/* En móvil, los datos van en una columna y el id y la barra ocupan su propia fila. */
+@media (max-width: 560px) {
+  .class-facts {
+    grid-template-columns: 1fr;
+  }
+  .class-facts dd {
+    margin-bottom: 4px;
+  }
+  .class-candidates li {
+    grid-template-columns: 1fr max-content max-content;
+  }
+  .class-bar {
+    grid-column: 1 / -1;
+    order: 3;
+  }
+}
+
+/* Movimiento reducido: los nodos y aristas cambian sin transición. */
+@media (prefers-reduced-motion: reduce) {
+  .class-node rect,
+  .class-edge {
+    transition: none;
+  }
+}

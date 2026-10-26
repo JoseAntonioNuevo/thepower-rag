@@ -3,6 +3,8 @@
 // clasifica cada binding en ausente, declarado o configurado y redacta el informe del preflight sin claves.
 // Lectura de archivos.
 import { existsSync, readFileSync } from "node:fs";
+// Corpus del chat: lectura de CHAT_CORPUS y variables de la tienda.
+import { STORE_SETTING_VARIABLES, chatCorpusId } from "../apps/api/src/chat-corpus";
 // Rutas.
 import path from "node:path";
 // Parser de .env.
@@ -56,6 +58,8 @@ export interface LocalWorkerConfig {
   vars: Record<string, string>;
   // Bindings.
   bindings: Record<RagBindingName, BindingView>;
+  // Índice de Vectorize de la tienda Zocomar (solo lo usa el chat con CHAT_CORPUS=zocomar).
+  storeBinding: BindingView;
   // Capacidades.
   assessment: Assessment;
 }
@@ -168,6 +172,8 @@ export function inspectBindings(
   vars: Record<string, string>;
   // Bindings.
   bindings: Record<RagBindingName, BindingView>;
+  // Índice de la tienda.
+  storeBinding: BindingView;
 } {
   // Archivo.
   const parsed = record(readJson(file));
@@ -191,6 +197,7 @@ export function inspectBindings(
         DB: view("absent"),
         CORPUS: view("absent"),
       },
+      storeBinding: view("absent"),
     };
   }
   // Workers AI.
@@ -198,6 +205,10 @@ export function inspectBindings(
   // Vectorize con binding VECTORIZE.
   const vector = Array.isArray(section?.vectorize)
     ? (section.vectorize.map(record).find((item) => item?.binding === "VECTORIZE") ?? null)
+    : null;
+  // Vectorize con binding VECTORIZE_STORE (tienda Zocomar).
+  const storeVector = Array.isArray(section?.vectorize)
+    ? (section.vectorize.map(record).find((item) => item?.binding === "VECTORIZE_STORE") ?? null)
     : null;
   // D1 con binding DB.
   const database = Array.isArray(section?.d1_databases)
@@ -217,6 +228,7 @@ export function inspectBindings(
       DB: view(bindingLevel(database, ["database_name", "database_id"])),
       CORPUS: view(bindingLevel(bucket, ["bucket_name"])),
     },
+    storeBinding: view(bindingLevel(storeVector, ["index_name"])),
   };
 }
 
@@ -283,6 +295,7 @@ export function loadLocalWorkerConfig(
     // Variables efectivas y bindings clasificados.
     vars,
     bindings: inspected.bindings,
+    storeBinding: inspected.storeBinding,
     // Diagnóstico con las mismas reglas que el Worker, o todo bloqueado si el entorno no existe.
     assessment: inspected.found
       ? assessWorker(vars as WorkerEnv)
@@ -291,6 +304,8 @@ export function loadLocalWorkerConfig(
           message: "El entorno pedido no está en el archivo de Wrangler.",
           generation: null,
           retrieval: null,
+          chatCorpus: null,
+          chatRetrieval: null,
           capabilities: {
             "sin-rag": { status: "blocked", missing: ["APP_MODE"] },
             rag: { status: "blocked", missing: ["APP_MODE"] },
@@ -356,6 +371,29 @@ export function ragDeclarationReady(config: LocalWorkerConfig): { ok: boolean; m
       // Falta.
       missing.push(name);
     }
+  }
+  // Corpus del chat: con la tienda también hacen falta sus variables y su índice.
+  const chatCorpus = chatCorpusId(config.vars.CHAT_CORPUS);
+  // Valor desconocido.
+  if (chatCorpus === null) missing.push("CHAT_CORPUS");
+  // Tienda Zocomar.
+  if (chatCorpus === "zocomar") {
+    // Cada variable de la tienda.
+    for (const name of STORE_SETTING_VARIABLES) {
+      // Ausente o marcador.
+      if (!present(config.vars, name)) missing.push(name);
+    }
+    // Umbral no numérico.
+    if (
+      present(config.vars, "STORE_MIN_RETRIEVAL_SCORE") &&
+      !Number.isFinite(Number(config.vars.STORE_MIN_RETRIEVAL_SCORE))
+    )
+      // Falta.
+      missing.push("STORE_MIN_RETRIEVAL_SCORE");
+    // Índice de la tienda.
+    if (config.storeBinding.level !== "configured") missing.push("VECTORIZE_STORE");
+    // El contexto completo es solo del curso.
+    if (config.vars.RAG_CONTEXT_MODE === "complete") missing.push("RAG_CONTEXT_MODE");
   }
   // Listo si es real y no falta nada.
   return { ok: config.assessment.execution === "real" && missing.length === 0, missing };
@@ -430,6 +468,23 @@ export function formatPreflight(
     const binding = config.bindings[name];
     // Nivel, sin comprobar conexión.
     lines.push(`  ${name}: ${binding.level}; alcanzable: no comprobado; verificado: no`);
+  }
+  // Corpus del chat y, con la tienda, sus variables e índice. La investigación sigue con el curso.
+  const chatCorpus = chatCorpusId(config.vars.CHAT_CORPUS);
+  // Línea del corpus.
+  lines.push(
+    `corpus del chat (CHAT_CORPUS): ${chatCorpus ?? `desconocido (${config.vars.CHAT_CORPUS ?? ""})`}; la investigación usa el curso`,
+  );
+  // Con la tienda, sus nombres y su binding.
+  if (chatCorpus === "zocomar") {
+    // Cada variable.
+    for (const name of STORE_SETTING_VARIABLES)
+      // Presente o ausente.
+      lines.push(`  ${name}: ${present(config.vars, name) ? "presente" : "ausente"}`);
+    // Índice de la tienda.
+    lines.push(
+      `  VECTORIZE_STORE: ${config.storeBinding.level}; alcanzable: no comprobado; verificado: no`,
+    );
   }
   // Variables solo en process.env.
   lines.push("nombres solo en process.env, ignorados por el Worker:");

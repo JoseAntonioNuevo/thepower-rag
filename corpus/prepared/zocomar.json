@@ -1,0 +1,757 @@
+{
+  "contentVersion": "cbb8eb3cb881c",
+  "preparationId": "cb7dabfb11854",
+  "version": "cb7dabfb11854",
+  "verifiedDate": "2026-10-24",
+  "embeddingModel": "fixture-token-hash-v1",
+  "dimensions": 128,
+  "remoteRevision": null,
+  "coverage": {
+    "curriculum": "partial",
+    "calendarLx": "partial",
+    "calendarMj": "partial",
+    "exerciseDetail": "partial",
+    "remote": "not-verified",
+    "sessions": [
+      {
+        "session": "S1",
+        "curriculum": "absent",
+        "exerciseDetail": "absent",
+        "dateLx": null,
+        "dateMj": null,
+        "instructorLx": null,
+        "instructorMj": null
+      },
+      {
+        "session": "S2",
+        "curriculum": "absent",
+        "exerciseDetail": "absent",
+        "dateLx": null,
+        "dateMj": null,
+        "instructorLx": null,
+        "instructorMj": null
+      },
+      {
+        "session": "S3",
+        "curriculum": "absent",
+        "exerciseDetail": "absent",
+        "dateLx": null,
+        "dateMj": null,
+        "instructorLx": null,
+        "instructorMj": null
+      },
+      {
+        "session": "S4",
+        "curriculum": "absent",
+        "exerciseDetail": "absent",
+        "dateLx": null,
+        "dateMj": null,
+        "instructorLx": null,
+        "instructorMj": null
+      },
+      {
+        "session": "S5",
+        "curriculum": "absent",
+        "exerciseDetail": "absent",
+        "dateLx": null,
+        "dateMj": null,
+        "instructorLx": null,
+        "instructorMj": null
+      },
+      {
+        "session": "S6",
+        "curriculum": "absent",
+        "exerciseDetail": "absent",
+        "dateLx": null,
+        "dateMj": null,
+        "instructorLx": null,
+        "instructorMj": null
+      },
+      {
+        "session": "S7",
+        "curriculum": "absent",
+        "exerciseDetail": "absent",
+        "dateLx": null,
+        "dateMj": null,
+        "instructorLx": null,
+        "instructorMj": null
+      },
+      {
+        "session": "S8",
+        "curriculum": "absent",
+        "exerciseDetail": "absent",
+        "dateLx": null,
+        "dateMj": null,
+        "instructorLx": null,
+        "instructorMj": null
+      },
+      {
+        "session": "S9",
+        "curriculum": "absent",
+        "exerciseDetail": "absent",
+        "dateLx": null,
+        "dateMj": null,
+        "instructorLx": null,
+        "instructorMj": null
+      },
+      {
+        "session": "S10",
+        "curriculum": "absent",
+        "exerciseDetail": "absent",
+        "dateLx": null,
+        "dateMj": null,
+        "instructorLx": null,
+        "instructorMj": null
+      },
+      {
+        "session": "S11",
+        "curriculum": "absent",
+        "exerciseDetail": "absent",
+        "dateLx": null,
+        "dateMj": null,
+        "instructorLx": null,
+        "instructorMj": null
+      },
+      {
+        "session": "S12",
+        "curriculum": "absent",
+        "exerciseDetail": "absent",
+        "dateLx": null,
+        "dateMj": null,
+        "instructorLx": null,
+        "instructorMj": null
+      },
+      {
+        "session": "S13",
+        "curriculum": "absent",
+        "exerciseDetail": "absent",
+        "dateLx": null,
+        "dateMj": null,
+        "instructorLx": null,
+        "instructorMj": null
+      },
+      {
+        "session": "S14",
+        "curriculum": "absent",
+        "exerciseDetail": "absent",
+        "dateLx": null,
+        "dateMj": null,
+        "instructorLx": null,
+        "instructorMj": null
+      },
+      {
+        "session": "S15",
+        "curriculum": "absent",
+        "exerciseDetail": "absent",
+        "dateLx": null,
+        "dateMj": null,
+        "instructorLx": null,
+        "instructorMj": null
+      },
+      {
+        "session": "S16",
+        "curriculum": "absent",
+        "exerciseDetail": "absent",
+        "dateLx": null,
+        "dateMj": null,
+        "instructorLx": null,
+        "instructorMj": null
+      },
+      {
+        "session": "S17",
+        "curriculum": "absent",
+        "exerciseDetail": "absent",
+        "dateLx": null,
+        "dateMj": null,
+        "instructorLx": null,
+        "instructorMj": null
+      },
+      {
+        "session": "S18",
+        "curriculum": "absent",
+        "exerciseDetail": "absent",
+        "dateLx": null,
+        "dateMj": null,
+        "instructorLx": null,
+        "instructorMj": null
+      },
+      {
+        "session": "S19",
+        "curriculum": "absent",
+        "exerciseDetail": "absent",
+        "dateLx": null,
+        "dateMj": null,
+        "instructorLx": null,
+        "instructorMj": null
+      },
+      {
+        "session": "S20",
+        "curriculum": "absent",
+        "exerciseDetail": "absent",
+        "dateLx": null,
+        "dateMj": null,
+        "instructorLx": null,
+        "instructorMj": null
+      }
+    ]
+  },
+  "indexProfile": {
+    "family": "fixture",
+    "model": "fixture-token-hash-v1",
+    "dimensions": 128,
+    "metric": "cosine",
+    "chunkMaxChars": 900,
+    "chunkOverlap": 80,
+    "providerRevision": null,
+    "preparationId": "cb7dabfb11854",
+    "id": "p232667415b83"
+  },
+  "documents": [
+    {
+      "id": "01-zocomar-que-es",
+      "title": "Qué es Zocomar y cómo funciona el marketplace",
+      "audience": "program",
+      "session": null,
+      "verified": "2026-10-24",
+      "source": "lab/corpus/sources/01-zocomar-que-es.md (tienda ficticia Zocomar)",
+      "sourcePath": "01-zocomar-que-es.md",
+      "sourceHash": "c881d7c6c17d81f8",
+      "curriculum": "absent",
+      "exerciseDetail": "absent",
+      "chunks": [
+        {
+          "chunkId": "cb7dabfb11854:01-zocomar-que-es:00",
+          "vectorId": "cb7dabfb11854:01-zocomar-que-es:00",
+          "section": "Modelo de marketplace",
+          "text": "## Modelo de marketplace\n\nZocomar es un marketplace en línea ficticio que reúne a vendedores profesionales independientes y a compradores particulares. Zocomar no fabrica productos: cada ficha indica qué vendedor vende y envía el artículo. Algunos productos se venden y envían desde el almacén propio de Zocomar en Getafe (Madrid); en ese caso la ficha muestra «Vendido y enviado por Zocomar».",
+          "ordinal": 0
+        },
+        {
+          "chunkId": "cb7dabfb11854:01-zocomar-que-es:01",
+          "vectorId": "cb7dabfb11854:01-zocomar-que-es:01",
+          "section": "Zonas de servicio",
+          "text": "## Zonas de servicio\n\nZocomar vende y entrega en España peninsular, en las Islas Baleares y en Portugal continental. No realiza entregas en Canarias, Ceuta, Melilla, Azores ni Madeira. Los plazos y precios de cada zona se detallan en la política de envíos vigente.",
+          "ordinal": 1
+        },
+        {
+          "chunkId": "cb7dabfb11854:01-zocomar-que-es:02",
+          "vectorId": "cb7dabfb11854:01-zocomar-que-es:02",
+          "section": "Responsabilidades de cada parte",
+          "text": "## Responsabilidades de cada parte\n\nEl vendedor es responsable de la descripción, el stock, el embalaje y el envío de sus artículos. Zocomar gestiona los cobros, la atención al cliente de primer nivel y la mediación en disputas mediante la Garantía Zocomar. Los pagos realizados fuera de la plataforma no están cubiertos.",
+          "ordinal": 2
+        },
+        {
+          "chunkId": "cb7dabfb11854:01-zocomar-que-es:03",
+          "vectorId": "cb7dabfb11854:01-zocomar-que-es:03",
+          "section": "Cuenta de cliente",
+          "text": "## Cuenta de cliente\n\nPara comprar hace falta una cuenta verificada con correo electrónico y teléfono móvil. Los menores de 18 años no pueden abrir una cuenta. Desde «Mis pedidos» se consultan los pedidos, se inician devoluciones y se abren disputas.",
+          "ordinal": 3
+        },
+        {
+          "chunkId": "cb7dabfb11854:01-zocomar-que-es:04",
+          "vectorId": "cb7dabfb11854:01-zocomar-que-es:04",
+          "section": "Información que no está en esta documentación",
+          "text": "## Información que no está en esta documentación\n\nEl estado de cada pedido, el stock disponible y los precios del catálogo cambian continuamente y se consultan en la aplicación, no en estas políticas.",
+          "ordinal": 4
+        }
+      ]
+    },
+    {
+      "id": "02-devoluciones",
+      "title": "Política de devoluciones",
+      "audience": "program",
+      "session": null,
+      "verified": "2026-10-24",
+      "source": "lab/corpus/sources/02-devoluciones.md (tienda ficticia Zocomar)",
+      "sourcePath": "02-devoluciones.md",
+      "sourceHash": "6dfe5b9aea66fa6e",
+      "curriculum": "absent",
+      "exerciseDetail": "absent",
+      "chunks": [
+        {
+          "chunkId": "cb7dabfb11854:02-devoluciones:00",
+          "vectorId": "cb7dabfb11854:02-devoluciones:00",
+          "section": "Plazo general de desistimiento",
+          "text": "## Plazo general de desistimiento\n\nEl comprador puede devolver la mayoría de los artículos en un plazo de 30 días naturales contados desde la fecha de entrega que figura en el seguimiento del pedido. Los miembros de Zocomar Plus disponen de 45 días naturales. Algunas categorías tienen plazos o exclusiones propios, que se describen en sus documentos específicos y prevalecen sobre esta regla general.",
+          "ordinal": 0
+        },
+        {
+          "chunkId": "cb7dabfb11854:02-devoluciones:01",
+          "vectorId": "cb7dabfb11854:02-devoluciones:01",
+          "section": "Estado en que debe devolverse el artículo",
+          "text": "## Estado en que debe devolverse el artículo\n\nEl artículo debe devolverse completo, con todos sus accesorios, manuales y embalaje original. Se admiten artículos abiertos para comprobar su funcionamiento siempre que no presenten señales de uso, daños ni falta de piezas. Si el almacén detecta un uso que reduce su valor, puede aplicar una depreciación de hasta el 30 % del precio del artículo, que se comunica antes de reembolsar.",
+          "ordinal": 1
+        },
+        {
+          "chunkId": "cb7dabfb11854:02-devoluciones:02",
+          "vectorId": "cb7dabfb11854:02-devoluciones:02",
+          "section": "Cómo iniciar una devolución",
+          "text": "## Cómo iniciar una devolución\n\nLa devolución se solicita desde «Mis pedidos», seleccionando el artículo y el motivo. La aplicación genera un código QR válido durante 10 días. Con ese código el paquete puede entregarse en cualquier Zocopunto o puede solicitarse una recogida a domicilio. No se aceptan devoluciones enviadas por cuenta propia sin código.",
+          "ordinal": 2
+        },
+        {
+          "chunkId": "cb7dabfb11854:02-devoluciones:03",
+          "vectorId": "cb7dabfb11854:02-devoluciones:03",
+          "section": "Coste de la devolución",
+          "text": "## Coste de la devolución\n\nEntregar el paquete en un Zocopunto es gratuito. La recogida a domicilio cuesta 3,95 €, que se descuentan del reembolso. La devolución es siempre gratuita, por cualquier vía, si el artículo llegó defectuoso, dañado o no corresponde con lo pedido, y también en los productos de vendedores con el sello «Devolución gratuita».",
+          "ordinal": 3
+        },
+        {
+          "chunkId": "cb7dabfb11854:02-devoluciones:04",
+          "vectorId": "cb7dabfb11854:02-devoluciones:04",
+          "section": "Reembolso de una devolución",
+          "text": "## Reembolso de una devolución\n\nEl almacén o el vendedor dispone de hasta 3 días hábiles desde la recepción del paquete para validar la devolución. Una vez validada, Zocomar ordena el reembolso por el mismo método de pago del pedido. Los plazos de abono de cada método de pago se detallan en la política de pagos y reembolsos.",
+          "ordinal": 4
+        },
+        {
+          "chunkId": "cb7dabfb11854:02-devoluciones:05",
+          "vectorId": "cb7dabfb11854:02-devoluciones:05",
+          "section": "Gastos de envío del pedido original",
+          "text": "## Gastos de envío del pedido original\n\nSi se devuelve el pedido completo dentro del plazo, se reembolsan también los gastos de envío estándar pagados. Los suplementos del envío exprés no se reembolsan, salvo que el artículo fuera defectuoso o erróneo. En las devoluciones parciales no se reembolsan gastos de envío.",
+          "ordinal": 5
+        },
+        {
+          "chunkId": "cb7dabfb11854:02-devoluciones:06",
+          "vectorId": "cb7dabfb11854:02-devoluciones:06",
+          "section": "Cambios de talla o color",
+          "text": "## Cambios de talla o color\n\nZocomar no tramita cambios directos. Para cambiar de talla o de color hay que devolver el artículo y hacer un pedido nuevo. Los vendedores de moda con el sello «Cambio fácil» reservan la nueva talla durante 7 días si el pedido nuevo se hace desde la misma solicitud de devolución.",
+          "ordinal": 6
+        }
+      ]
+    },
+    {
+      "id": "03-electronica-y-garantia",
+      "title": "Electrónica: devoluciones especiales y garantía",
+      "audience": "program",
+      "session": null,
+      "verified": "2026-10-24",
+      "source": "lab/corpus/sources/03-electronica-y-garantia.md (tienda ficticia Zocomar)",
+      "sourcePath": "03-electronica-y-garantia.md",
+      "sourceHash": "36075eed2f52ee3d",
+      "curriculum": "absent",
+      "exerciseDetail": "absent",
+      "chunks": [
+        {
+          "chunkId": "cb7dabfb11854:03-electronica-y-garantia:00",
+          "vectorId": "cb7dabfb11854:03-electronica-y-garantia:00",
+          "section": "Plazo de devolución de la electrónica",
+          "text": "## Plazo de devolución de la electrónica\n\nLos artículos de electrónica (móviles, tabletas, ordenadores, consolas, televisores, audio y pequeños electrodomésticos) siguen el plazo general si se devuelven con el precinto de fábrica intacto. Si el precinto se ha retirado o el dispositivo se ha encendido y configurado, el plazo de desistimiento se reduce a 14 días naturales desde la entrega, también para los miembros de Zocomar Plus.",
+          "ordinal": 0
+        },
+        {
+          "chunkId": "cb7dabfb11854:03-electronica-y-garantia:01",
+          "vectorId": "cb7dabfb11854:03-electronica-y-garantia:01",
+          "section": "Artículos excluidos por higiene",
+          "text": "## Artículos excluidos por higiene\n\nLos auriculares intraauditivos, los cepillos de dientes eléctricos, las afeitadoras y las depiladoras no admiten devolución por desistimiento una vez retirado su precinto higiénico. En ese caso solo pueden devolverse si presentan un defecto, a través de la garantía.",
+          "ordinal": 1
+        },
+        {
+          "chunkId": "cb7dabfb11854:03-electronica-y-garantia:02",
+          "vectorId": "cb7dabfb11854:03-electronica-y-garantia:02",
+          "section": "Dispositivos con cuenta o bloqueo de activación",
+          "text": "## Dispositivos con cuenta o bloqueo de activación\n\nAntes de devolver un móvil, una tableta o un ordenador hay que cerrar la sesión de todas las cuentas, desactivar el bloqueo de activación y restablecer los valores de fábrica. Si el dispositivo llega bloqueado, la devolución se rechaza y se reenvía al comprador con un cargo de 6,50 €.",
+          "ordinal": 2
+        },
+        {
+          "chunkId": "cb7dabfb11854:03-electronica-y-garantia:03",
+          "vectorId": "cb7dabfb11854:03-electronica-y-garantia:03",
+          "section": "Garantía legal",
+          "text": "## Garantía legal\n\nLos productos nuevos tienen 3 años de garantía legal desde la entrega y los reacondicionados con calificación A o B tienen 1 año. Durante la garantía, el comprador puede elegir entre reparación y sustitución; si ninguna de las dos es posible, se reembolsa el precio.",
+          "ordinal": 3
+        },
+        {
+          "chunkId": "cb7dabfb11854:03-electronica-y-garantia:04",
+          "vectorId": "cb7dabfb11854:03-electronica-y-garantia:04",
+          "section": "Cómo se tramita la garantía",
+          "text": "## Cómo se tramita la garantía\n\nLa reclamación se abre desde «Mis pedidos» > «Tengo un problema». El artículo se envía gratis al servicio técnico asociado, que emite un diagnóstico en un máximo de 15 días hábiles. Si la avería se debe a un golpe, a la humedad o a una manipulación, la reparación no está cubierta y se ofrece un presupuesto.",
+          "ordinal": 4
+        }
+      ]
+    },
+    {
+      "id": "04-envios-vigente",
+      "title": "Política de envíos (vigente desde el 1 de marzo de 2026)",
+      "audience": "program",
+      "session": null,
+      "verified": "2026-10-24",
+      "source": "lab/corpus/sources/04-envios-vigente.md (tienda ficticia Zocomar)",
+      "sourcePath": "04-envios-vigente.md",
+      "sourceHash": "208e7ba8b53ddebe",
+      "curriculum": "absent",
+      "exerciseDetail": "absent",
+      "chunks": [
+        {
+          "chunkId": "cb7dabfb11854:04-envios-vigente:00",
+          "vectorId": "cb7dabfb11854:04-envios-vigente:00",
+          "section": "Envío estándar en España peninsular",
+          "text": "## Envío estándar en España peninsular\n\nEl envío estándar a España peninsular tarda de 2 a 4 días laborables y cuesta 3,99 €. Es gratuito cuando el importe de los artículos de un mismo vendedor alcanza 39 €. Si un pedido incluye artículos de varios vendedores, cada vendedor envía su propio paquete y el umbral de 39 € se calcula por separado para cada uno.",
+          "ordinal": 0
+        },
+        {
+          "chunkId": "cb7dabfb11854:04-envios-vigente:01",
+          "vectorId": "cb7dabfb11854:04-envios-vigente:01",
+          "section": "Envío exprés",
+          "text": "## Envío exprés\n\nEl envío exprés entrega en 24 horas laborables los pedidos confirmados antes de las 14:00 en España peninsular. Cuesta 6,99 € por paquete y no está disponible para las Islas Baleares ni para Portugal. Solo pueden usarlo los artículos marcados como «Exprés disponible».",
+          "ordinal": 1
+        },
+        {
+          "chunkId": "cb7dabfb11854:04-envios-vigente:02",
+          "vectorId": "cb7dabfb11854:04-envios-vigente:02",
+          "section": "Islas Baleares",
+          "text": "## Islas Baleares\n\nLos envíos a Baleares tardan de 4 a 6 días laborables y cuestan 5,99 €. Son gratuitos a partir de 59 € por vendedor. Los artículos voluminosos de más de 30 kg no se envían a las islas; la ficha del producto lo indica.",
+          "ordinal": 2
+        },
+        {
+          "chunkId": "cb7dabfb11854:04-envios-vigente:03",
+          "vectorId": "cb7dabfb11854:04-envios-vigente:03",
+          "section": "Portugal continental",
+          "text": "## Portugal continental\n\nLos envíos a Portugal continental tardan de 3 a 5 días laborables y cuestan 4,99 €. Son gratuitos a partir de 49 € por vendedor.",
+          "ordinal": 3
+        },
+        {
+          "chunkId": "cb7dabfb11854:04-envios-vigente:04",
+          "vectorId": "cb7dabfb11854:04-envios-vigente:04",
+          "section": "Ventajas de Zocomar Plus en el envío",
+          "text": "## Ventajas de Zocomar Plus en el envío\n\nLos miembros de Zocomar Plus tienen envío estándar gratuito sin importe mínimo en España peninsular y en Portugal continental, y en Baleares a partir de 29 € por vendedor. El envío exprés les cuesta 2,99 € por paquete.",
+          "ordinal": 4
+        },
+        {
+          "chunkId": "cb7dabfb11854:04-envios-vigente:05",
+          "vectorId": "cb7dabfb11854:04-envios-vigente:05",
+          "section": "Retrasos y pedidos no recibidos",
+          "text": "## Retrasos y pedidos no recibidos\n\nSi un paquete no llega en la fecha máxima indicada en el seguimiento, el comprador puede abrir una disputa con la Garantía Zocomar. Los plazos y la cobertura se detallan en la política de la Garantía Zocomar.",
+          "ordinal": 5
+        }
+      ]
+    },
+    {
+      "id": "05-envios-2025-sustituida",
+      "title": "Política de envíos de 2025 (SUSTITUIDA el 1 de marzo de 2026)",
+      "audience": "program",
+      "session": null,
+      "verified": "2026-10-24",
+      "source": "lab/corpus/sources/05-envios-2025-sustituida.md (tienda ficticia Zocomar)",
+      "sourcePath": "05-envios-2025-sustituida.md",
+      "sourceHash": "711ee6018317b793",
+      "curriculum": "absent",
+      "exerciseDetail": "absent",
+      "chunks": [
+        {
+          "chunkId": "cb7dabfb11854:05-envios-2025-sustituida:00",
+          "vectorId": "cb7dabfb11854:05-envios-2025-sustituida:00",
+          "section": "Aviso de vigencia",
+          "text": "## Aviso de vigencia\n\nEste documento se conserva solo como archivo histórico. Dejó de aplicarse el 1 de marzo de 2026 y fue sustituido por la política de envíos vigente. No debe utilizarse para informar a los clientes.",
+          "ordinal": 0
+        },
+        {
+          "chunkId": "cb7dabfb11854:05-envios-2025-sustituida:01",
+          "vectorId": "cb7dabfb11854:05-envios-2025-sustituida:01",
+          "section": "Envío estándar en 2025",
+          "text": "## Envío estándar en 2025\n\nEn 2025, el envío estándar a la península costaba 2,99 € y era gratuito a partir de 29 € por pedido completo, sumando los artículos de todos los vendedores.",
+          "ordinal": 1
+        },
+        {
+          "chunkId": "cb7dabfb11854:05-envios-2025-sustituida:02",
+          "vectorId": "cb7dabfb11854:05-envios-2025-sustituida:02",
+          "section": "Envío exprés en 2025",
+          "text": "## Envío exprés en 2025\n\nEn 2025 el envío exprés costaba 5,99 € y estaba disponible también para Baleares, con entrega en 48 horas.",
+          "ordinal": 2
+        },
+        {
+          "chunkId": "cb7dabfb11854:05-envios-2025-sustituida:03",
+          "vectorId": "cb7dabfb11854:05-envios-2025-sustituida:03",
+          "section": "Baleares y Portugal en 2025",
+          "text": "## Baleares y Portugal en 2025\n\nEn 2025 los envíos a Baleares costaban 4,99 € y eran gratuitos desde 49 €. Portugal continental tenía la misma tarifa que la península.",
+          "ordinal": 3
+        }
+      ]
+    },
+    {
+      "id": "06-pagos-y-reembolsos",
+      "title": "Pagos y reembolsos",
+      "audience": "program",
+      "session": null,
+      "verified": "2026-10-24",
+      "source": "lab/corpus/sources/06-pagos-y-reembolsos.md (tienda ficticia Zocomar)",
+      "sourcePath": "06-pagos-y-reembolsos.md",
+      "sourceHash": "b92754532abe1205",
+      "curriculum": "absent",
+      "exerciseDetail": "absent",
+      "chunks": [
+        {
+          "chunkId": "cb7dabfb11854:06-pagos-y-reembolsos:00",
+          "vectorId": "cb7dabfb11854:06-pagos-y-reembolsos:00",
+          "section": "Métodos de pago aceptados",
+          "text": "## Métodos de pago aceptados\n\nZocomar acepta tarjeta de débito o crédito (Visa y Mastercard), Bizum, PayPal y saldo Zocomar. La transferencia bancaria solo está disponible para pedidos de más de 300 €, y el pedido no se prepara hasta recibirla. No se acepta el pago contra reembolso.",
+          "ordinal": 0
+        },
+        {
+          "chunkId": "cb7dabfb11854:06-pagos-y-reembolsos:01",
+          "vectorId": "cb7dabfb11854:06-pagos-y-reembolsos:01",
+          "section": "ZocoPlazos: pago en tres cuotas",
+          "text": "## ZocoPlazos: pago en tres cuotas\n\nZocoPlazos permite pagar en 3 cuotas mensuales sin intereses los pedidos de entre 90 € y 1.500 €. La primera cuota se cobra al confirmar el pedido. Solo está disponible con tarjeta y exige que la tarjeta caduque después de la última cuota.",
+          "ordinal": 1
+        },
+        {
+          "chunkId": "cb7dabfb11854:06-pagos-y-reembolsos:02",
+          "vectorId": "cb7dabfb11854:06-pagos-y-reembolsos:02",
+          "section": "Plazos de abono de los reembolsos",
+          "text": "## Plazos de abono de los reembolsos\n\nUna vez ordenado el reembolso, el abono tarda 5 días hábiles en tarjeta, 2 días hábiles en Bizum y 24 horas en PayPal. El reembolso en saldo Zocomar es inmediato y puede elegirse en lugar del método original. En los pedidos pagados con ZocoPlazos se cancelan las cuotas pendientes y se devuelven a la tarjeta las ya pagadas.",
+          "ordinal": 2
+        },
+        {
+          "chunkId": "cb7dabfb11854:06-pagos-y-reembolsos:03",
+          "vectorId": "cb7dabfb11854:06-pagos-y-reembolsos:03",
+          "section": "Cargos duplicados y retenciones",
+          "text": "## Cargos duplicados y retenciones\n\nAl confirmar un pedido, el banco puede mostrar una retención temporal además del cargo definitivo. Las retenciones de pedidos cancelados o modificados se liberan solas en un máximo de 7 días naturales. Si aparecen dos cargos definitivos por el mismo pedido, Zocomar devuelve el cargo duplicado en 48 horas hábiles desde que el cliente lo comunica por el chat de atención al cliente.",
+          "ordinal": 3
+        },
+        {
+          "chunkId": "cb7dabfb11854:06-pagos-y-reembolsos:04",
+          "vectorId": "cb7dabfb11854:06-pagos-y-reembolsos:04",
+          "section": "Facturas",
+          "text": "## Facturas\n\nLa factura de cada artículo la emite el vendedor y se descarga desde «Mis pedidos» en un plazo de 24 horas tras el envío. Para obtener la factura a nombre de una empresa hay que indicar su NIF antes de confirmar el pedido; no se puede modificar después.",
+          "ordinal": 4
+        }
+      ]
+    },
+    {
+      "id": "07-vendedores-planes-y-comisiones",
+      "title": "Vender en Zocomar: planes, comisiones y pagos",
+      "audience": "program",
+      "session": null,
+      "verified": "2026-10-24",
+      "source": "lab/corpus/sources/07-vendedores-planes-y-comisiones.md (tienda ficticia Zocomar)",
+      "sourcePath": "07-vendedores-planes-y-comisiones.md",
+      "sourceHash": "28af29a3ba1d7d86",
+      "curriculum": "absent",
+      "exerciseDetail": "absent",
+      "chunks": [
+        {
+          "chunkId": "cb7dabfb11854:07-vendedores-planes-y-comisiones:00",
+          "vectorId": "cb7dabfb11854:07-vendedores-planes-y-comisiones:00",
+          "section": "Planes para vendedores",
+          "text": "## Planes para vendedores\n\nEl Plan Básico no tiene cuota mensual y aplica una comisión del 12 % sobre el precio de venta con IVA. El Plan Pro cuesta 39 € al mes más IVA y reduce la comisión al 8 %. En la categoría de electrónica la comisión es del 7 % en los dos planes.",
+          "ordinal": 0
+        },
+        {
+          "chunkId": "cb7dabfb11854:07-vendedores-planes-y-comisiones:01",
+          "vectorId": "cb7dabfb11854:07-vendedores-planes-y-comisiones:01",
+          "section": "Liquidación de las ventas",
+          "text": "## Liquidación de las ventas\n\nZocomar paga a los vendedores cada 14 días por transferencia. Cada venta entra en la liquidación cuando han pasado 7 días desde la entrega sin una devolución ni una disputa abierta.",
+          "ordinal": 1
+        },
+        {
+          "chunkId": "cb7dabfb11854:07-vendedores-planes-y-comisiones:02",
+          "vectorId": "cb7dabfb11854:07-vendedores-planes-y-comisiones:02",
+          "section": "Sello «Devolución gratuita»",
+          "text": "## Sello «Devolución gratuita»\n\nLos vendedores con una valoración media igual o superior a 4,5 y una tasa de incidencias inferior al 2 % pueden activar el sello «Devolución gratuita». Con el sello activo, el vendedor asume el coste de todas las devoluciones de sus artículos.",
+          "ordinal": 2
+        },
+        {
+          "chunkId": "cb7dabfb11854:07-vendedores-planes-y-comisiones:03",
+          "vectorId": "cb7dabfb11854:07-vendedores-planes-y-comisiones:03",
+          "section": "Cancelaciones del vendedor",
+          "text": "## Cancelaciones del vendedor\n\nSi el vendedor cancela un pedido ya confirmado por falta de stock, se le aplica una penalización de 5 € por pedido y el comprador recibe el reembolso completo de inmediato. Tres cancelaciones en 30 días suspenden temporalmente la cuenta del vendedor.",
+          "ordinal": 3
+        },
+        {
+          "chunkId": "cb7dabfb11854:07-vendedores-planes-y-comisiones:04",
+          "vectorId": "cb7dabfb11854:07-vendedores-planes-y-comisiones:04",
+          "section": "Plazos de preparación",
+          "text": "## Plazos de preparación\n\nEl vendedor debe entregar el paquete al transportista en un máximo de 2 días laborables desde la confirmación del pedido, o de 1 día laborable para los artículos con «Exprés disponible».",
+          "ordinal": 4
+        }
+      ]
+    },
+    {
+      "id": "08-garantia-zocomar-y-disputas",
+      "title": "Garantía Zocomar y disputas",
+      "audience": "program",
+      "session": null,
+      "verified": "2026-10-24",
+      "source": "lab/corpus/sources/08-garantia-zocomar-y-disputas.md (tienda ficticia Zocomar)",
+      "sourcePath": "08-garantia-zocomar-y-disputas.md",
+      "sourceHash": "1982c226de842f35",
+      "curriculum": "absent",
+      "exerciseDetail": "absent",
+      "chunks": [
+        {
+          "chunkId": "cb7dabfb11854:08-garantia-zocomar-y-disputas:00",
+          "vectorId": "cb7dabfb11854:08-garantia-zocomar-y-disputas:00",
+          "section": "Qué cubre la Garantía Zocomar",
+          "text": "## Qué cubre la Garantía Zocomar\n\nLa Garantía Zocomar protege al comprador cuando un pedido no llega, llega dañado o no corresponde con la descripción y el vendedor no lo resuelve. Cubre hasta 2.500 € por pedido. No cubre los pagos hechos fuera de Zocomar ni los daños causados por el comprador.",
+          "ordinal": 0
+        },
+        {
+          "chunkId": "cb7dabfb11854:08-garantia-zocomar-y-disputas:01",
+          "vectorId": "cb7dabfb11854:08-garantia-zocomar-y-disputas:01",
+          "section": "Cuándo abrir una disputa",
+          "text": "## Cuándo abrir una disputa\n\nPor un pedido no recibido, la disputa puede abrirse desde el tercer día posterior a la fecha máxima de entrega y hasta 30 días después de esa fecha. Si el artículo llegó dañado o no corresponde con lo pedido, el plazo para abrirla es de 30 días desde la entrega.",
+          "ordinal": 1
+        },
+        {
+          "chunkId": "cb7dabfb11854:08-garantia-zocomar-y-disputas:02",
+          "vectorId": "cb7dabfb11854:08-garantia-zocomar-y-disputas:02",
+          "section": "Cómo se resuelve una disputa",
+          "text": "## Cómo se resuelve una disputa\n\nEl vendedor tiene 48 horas para responder a la disputa. Si no responde o no hay acuerdo, el comprador puede pedir la mediación de Zocomar, que resuelve en un máximo de 10 días hábiles. Si la resolución es favorable al comprador, el reembolso se ordena ese mismo día.",
+          "ordinal": 2
+        },
+        {
+          "chunkId": "cb7dabfb11854:08-garantia-zocomar-y-disputas:03",
+          "vectorId": "cb7dabfb11854:08-garantia-zocomar-y-disputas:03",
+          "section": "Pruebas que se piden",
+          "text": "## Pruebas que se piden\n\nPara un paquete dañado hay que adjuntar fotos del embalaje y del artículo en los 3 primeros días tras la entrega. Para un artículo que no corresponde con lo pedido, fotos de la etiqueta y del artículo recibido.",
+          "ordinal": 3
+        }
+      ]
+    },
+    {
+      "id": "09-zocomar-plus",
+      "title": "Zocomar Plus",
+      "audience": "program",
+      "session": null,
+      "verified": "2026-10-24",
+      "source": "lab/corpus/sources/09-zocomar-plus.md (tienda ficticia Zocomar)",
+      "sourcePath": "09-zocomar-plus.md",
+      "sourceHash": "d9a69e6483ed2831",
+      "curriculum": "absent",
+      "exerciseDetail": "absent",
+      "chunks": [
+        {
+          "chunkId": "cb7dabfb11854:09-zocomar-plus:00",
+          "vectorId": "cb7dabfb11854:09-zocomar-plus:00",
+          "section": "Precio y prueba gratuita",
+          "text": "## Precio y prueba gratuita\n\nZocomar Plus cuesta 4,99 € al mes o 49 € al año. Cada cliente puede disfrutar una sola vez de una prueba gratuita de 30 días. La cuota se cobra al terminar la prueba si no se cancela antes.",
+          "ordinal": 0
+        },
+        {
+          "chunkId": "cb7dabfb11854:09-zocomar-plus:01",
+          "vectorId": "cb7dabfb11854:09-zocomar-plus:01",
+          "section": "Ventajas de la suscripción",
+          "text": "## Ventajas de la suscripción\n\nPlus incluye envío estándar gratuito en las condiciones de la política de envíos vigente, envío exprés a precio reducido, un plazo de devolución ampliado a 45 días en los artículos que siguen el plazo general y acceso anticipado de 24 horas a las ofertas destacadas.",
+          "ordinal": 1
+        },
+        {
+          "chunkId": "cb7dabfb11854:09-zocomar-plus:02",
+          "vectorId": "cb7dabfb11854:09-zocomar-plus:02",
+          "section": "Cancelación y reembolso de la cuota",
+          "text": "## Cancelación y reembolso de la cuota\n\nLa suscripción puede cancelarse en cualquier momento desde «Mi cuenta» y las ventajas se mantienen hasta el final del periodo pagado. La cuota mensual no se reembolsa. La cuota anual se reembolsa de forma proporcional solo si se cancela en los primeros 14 días y no se ha usado ninguna ventaja.",
+          "ordinal": 2
+        }
+      ]
+    },
+    {
+      "id": "10-productos-prohibidos-y-restringidos",
+      "title": "Productos prohibidos y restringidos",
+      "audience": "program",
+      "session": null,
+      "verified": "2026-10-24",
+      "source": "lab/corpus/sources/10-productos-prohibidos-y-restringidos.md (tienda ficticia Zocomar)",
+      "sourcePath": "10-productos-prohibidos-y-restringidos.md",
+      "sourceHash": "95be2be282641cbd",
+      "curriculum": "absent",
+      "exerciseDetail": "absent",
+      "chunks": [
+        {
+          "chunkId": "cb7dabfb11854:10-productos-prohibidos-y-restringidos:00",
+          "vectorId": "cb7dabfb11854:10-productos-prohibidos-y-restringidos:00",
+          "section": "Productos prohibidos",
+          "text": "## Productos prohibidos\n\nEn Zocomar no se pueden vender medicamentos, productos sanitarios que requieran receta, armas ni sus réplicas, animales vivos, tabaco, productos de vapeo con nicotina, entradas para espectáculos ni productos falsificados.",
+          "ordinal": 0
+        },
+        {
+          "chunkId": "cb7dabfb11854:10-productos-prohibidos-y-restringidos:01",
+          "vectorId": "cb7dabfb11854:10-productos-prohibidos-y-restringidos:01",
+          "section": "Productos restringidos por edad",
+          "text": "## Productos restringidos por edad\n\nLas bebidas alcohólicas y los cuchillos de cocina con una hoja de más de 11 cm solo se entregan a mayores de 18 años. El repartidor pide un documento de identidad en la entrega y, si el destinatario no lo acredita, el paquete vuelve al vendedor y se reembolsa sin los gastos de envío.",
+          "ordinal": 1
+        },
+        {
+          "chunkId": "cb7dabfb11854:10-productos-prohibidos-y-restringidos:02",
+          "vectorId": "cb7dabfb11854:10-productos-prohibidos-y-restringidos:02",
+          "section": "Baterías y mercancías peligrosas",
+          "text": "## Baterías y mercancías peligrosas\n\nLas baterías de litio sueltas de más de 100 Wh, los aerosoles inflamables y los productos con combustible no pueden enviarse por envío exprés. Solo se envían por envío estándar terrestre dentro de España peninsular.",
+          "ordinal": 2
+        }
+      ]
+    },
+    {
+      "id": "11-atencion-al-cliente",
+      "title": "Atención al cliente",
+      "audience": "program",
+      "session": null,
+      "verified": "2026-10-24",
+      "source": "lab/corpus/sources/11-atencion-al-cliente.md (tienda ficticia Zocomar)",
+      "sourcePath": "11-atencion-al-cliente.md",
+      "sourceHash": "5e00c79b0cfd96c6",
+      "curriculum": "absent",
+      "exerciseDetail": "absent",
+      "chunks": [
+        {
+          "chunkId": "cb7dabfb11854:11-atencion-al-cliente:00",
+          "vectorId": "cb7dabfb11854:11-atencion-al-cliente:00",
+          "section": "Canales y horarios",
+          "text": "## Canales y horarios\n\nEl chat de la aplicación atiende todos los días de 8:00 a 22:00. El teléfono gratuito, que aparece en la sección «Ayuda» de la aplicación, atiende de lunes a viernes de 9:00 a 19:00. Zocomar no ofrece atención por correo electrónico ni por redes sociales.",
+          "ordinal": 0
+        },
+        {
+          "chunkId": "cb7dabfb11854:11-atencion-al-cliente:01",
+          "vectorId": "cb7dabfb11854:11-atencion-al-cliente:01",
+          "section": "Tiempos de respuesta",
+          "text": "## Tiempos de respuesta\n\nEl objetivo de primera respuesta del chat es de 5 minutos. Las reclamaciones formales presentadas desde «Ayuda» > «Reclamación» se responden por escrito en un máximo de 30 días naturales.",
+          "ordinal": 1
+        },
+        {
+          "chunkId": "cb7dabfb11854:11-atencion-al-cliente:02",
+          "vectorId": "cb7dabfb11854:11-atencion-al-cliente:02",
+          "section": "Idiomas",
+          "text": "## Idiomas\n\nLa atención se presta en español y en portugués. Las fichas de producto pueden estar en otros idiomas si el vendedor es extranjero.",
+          "ordinal": 2
+        }
+      ]
+    },
+    {
+      "id": "12-promociones-y-cupones",
+      "title": "Promociones, cupones y garantía de precio",
+      "audience": "program",
+      "session": null,
+      "verified": "2026-10-24",
+      "source": "lab/corpus/sources/12-promociones-y-cupones.md (tienda ficticia Zocomar)",
+      "sourcePath": "12-promociones-y-cupones.md",
+      "sourceHash": "05f44c4a3fa35e9a",
+      "curriculum": "absent",
+      "exerciseDetail": "absent",
+      "chunks": [
+        {
+          "chunkId": "cb7dabfb11854:12-promociones-y-cupones:00",
+          "vectorId": "cb7dabfb11854:12-promociones-y-cupones:00",
+          "section": "Cupón de bienvenida",
+          "text": "## Cupón de bienvenida\n\nLos clientes nuevos reciben un cupón de 10 € para su primer pedido, válido en compras de 50 € o más durante 30 días desde el registro. No es acumulable con otros cupones.",
+          "ordinal": 0
+        },
+        {
+          "chunkId": "cb7dabfb11854:12-promociones-y-cupones:01",
+          "vectorId": "cb7dabfb11854:12-promociones-y-cupones:01",
+          "section": "Cupones y devoluciones",
+          "text": "## Cupones y devoluciones\n\nSi se devuelve un artículo comprado con un cupón, el reembolso descuenta la parte proporcional del cupón aplicada a ese artículo. El cupón no se repone ni se convierte en saldo.",
+          "ordinal": 1
+        },
+        {
+          "chunkId": "cb7dabfb11854:12-promociones-y-cupones:02",
+          "vectorId": "cb7dabfb11854:12-promociones-y-cupones:02",
+          "section": "Garantía de precio",
+          "text": "## Garantía de precio\n\nSi el precio de un artículo vendido y enviado por Zocomar baja en los 7 días siguientes a la compra, el cliente puede solicitar la diferencia como saldo Zocomar desde «Mis pedidos». No se aplica a los artículos de otros vendedores ni a las ofertas flash.",
+          "ordinal": 2
+        },
+        {
+          "chunkId": "cb7dabfb11854:12-promociones-y-cupones:03",
+          "vectorId": "cb7dabfb11854:12-promociones-y-cupones:03",
+          "section": "Ofertas flash",
+          "text": "## Ofertas flash\n\nLas ofertas flash duran como máximo 24 horas o hasta agotar las unidades reservadas. Un mismo cliente puede comprar como máximo 2 unidades de cada oferta flash.",
+          "ordinal": 3
+        }
+      ]
+    }
+  ]
+}

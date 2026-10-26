@@ -186,6 +186,8 @@ export interface CragTurnInput {
   scenarioId: string | null;
   // Plazo opcional del perfil; la demo y las referencias anteriores conservan 20 segundos.
   executionBudgetMs?: number;
+  // Si el corpus tiene grupos y calendario. Sin valor, sí (curso); la tienda no pide grupo.
+  groups?: boolean;
   // Callback de cada paso.
   onStep?: (step: CragStep) => void;
 }
@@ -300,6 +302,10 @@ function emitStep(
     query?: string;
     // Ids conservados.
     retainedIds?: string[];
+    // Modo clase: candidatos con coseno y, tras el juez, nota y motivo.
+    candidates?: NonNullable<CragStep["candidates"]>;
+    // Modo clase: lagunas nombradas por el juez.
+    gaps?: string[];
   },
 ): CragStep {
   // Paso recortado y validado con el esquema.
@@ -319,6 +325,22 @@ function emitStep(
       CRAG_BOUNDS.maxRetained,
     ),
     discardedIds: step.discardedIds.slice(0, 10),
+    // Detalle del modo clase, solo si el paso lo trae y recortado a los límites del contrato.
+    ...(step.candidates === undefined
+      ? {}
+      : {
+          candidates: step.candidates.slice(0, CRAG_BOUNDS.maxCandidates).map((item) => ({
+            ...item,
+            reason: item.reason === null ? null : item.reason.slice(0, CRAG_BOUNDS.maxReasonChars),
+          })),
+        }),
+    ...(step.gaps === undefined
+      ? {}
+      : {
+          gaps: step.gaps
+            .slice(0, CRAG_BOUNDS.maxGaps)
+            .map((gap) => gap.slice(0, CRAG_BOUNDS.maxGapChars)),
+        }),
   });
   // Lo emite.
   emit(built);
@@ -515,8 +537,12 @@ export async function runCragTurn(input: CragTurnInput): Promise<CragTurnResult>
         // Devuelve.
         return stop;
       }
-      // Calendario en la vista general.
-      if (state.scope.audience === "program" && isScheduleQuestion(state.originalQuestion)) {
+      // Calendario en la vista general, solo en un corpus con grupos.
+      if (
+        input.groups !== false &&
+        state.scope.audience === "program" &&
+        isScheduleQuestion(state.originalQuestion)
+      ) {
         // Paso clarify.
         emitStep(state, emit, {
           kind: "clarify",
@@ -641,6 +667,13 @@ export async function runCragTurn(input: CragTurnInput): Promise<CragTurnResult>
             : `Búsqueda ${String(retrievalCount)}. ${String(filtered.accepted.length)} fragmentos en alcance.`,
         evidenceStatus: null,
         discardedIds: filtered.dropped.map((item) => item.chunkId),
+        // Candidatos en el orden de Vectorize, con su coseno; el juez aún no los ha visto.
+        candidates: filtered.accepted.map((chunk) => ({
+          chunkId: chunk.chunkId,
+          cosine: chunk.score,
+          relevance: null,
+          reason: null,
+        })),
       });
       // Candidatos.
       return {
@@ -789,11 +822,20 @@ export async function runCragTurn(input: CragTurnInput): Promise<CragTurnResult>
         .map((hit) => `${hit.chunkId} ${hit.score.toFixed(3)}`)
         .join(", ");
       // Paso rank.
+      // Coseno de cada fragmento mostrado, para enseñarlo junto a la nota del juez.
+      const cosineById = new Map(shown.map((chunk) => [chunk.chunkId, chunk.score]));
       emitStep({ ...state, ledger }, emit, {
         kind: "rank",
         status: `Orden: ${order || "sin fragmentos"}.`.slice(0, CRAG_BOUNDS.maxReasonChars),
         evidenceStatus: null,
         discardedIds: [],
+        // Candidatos en el orden validado del juez, con su nota y su motivo.
+        candidates: parsed.ranking.map((hit) => ({
+          chunkId: hit.chunkId,
+          cosine: cosineById.get(hit.chunkId) ?? null,
+          relevance: hit.score,
+          reason: hit.reason,
+        })),
       });
       // Pasa el ranking validado y la salida bruta al nodo assess.
       return {
@@ -931,6 +973,8 @@ export async function runCragTurn(input: CragTurnInput): Promise<CragTurnResult>
         evidenceStatus: parsed.assessment.status,
         discardedIds: [],
         retainedIds: parsed.assessment.usefulIds,
+        // Lagunas que justifican reformular.
+        gaps: parsed.assessment.gaps,
       });
       // Decisión validada.
       return {

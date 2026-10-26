@@ -27,6 +27,15 @@ import {
 } from "@thepower-rag/contracts";
 // Lectura de la lista de dominios permitidos de la investigación.
 import { parseAllowedDomains } from "@thepower-rag/research";
+// Tipo del corpus del chat.
+import type { ChatCorpusId } from "@thepower-rag/contracts";
+// Corpus del chat: lectura de CHAT_CORPUS y variables y bindings propios de la tienda.
+import {
+  SHARED_RETRIEVAL_VARIABLES,
+  STORE_BINDING_NAMES,
+  STORE_SETTING_VARIABLES,
+  chatCorpusId,
+} from "./chat-corpus";
 
 // Variables y bindings que recibe el Worker (todas opcionales).
 export interface WorkerEnv {
@@ -34,6 +43,14 @@ export interface WorkerEnv {
   APP_MODE?: string;
   // complete para el RAG con contexto completo.
   RAG_CONTEXT_MODE?: string;
+  // Corpus del chat: course (por defecto) o zocomar. La investigación usa siempre el curso.
+  CHAT_CORPUS?: string;
+  // Versión del corpus de la tienda Zocomar.
+  STORE_CORPUS_VERSION?: string;
+  // Perfil del índice de la tienda.
+  STORE_INDEX_PROFILE?: string;
+  // Umbral de similitud del RAG básico sobre la tienda (calibrado con BGE-M3).
+  STORE_MIN_RETRIEVAL_SCORE?: string;
   // Origen público (para Turnstile).
   PUBLIC_ORIGIN?: string;
   // Clave pública de Turnstile.
@@ -128,8 +145,10 @@ export interface WorkerEnv {
   RESEARCH_OWNER_SECRET?: string;
   // Binding de Workers AI.
   AI?: unknown;
-  // Binding de Vectorize.
+  // Binding de Vectorize del curso (también lo usa la investigación).
   VECTORIZE?: unknown;
+  // Binding de Vectorize de la tienda Zocomar (solo el chat).
+  VECTORIZE_STORE?: unknown;
   // Binding de D1 del curso.
   DB?: unknown;
   // Binding de R2 del corpus.
@@ -239,8 +258,12 @@ export interface Assessment {
   message: string | null;
   // Ajustes de generación, o null.
   generation: GenerationSettings | null;
-  // Ajustes del RAG, o null.
+  // Ajustes del RAG del curso, o null. Los usa la investigación de S12.
   retrieval: RetrievalSettings | null;
+  // Corpus del chat (null si CHAT_CORPUS no es válido).
+  chatCorpus: ChatCorpusId | null;
+  // Ajustes del RAG del chat: los del curso o los de la tienda, o null.
+  chatRetrieval: RetrievalSettings | null;
   // Estado de cada etapa.
   capabilities: {
     // Sin RAG.
@@ -752,6 +775,42 @@ function retrievalMissing(env: WorkerEnv): string[] {
   return [...missing];
 }
 
+// Lo que falta para que el chat use la tienda: generación, embeddings compartidos, sus variables y
+// su índice. Con la tienda el contexto completo no está disponible: se pide el recorrido semántico.
+function storeRetrievalMissing(env: WorkerEnv): string[] {
+  // Generación, ajustes compartidos, variables de la tienda y bindings.
+  const missing = new Set<string>([
+    ...generationMissing(env),
+    ...absent(env, SHARED_RETRIEVAL_VARIABLES),
+    ...absent(env, STORE_SETTING_VARIABLES),
+    ...STORE_BINDING_NAMES.filter((name) => env[name] == null),
+  ]);
+  // Dimensión no válida.
+  if (
+    isConfiguredValue(env.EMBEDDING_DIMENSIONS) &&
+    positiveInteger(env.EMBEDDING_DIMENSIONS) === null
+  )
+    // Se marca.
+    missing.add("EMBEDDING_DIMENSIONS");
+  // Umbral de la tienda no válido.
+  if (
+    isConfiguredValue(env.STORE_MIN_RETRIEVAL_SCORE) &&
+    finiteNumber(env.STORE_MIN_RETRIEVAL_SCORE) === null
+  )
+    // Se marca.
+    missing.add("STORE_MIN_RETRIEVAL_SCORE");
+  // Métrica distinta de coseno.
+  if (isConfiguredValue(env.VECTOR_METRIC) && env.VECTOR_METRIC?.trim() !== "cosine")
+    // Se marca.
+    missing.add("VECTOR_METRIC");
+  // El contexto completo lee el manifiesto del curso: con la tienda no se sustituye en silencio.
+  if (env.RAG_CONTEXT_MODE === "complete")
+    // Se marca.
+    missing.add("RAG_CONTEXT_MODE");
+  // Lista sin repetidos.
+  return [...missing];
+}
+
 // Diagnóstico completo del Worker.
 export function assessWorker(env: WorkerEnv): Assessment {
   // Modo pedido.
@@ -769,6 +828,8 @@ export function assessWorker(env: WorkerEnv): Assessment {
       message: "APP_MODE debe ser demo o real.",
       generation: null,
       retrieval: null,
+      chatCorpus: chatCorpusId(env.CHAT_CORPUS),
+      chatRetrieval: null,
       // Cada etapa dice qué falta: APP_MODE.
       capabilities: {
         "sin-rag": { status: "blocked", missing: ["APP_MODE"] },
@@ -798,6 +859,36 @@ export function assessWorker(env: WorkerEnv): Assessment {
         }
       : null;
 
+  // Corpus del chat pedido (null si el valor no es válido).
+  const chatCorpus = chatCorpusId(env.CHAT_CORPUS);
+  // Lo que falta para el chat: el del curso, el de la tienda o el propio CHAT_CORPUS.
+  const chatMissing =
+    chatCorpus === null
+      ? ["CHAT_CORPUS"]
+      : chatCorpus === "course"
+        ? ragMissing
+        : storeRetrievalMissing(env);
+  // Umbral de la tienda.
+  const storeMinScore = finiteNumber(env.STORE_MIN_RETRIEVAL_SCORE);
+  // Ajustes del RAG del chat si no falta nada.
+  const chatRetrieval =
+    chatCorpus === "course"
+      ? retrieval
+      : chatCorpus === "zocomar" &&
+          chatMissing.length === 0 &&
+          generation !== null &&
+          dimensions !== null &&
+          storeMinScore !== null
+        ? {
+            embeddingModel: text(env, "EMBEDDING_MODEL")?.trim() ?? "",
+            dimensions,
+            corpusVersion: text(env, "STORE_CORPUS_VERSION")?.trim() ?? "",
+            indexProfile: text(env, "STORE_INDEX_PROFILE")?.trim() ?? "",
+            metric: "cosine" as const,
+            minScore: storeMinScore,
+          }
+        : null;
+
   // Modo demo (o sin modo): todo con guiones.
   if (requested === undefined || requested === "demo") {
     // Diagnóstico de la demo.
@@ -807,6 +898,9 @@ export function assessWorker(env: WorkerEnv): Assessment {
       message: null,
       generation: null,
       retrieval: null,
+      // La demo trae los guiones y el índice léxico del curso, sea cual sea CHAT_CORPUS.
+      chatCorpus: "course",
+      chatRetrieval: null,
       // Estados «offline-*»: la interfaz los muestra como demostración, no como servicio real.
       capabilities: {
         "sin-rag": { status: "offline-demo", missing: [] },
@@ -826,29 +920,34 @@ export function assessWorker(env: WorkerEnv): Assessment {
       generation === null
         ? "El modo real necesita la configuración de generación. No hay demostración de sustitución."
         : null,
-    // Ajustes resueltos de generación y recuperación (o null).
+    // Ajustes resueltos de generación y recuperación (o null): el curso y el del chat.
     generation,
     retrieval,
-    // Sin RAG necesita generación; RAG, la recuperación completa; CRAG, además el evaluador.
+    chatCorpus,
+    chatRetrieval,
+    // Sin RAG necesita generación; RAG, la recuperación del chat; CRAG, además el evaluador.
     capabilities: {
-      "sin-rag": { status: generation ? "ready" : "blocked", missing: generationGaps },
-      rag: { status: retrieval ? "ready" : "blocked", missing: ragMissing },
+      "sin-rag": {
+        status: generation && chatCorpus !== null ? "ready" : "blocked",
+        missing: chatCorpus === null ? [...generationGaps, "CHAT_CORPUS"] : generationGaps,
+      },
+      rag: { status: chatRetrieval ? "ready" : "blocked", missing: chatMissing },
       crag: {
         status:
-          retrieval !== null &&
+          chatRetrieval !== null &&
           absent(env, CRAG_VARIABLES).length === 0 &&
           cragExecutionBudgetMs(env) !== null
             ? "ready"
             : "blocked",
         missing: [
           ...new Set([
-            ...ragMissing,
+            ...chatMissing,
             ...absent(env, CRAG_VARIABLES),
             ...(cragExecutionBudgetMs(env) === null ? ["CRAG_EXECUTION_BUDGET_MS"] : []),
           ]),
         ],
       },
-      // La investigación tiene su propio diagnóstico.
+      // La investigación tiene su propio diagnóstico y lee siempre el curso.
       research: researchCapability(env, ragMissing),
     },
   };

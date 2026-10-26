@@ -270,6 +270,11 @@ describe("grafo CRAG", () => {
     expect(result.summary.originalQuestion).toBe("estado y observabilidad");
     // Y la consulta actual.
     expect(result.summary.currentQuery).toBe("observabilidad del agente");
+    // Modo clase: la primera valoración nombra la laguna que justifica reformular.
+    const assessSteps = result.steps.filter((step) => step.kind === "assess");
+    expect(assessSteps[0]?.gaps).toEqual(["falta observar la ejecución"]);
+    // La valoración suficiente ya no trae lagunas.
+    expect(assessSteps[1]?.gaps).toEqual([]);
   });
 
   // Un fragmento rechazado no se cita.
@@ -466,6 +471,30 @@ describe("grafo CRAG", () => {
     expect(clarify.counts).toEqual({ retrieve: 0, rank: 0, rewrite: 0, generate: 0 });
   });
 
+  // Un corpus sin grupos (la tienda Zocomar) no confunde «horario» o «qué día» con el calendario.
+  it("no pide grupo con un corpus sin calendarios", async () => {
+    // Pregunta de la tienda que parece de calendario.
+    const question = "¿Qué día de la semana se publican las ofertas flash?";
+    // Con el curso pide grupo.
+    expect((await turn(question)).result.terminal).toBe("clarify");
+    // Puertos simulados para la tienda.
+    const used = ports();
+    // Mismo turno sin grupos.
+    const result = await runCragTurn({
+      question,
+      scope,
+      ports: used,
+      fixture: true,
+      scenarioId: null,
+      groups: false,
+    });
+    // No se aclara: busca, evalúa y responde.
+    expect(result.terminal).toBe("answer");
+    // Hubo búsqueda y evaluación.
+    expect(used.counts.retrieve).toBe(1);
+    expect(used.counts.rank).toBe(1);
+  });
+
   // Respeta el orden del evaluador y descarta una generación fuera de plazo.
   it("aplica el orden devuelto y no acepta una generación fuera de plazo", async () => {
     // Evaluador que pone b delante de a.
@@ -502,6 +531,18 @@ describe("grafo CRAG", () => {
     expect(ranked.result.summary.retained.map((item) => item.chunkId)).toEqual(["b", "a"]);
     // El paso muestra b con su puntuación.
     expect(ranked.result.steps.some((step) => step.status.includes("b 0.200"))).toBe(true);
+    // Modo clase: la búsqueda trae los candidatos con su coseno y sin nota del juez.
+    const retrieveStep = ranked.result.steps.find((step) => step.kind === "retrieve");
+    expect(retrieveStep?.candidates).toEqual([
+      { chunkId: "a", cosine: 0.5, relevance: null, reason: null },
+      { chunkId: "b", cosine: 0.5, relevance: null, reason: null },
+    ]);
+    // El paso del juez sigue su orden, con coseno, nota y motivo de cada fragmento.
+    const rankStep = ranked.result.steps.find((step) => step.kind === "rank");
+    expect(rankStep?.candidates).toEqual([
+      { chunkId: "b", cosine: 0.5, relevance: 0.2, reason: "va delante" },
+      { chunkId: "a", cosine: 0.5, relevance: 0.9, reason: "va detrás" },
+    ]);
 
     // Número de búsqueda.
     let retrieval = 0;

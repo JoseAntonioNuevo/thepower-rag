@@ -10,7 +10,7 @@ S12 también está publicado: conversaciones aisladas, investigación asíncrona
 
 ## Perfil de calidad publicado · 18 de octubre de 2026
 
-**Sonnet 5.5** está publicado para el generador de sin RAG/RAG/CRAG y su evaluador, con 30 s por llamada y un plazo único de CRAG de **60 segundos**. La versión `c9eae749-6cd4-4911-95a4-3cbb8390d2d9` recibe el 100 % del tráfico; se verificaron health, una respuesta RAG y otra CRAG con fuentes. La comparativa dirigida completó 28 llamadas; el conjunto reservado de veinte preguntas sigue sin ejecutar con Sonnet. La [evidencia de publicación y pruebas](docs/evidence/sonnet-quality-2026-10-18.md) separa estos resultados de los históricos. S12 mantiene Haiku, Whisper y Aura.
+**Sonnet 5.5** está publicado para el generador de sin RAG/RAG/CRAG y su evaluador, con 30 s por llamada y un plazo único de CRAG de **60 segundos**. La versión `c9eae749-6cd4-4911-95a4-3cbb8390d2d9` recibe el 100 % del tráfico; se verificaron health, una respuesta RAG y otra CRAG con fuentes. La comparativa dirigida completó 28 llamadas; el conjunto reservado de veinte preguntas sigue sin ejecutar con Sonnet. La [evidencia de publicación y pruebas](docs/evidence/sonnet-quality-2026-10-18.md) separa estos resultados de los históricos. S12 mantiene Haiku, Whisper y Aura. El 26/10 se publicó el reparto Haiku generador y Sonnet evaluador, versión `35d435a0-8f36-4c6b-8051-73cfae84456b` ([decisión](docs/decisions.md)).
 
 Tras las dos pruebas quedan **0,6283574 USD** para nuevas reservas públicas. Un turno CRAG Sonnet requiere reservar **0,9000885 USD** y quedará bloqueado por el tope acumulado existente. No se ha reiniciado ni ampliado ese presupuesto. El [informe de migración](docs/sonnet-crag.md) explica costes y límites.
 
@@ -37,7 +37,7 @@ El navegador habla con un único Worker. Workers Static Assets sirve React. Hono
 - D1 guarda texto, metadatos, versiones y registros de ejecución.
 - R2 guarda el corpus privado y, en S12, adjuntos de investigación en un bucket aparte.
 - Workers AI ejecuta embeddings con `@cf/baai/bge-m3`; la dimensión observada en esta cuenta es 1024.
-- El despliegue documentado del 11/10 generaba con `claude-haiku-5-5`. La configuración preparada del 18/10 usa `claude-sonnet-5-5` para generación y evaluación, pendiente de publicación. El código admite cualquier otro proveedor y modelo: [elegir proveedor y modelo](#elegir-proveedor-y-modelo).
+- Desde el 26/10 (versión `35d435a0-8f36-4c6b-8051-73cfae84456b`) producción genera con `claude-haiku-5-5` (Sin RAG, RAG y respuesta final de CRAG) y evalúa y reformula CRAG con `claude-sonnet-5-5`. Del 18 al 26/10 Sonnet hizo los dos papeles; antes generaba Haiku. El código admite cualquier otro proveedor y modelo: [elegir proveedor y modelo](#elegir-proveedor-y-modelo).
 
 El perfil demo no usa esos servicios. Usa un índice lexical de 128 dimensiones, etiquetado como prueba. No es una búsqueda semántica ni Vectorize.
 
@@ -117,7 +117,7 @@ El código no está atado a Claude. `LLM_PROVIDER` elige el proveedor de todos l
 
 | Para usar…                                                                                       | `LLM_PROVIDER` | Clave                                                      | Ejemplo de `MODEL_ID`                     |
 | ------------------------------------------------------------------------------------------------ | -------------- | ---------------------------------------------------------- | ----------------------------------------- |
-| Claude por la API de Anthropic (perfil Sonnet publicado)                                         | `anthropic`    | `ANTHROPIC_API_KEY` (y `ANTHROPIC_WORKSPACE_ID`, opcional) | `claude-sonnet-5-5`                       |
+| Claude por la API de Anthropic (ruta publicada)                                                  | `anthropic`    | `ANTHROPIC_API_KEY` (y `ANTHROPIC_WORKSPACE_ID`, opcional) | `claude-haiku-5-5`                        |
 | GPT por la API de OpenAI                                                                         | `openai`       | `OPENAI_API_KEY`                                           | `gpt-6-luna`                              |
 | **Cualquier modelo de OpenRouter**: Claude, GPT, Gemini, GLM, Kimi, DeepSeek, Qwen, Llama, Grok… | `openrouter`   | `OPENROUTER_API_KEY`                                       | `z-ai/glm-5.3` (ID exacto de su catálogo) |
 | Gemini con clave de Google AI Studio                                                             | `gemini`       | `GEMINI_API_KEY`                                           | `gemini-3.1-flash-lite`                   |
