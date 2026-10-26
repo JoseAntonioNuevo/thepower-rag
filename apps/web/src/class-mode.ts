@@ -32,6 +32,8 @@ export interface GraphEdge {
   to: string;
   // Trazado.
   path: string;
+  // Etiqueta opcional de la rama (por ejemplo «pasa»), con su posición en el lienzo.
+  label?: { text: string; x: number; y: number };
 }
 
 // Grafo completo: nodos, aristas y alto del lienzo.
@@ -67,15 +69,15 @@ function down(from: GraphNode, to: GraphNode): GraphEdge {
   };
 }
 
-// Nodos del RAG básico: una fila y dos salidas sin modelo debajo.
+// Nodos del RAG básico: una fila y, debajo del filtro, la salida sin modelo. El chat ya no tiene
+// grupos, así que «pedir grupo» no se dibuja (si llega, el inspector lo explica igualmente).
 const RAG_NODES = {
   embed: { id: "embed", title: "Embedding", subtitle: "BGE-M3", x: 20, y: 30 },
-  search: { id: "search", title: "Vectorize", subtitle: "vecinos", x: 145, y: 30 },
-  threshold: { id: "threshold", title: "Umbral", subtitle: "decide el código", x: 270, y: 30 },
+  search: { id: "search", title: "Buscar", subtitle: "en Vectorize", x: 145, y: 30 },
+  threshold: { id: "threshold", title: "Filtrar", subtitle: "nota mínima", x: 270, y: 30 },
   generate: { id: "generate", title: "Generar", subtitle: "generador", x: 395, y: 30 },
-  answer: { id: "answer", title: "Citas", subtitle: "validadas", x: 520, y: 30 },
-  refuse: { id: "refuse", title: "No consta", subtitle: "sin modelo", x: 270, y: 120 },
-  clarify: { id: "clarify", title: "Aclarar", subtitle: "sin buscar", x: 20, y: 120 },
+  answer: { id: "answer", title: "Responder", subtitle: "citas validadas", x: 520, y: 30 },
+  refuse: { id: "refuse", title: "Rechazar", subtitle: "«no consta»", x: 270, y: 120 },
 } satisfies Record<string, GraphNode>;
 
 // Grafo del RAG básico.
@@ -84,43 +86,63 @@ export const RAG_GRAPH: GraphDefinition = {
   edges: [
     across(RAG_NODES.embed, RAG_NODES.search),
     across(RAG_NODES.search, RAG_NODES.threshold),
-    across(RAG_NODES.threshold, RAG_NODES.generate),
+    // Algún fragmento llega a la nota mínima: pasa al generador.
+    { ...across(RAG_NODES.threshold, RAG_NODES.generate), label: { text: "pasa", x: 387, y: 24 } },
     across(RAG_NODES.generate, RAG_NODES.answer),
-    down(RAG_NODES.threshold, RAG_NODES.refuse),
+    // Ninguno llega: rechazo sin llamar al modelo.
+    {
+      ...down(RAG_NODES.threshold, RAG_NODES.refuse),
+      label: { text: "ninguno pasa", x: 368, y: 102 },
+    },
   ],
   height: 186,
 };
 
-// Nodos de CRAG: la fila central es el camino feliz; arriba, el bucle correctivo; abajo, las salidas.
+// Nodos de CRAG en cuatro columnas centradas en el lienzo de 680: la fila central es el camino
+// feliz; arriba, el bucle correctivo; abajo, las dos salidas sin respuesta.
 const CRAG_NODES = {
-  retrieve: { id: "retrieve", title: "Buscar", subtitle: "10 candidatos", x: 20, y: 110 },
-  rank: { id: "rank", title: "Juez", subtitle: "nota 0–1", x: 150, y: 110 },
-  assess: { id: "assess", title: "Decidir", subtitle: "suficiencia", x: 280, y: 110 },
-  answer: { id: "answer", title: "Responder", subtitle: "generador", x: 410, y: 110 },
-  reformulate: { id: "reformulate", title: "Reformular", subtitle: "evaluador", x: 20, y: 20 },
-  retain: { id: "retain", title: "Conservar", subtitle: "parcial", x: 150, y: 20 },
-  discard: { id: "discard", title: "Descartar", subtitle: "insuficiente", x: 280, y: 20 },
-  refuse: { id: "refuse", title: "No consta", subtitle: "sin intentos", x: 280, y: 200 },
-  error: { id: "error", title: "Detenido", subtitle: "error o plazo", x: 410, y: 200 },
-  clarify: { id: "clarify", title: "Aclarar", subtitle: "sin buscar", x: 540, y: 110 },
+  retrieve: { id: "retrieve", title: "Buscar", subtitle: "10 candidatos", x: 60, y: 110 },
+  rank: { id: "rank", title: "Juez", subtitle: "nota de 0 a 1", x: 210, y: 110 },
+  assess: { id: "assess", title: "¿Basta?", subtitle: "decide el código", x: 360, y: 110 },
+  answer: { id: "answer", title: "Responder", subtitle: "generador", x: 510, y: 110 },
+  reformulate: { id: "reformulate", title: "Reformular", subtitle: "otra consulta", x: 60, y: 20 },
+  retain: { id: "retain", title: "Conservar", subtitle: "lo que sirve", x: 210, y: 20 },
+  discard: { id: "discard", title: "Descartar", subtitle: "todo", x: 360, y: 20 },
+  refuse: { id: "refuse", title: "Rechazar", subtitle: "«no consta»", x: 360, y: 200 },
+  error: { id: "error", title: "Detenido", subtitle: "error o tiempo", x: 510, y: 200 },
 } satisfies Record<string, GraphNode>;
 
-// Grafo de CRAG con el bucle de reformulación.
+// Grafo de CRAG con el bucle de reformulación. Cada salida de «¿Basta?» lleva su etiqueta.
 export const CRAG_GRAPH: GraphDefinition = {
   nodes: Object.values(CRAG_NODES),
   edges: [
     across(CRAG_NODES.retrieve, CRAG_NODES.rank),
     across(CRAG_NODES.rank, CRAG_NODES.assess),
-    across(CRAG_NODES.assess, CRAG_NODES.answer),
-    down(CRAG_NODES.assess, CRAG_NODES.refuse),
-    // Decidir → conservar: sube y gira a la izquierda sin cruzar el juez.
-    { from: "assess", to: "retain", path: "M305 110 L305 90 L205 90 L205 72" },
-    // Decidir → descartar: recto hacia arriba.
-    { from: "assess", to: "discard", path: "M345 110 L345 72" },
+    // Evidencia suficiente: responde.
+    { ...across(CRAG_NODES.assess, CRAG_NODES.answer), label: { text: "sí", x: 490, y: 128 } },
+    // Sin búsquedas ni reformulaciones restantes: rechaza.
+    {
+      ...down(CRAG_NODES.assess, CRAG_NODES.refuse),
+      label: { text: "sin intentos", x: 452, y: 181 },
+    },
+    // Evidencia parcial: sube y gira a la izquierda sin cruzar el juez.
+    {
+      from: "assess",
+      to: "retain",
+      path: "M385 110 L385 90 L265 90 L265 72",
+      label: { text: "a medias", x: 325, y: 85 },
+    },
+    // Nada sirve: recto hacia arriba.
+    {
+      from: "assess",
+      to: "discard",
+      path: "M435 110 L435 72",
+      label: { text: "nada sirve", x: 470, y: 95 },
+    },
     // Conservar → reformular: hacia la izquierda, del borde de conservar al de reformular.
-    { from: "retain", to: "reformulate", path: "M150 44 L134 44" },
+    { from: "retain", to: "reformulate", path: "M210 44 L174 44" },
     // Descartar → reformular: por encima de la fila superior.
-    { from: "discard", to: "reformulate", path: "M335 20 L335 8 L75 8 L75 16" },
+    { from: "discard", to: "reformulate", path: "M415 20 L415 8 L115 8 L115 16" },
     // Reformular → buscar otra vez.
     down(CRAG_NODES.reformulate, CRAG_NODES.retrieve),
   ],
@@ -220,11 +242,13 @@ const NODE_EXPLANATIONS: Record<ClassStage, Record<string, string>> = {
     embed: "Convierte la pregunta en un vector de números para compararla con los fragmentos.",
     search: "Busca en Vectorize los fragmentos cuyo vector se parece más al de la pregunta.",
     threshold:
-      "El código compara cada similitud con el umbral calibrado: lo que no llega, no pasa al generador.",
+      "El código compara la similitud de cada fragmento con la nota mínima calibrada (el corte): solo lo que llega pasa al generador.",
     generate: "El generador escribe la respuesta usando solo los fragmentos que pasaron el umbral.",
     answer: "Se validan las citas: solo se aceptan ids de la evidencia que recibió el generador.",
-    refuse: "Ningún fragmento alcanzó el umbral: responde «no consta» sin llamar al modelo.",
-    clarify: "Falta el grupo para una pregunta de calendario: pide aclaración sin buscar.",
+    refuse:
+      "Ningún fragmento llegó a la nota mínima: responde «no consta» sin llamar al modelo, así que no gasta ni inventa.",
+    clarify:
+      "Solo con el material del curso: una pregunta de horario sin grupo (L/X o M/J) pide el grupo antes de buscar. Con la tienda no ocurre.",
   },
   crag: {
     retrieve: "Busca 10 candidatos en Vectorize. Aquí no corta ningún umbral: decidirá el juez.",
@@ -236,9 +260,11 @@ const NODE_EXPLANATIONS: Record<ClassStage, Record<string, string>> = {
     reformulate:
       "El evaluador reescribe la búsqueda para cubrir la laguna, sin cambiar la pregunta.",
     answer: "El generador responde solo con los fragmentos conservados y cita sus ids.",
-    refuse: "Se agotaron las búsquedas o las reformulaciones: responde «no consta».",
+    refuse:
+      "Se agotaron las búsquedas o las reformulaciones sin evidencia suficiente: responde «no consta».",
     error: "Error o plazo agotado: el turno se detiene sin reintentar ni cambiar de etapa.",
-    clarify: "Falta el grupo para una pregunta de calendario: pide aclaración sin buscar.",
+    clarify:
+      "Solo con el material del curso: una pregunta de horario sin grupo (L/X o M/J) pide el grupo antes de buscar. Con la tienda no ocurre.",
   },
 };
 
@@ -458,14 +484,14 @@ const STEP_GUIDES: Record<ClassStage, Record<string, readonly GuideEntry[]>> = {
     ],
     refuse: [
       {
-        term: "No consta",
-        text: "Sin evidencia que pase el umbral no se llama al modelo: no gasta y no inventa.",
+        term: "Rechazar",
+        text: "Sin evidencia que pase la nota mínima no se llama al modelo: responde «no consta», no gasta y no inventa.",
       },
     ],
     clarify: [
       {
-        term: "Aclarar",
-        text: "La pregunta necesita un grupo; se pide antes de buscar o generar.",
+        term: "Pedir grupo",
+        text: "Una pregunta de horario necesita saber el grupo (L/X o M/J); se pide antes de buscar o generar. Solo con el material del curso.",
       },
     ],
   },
@@ -541,7 +567,7 @@ const STEP_GUIDES: Record<ClassStage, Record<string, readonly GuideEntry[]>> = {
     ],
     refuse: [
       {
-        term: "No consta",
+        term: "Rechazar",
         text: "Se agotaron las búsquedas o las reformulaciones sin evidencia suficiente.",
       },
     ],
@@ -551,7 +577,12 @@ const STEP_GUIDES: Record<ClassStage, Record<string, readonly GuideEntry[]>> = {
         text: "Un error o el plazo del turno agotado; no se reintenta ni se cambia de etapa.",
       },
     ],
-    clarify: [{ term: "Aclarar", text: "La pregunta necesita un grupo; se pide antes de buscar." }],
+    clarify: [
+      {
+        term: "Pedir grupo",
+        text: "Una pregunta de horario necesita saber el grupo (L/X o M/J); se pide antes de buscar. Solo con el material del curso.",
+      },
+    ],
   },
 };
 

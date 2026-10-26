@@ -71,10 +71,10 @@ function subtitleFor(
     // Embedding: modelo.
     if (node.id === "embed") return modelLabel(models.embedding) ?? node.subtitle;
     // Búsqueda: cuántos vecinos.
-    if (node.id === "search" && step) return `${String(step.candidates.length)} vecinos`;
-    // Umbral: su valor.
+    if (node.id === "search" && step) return `${String(step.candidates.length)} parecidos`;
+    // Filtro: la nota mínima de este turno.
     if (node.id === "threshold" && step?.threshold != null)
-      return `corte ${formatScore(step.threshold)}`;
+      return `mínimo ${formatScore(step.threshold)}`;
     // Generación: generador.
     if (node.id === "generate") return modelLabel(step?.model ?? models.generator) ?? "plantilla";
     // Resto: texto por defecto.
@@ -88,8 +88,7 @@ function subtitleFor(
     ).length;
     return count === 0 ? node.subtitle : `búsqueda ${String(count)} de 3`;
   }
-  if (node.id === "rank" || node.id === "reformulate")
-    return modelLabel(models.evaluator) ?? node.subtitle;
+  if (node.id === "rank") return modelLabel(models.evaluator) ?? node.subtitle;
   if (node.id === "answer") return modelLabel(models.generator) ?? node.subtitle;
   // Resto: texto por defecto.
   return node.subtitle;
@@ -400,9 +399,12 @@ export function ClassModeView({
   const activeNode = graph.nodes.find((node) => node.id === view.active);
   // Texto de estado: nodo y su modelo o dato.
   const label =
-    activeNode === undefined
+    view.active === null
       ? "Esperando una pregunta"
-      : `${activeNode.title} · ${subtitleFor(stage, activeNode, models, events, view)}`;
+      : activeNode === undefined
+        ? // Paso sin nodo dibujado (pedir grupo): su explicación.
+          (explainNode(stage, view.active) ?? view.active)
+        : `${activeNode.title} · ${subtitleFor(stage, activeNode, models, events, view)}`;
   // Qué hace el nodo activo, en una frase, y cómo leer sus datos.
   const explanation = explainNode(stage, view.active);
   const guide = stepGuide(stage, view.active);
@@ -482,13 +484,25 @@ export function ClassModeView({
           const key = `${edge.from}->${edge.to}`;
           const kind = key === view.current ? "current" : used.has(key) ? "used" : "idle";
           return (
-            <path
-              key={key}
-              d={edge.path}
-              className="class-edge"
-              data-state={kind}
-              markerEnd={`url(#class-arrow-${kind}-${stage})`}
-            />
+            <g key={key}>
+              <path
+                d={edge.path}
+                className="class-edge"
+                data-state={kind}
+                markerEnd={`url(#class-arrow-${kind}-${stage})`}
+              />
+              {/* Etiqueta de la rama, si la tiene. */}
+              {edge.label === undefined ? null : (
+                <text
+                  className="class-edge-label"
+                  x={edge.label.x}
+                  y={edge.label.y}
+                  textAnchor="middle"
+                >
+                  {edge.label.text}
+                </text>
+              )}
+            </g>
           );
         })}
         {/* Nodos. */}

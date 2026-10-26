@@ -114,6 +114,11 @@ h1,
   line-height: 1.15;
 }
 
+/* Cabecera en espera de /api/health: ocupa su sitio pero no se ve, para no enseñar un texto que luego cambia. */
+.masthead[data-pending="true"] {
+  visibility: hidden;
+}
+
 /* Subtítulo de la cabecera: ancho limitado a 62 caracteres para que se lea cómodo. */
 .masthead p {
   margin: 10px 0 0;
@@ -1712,6 +1717,14 @@ button.t-toggle[data-on="true"] {
   fill: #57534e;
   font-family: var(--font-ui);
   font-size: 12px;
+}
+
+/* Etiqueta de una rama del grafo («pasa», «ninguno pasa»). */
+.class-edge-label {
+  fill: #57534e;
+  font-family: var(--font-ui);
+  font-size: 11px;
+  font-style: italic;
 }
 
 /* Nodo ya recorrido: verde suave. */

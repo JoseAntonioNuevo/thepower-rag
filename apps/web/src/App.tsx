@@ -6,8 +6,7 @@
 import { useChat } from "@ai-sdk/react";
 // Escenarios de demo, esquema de salud y tipos del contrato.
 import {
-  // Guiones de CRAG y de investigación y la pregunta de demo.
-  DEMO_CRAG_SCENARIOS,
+  // Guiones de investigación y la pregunta de demo.
   DEMO_RESEARCH_QUESTION,
   DEMO_RESEARCH_SCENARIOS,
   // Esquema para validar /api/health.
@@ -16,7 +15,6 @@ import {
   type Audience,
   type ChatMode,
   type CragStep,
-  type DemoScenarioId,
   type HealthResponse,
   type ResearchScenarioId,
   type ResearchStep,
@@ -580,7 +578,7 @@ function AssistantMessage({ message }: { message: CourseUIMessage }) {
 function ChatPane({
   mode,
   audience,
-  store,
+  examples,
   allowScenario,
   onBusy,
   classMode,
@@ -592,8 +590,8 @@ function ChatPane({
   mode: ChatMode;
   // Grupo.
   audience: Audience;
-  // Si el chat consulta la tienda ThePower Shop en lugar del curso.
-  store: boolean;
+  // Preguntas de ejemplo del corpus del chat; null mientras no se sabe qué corpus consulta.
+  examples: Record<ChatMode, string> | null;
   // Si se pueden elegir escenarios.
   allowScenario: boolean;
   // Avisa de si está ocupado.
@@ -621,8 +619,6 @@ function ChatPane({
   const [submitError, setSubmitError] = useState<string | null>(null);
   // Cerrojo síncrono: dos eventos antes del siguiente render no pueden enviar dos preguntas.
   const submitting = useRef(false);
-  // Escenario CRAG.
-  const [scenario, setScenario] = useState<DemoScenarioId | null>(null);
   // Pasos CRAG en directo.
   const [liveSteps, setLiveSteps] = useState<CragStep[]>([]);
   // Pasos del modo clase (RAG y CRAG) con su instante de llegada.
@@ -635,8 +631,6 @@ function ChatPane({
   const [researchScenario, setResearchScenario] = useState<ResearchScenarioId | null>(null);
   // Pasos de investigación en directo.
   const [researchSteps, setResearchSteps] = useState<ResearchStep[]>([]);
-  // Escenario CRAG efectivo.
-  const selectedScenario = allowScenario && mode === "crag" ? scenario : null;
   // Escenario de investigación efectivo.
   const selectedResearch = allowScenario && mode === "research" ? researchScenario : null;
   // Transporte HTTP de useChat con el cuerpo del curso.
@@ -671,13 +665,12 @@ function ChatPane({
               parts: [{ type: "text", text: partText(message) }],
             })),
             // Guiones de demo, solo si se eligieron.
-            ...(selectedScenario === null ? {} : { demoScenario: selectedScenario }),
             ...(selectedResearch === null ? {} : { researchScenario: selectedResearch }),
           },
         }),
       }),
     // useMemo recrea el transporte solo si cambia el modo, el grupo o un guion.
-    [mode, audience, selectedScenario, selectedResearch],
+    [mode, audience, selectedResearch],
   );
   // useChat: mensajes, envío, estado, parada y errores.
   const { messages, sendMessage, status, stop, error, clearError, setMessages } =
@@ -885,66 +878,6 @@ function ChatPane({
           {error === undefined ? null : <ChatError message={readableError(error)} />}
           {/* Formulario. */}
           <form className="composer" onSubmit={onSubmit}>
-            {/* Selector de guion CRAG. */}
-            {mode === "crag" && allowScenario ? (
-              <label className="composer-script" htmlFor="guion-crag">
-                Guion
-                <select
-                  id="guion-crag"
-                  value={scenario ?? ""}
-                  disabled={busy || !acceptScenarioChange(busy)}
-                  onChange={(event) => {
-                    // Ocupado.
-                    if (!acceptScenarioChange(busy)) {
-                      // Nada.
-                      return;
-                    }
-                    // Valor.
-                    const next = event.target.value;
-                    // Sin guion.
-                    if (next === "") {
-                      // Libre.
-                      setScenario(null);
-                      // Vacía la conversación.
-                      setMessages([]);
-                      // Vacía los pasos.
-                      setLiveSteps([]);
-                      // Vacía el grafo del modo clase.
-                      setClassEvents([]);
-                      // Sale.
-                      return;
-                    }
-                    // Escenario.
-                    const found = DEMO_CRAG_SCENARIOS.find((item) => item.id === next);
-                    // Desconocido.
-                    if (found === undefined) {
-                      // Nada.
-                      return;
-                    }
-                    // Lo elige.
-                    setScenario(found.id);
-                    // Rellena su pregunta.
-                    setInput(found.question);
-                    // Vacía la conversación.
-                    setMessages([]);
-                    // Vacía los pasos.
-                    setLiveSteps([]);
-                    // Vacía el grafo del modo clase.
-                    setClassEvents([]);
-                  }}
-                >
-                  {/* Sin guion. */}
-                  <option value="">Libre, con el índice lexical de prueba</option>
-                  {/* Un guion por escenario. */}
-                  {DEMO_CRAG_SCENARIOS.map((item) => (
-                    <option key={item.id} value={item.id}>
-                      {/* Nombre. */}
-                      {item.label}
-                    </option>
-                  ))}
-                </select>
-              </label>
-            ) : null}
             {/* Selector de guion de investigación. */}
             {mode === "research" && allowScenario ? (
               <label className="composer-script" htmlFor="guion-investigacion">
@@ -1020,28 +953,29 @@ function ChatPane({
                   <ThinkStatus label={statusLabel} live />
                 </div>
               ) : messages.length === 0 ? (
-                <button
-                  className="caption-action"
-                  type="button"
-                  onClick={() => {
-                    // Ocupado.
-                    if (!acceptScenarioChange(busy)) {
-                      // Nada.
-                      return;
-                    }
-                    // Sin guion CRAG.
-                    setScenario(null);
-                    // Sin guion de investigación.
-                    setResearchScenario(null);
-                    // Pregunta de ejemplo del corpus del chat.
-                    setInput((store ? STORE_EXAMPLES : EXAMPLES)[mode]);
-                    // Foco en el textarea.
-                    questionRef.current?.focus();
-                  }}
-                >
-                  {/* Ejemplo. */}
-                  {(store ? STORE_EXAMPLES : EXAMPLES)[mode]}
-                </button>
+                // Sin corpus conocido todavía, ningún ejemplo (ni del curso ni de la tienda).
+                examples === null ? null : (
+                  <button
+                    className="caption-action"
+                    type="button"
+                    onClick={() => {
+                      // Ocupado.
+                      if (!acceptScenarioChange(busy)) {
+                        // Nada.
+                        return;
+                      }
+                      // Sin guion de investigación.
+                      setResearchScenario(null);
+                      // Pregunta de ejemplo del corpus del chat.
+                      setInput(examples[mode]);
+                      // Foco en el textarea.
+                      questionRef.current?.focus();
+                    }}
+                  >
+                    {/* Ejemplo. */}
+                    {examples[mode]}
+                  </button>
+                )
               ) : (
                 <button
                   className="caption-action"
@@ -1078,14 +1012,7 @@ function ChatPane({
                     // Nada.
                     return;
                   }
-                  // Si el texto ya no es el del guion CRAG, lo quita.
-                  setScenario((current) => {
-                    // Escenario.
-                    const selected = DEMO_CRAG_SCENARIOS.find((item) => item.id === current);
-                    // Se conserva solo si coincide.
-                    return selected !== undefined && selected.question === next ? current : null;
-                  });
-                  // Lo mismo con el guion de investigación.
+                  // Si el texto ya no es el del guion de investigación, lo quita.
                   setResearchScenario((current) => {
                     // Escenario.
                     const selected = DEMO_RESEARCH_SCENARIOS.find((item) => item.id === current);
@@ -1379,6 +1306,8 @@ export function App() {
   const [busy, setBusy] = useState(false);
   // Salud del servidor.
   const [health, setHealth] = useState<HealthResponse | null>(null);
+  // Si /api/health falló: la página se enseña sin saber qué corpus consulta el chat.
+  const [healthFailed, setHealthFailed] = useState(false);
   // Modo clase: grafo en directo encima del chat.
   const [classMode, setClassMode] = useState(() => flagFromUrl("clase") || flagFromUrl("lento"));
   // Modo lento del grafo: un paso cada pocos segundos, aunque lleguen antes.
@@ -1415,7 +1344,12 @@ export function App() {
         // Guarda.
         setHealth(parsed.data);
       })
-      .catch(() => undefined);
+      .catch(() => {
+        // Cancelada al desmontar: nada.
+        if (controller.signal.aborted) return;
+        // Sin estado del servidor.
+        setHealthFailed(true);
+      });
     // Limpieza.
     return () => {
       // Cancela.
@@ -1423,12 +1357,19 @@ export function App() {
     };
   }, []);
 
-  // ¿El chat consulta la tienda? Solo lo dice /api/health; la investigación sigue con el curso.
-  const store = health?.chatCorpus?.id === "thepower-shop";
-  // Con la tienda, el chat no tiene grupos: siempre «General». La investigación conserva el grupo.
-  const chatAudience: Audience = store && mode !== "research" ? "program" : audience;
-  // Selector de grupo: con la tienda solo se muestra en la investigación.
-  const showGroups = !store || mode === "research";
+  // Corpus del chat. Solo lo dice /api/health; hasta que responde es null, para no enseñar durante
+  // ese medio segundo textos del curso (ni de la tienda). La investigación sigue con el curso.
+  const chatCorpus =
+    health === null ? null : health.chatCorpus?.id === "thepower-shop" ? "thepower-shop" : "course";
+  // ¿El chat consulta la tienda?
+  const store = chatCorpus === "thepower-shop";
+  // Cabecera en espera: ocupa su sitio, invisible, hasta saber el corpus (o hasta que falle /api/health).
+  const mastheadPending = chatCorpus === null && !healthFailed;
+  // Las etapas del chat no tienen grupos: siempre «General». Solo la investigación, que lee el
+  // material del curso con sus calendarios, conserva el grupo.
+  const chatAudience: Audience = mode !== "research" ? "program" : audience;
+  // Selector de grupo: solo en la investigación.
+  const showGroups = mode === "research";
 
   // Cambia de etapa o grupo (nunca con una respuesta en curso).
   function choose(nextMode: ChatMode, nextAudience: Audience) {
@@ -1449,28 +1390,34 @@ export function App() {
   return (
     <main className="shell">
       {/* Cabecera. */}
-      <header className="masthead">
+      {/* En espera lleva el texto de la tienda, invisible, para reservar su alto sin saltos. */}
+      <header
+        className="masthead"
+        data-pending={mastheadPending ? "true" : undefined}
+        aria-busy={mastheadPending}
+      >
         {/* Título. */}
         <h1>
-          {store
-            ? "ThePower Shop: RAG, CRAG e investigación"
-            : "The Power RAG, CRAG e investigación"}
+          {chatCorpus === "course"
+            ? "The Power RAG, CRAG e investigación"
+            : chatCorpus === null && healthFailed
+              ? "RAG, CRAG e investigación"
+              : "ThePower Shop: RAG, CRAG e investigación"}
         </h1>
         {/* Descripción según el corpus del chat. */}
-        {store ? (
+        {chatCorpus === null && healthFailed ? (
+          <p>
+            No se pudo leer el estado del servidor, así que no se sabe qué material consulta el
+            chat. Recarga la página para volver a intentarlo.
+          </p>
+        ) : chatCorpus !== "course" ? (
           <p>
             Sin RAG, RAG básico y CRAG consultan las políticas de ThePower Shop, una tienda en línea
             ficticia: devoluciones, envíos, pagos, garantías y vendedores. La investigación sigue
             usando el material del curso, con su temario, ejercicios y calendario de cada grupo.
           </p>
-        ) : (
-          <p>
-            Clases 10, 11 y 12. Las cuatro etapas consultan el mismo material del curso: el temario
-            de las sesiones 1 a 20, los ejercicios documentados y el calendario de cada grupo. La
-            investigación añade un plan acotado, documentación técnica externa y un informe con
-            fuentes.
-          </p>
-        )}
+        ) : // Con el curso, solo el título: sin descripción de clases.
+        null}
       </header>
       {/* Biblioteca de documentos: sustituye a la barra y al chat, que siguen montados y ocultos. */}
       {screen === "library" ? (
@@ -1501,7 +1448,7 @@ export function App() {
             {/* Estado de la etapa. */}
             <p className="stage-note">{capabilityNote(health?.capabilities[mode].status)}</p>
           </div>
-          {/* Grupo: con la tienda, solo para la investigación. */}
+          {/* Grupo: solo para la investigación. */}
           {showGroups ? (
             <div>
               {/* Selector de grupo. */}
@@ -1574,7 +1521,7 @@ export function App() {
             key={conversationKey(mode, chatAudience, epoch)}
             mode={mode}
             audience={chatAudience}
-            store={store}
+            examples={chatCorpus === null ? null : store ? STORE_EXAMPLES : EXAMPLES}
             allowScenario={health?.execution === "demo"}
             onBusy={onBusy}
             classMode={classMode}
