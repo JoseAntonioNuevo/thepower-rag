@@ -2,6 +2,10 @@
 
 Verificado el 3 de octubre de 2026. URL: https://rag-thepower.josenuevo.dev.
 
+## Borrado del corpus del curso: publicación del 27 de octubre de 2026
+
+La versión `7fdda967-2e91-44fc-9a9f-492fe9baaf2a` (deployment `38bb6920-e603-4ca4-9d80-076ef3253ad3`, 100 %) ya no enlaza el índice del curso: respecto a `483fa8fd` solo desaparecen el binding `VECTORIZE` y las variables `CORPUS_VERSION`, `INDEX_PROFILE` y `MIN_RETRIEVAL_SCORE`; los secretos y el resto de variables siguen igual. Con esa versión publicada se borraron, con autorización expresa del usuario, los índices Vectorize del curso y de la tienda anterior, sus filas en D1, sus 40 objetos en R2 y los 9 trabajos de investigación del 11/10 con sus 28 medios. Se leyó todo de vuelta: queda un índice (`thepower-ai-course-rag-3d2b914bd60c`), una versión de corpus (`cc140d7876624`) con 12 documentos y 54 fragmentos, 15 objetos en R2 y la investigación sin filas salvo su cuenta, que conserva el saldo. Health en verde en las cuatro etapas con el índice de la tienda verificado, y la biblioteca lista 12 documentos. El cliente no cambia (`assets/index-0gxffQqf.js`). No se lanzó ningún turno de pago. Detalle en [decisions.md](decisions.md); recibos y copia local en `activation-receipts/thepower-shop/limpieza/`.
+
 ## Cierre de la migración a ThePower Shop: publicación del 26 de octubre de 2026
 
 La versión `483fa8fd-1858-4090-8fe3-b2ea266a02c6` (deployment `e00355b5-b8c1-4af8-8e74-164780bb9cb7`, 100 %) publica el commit `d9da3ff`. Las variables y los bindings son los de `9b4284ca`; cambia el código. El rechazo de CRAG ya no nombra el corpus del curso («No hay evidencia suficiente en los documentos consultados»), la cabecera de la tienda describe la investigación con el pedido, la normativa y la foto o la nota de voz, y la biblioteca ya no habla de grupos. La demo local sigue `CHAT_CORPUS`, lo que no afecta a producción. Health en verde en las cuatro etapas, con el chat en `thepower-shop`. El cliente servido (`assets/index-0gxffQqf.js`) es byte a byte el del build. No se lanzó ningún turno ni investigación de pago. Recibos en `activation-receipts/thepower-shop/cierre/`.

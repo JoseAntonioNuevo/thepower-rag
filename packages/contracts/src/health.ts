@@ -57,8 +57,8 @@ export const healthResponseSchema = z.object({
     remoteRevision: z.null(),
   }),
   /**
-   * Corpus del chat (Sin RAG, RAG y CRAG). `corpus` describe siempre el del curso, que es el que
-   * usa la investigación de S12; cuando el chat usa la tienda, sus datos van aquí.
+   * Corpus del chat (Sin RAG, RAG y CRAG). `corpus` describe el del curso si está configurado y,
+   * si no, este mismo; cuando el chat usa la tienda, sus datos van siempre aquí.
    */
   chatCorpus: z
     .object({

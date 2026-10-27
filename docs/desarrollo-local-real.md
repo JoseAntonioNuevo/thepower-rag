@@ -13,7 +13,7 @@ Abrir http://127.0.0.1:5173/. Vite aplica los cambios del código en local. Ctrl
 ## Configuración
 
 - Variables y clave existentes en `apps/web/.dev.vars.local`, con permisos 0600 e ignorado por Git. No son variables VITE_* y no se exportan al navegador.
-- Perfil `env.local` en `apps/web/wrangler.jsonc`, con main separado `apps/api/src/local-worker.ts` y los mismos bindings remotos del curso.
+- Perfil `env.local` en `apps/web/wrangler.jsonc`, con main separado `apps/api/src/local-worker.ts` y los mismos bindings remotos del chat. Desde el 27/10/2026 son los de la tienda ThePower Shop (`VECTORIZE_STORE`): el índice del curso se borró de la cuenta.
 - `remoteBindings` se activa únicamente con `CLOUDFLARE_ENV=local`. El perfil demo sigue desconectado. Producción conserva su configuración y sus controles públicos.
 - Modelo generador GPT-6 Luna priority y evaluador Gemini 3.8 Flash low, mismos parámetros y tarifas del despliegue publicado. Embedding BGE-M3 de 1024 dimensiones, corpus y perfil activos existentes.
 - `LOCAL_BUDGET_USD=4.3`: las consultas locales reservan contra la misma fila D1 del curso y comparten el límite existente y la clave limitada. No hay un presupuesto nuevo ni una cuenta distinta. Costes de Cloudflare aparte.

@@ -1,8 +1,7 @@
 // GUÍA DE LECTURA · apps/api/src/corpus-browser.ts
 // Biblioteca de documentos: lectura de los documentos y fragmentos del corpus del chat (la tienda
-// ThePower Shop en producción). Solo se ofrece ese corpus: el del curso sigue en D1 porque lo lee la
-// investigación de S12, pero no se enseña aquí. En real lee D1 en cada petición (sin caché) con
-// consultas preparadas de solo lectura; en la demo usa el corpus preparado de ThePower Shop empaquetado.
+// ThePower Shop en producción). Solo se ofrece ese corpus. En real lee D1 en cada petición (sin caché)
+// con consultas preparadas de solo lectura; en la demo usa el corpus preparado de ThePower Shop empaquetado.
 // No llama a modelos ni a Vectorize y no escribe nada.
 // Tipos del contrato.
 import type {

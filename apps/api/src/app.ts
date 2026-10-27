@@ -299,8 +299,10 @@ export function createApp(deps: AppDeps = {}) {
     const demoFixture = demoChatFixture(assessment.chatCorpus ?? "course");
     // Versión del corpus incluido.
     const bundled = fixtureCorpusVersion();
+    // Corpus que describe la salud: el del curso si está configurado; si no, el del chat.
+    const described = assessment.retrieval ?? assessment.chatRetrieval;
     // Versión configurada.
-    const configuredVersion = assessment.retrieval?.corpusVersion ?? null;
+    const configuredVersion = described?.corpusVersion ?? null;
     // ¿Se conoce el contenido del corpus?
     const sourceKnown = demoCorpus || configuredVersion === bundled;
     // Cobertura desconocida.
@@ -328,10 +330,8 @@ export function createApp(deps: AppDeps = {}) {
           : sourceKnown
             ? fixtureContentVersion()
             : null,
-        profileId: demoCorpus
-          ? demoFixture.profile.id
-          : (assessment.retrieval?.indexProfile ?? null),
-        profileFamily: demoCorpus ? "fixture" : assessment.retrieval ? "workers-ai" : "unknown",
+        profileId: demoCorpus ? demoFixture.profile.id : (described?.indexProfile ?? null),
+        profileFamily: demoCorpus ? "fixture" : described ? "workers-ai" : "unknown",
         coverage: demoCorpus
           ? demoFixture.coverage
           : sourceKnown
@@ -340,8 +340,8 @@ export function createApp(deps: AppDeps = {}) {
         // Modelo de embeddings y dimensión que usa cada modo.
         embedding: demoCorpus
           ? FIXTURE_EMBEDDING_MODEL
-          : (assessment.retrieval?.embeddingModel ?? "sin configurar"),
-        dimensions: demoCorpus ? FIXTURE_DIMENSIONS : (assessment.retrieval?.dimensions ?? null),
+          : (described?.embeddingModel ?? "sin configurar"),
+        dimensions: demoCorpus ? FIXTURE_DIMENSIONS : (described?.dimensions ?? null),
         remoteRevision: null,
       },
       // Compatibilidad de dependencias, investigación durable y medios de S12.
@@ -383,26 +383,25 @@ export function createApp(deps: AppDeps = {}) {
       media: mediaReadiness(context.env),
     };
     // En real con D1, comprueba el perfil del índice.
-    if (!demoCorpus && assessment.retrieval && context.env.DB) {
+    if (!demoCorpus && described && context.env.DB) {
       // Fallo de lectura: no se marca como verificado.
       try {
         // Perfil.
         const row = await readIndexProfile(
           context.env.DB as SqlDatabase,
-          assessment.retrieval.indexProfile,
-          assessment.retrieval.corpusVersion,
+          described.indexProfile,
+          described.corpusVersion,
         );
         // Si coincide, índice verificado.
-        if (profileReady(row, assessment.retrieval).ok)
-          body.corpus.coverage.remote = "index-verified";
+        if (profileReady(row, described).ok) body.corpus.coverage.remote = "index-verified";
       } catch {
         /* Declarar el binding no demuestra conexión: sin lectura correcta no se marca verificado. */
       }
     }
     // Perfil del corpus del chat: el mismo del curso o el de la tienda, leído también en D1.
     if (!demoCorpus && body.chatCorpus && assessment.chatRetrieval && context.env.DB) {
-      // Con el curso coincide con la lectura anterior.
-      if (assessment.chatCorpus === "course") {
+      // Si es el mismo corpus que el de la lectura anterior, no se vuelve a leer.
+      if (described === assessment.chatRetrieval) {
         // Copia el resultado.
         body.chatCorpus.remote = body.corpus.coverage.remote;
       } else {

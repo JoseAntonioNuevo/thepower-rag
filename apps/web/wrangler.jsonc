@@ -5,7 +5,7 @@
 //   - Sin entorno (`bun run dev`): nivel superior, APP_MODE=demo, sin recursos de la cuenta.
 //   - `CLOUDFLARE_ENV=production`: la web publicada en rag-thepower.josenuevo.dev.
 //   - `CLOUDFLARE_ENV=local` (`bun run dev:real`): este Mac con la API del proveedor y los
-//     bindings reales del curso. Gasta el presupuesto existente.
+//     bindings reales del chat (la tienda). Gasta el presupuesto existente.
 //   - `CLOUDFLARE_ENV=research` (`bun run dev:research`): investigación durable con D1, R2 y
 //     Workflows locales en apps/web/.wrangler/research-state, sin pago.
 // Reglas de Wrangler que conviene recordar:
@@ -63,8 +63,10 @@
         // Recuperación semántica con filtro, puntuaciones y umbral: la comparación RAG/CRAG de S11
         // necesita que RAG básico busque. "complete" solo existe para el curso y bloquea la tienda.
         "RAG_CONTEXT_MODE": "semantic",
-        // Corpus del chat (Sin RAG, RAG y CRAG): la tienda ficticia ThePower Shop. La investigación de S12
-        // sigue con el curso (CORPUS_VERSION, INDEX_PROFILE y VECTORIZE). Volver al curso: "course".
+        // Corpus del chat (Sin RAG, RAG y CRAG): la tienda ficticia ThePower Shop, la misma que lee la
+        // investigación de S12. El corpus del curso se borró de la cuenta el 27/10/2026: volver a
+        // "course" exige activarlo e ingerirlo de nuevo, además de CORPUS_VERSION, INDEX_PROFILE,
+        // MIN_RETRIEVAL_SCORE y el binding VECTORIZE.
         "CHAT_CORPUS": "thepower-shop",
         // Versión y perfil de ThePower Shop (corpus/prepared/thepower-shop.json, BGE-M3 de 1024 dimensiones).
         "STORE_CORPUS_VERSION": "cc140d7876624",
@@ -104,12 +106,8 @@
         // Embeddings: BGE-M3 en Workers AI con la dimensión medida en la cuenta.
         "EMBEDDING_MODEL": "@cf/baai/bge-m3",
         "EMBEDDING_DIMENSIONS": "1024",
-        // Versión del corpus y perfil de índice activos (deben estar «ready» en D1).
-        "CORPUS_VERSION": "c3a59a406888b",
-        "INDEX_PROFILE": "p76509a5f9743",
-        // Métrica del índice y umbral calibrado con preguntas de desarrollo.
+        // Métrica del índice de la tienda.
         "VECTOR_METRIC": "cosine",
-        "MIN_RETRIEVAL_SCORE": "0.5",
         // Tope del presupuesto público del chat (tabla public_budget).
         "PUBLIC_BUDGET_USD": "4.3",
         // Tarifas del generador (Haiku) y del evaluador (Sonnet), para el coste mostrado y la reserva.
@@ -127,21 +125,16 @@
         "binding": "AI",
         "remote": true,
       },
-      // Índices vectoriales: el del curso y el de la tienda ThePower Shop (chat e investigación).
+      // Índice vectorial de ThePower Shop (chat e investigación), creado e ingerido el 26/10/2026
+      // (perfil p3d2b914bd60c, 54 vectores).
       "vectorize": [
-        {
-          "binding": "VECTORIZE",
-          "index_name": "thepower-ai-course-rag-76509a5f9743",
-          "remote": true,
-        },
-        // Índice de ThePower Shop, creado e ingerido el 26/10/2026 (perfil p3d2b914bd60c, 54 vectores).
         {
           "binding": "VECTORIZE_STORE",
           "index_name": "thepower-ai-course-rag-3d2b914bd60c",
           "remote": true,
         },
       ],
-      // Bases D1: la del curso (catálogo y presupuesto del chat) y la de la investigación.
+      // Bases D1: la del chat (catálogo del corpus y presupuesto público) y la de la investigación.
       "d1_databases": [
         {
           "binding": "DB",
@@ -158,7 +151,7 @@
           "remote": true,
         },
       ],
-      // R2 privados: el corpus del curso y los medios de la investigación, separados.
+      // R2 privados: los documentos del corpus y los medios de la investigación, separados.
       "r2_buckets": [
         {
           "binding": "CORPUS",
@@ -216,13 +209,8 @@
         "binding": "AI",
         "remote": true,
       },
+      // Índice de la tienda ThePower Shop, el que usa el chat.
       "vectorize": [
-        {
-          "binding": "VECTORIZE",
-          "index_name": "thepower-ai-course-rag-76509a5f9743",
-          "remote": true,
-        },
-        // Índice de la tienda ThePower Shop, el que usa el chat.
         {
           "binding": "VECTORIZE_STORE",
           "index_name": "thepower-ai-course-rag-3d2b914bd60c",
@@ -262,10 +250,7 @@
         "RESEARCH_MODEL_ID": "claude-haiku-5-5",
         "EMBEDDING_MODEL": "@cf/baai/bge-m3",
         "EMBEDDING_DIMENSIONS": "1024",
-        "CORPUS_VERSION": "c3a59a406888b",
-        "INDEX_PROFILE": "p76509a5f9743",
         "VECTOR_METRIC": "cosine",
-        "MIN_RETRIEVAL_SCORE": "0.5",
         // El chat local consulta la tienda ThePower Shop, igual que producción.
         "CHAT_CORPUS": "thepower-shop",
         "STORE_CORPUS_VERSION": "cc140d7876624",

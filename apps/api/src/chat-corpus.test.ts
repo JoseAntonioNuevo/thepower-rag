@@ -386,4 +386,33 @@ describe("corpus del chat · /api/chat y /api/health", () => {
     // Umbral del chat en la configuración publicada.
     expect(body.modelConfiguration?.retrievalMinScore).toBe(0.2);
   });
+
+  // Producción sin el curso: sin sus variables ni su índice, todo sigue listo con la tienda.
+  it("sin el corpus del curso la salud describe la tienda y las etapas siguen listas", async () => {
+    // Entorno sin las variables ni el índice del curso.
+    const {
+      CORPUS_VERSION: _version,
+      INDEX_PROFILE: _profile,
+      MIN_RETRIEVAL_SCORE: _score,
+      VECTORIZE: _index,
+      ...storeOnly
+    } = storeEnv;
+    // Salud.
+    const response = await createApp().request("/api/health", { method: "GET" }, storeOnly);
+    // Validada.
+    const body = healthResponseSchema.parse(await response.json());
+    // Las cuatro etapas, listas.
+    expect(body.capabilities.rag.status).toBe("ready");
+    expect(body.capabilities.crag.status).toBe("ready");
+    // El bloque del corpus describe la tienda con su modelo de embeddings.
+    expect(body.corpus).toMatchObject({
+      version: "tienda-v",
+      profileId: "p-tienda",
+      profileFamily: "workers-ai",
+      embedding: "@cf/baai/bge-m3",
+      dimensions: 32,
+    });
+    // Mismo corpus que el del chat.
+    expect(body.chatCorpus).toMatchObject({ version: "tienda-v", profileId: "p-tienda" });
+  });
 });

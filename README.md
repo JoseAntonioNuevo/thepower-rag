@@ -18,7 +18,7 @@ Tras las dos pruebas quedan **0,6283574 USD** para nuevas reservas públicas. Un
 
 Proyecto de clase para The Power. El producto será un asistente en español del programa completo de AI Engineer, de la sesión 1 a la 20. Cada respuesta con recuperación debe citar sus documentos y reconocer lo que no consta.
 
-El temario de S1 a S20 y los dos calendarios de AI Engineer están en el corpus. El detalle de varios ejercicios sigue siendo solo un título. La cobertura generada está en `corpus/COVERAGE.md`. El despliegue real del RAG usa el perfil Vectorize `p76509a5f9743`, con 69 vectores leídos de vuelta; su estado está en [despliegue real](docs/despliegue-real.md).
+El temario de S1 a S20 y los dos calendarios de AI Engineer están en el corpus. El detalle de varios ejercicios sigue siendo solo un título. La cobertura generada está en `corpus/COVERAGE.md`. Ese corpus del curso ya no está en la cuenta de Cloudflare: el 27/10/2026 se borraron su índice, sus filas y sus objetos, y producción usa la tienda ThePower Shop; su estado está en [despliegue real](docs/despliegue-real.md).
 
 ## Clases 10, 11 y 12, cuatro etapas
 
@@ -94,10 +94,11 @@ bun run preflight -- --capability rag
 | `MODEL_ID`             | Modelo generativo del servidor               |
 | `EMBEDDING_MODEL`      | Modelo de embeddings del RAG real            |
 | `EMBEDDING_DIMENSIONS` | Dimensión observada, no supuesta             |
-| `CORPUS_VERSION`       | Versión de preparación que se consulta       |
-| `INDEX_PROFILE`        | Perfil de índice, distinto del hash lexical  |
+| `CORPUS_VERSION`       | Versión del curso (solo con `course`)        |
+| `INDEX_PROFILE`        | Perfil del curso (solo con `course`)         |
 | `VECTOR_METRIC`        | Debe ser `cosine` en el perfil real          |
-| `MIN_RETRIEVAL_SCORE`  | Umbral calibrado del índice que se use       |
+| `MIN_RETRIEVAL_SCORE`  | Umbral del curso (solo con `course`)         |
+| `STORE_*`              | Versión, perfil y umbral de la tienda        |
 | `EVALUATOR_MODEL_ID`   | Solo CRAG real. No bloquea las otras etapas  |
 | `LLM_REASONING_EFFORT` | Opcional. Razonamiento de todos los modelos  |
 
@@ -107,7 +108,7 @@ Los secretos van en `apps/web/.dev.vars`. Ese archivo y cualquier `.dev.vars*` q
 
 En local, `.dev.vars` sustituye las claves repetidas de `vars`. El entorno del proceso no entra en el Worker. `bun run preflight` muestra nombres y perfiles, no valores, y no abre conexiones. Si `APP_MODE=real` y falta la generación, el código de salida es 2.
 
-El perfil demo no declara los recursos de la cuenta. Producción usa los bindings del curso y los bindings durables propios de S12 descritos en `docs/s12-cloud-deployment.md`.
+El perfil demo no declara los recursos de la cuenta. Producción usa los bindings de la tienda (`VECTORIZE_STORE`, `DB`, `CORPUS` y `AI`) y los bindings durables propios de S12 descritos en `docs/s12-cloud-deployment.md`.
 
 Cuando el perfil real tenga la clave del proveedor y `MODEL_ID`, sin RAG llamará a ese modelo. RAG real llamará además a Workers AI, Vectorize y D1.
 
